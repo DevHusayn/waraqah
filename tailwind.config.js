@@ -6,7 +6,16 @@ export default {
     ],
     theme: {
         extend: {
+            fontFamily: {
+                sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+            },
             colors: {
+                brand: {
+                    DEFAULT: 'var(--brand)',
+                    hover: 'var(--brand-hover)',
+                    light: 'var(--brand-light)',
+                    subtle: 'var(--brand-subtle)',
+                },
                 primary: {
                     50: '#f0f9ff',
                     100: '#e0f2fe',
@@ -19,6 +28,13 @@ export default {
                     800: '#075985',
                     900: '#0c4a6e',
                 },
+            },
+            boxShadow: {
+                card: '0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06)',
+                'card-md': '0 4px 6px -1px rgb(15 23 42 / 0.05), 0 2px 4px -2px rgb(15 23 42 / 0.05)',
+            },
+            borderRadius: {
+                DEFAULT: '0.75rem',
             },
         },
     },

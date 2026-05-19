@@ -14,7 +14,7 @@ export const useSettings = () => {
 
 export const SettingsProvider = ({ children }) => {
     const [businessInfo, setBusinessInfo] = useState({
-        name: '', address: '', email: '', phone: '', website: '', defaultCurrency: 'USD', taxRate: 10, brandColor: '#0ea5e9',
+        name: '', address: '', email: '', phone: '', website: '', defaultCurrency: 'NGN', taxRate: 10, brandColor: '#0ea5e9', plan: 'free', businessLogo: '',
     });
     const [loading, setLoading] = useState(true);
 
@@ -25,8 +25,18 @@ export const SettingsProvider = ({ children }) => {
             try {
                 const info = await apiFetch('/business-info');
                 setBusinessInfo(info);
-            } catch (e) {
-                setBusinessInfo({ name: '', address: '', email: '', phone: '', website: '', defaultCurrency: 'USD', taxRate: 10, brandColor: '#0ea5e9' });
+            } catch {
+                let fallback = { name: '', address: '', email: '', phone: '', website: '', defaultCurrency: 'NGN', taxRate: 10, brandColor: '#0ea5e9', plan: 'free', businessLogo: '' };
+                if (import.meta.env.DEV) {
+                    try {
+                        const stored = localStorage.getItem('waraqah_business');
+                        if (stored) fallback = { ...fallback, ...JSON.parse(stored) };
+                    } catch { /* ignore */ }
+                    if (localStorage.getItem('waraqah_plan') === 'premium') {
+                        fallback.plan = 'premium';
+                    }
+                }
+                setBusinessInfo(fallback);
             } finally {
                 setLoading(false);
             }
@@ -35,11 +45,22 @@ export const SettingsProvider = ({ children }) => {
     }, []);
 
     const updateBusinessInfo = async (info) => {
-        const updated = await apiFetch('/business-info', {
-            method: 'PUT',
-            body: JSON.stringify(info),
-        });
-        setBusinessInfo(updated);
+        try {
+            const updated = await apiFetch('/business-info', {
+                method: 'PUT',
+                body: JSON.stringify(info),
+            });
+            setBusinessInfo(updated);
+            if (import.meta.env.DEV) {
+                localStorage.setItem('waraqah_business', JSON.stringify(updated));
+            }
+        } catch {
+            setBusinessInfo(info);
+            if (import.meta.env.DEV) {
+                localStorage.setItem('waraqah_business', JSON.stringify(info));
+            }
+            throw new Error('Could not save settings. Logo and details are stored locally for this session in dev mode.');
+        }
     };
 
     const value = {

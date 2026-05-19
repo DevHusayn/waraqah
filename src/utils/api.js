@@ -12,13 +12,18 @@ export async function apiFetch(path, options = {}) {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers,
     };
-    const res = await fetch(`${API_BASE}${path}`, {
-        ...options,
-        headers,
-    });
+    let res;
+    try {
+        res = await fetch(`${API_BASE}${path}`, {
+            ...options,
+            headers,
+        });
+    } catch {
+        throw new Error('Unable to connect to the server. Check your connection and try again.');
+    }
     if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'API error');
+        throw new Error(data.message || 'Something went wrong. Please try again.');
     }
     return res.json();
 }

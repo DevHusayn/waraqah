@@ -1,8 +1,8 @@
-# Freelancer Invoice Generator 🧾
+# Waraqah 🧾
 
-A professional, full-featured invoice generator built with React, designed to help freelancers and small businesses manage their invoicing needs efficiently.
+A professional, full-featured invoice app built with React, designed to help freelancers and small businesses manage their invoicing needs efficiently.
 
-![Invoice Generator](https://img.shields.io/badge/React-18.2-blue) ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38bdf8) ![License](https://img.shields.io/badge/License-MIT-green)
+![Waraqah](https://img.shields.io/badge/React-18.2-blue) ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38bdf8) ![License](https://img.shields.io/badge/License-MIT-green)
 
 ## ✨ Features
 
@@ -26,7 +26,7 @@ A professional, full-featured invoice generator built with React, designed to he
 
 1. Clone the repository or navigate to the project folder
 ```bash
-cd invoice-generator
+cd waraqah
 ```
 
 2. Install dependencies

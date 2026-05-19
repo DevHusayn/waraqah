@@ -22,7 +22,7 @@ export default function AlertModal({ open, onClose, message, type = 'error' }) {
                 </div>
                 <div className="flex justify-center mt-2">
                     <button
-                        className={`font-semibold px-6 py-2 rounded-lg shadow transition-colors duration-150 focus:ring-2 ${isSuccess ? 'bg-green-600 hover:bg-green-700 focus:ring-green-400 text-white' : 'bg-primary-600 hover:bg-primary-700 focus:ring-primary-400 text-white'}`}
+                        className={`font-medium px-6 py-2 rounded-xl shadow-sm transition-colors duration-150 focus:ring-2 ${isSuccess ? 'bg-green-600 hover:bg-green-700 focus:ring-green-400 text-white' : 'bg-brand hover:bg-brand-hover focus:ring-[rgb(var(--brand-ring)/0.3)] text-white'}`}
                         onClick={onClose}
                     >
                         OK

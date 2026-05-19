@@ -4,6 +4,7 @@ import { FileText, Users, DollarSign, TrendingUp, Clock, CheckCircle } from 'luc
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '../utils/currency';
+import PageHeader from '../components/PageHeader';
 
 const Dashboard = () => {
     const { invoices, clients } = useInvoice();
@@ -11,186 +12,137 @@ const Dashboard = () => {
     const navigate = useNavigate();
 
     const totalRevenue = invoices
-        .filter(inv => inv.status === 'paid')
+        .filter((inv) => inv.status === 'paid')
         .reduce((sum, inv) => sum + inv.total, 0);
 
     const pendingRevenue = invoices
-        .filter(inv => inv.status === 'pending')
+        .filter((inv) => inv.status === 'pending')
         .reduce((sum, inv) => sum + inv.total, 0);
 
-    const overdueInvoices = invoices.filter(inv => inv.status === 'overdue');
+    const overdueInvoices = invoices.filter((inv) => inv.status === 'overdue');
 
     const recentInvoices = [...invoices]
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         .slice(0, 5);
 
     const stats = [
-        {
-            name: 'Total Invoices',
-            value: invoices.length,
-            icon: FileText,
-            color: 'bg-blue-500',
-            bgLight: 'bg-blue-50',
-            textColor: 'text-blue-600',
-        },
-        {
-            name: 'Total Clients',
-            value: clients.length,
-            icon: Users,
-            color: 'bg-purple-500',
-            bgLight: 'bg-purple-50',
-            textColor: 'text-purple-600',
-        },
-        {
-            name: 'Revenue (Paid)',
-            value: formatCurrency(totalRevenue, businessInfo.defaultCurrency || 'USD', true),
-            icon: DollarSign,
-            color: 'bg-green-500',
-            bgLight: 'bg-green-50',
-            textColor: 'text-green-600',
-        },
-        {
-            name: 'Pending Revenue',
-            value: formatCurrency(pendingRevenue, businessInfo.defaultCurrency || 'USD', true),
-            icon: Clock,
-            color: 'bg-yellow-500',
-            bgLight: 'bg-yellow-50',
-            textColor: 'text-yellow-600',
-        },
+        { name: 'Total Invoices', value: invoices.length, icon: FileText, iconBg: 'bg-brand-light', iconColor: 'text-brand' },
+        { name: 'Total Clients', value: clients.length, icon: Users, iconBg: 'bg-violet-50', iconColor: 'text-violet-600' },
+        { name: 'Revenue (Paid)', value: formatCurrency(totalRevenue), icon: DollarSign, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600' },
+        { name: 'Pending Revenue', value: formatCurrency(pendingRevenue), icon: Clock, iconBg: 'bg-amber-50', iconColor: 'text-amber-600' },
     ];
 
     const getClientName = (clientId) => {
-        const client = clients.find(c => c.id === clientId);
+        const client = clients.find((c) => c.id === clientId);
         return client ? client.name : 'Unknown Client';
     };
 
     const getStatusColor = (status) => {
         const colors = {
-            pending: 'bg-yellow-100 text-yellow-800',
-            paid: 'bg-green-100 text-green-800',
+            pending: 'bg-amber-100 text-amber-800',
+            paid: 'bg-emerald-100 text-emerald-800',
             overdue: 'bg-red-100 text-red-800',
-            cancelled: 'bg-gray-100 text-gray-800',
+            cancelled: 'bg-slate-100 text-slate-600',
         };
         return colors[status] || colors.pending;
     };
 
     return (
-        <div className="max-w-7xl mx-auto">
-            <div className="mb-10">
-                <h1 className="text-3xl font-extrabold text-primary-700">Dashboard</h1>
-                <p className="mt-2 text-gray-500 text-lg">Welcome back! Here's an overview of your invoicing</p>
-            </div>
+        <div>
+            <PageHeader title="Dashboard" subtitle="Welcome back — here's your invoicing overview" />
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 {stats.map((stat) => {
                     const Icon = stat.icon;
                     return (
-                        <div key={stat.name} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 flex items-center gap-4">
-                            <div className={`${stat.bgLight} p-4 rounded-xl flex items-center justify-center`}>
-                                <Icon className={`h-7 w-7 ${stat.textColor}`} />
+                        <div key={stat.name} className="stat-card">
+                            <div className={`${stat.iconBg} p-3 rounded-xl flex items-center justify-center`}>
+                                <Icon className={`h-6 w-6 ${stat.iconColor}`} />
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500 font-semibold">{stat.name}</p>
-                                <p className="text-2xl font-extrabold text-gray-900">{stat.value}</p>
+                                <p className="text-sm text-slate-500 font-medium">{stat.name}</p>
+                                <p className="text-xl font-semibold text-slate-900 mt-0.5">{stat.value}</p>
                             </div>
                         </div>
                     );
                 })}
             </div>
 
-            {/* Quick Actions */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-10 p-6">
-                <h2 className="text-xl font-bold text-primary-700 mb-4">Quick Actions</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button
-                        onClick={() => navigate('/invoices/create')}
-                        className="bg-primary-600 hover:bg-primary-700 text-white font-semibold flex items-center gap-2 px-6 py-4 rounded-xl shadow-md transition justify-start"
-                    >
-                        <FileText size={20} />
-                        Create New Invoice
+            <div className="card mb-8">
+                <h2 className="text-lg font-semibold text-slate-900 mb-4">Quick actions</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <button type="button" onClick={() => navigate('/invoices/create')} className="btn-primary justify-start py-3">
+                        <FileText size={18} />
+                        Create invoice
                     </button>
-                    <button
-                        onClick={() => navigate('/clients')}
-                        className="bg-primary-100 hover:bg-primary-200 text-primary-700 font-semibold flex items-center gap-2 px-6 py-4 rounded-xl shadow-md transition justify-start"
-                    >
-                        <Users size={20} />
-                        Manage Clients
+                    <button type="button" onClick={() => navigate('/clients')} className="btn-secondary justify-start py-3 bg-brand-light border-brand/20 text-brand hover:bg-brand-subtle">
+                        <Users size={18} />
+                        Manage clients
                     </button>
-                    <button
-                        onClick={() => navigate('/invoices')}
-                        className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold flex items-center gap-2 px-6 py-4 rounded-xl shadow-md transition justify-start"
-                    >
-                        <TrendingUp size={20} />
-                        View All Invoices
+                    <button type="button" onClick={() => navigate('/invoices')} className="btn-secondary justify-start py-3">
+                        <TrendingUp size={18} />
+                        View all invoices
                     </button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Recent Invoices */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-                    <h2 className="text-xl font-bold text-primary-700 mb-4">Recent Invoices</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="card">
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">Recent invoices</h2>
                     {recentInvoices.length === 0 ? (
                         <div className="text-center py-10">
-                            <FileText className="mx-auto h-12 w-12 text-gray-300" />
-                            <p className="mt-3 text-gray-500 text-base">No invoices yet</p>
-                            <button
-                                onClick={() => navigate('/invoices/create')}
-                                className="mt-6 bg-primary-600 hover:bg-primary-700 text-white font-semibold flex items-center gap-2 px-6 py-3 rounded-xl shadow-md transition"
-                            >
-                                Create Your First Invoice
+                            <FileText className="mx-auto h-12 w-12 text-slate-300" />
+                            <p className="mt-3 text-slate-500">No invoices yet</p>
+                            <button type="button" onClick={() => navigate('/invoices/create')} className="btn-primary mt-6 mx-auto">
+                                Create your first invoice
                             </button>
                         </div>
                     ) : (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                             {recentInvoices.map((invoice) => (
-                                <div
+                                <button
+                                    type="button"
                                     key={invoice.id}
-                                    className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer border border-gray-100"
+                                    className="w-full flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-left border border-slate-100"
                                     onClick={() => navigate(`/invoices/edit/${invoice.id}`)}
                                 >
-                                    <div className="flex-1">
-                                        <p className="font-semibold text-gray-900">{invoice.invoiceNumber}</p>
-                                        <p className="text-sm text-gray-500">{getClientName(invoice.clientId)}</p>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-medium text-slate-900 truncate">{invoice.invoiceNumber}</p>
+                                        <p className="text-sm text-slate-500 truncate">{getClientName(invoice.clientId)}</p>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="font-bold text-primary-700">{formatCurrency(invoice.total, invoice.currency || 'USD', true)}</p>
-                                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(invoice.status)} capitalize mt-1`}>
+                                    <div className="text-right ml-3 flex-shrink-0">
+                                        <p className="font-semibold text-brand">{formatCurrency(invoice.total)}</p>
+                                        <span className={`inline-block px-2 py-0.5 rounded-lg text-xs font-medium ${getStatusColor(invoice.status)} capitalize mt-1`}>
                                             {invoice.status}
                                         </span>
                                     </div>
-                                </div>
+                                </button>
                             ))}
                         </div>
                     )}
                 </div>
 
-                {/* Overdue & Alerts */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-                    <h2 className="text-xl font-bold text-primary-700 mb-4">Alerts & Notifications</h2>
+                <div className="card">
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">Alerts</h2>
                     {overdueInvoices.length === 0 ? (
                         <div className="text-center py-10">
-                            <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
-                            <p className="mt-3 font-semibold text-gray-900">All caught up!</p>
-                            <p className="text-gray-500">No overdue invoices</p>
+                            <CheckCircle className="mx-auto h-12 w-12 text-emerald-500" />
+                            <p className="mt-3 font-medium text-slate-900">All caught up</p>
+                            <p className="text-slate-500 text-sm">No overdue invoices</p>
                         </div>
                     ) : (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                             {overdueInvoices.map((invoice) => (
-                                <div
-                                    key={invoice.id}
-                                    className="p-4 bg-red-50 border border-red-200 rounded-xl"
-                                >
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <p className="font-semibold text-gray-900">{invoice.invoiceNumber}</p>
-                                            <p className="text-sm text-gray-500">{getClientName(invoice.clientId)}</p>
+                                <div key={invoice.id} className="p-4 bg-red-50 border border-red-100 rounded-xl">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <p className="font-medium text-slate-900">{invoice.invoiceNumber}</p>
+                                            <p className="text-sm text-slate-500">{getClientName(invoice.clientId)}</p>
                                             <p className="text-xs text-red-600 mt-1">
-                                                Due: {format(new Date(invoice.dueDate), 'MMM dd, yyyy')}
+                                                Due {format(new Date(invoice.dueDate), 'MMM dd, yyyy')}
                                             </p>
                                         </div>
-                                        <p className="font-bold text-red-600">{formatCurrency(invoice.total, invoice.currency || 'USD', true)}</p>
+                                        <p className="font-semibold text-red-600 flex-shrink-0">{formatCurrency(invoice.total)}</p>
                                     </div>
                                 </div>
                             ))}

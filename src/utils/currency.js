@@ -1,32 +1,22 @@
-// Currency configuration
-export const CURRENCIES = [
-    { code: 'USD', symbol: '$', name: 'US Dollar' },
-    { code: 'EUR', symbol: '€', name: 'Euro' },
-    { code: 'GBP', symbol: '£', name: 'British Pound' },
-    { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
-    { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
-    { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
-    { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
-    { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc' },
-    { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
-    { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
-    { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
-    { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
-    { code: 'MXN', symbol: 'MX$', name: 'Mexican Peso' },
-    { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
-    { code: 'HKD', symbol: 'HK$', name: 'Hong Kong Dollar' },
-];
+/** App uses Nigerian Naira only */
+export const APP_CURRENCY = 'NGN';
 
-// showNairaSign: true = show ₦, false = show NGN (for PDF)
-export const getCurrencySymbol = (code, showNairaSign = true) => {
-    const currency = CURRENCIES.find(c => c.code === code);
-    if (code === 'NGN') return showNairaSign ? '₦' : 'NGN';
-    return currency ? currency.symbol : '$';
+export const CURRENCY_INFO = {
+    code: 'NGN',
+    symbol: '₦',
+    name: 'Nigerian Naira',
 };
 
-// showNairaSign: true = show ₦, false = show NGN (for PDF)
-export const formatCurrency = (amount, currencyCode = 'USD', showNairaSign = true) => {
-    const symbol = getCurrencySymbol(currencyCode, showNairaSign);
-    // Use toLocaleString for comma separation
-    return `${symbol}${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+/** @param {number} amount */
+export const formatCurrency = (amount, showNairaSign = true) => {
+    const symbol = showNairaSign ? CURRENCY_INFO.symbol : CURRENCY_INFO.code;
+    const formatted = Number(amount).toLocaleString('en-NG', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+    return `${symbol}${formatted}`;
 };
+
+/** PDF and exports — code label instead of ₦ */
+export const getCurrencySymbol = (showNairaSign = true) =>
+    showNairaSign ? CURRENCY_INFO.symbol : CURRENCY_INFO.code;

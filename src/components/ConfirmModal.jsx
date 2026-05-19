@@ -8,7 +8,7 @@ export default function ConfirmModal({ open, onConfirm, onCancel, message }) {
                 <div className="mb-6 text-gray-900 text-center text-xl font-bold tracking-tight">{message || 'Are you sure?'}</div>
                 <div className="flex justify-center gap-4 mt-4">
                     <button
-                        className="bg-primary-600 hover:bg-primary-700 focus:ring-2 focus:ring-primary-400 text-white font-semibold px-6 py-2 rounded-lg shadow transition-colors duration-150"
+                        className="bg-brand hover:bg-brand-hover focus:ring-2 focus:ring-[rgb(var(--brand-ring)/0.3)] text-white font-medium px-6 py-2 rounded-xl shadow-sm transition-colors duration-150"
                         onClick={onConfirm}
                     >
                         Yes

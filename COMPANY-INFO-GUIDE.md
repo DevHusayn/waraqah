@@ -1,6 +1,6 @@
 # How to Customize Your Company Info
 
-Your Invoice Generator now has a **Settings page** where you can easily customize your company information!
+Waraqah now has a **Settings page** where you can easily customize your company information!
 
 ## 📍 How to Access Settings
 

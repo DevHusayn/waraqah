@@ -1,31 +1,45 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
-import { Plus, Trash2, Save, ArrowLeft } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { Plus, Trash2, Save, ArrowLeft, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { CURRENCIES, formatCurrency } from '../utils/currency';
+import { APP_CURRENCY, CURRENCY_INFO, formatCurrency } from '../utils/currency';
+import { getClientBusiness } from '../utils/clientHelpers';
 
 const CreateInvoice = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { clients, addInvoice, updateInvoice, invoices } = useInvoice();
     const { businessInfo } = useSettings();
+    const { showToast } = useToast();
+    const [saving, setSaving] = useState(false);
 
     const [formData, setFormData] = useState({
         invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
         clientId: '',
         date: format(new Date(), 'yyyy-MM-dd'),
         dueDate: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
-        items: [{ description: '', quantity: 1, rate: 0, amountPaid: 0 }],
+        items: [{ description: '', quantity: 1, rate: 0 }],
         notes: '',
         status: 'pending',
-        currency: businessInfo.defaultCurrency || 'USD',
-        taxRate: 0,
+        currency: APP_CURRENCY,
+        taxRate: businessInfo.taxRate ?? 10,
         isRecurring: false,
         recurringFrequency: 'monthly',
         recurringEndDate: '',
     });
+
+    useEffect(() => {
+        if (!id) {
+            setFormData((prev) => ({
+                ...prev,
+                currency: APP_CURRENCY,
+                taxRate: businessInfo.taxRate ?? prev.taxRate,
+            }));
+        }
+    }, [id, businessInfo.taxRate]);
 
     useEffect(() => {
         if (id) {
@@ -49,7 +63,7 @@ const CreateInvoice = () => {
     const addItem = () => {
         setFormData({
             ...formData,
-            items: [...formData.items, { description: '', quantity: 1, rate: 0, amountPaid: 0 }],
+            items: [...formData.items, { description: '', quantity: 1, rate: 0 }],
         });
     };
 
@@ -82,29 +96,38 @@ const CreateInvoice = () => {
 
     // Removed partial payment logic
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!formData.clientId) {
-            alert('Please select a client');
+            showToast('Please select a client', 'error');
             return;
         }
 
         const invoiceData = {
             ...formData,
+            currency: APP_CURRENCY,
             subtotal: calculateSubtotal(),
             tax: calculateTax(),
             total: calculateTotal(),
             balance: calculateBalance(),
         };
 
-        if (id) {
-            updateInvoice(id, invoiceData);
-        } else {
-            addInvoice(invoiceData);
+        setSaving(true);
+        try {
+            if (id) {
+                await updateInvoice(id, invoiceData);
+                showToast('Invoice updated successfully', 'success');
+            } else {
+                await addInvoice(invoiceData);
+                showToast('Invoice created successfully', 'success');
+            }
+            navigate('/invoices');
+        } catch (err) {
+            showToast(err.message || 'Failed to save invoice', 'error');
+        } finally {
+            setSaving(false);
         }
-
-        navigate('/invoices');
     };
 
     const selectedClient = clients.find(c => c.id === formData.clientId);
@@ -119,10 +142,10 @@ const CreateInvoice = () => {
                     <ArrowLeft size={18} />
                     Back to Invoices
                 </button>
-                <h1 className="text-3xl font-bold text-gray-900">
-                    {id ? 'Edit Invoice' : 'Create New Invoice'}
+                <h1 className="page-title">
+                    {id ? 'Edit invoice' : 'Create invoice'}
                 </h1>
-                <p className="mt-2 text-gray-600">Fill in the details below to generate an invoice</p>
+                <p className="page-subtitle">Fill in the details below</p>
             </div>
 
             <form onSubmit={handleSubmit}>
@@ -156,22 +179,6 @@ const CreateInvoice = () => {
                                         <option value="paid">Paid</option>
                                         <option value="overdue">Overdue</option>
                                         <option value="cancelled">Cancelled</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="label">Currency</label>
-                                    <select
-                                        name="currency"
-                                        value={formData.currency}
-                                        onChange={handleChange}
-                                        className="input-field"
-                                        required
-                                    >
-                                        {CURRENCIES.map(currency => (
-                                            <option key={currency.code} value={currency.code}>
-                                                {currency.symbol} {currency.code}
-                                            </option>
-                                        ))}
                                     </select>
                                 </div>
                                 <div>
@@ -262,13 +269,12 @@ const CreateInvoice = () => {
                         <div className="card">
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-xl font-semibold text-gray-900">Client Information</h2>
-                                <a
-                                    href="/clients"
-                                    className="text-primary-600 text-sm font-medium hover:underline"
-                                    style={{ whiteSpace: 'nowrap' }}
+                                <Link
+                                    to="/clients"
+                                    className="text-primary-600 text-sm font-medium hover:underline whitespace-nowrap"
                                 >
                                     + Add New Client
-                                </a>
+                                </Link>
                             </div>
                             <div>
                                 <label className="label">Select Client</label>
@@ -282,7 +288,7 @@ const CreateInvoice = () => {
                                     <option value="">Choose a client...</option>
                                     {clients.map(client => (
                                         <option key={client.id} value={client.id}>
-                                            {client.name} - {client.company}
+                                            {client.name}{getClientBusiness(client) ? ` — ${getClientBusiness(client)}` : ''}
                                         </option>
                                     ))}
                                 </select>
@@ -335,7 +341,7 @@ const CreateInvoice = () => {
                                                 />
                                             </div>
                                             <div className="md:col-span-3">
-                                                <label className="label">Rate ({CURRENCIES.find(c => c.code === formData.currency)?.symbol})</label>
+                                                <label className="label">Rate ({CURRENCY_INFO.symbol})</label>
                                                 <input
                                                     type="number"
                                                     value={item.rate}
@@ -351,7 +357,7 @@ const CreateInvoice = () => {
                                                 <div className="flex flex-col justify-end h-full">
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-sm font-medium text-gray-700">
-                                                            {formatCurrency(item.quantity * item.rate, formData.currency, true)}
+                                                            {formatCurrency(item.quantity * item.rate)}
                                                         </span>
                                                         {formData.items.length > 1 && (
                                                             <button
@@ -395,7 +401,9 @@ const CreateInvoice = () => {
                                 <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                                     <p className="text-xs text-gray-500 uppercase font-medium mb-1">Bill To</p>
                                     <p className="font-semibold text-gray-900">{selectedClient.name}</p>
-                                    <p className="text-sm text-gray-600">{selectedClient.company}</p>
+                                    {getClientBusiness(selectedClient) && (
+                                        <p className="text-sm text-gray-600">{getClientBusiness(selectedClient)}</p>
+                                    )}
                                     <p className="text-sm text-gray-600">{selectedClient.email}</p>
                                 </div>
                             )}
@@ -403,26 +411,26 @@ const CreateInvoice = () => {
                             <div className="space-y-3 mb-6">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Subtotal:</span>
-                                    <span className="font-medium text-gray-900">{formatCurrency(calculateSubtotal(), formData.currency, true)}</span>
+                                    <span className="font-medium text-gray-900">{formatCurrency(calculateSubtotal())}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Tax ({formData.taxRate}%):</span>
-                                    <span className="font-medium text-gray-900">{formatCurrency(calculateTax(), formData.currency, true)}</span>
+                                    <span className="font-medium text-gray-900">{formatCurrency(calculateTax())}</span>
                                 </div>
                                 <div className="pt-3 border-t border-gray-200">
                                     <div className="flex justify-between mb-2">
                                         <span className="text-lg font-semibold text-gray-900">Total:</span>
-                                        <span className="text-2xl font-bold text-primary-600">
-                                            {formatCurrency(calculateTotal(), formData.currency, true)}
+                                        <span className="text-2xl font-bold text-brand">
+                                            {formatCurrency(calculateTotal())}
                                         </span>
                                     </div>
                                     {/* Removed partial payment summary */}
                                 </div>
                             </div>
 
-                            <button type="submit" className="btn-primary w-full">
-                                <Save size={18} />
-                                {id ? 'Update Invoice' : 'Create Invoice'}
+                            <button type="submit" className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed" disabled={saving}>
+                                {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                                {saving ? 'Saving...' : id ? 'Update Invoice' : 'Create Invoice'}
                             </button>
                         </div>
                     </div>

@@ -4,7 +4,9 @@ import AlertModal from '../components/AlertModal';
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { CURRENCIES } from '../utils/currency';
+import { APP_CURRENCY } from '../utils/currency';
+import { applyBrandTheme } from '../utils/brandTheme';
+import { APP_NAME } from '../constants/brand';
 
 // Unified URL Configuration
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -22,7 +24,7 @@ function Auth() {
         businessEmail: '',
         phone: '',
         website: '',
-        defaultCurrency: 'USD',
+        defaultCurrency: APP_CURRENCY,
         brandColor: '#0ea5e9',
     };
     const [form, setForm] = useState(initialForm);
@@ -53,6 +55,10 @@ function Auth() {
         return () => window.removeEventListener('app-logout', resetForm);
     }, []);
 
+    useEffect(() => {
+        applyBrandTheme(isLogin ? '#0284c7' : form.brandColor);
+    }, [isLogin, form.brandColor]);
+
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
@@ -78,7 +84,7 @@ function Auth() {
                     email: form.businessEmail,
                     phone: form.phone,
                     website: form.website,
-                    defaultCurrency: form.defaultCurrency,
+                    defaultCurrency: APP_CURRENCY,
                     brandColor: form.brandColor,
                 };
             }
@@ -143,8 +149,8 @@ function Auth() {
     };
 
     return (
-        <div className="relative min-h-screen w-full flex flex-col items-center justify-center" style={{ minHeight: '100vh' }}>
-            <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-blue-100 via-white to-blue-200 -z-10"></div>
+        <div className="relative min-h-screen w-full flex flex-col items-center justify-center bg-slate-50">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--brand-subtle)_0%,_transparent_50%)] pointer-events-none" aria-hidden />
             <AlertModal open={alert.open} message={alert.message} type={alert.type} onClose={() => setAlert({ ...alert, open: false })} />
 
             {/* Password Reset Modal */}
@@ -158,7 +164,7 @@ function Auth() {
                                 <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
                                 <input
                                     type="email"
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all bg-white/90"
+                                    className="input-field"
                                     placeholder="Enter your email"
                                     value={resetEmail}
                                     onChange={e => setResetEmail(e.target.value)}
@@ -182,19 +188,19 @@ function Auth() {
             <div className="flex items-center justify-center min-h-screen p-4 sm:p-10 bg-transparent w-full">
                 <div className="w-full max-w-md">
                     <div className="md:hidden flex justify-center mb-8">
-                        <span className="text-3xl font-extrabold text-primary-700 font-mono">InvoicePro</span>
+                        <span className="text-2xl font-semibold text-brand">{APP_NAME}</span>
                     </div>
 
-                    <div className="mb-10 text-center md:text-left">
-                        <h1 className="text-4xl font-extrabold text-gray-900 mb-2 tracking-tight drop-shadow-sm">
+                    <div className="mb-8 text-center md:text-left">
+                        <h1 className="page-title text-3xl sm:text-4xl mb-2">
                             {isLogin ? 'Welcome back' : 'Create account'}
                         </h1>
-                        <p className="text-gray-500 text-lg">
-                            {isLogin ? 'Enter your details to access your dashboard.' : 'Register to start managing your invoices professionally.'}
+                        <p className="page-subtitle">
+                            {isLogin ? 'Sign in to manage your invoices.' : 'Register to start invoicing professionally.'}
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6 bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-gray-100">
+                    <form onSubmit={handleSubmit} className="card space-y-6 shadow-card-md">
 
                         <div className="space-y-5">
                             {/* Email */}
@@ -202,7 +208,7 @@ function Auth() {
                                 <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
                                 <input
                                     type="email" name="email" value={form.email} onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all bg-white/90"
+                                    className="input-field"
                                     placeholder="name@company.com" required
                                 />
                             </div>
@@ -212,7 +218,7 @@ function Auth() {
                                 <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
                                 <input
                                     type={showPassword ? "text" : "password"} name="password" value={form.password} onChange={handleChange}
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all bg-white/90"
+                                    className="input-field"
                                     placeholder="••••••••" required
                                 />
                                 <button
@@ -231,7 +237,7 @@ function Auth() {
                                         <label className="block text-sm font-semibold text-gray-700 mb-1">Business Name</label>
                                         <input
                                             type="text" name="name" value={form.name} onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all bg-white/90"
+                                            className="input-field"
                                             placeholder="Your Business Name" required
                                         />
                                     </div>
@@ -240,7 +246,7 @@ function Auth() {
                                         <label className="block text-sm font-semibold text-gray-700 mb-1">Business Email</label>
                                         <input
                                             type="email" name="businessEmail" value={form.businessEmail} onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all bg-white/90"
+                                            className="input-field"
                                             placeholder="business@email.com" required
                                         />
                                     </div>
@@ -249,7 +255,7 @@ function Auth() {
                                         <label className="block text-sm font-semibold text-gray-700 mb-1">Business Address</label>
                                         <input
                                             type="text" name="address" value={form.address} onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all bg-white/90"
+                                            className="input-field"
                                             placeholder="123 Main St, City" required
                                         />
                                     </div>
@@ -258,7 +264,7 @@ function Auth() {
                                         <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
                                         <input
                                             type="tel" name="phone" value={form.phone} onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all bg-white/90"
+                                            className="input-field"
                                             placeholder="+1 234 567 8900" required
                                         />
                                     </div>
@@ -267,24 +273,11 @@ function Auth() {
                                         <label className="block text-sm font-semibold text-gray-700 mb-1">Website</label>
                                         <input
                                             type="url" name="website" value={form.website} onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all bg-white/90"
+                                            className="input-field"
                                             placeholder="https://yourbusiness.com"
                                         />
                                     </div>
-                                    {/* Default Currency */}
-                                    <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Default Currency</label>
-                                        <select
-                                            name="defaultCurrency" value={form.defaultCurrency} onChange={handleChange}
-                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all bg-white/90"
-                                            required
-                                        >
-                                            {Object.entries(CURRENCIES).map(([code, { symbol, name }]) => (
-                                                <option key={code} value={code}>{symbol} {code} - {name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    {/* Brand Color */}
+{/* Brand Color */}
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-1">Brand Color</label>
                                         <input
@@ -311,11 +304,8 @@ function Auth() {
 
                         {error && <p className="text-red-500 text-sm text-center font-medium bg-red-50 py-2 rounded-lg">{error}</p>}
 
-                        <button
-                            type="submit"
-                            className="w-full bg-gradient-to-r from-primary-600 via-blue-600 to-primary-700 hover:from-primary-700 hover:to-blue-700 text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-primary-200 transition-all transform hover:-translate-y-0.5 text-lg tracking-wide"
-                        >
-                            {isLogin ? 'Sign In' : 'Register'}
+                        <button type="submit" className="btn-primary w-full py-3.5 text-base">
+                            {isLogin ? 'Sign in' : 'Create account'}
                         </button>
                     </form>
 
@@ -323,7 +313,7 @@ function Auth() {
                         {isLogin ? "Don't have an account?" : "Already have an account?"}
                         <button
                             onClick={() => setIsLogin(!isLogin)}
-                            className="ml-2 font-bold text-primary-600 hover:underline"
+                            className="ml-2 font-medium text-brand hover:underline"
                         >
                             {isLogin ? 'Register' : 'Sign In'}
                         </button>

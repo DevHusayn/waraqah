@@ -3,7 +3,9 @@ import { useSettings } from '../context/SettingsContext';
 import { apiFetch } from '../utils/api';
 // import AlertModal from '../components/AlertModal';
 import { Building2, Save, DollarSign, Edit, X } from 'lucide-react';
-import { CURRENCIES } from '../utils/currency';
+import { CURRENCY_INFO, APP_CURRENCY } from '../utils/currency';
+import { isPremiumUser } from '../utils/premium';
+import PremiumLogoSettings from '../components/PremiumLogoSettings';
 
 const Settings = () => {
     const { businessInfo, updateBusinessInfo } = useSettings();
@@ -41,14 +43,28 @@ const Settings = () => {
         if (!formData.address) newErrors.address = 'Address is required.';
         if (!formData.email) newErrors.email = 'Email is required.';
         if (!formData.phone) newErrors.phone = 'Phone is required.';
-        if (!formData.defaultCurrency) newErrors.defaultCurrency = 'Currency is required.';
         if (!formData.brandColor) newErrors.brandColor = 'Brand color is required.';
         setErrors(newErrors);
         if (Object.keys(newErrors).length > 0) return;
-        updateBusinessInfo(formData);
-        setIsEditing(false);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
+        const payload = { ...formData, defaultCurrency: APP_CURRENCY };
+        if (!isPremiumUser(formData)) {
+            payload.businessLogo = '';
+        }
+        updateBusinessInfo(payload)
+            .then(() => {
+                setIsEditing(false);
+                setSaved(true);
+                setTimeout(() => setSaved(false), 3000);
+            })
+            .catch((err) => {
+                if (import.meta.env.DEV) {
+                    setIsEditing(false);
+                    setSaved(true);
+                    setTimeout(() => setSaved(false), 3000);
+                } else {
+                    setErrors({ submit: err.message });
+                }
+            });
     };
 
     const handleEdit = () => {
@@ -61,17 +77,12 @@ const Settings = () => {
         setIsEditing(false);
     };
 
-    const getCurrencyName = (code) => {
-        const currency = CURRENCIES.find(c => c.code === code);
-        return currency ? `${currency.symbol} ${currency.name} (${currency.code})` : code;
-    };
-
     return (
         <div className="max-w-3xl mx-auto">
             <div className="mb-6 flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Business Settings</h1>
-                    <p className="mt-2 text-gray-600">Configure your business information for invoices</p>
+                    <h1 className="page-title">Business settings</h1>
+                    <p className="page-subtitle">Configure your business information for invoices</p>
                 </div>
                 {!isEditing && (
                     <button onClick={handleEdit} className="btn-secondary">
@@ -138,9 +149,10 @@ const Settings = () => {
                         <div className="pt-8 border-t border-gray-200">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
-                                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Default Currency</p>
-                                    <p className="text-base font-medium text-gray-900">{getCurrencyName(businessInfo.defaultCurrency || 'USD')}</p>
-                                    {errors.phone && <p className="text-xs text-red-600 mt-1">{errors.phone}</p>}
+                                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Currency</p>
+                                    <p className="text-base font-medium text-gray-900">
+                                        {CURRENCY_INFO.symbol} {CURRENCY_INFO.name} ({CURRENCY_INFO.code})
+                                    </p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Brand Color</p>
@@ -149,9 +161,14 @@ const Settings = () => {
                                         style={{ backgroundColor: businessInfo.brandColor || '#0ea5e9' }}
                                     />
                                 </div>
-                                {errors.defaultCurrency && <p className="text-xs text-red-600 mt-1">{errors.defaultCurrency}</p>}
                             </div>
                         </div>
+
+                        <PremiumLogoSettings
+                            formData={businessInfo}
+                            setFormData={setFormData}
+                            isEditing={false}
+                        />
                     </div>
                 ) : (
                     // Edit Mode - Show form
@@ -224,25 +241,7 @@ const Settings = () => {
                                     placeholder="https://www.yourbusiness.com"
                                 />
                             </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Default Currency <span className="text-red-500">*</span></label>
-                                <select
-                                    name="defaultCurrency"
-                                    value={formData.defaultCurrency || 'USD'}
-                                    onChange={handleChange}
-                                    className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition bg-gray-50"
-                                    required
-                                >
-                                    {CURRENCIES.map(currency => (
-                                        <option key={currency.code} value={currency.code}>
-                                            {currency.symbol} - {currency.name} ({currency.code})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
+<div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Brand Color <span className="text-red-500">*</span></label>
                                 <div className="flex items-center gap-3">
                                     <input
@@ -291,8 +290,14 @@ const Settings = () => {
                             </div>
                         </div>
 
+                        <PremiumLogoSettings
+                            formData={formData}
+                            setFormData={setFormData}
+                            isEditing
+                        />
+
                         <div className="mt-8 flex items-center gap-4">
-                            <button type="submit" className="bg-primary-600 hover:bg-primary-700 text-white font-semibold flex items-center gap-2 px-6 py-3 rounded-xl shadow-md transition">
+                            <button type="submit" className="btn-primary">
                                 <Save size={18} />
                                 Save Changes
                             </button>
@@ -307,9 +312,9 @@ const Settings = () => {
                 <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
                         <DollarSign size={18} />
-                        Currency & Branding
+                        Currency & branding
                     </h3>
-                    <p className="text-sm text-blue-800">Your default currency will be pre-selected when creating invoices. Brand color appears on your PDF invoice headers.</p>
+                    <p className="text-sm text-blue-800">All amounts are in Nigerian Naira (₦). Premium users can add a logo watermark on PDF invoices.</p>
                 </div>
             </div>
         </div>

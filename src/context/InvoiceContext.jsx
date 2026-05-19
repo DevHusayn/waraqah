@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { apiFetch } from '../utils/api';
+import { invoicesNeedingOverdueSync } from '../utils/invoiceHelpers';
 
 const InvoiceContext = createContext();
 
@@ -18,6 +19,25 @@ export const InvoiceProvider = ({ children }) => {
     const [clients, setClients] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const mapInvoice = (i) => ({ ...i, id: i._id || i.id });
+    const mapClient = (c) => ({ ...c, id: c._id || c.id });
+
+    const syncOverdueStatuses = async (invoiceList) => {
+        const toUpdate = invoicesNeedingOverdueSync(invoiceList);
+        if (toUpdate.length === 0) return invoiceList;
+
+        await Promise.all(
+            toUpdate.map((inv) =>
+                apiFetch(`/invoices/${inv.id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ ...inv, status: 'overdue' }),
+                })
+            )
+        );
+        const refreshed = await apiFetch('/invoices');
+        return refreshed.map(mapInvoice);
+    };
+
     // Helper to fetch all user data
     const fetchUserData = async () => {
         setLoading(true);
@@ -26,9 +46,11 @@ export const InvoiceProvider = ({ children }) => {
                 apiFetch('/invoices'),
                 apiFetch('/clients'),
             ]);
-            setInvoices(inv.map(i => ({ ...i, id: i._id })));
-            setClients(cli.map(c => ({ ...c, id: c._id })));
-        } catch (e) {
+            let mappedInvoices = inv.map(mapInvoice);
+            mappedInvoices = await syncOverdueStatuses(mappedInvoices);
+            setInvoices(mappedInvoices);
+            setClients(cli.map(mapClient));
+        } catch {
             setInvoices([]);
             setClients([]);
         } finally {

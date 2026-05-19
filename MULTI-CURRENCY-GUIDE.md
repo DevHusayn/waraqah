@@ -1,68 +1,58 @@
-# 💰 Multi-Currency Support Guide
+# 💰 Currency Guide (Nigerian Naira)
 
-Your Invoice Generator now supports **15+ international currencies**!
+Waraqah uses **Nigerian Naira (NGN)** only. All invoices, dashboard totals, and PDF exports display amounts in **₦**.
 
-## 🌍 Supported Currencies
+## 🇳🇬 Currency
 
-- **USD** ($) - US Dollar
-- **EUR** (€) - Euro
-- **GBP** (£) - British Pound
-- **NGN** (₦) - Nigerian Naira
-- **JPY** (¥) - Japanese Yen
-- **CAD** (C$) - Canadian Dollar
-- **AUD** (A$) - Australian Dollar
-- **CHF** (CHF) - Swiss Franc
-- **CNY** (¥) - Chinese Yuan
-- **INR** (₹) - Indian Rupee
-- **ZAR** (R) - South African Rand
-- **BRL** (R$) - Brazilian Real
-- **MXN** (MX$) - Mexican Peso
-- **SGD** (S$) - Singapore Dollar
-- **HKD** (HK$) - Hong Kong Dollar
+| Code | Symbol | Name           |
+|------|--------|----------------|
+| NGN  | ₦      | Nigerian Naira |
 
-## ⚙️ How to Set Default Currency
+Amounts are formatted with Nigerian locale grouping (e.g. **₦1,234,567.89**).
 
-1. Go to **Settings** page
-2. Find **Default Currency** dropdown
-3. Select your preferred currency
-4. Click **Save Changes**
+## ⚙️ Where currency is set
 
-Your selected currency will be pre-selected when creating new invoices!
+You do **not** choose a currency in Settings or when creating an invoice. The app always uses NGN.
 
-## 💵 Creating Invoices with Different Currencies
+- **Settings** shows currency as read-only: *₦ Nigerian Naira (NGN)*
+- **New invoices** are saved with `currency: NGN` automatically
+- **Business profile** stores `defaultCurrency: NGN` for API compatibility
+
+## 💵 Creating invoices
 
 When creating or editing an invoice:
 
-1. Fill in invoice details
-2. Select **Currency** from the dropdown (next to Status)
-3. Set **Tax Rate** (can be customized per invoice)
-4. Add items - prices will show in selected currency
-5. All totals automatically display with correct currency symbol
+1. Fill in invoice details (client, dates, status)
+2. Set **Tax Rate** (percentage per invoice)
+3. Add line items — rates and totals appear in **₦**
+4. Save or download PDF — all amounts stay in naira
+
+There is no currency dropdown on the invoice form.
 
 ## 🎯 Features
 
-✅ **Per-Invoice Currency** - Each invoice can use a different currency
-✅ **Custom Tax Rates** - Set tax percentage per invoice
-✅ **Automatic Formatting** - Currency symbols display correctly everywhere:
-   - Dashboard stats
-   - Invoice list
-   - Invoice creation form
-   - PDF exports
+✅ **Consistent formatting** — ₦ on dashboard, invoice list, create/edit form, and PDFs  
+✅ **Custom tax rates** — Set tax percentage per invoice  
+✅ **PDF exports** — Line items and totals use the **NGN** code label in PDFs (e.g. `NGN 10,000.00`) for clarity when printing  
 
-✅ **Professional PDFs** - Generated PDFs show the correct currency symbol throughout
+## 📊 Dashboard display
 
-## 📊 Dashboard Display
-
-- Revenue stats show amounts in your **default currency**
-- Individual invoices display in their **own currency**
-- Mixed currency support - no conversion needed!
+- **Revenue (Paid)** and **Pending Revenue** sum invoice totals in naira
+- Each invoice row shows its total as **₦**
+- Older invoices that were stored with another currency code are still **displayed** using naira formatting
 
 ## 💡 Tips
 
-- **Default Currency**: Set this to your primary business currency in Settings
-- **Tax Rate**: Common rates: 0% (no tax), 5%, 10%, 15%, 20% - adjust as needed
-- **Multi-Currency**: Great for international clients - bill them in their local currency!
+- **Tax rate**: Common values are 0%, 5%, 7.5%, 10%, or 15% — set per invoice as needed
+- **Rates**: Enter item rates in naira (no conversion step)
+- **PDFs**: Share or print PDFs; clients see amounts in Nigerian Naira
+
+## 🔧 For developers
+
+- Currency logic lives in `src/utils/currency.js`
+- Constants: `APP_CURRENCY` (`NGN`), `CURRENCY_INFO`, `formatCurrency(amount)`
+- Do not reintroduce multi-currency UI without updating this guide and the Settings/invoice flows
 
 ---
 
-**Note**: This system doesn't do currency conversion. Each invoice stores its amount in the selected currency independently.
+**Note:** Waraqah does not perform currency conversion. All amounts are treated as Nigerian Naira.

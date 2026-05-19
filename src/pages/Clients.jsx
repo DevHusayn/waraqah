@@ -2,11 +2,13 @@ import { useState } from 'react';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import { useInvoice } from '../context/InvoiceContext';
+import { useToast } from '../context/ToastContext';
 import Spinner from '../components/Spinner';
 import { Plus, Edit, Trash2, Building2, Mail, Phone, MapPin } from 'lucide-react';
 
 const Clients = () => {
     const { clients, addClient, updateClient, deleteClient, loading } = useInvoice();
+    const { showToast } = useToast();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingClient, setEditingClient] = useState(null);
     const [formData, setFormData] = useState({
@@ -29,10 +31,10 @@ const Clients = () => {
         try {
             if (editingClient) {
                 await updateClient(editingClient.id, formData);
-                setAlert({ open: true, message: 'Client updated successfully!', type: 'success' });
+                showToast('Client updated successfully', 'success');
             } else {
                 await addClient(formData);
-                setAlert({ open: true, message: 'Client added successfully!', type: 'success' });
+                showToast('Client added successfully', 'success');
             }
             closeModal();
         } catch (err) {
@@ -77,7 +79,7 @@ const Clients = () => {
         const id = confirm.clientId;
         try {
             await deleteClient(id);
-            setAlert({ open: true, message: 'Client deleted successfully!', type: 'success' });
+            showToast('Client deleted successfully', 'success');
         } catch (err) {
             setAlert({ open: true, message: err.message || 'Failed to delete client.', type: 'error' });
         }
@@ -96,8 +98,8 @@ const Clients = () => {
             <div className="max-w-7xl mx-auto">
                 <div className="flex items-center justify-between mb-6">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Clients</h1>
-                        <p className="mt-2 text-gray-600">Manage your client database</p>
+                        <h1 className="page-title">Clients</h1>
+                        <p className="page-subtitle">Manage your client database</p>
                     </div>
                     <button onClick={() => openModal()} className="btn-primary">
                         <Plus size={20} />
@@ -172,7 +174,7 @@ const Clients = () => {
                 {isModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                         <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-gray-100">
-                            <h2 className="text-2xl font-extrabold text-primary-700 mb-6 text-center">
+                            <h2 className="text-xl font-semibold text-slate-900 mb-6 text-center">
                                 {editingClient ? 'Edit Client' : 'Add New Client'}
                             </h2>
                             <form onSubmit={handleSubmit} className="space-y-5">
@@ -234,7 +236,7 @@ const Clients = () => {
                                     <button type="button" onClick={closeModal} className="w-1/2 py-3 rounded-xl bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition">
                                         Cancel
                                     </button>
-                                    <button type="submit" className="w-1/2 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 transition shadow-md">
+                                    <button type="submit" className="btn-primary w-1/2 py-3">
                                         {editingClient ? 'Update' : 'Add'} Client
                                     </button>
                                 </div>

@@ -2,24 +2,28 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { getCurrencySymbol } from './currency';
+import { getClientBusiness } from './clientHelpers';
+import { isPremiumUser } from './premium';
+import { drawPremiumLogoWatermark } from './pdfLogo';
 
-export const generatePDF = (invoice, client, businessInfo) => {
+export const generatePDF = async (invoice, client, businessInfo) => {
     try {
-        console.log('=== PDF Generation Started ===');
-        console.log('Invoice:', invoice);
-        console.log('Client:', client);
-        console.log('Business Info:', businessInfo);
-
-        // Validate required data
         if (!invoice || !client || !businessInfo) {
-            console.error('Missing required data:', { invoice, client, businessInfo });
             throw new Error('Missing required data for PDF generation');
         }
 
         const doc = new jsPDF();
 
+        if (isPremiumUser(businessInfo) && businessInfo.businessLogo) {
+            try {
+                await drawPremiumLogoWatermark(doc, businessInfo.businessLogo);
+            } catch {
+                /* continue without watermark if logo fails */
+            }
+        }
+
         // Get currency symbol (use 'NGN' for PDF, not ₦)
-        const currencySymbol = getCurrencySymbol(invoice.currency || 'USD', false);
+        const currencySymbol = getCurrencySymbol(false);
 
         // Helper function to convert hex color to RGB
         const hexToRgb = (hex) => {
@@ -106,7 +110,7 @@ export const generatePDF = (invoice, client, businessInfo) => {
         doc.setFontSize(9);
         doc.setFont(undefined, 'normal');
         doc.setTextColor(...grayColor);
-        doc.text(String(client.company || ''), 20, infoStartY + 19);
+        doc.text(String(getClientBusiness(client) || ''), 20, infoStartY + 19);
         doc.text(String(client.email || ''), 20, infoStartY + 24);
         if (client.phone) {
             doc.text(String(client.phone), 20, infoStartY + 29);
@@ -151,7 +155,6 @@ export const generatePDF = (invoice, client, businessInfo) => {
 
         // Validate items array
         if (!invoice.items || !Array.isArray(invoice.items) || invoice.items.length === 0) {
-            console.error('Invalid invoice items:', invoice.items);
             throw new Error('Invoice must have at least one item');
         }
 
@@ -294,18 +297,9 @@ export const generatePDF = (invoice, client, businessInfo) => {
         doc.setFillColor(...primaryColor);
         doc.rect(0, 294, 210, 3, 'F');
 
-        // Save
-        console.log('=== About to save PDF ===');
-        console.log('Invoice Number:', invoice.invoiceNumber);
         const fileName = `${String(invoice.invoiceNumber || 'invoice')}.pdf`;
         doc.save(fileName);
-        console.log('=== PDF saved successfully ===');
     } catch (error) {
-        console.error('=== PDF Generation Error ===');
-        console.error('Error type:', error.name);
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
-        console.error('Full error:', error);
         throw error;
     }
 }

@@ -1,31 +1,33 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import { useNavigate } from 'react-router-dom';
 import { useInvoice } from '../context/InvoiceContext';
+import { useToast } from '../context/ToastContext';
 import Spinner from '../components/Spinner';
 import { useSettings } from '../context/SettingsContext';
-import { Plus, Edit, Trash2, Download, FileText, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Download, FileText, Search, ArrowUpDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { generatePDF } from '../utils/pdfGenerator';
 import { formatCurrency } from '../utils/currency';
+import { getClientBusiness } from '../utils/clientHelpers';
+import { filterInvoicesBySearch, sortInvoices } from '../utils/invoiceHelpers';
+import PageHeader from '../components/PageHeader';
 
 const Invoices = () => {
     const navigate = useNavigate();
     const { invoices, clients, deleteInvoice, loading } = useInvoice();
     const { businessInfo } = useSettings();
+    const { showToast } = useToast();
     const [filter, setFilter] = useState('all');
+    const [search, setSearch] = useState('');
+    const [sortBy, setSortBy] = useState('newest');
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [confirm, setConfirm] = useState({ open: false, invoiceId: null });
 
     const getClientName = (clientId) => {
         const client = clients.find(c => c.id === clientId);
         return client ? client.name : 'Unknown Client';
-    };
-
-    const getClientCompany = (clientId) => {
-        const client = clients.find(c => c.id === clientId);
-        return client ? client.company : '';
     };
 
     const getStatusColor = (status) => {
@@ -46,29 +48,32 @@ const Invoices = () => {
         const id = confirm.invoiceId;
         try {
             await deleteInvoice(id);
-            setAlert({ open: true, message: 'Invoice deleted successfully!', type: 'success' });
+            showToast('Invoice deleted successfully', 'success');
         } catch (err) {
             setAlert({ open: true, message: err.message || 'Failed to delete invoice.', type: 'error' });
         }
         setConfirm({ open: false, invoiceId: null });
     };
 
-    const handleDownload = (invoice) => {
+    const handleDownload = async (invoice) => {
         const client = clients.find(c => c.id === invoice.clientId);
         if (!client) {
             setAlert({ open: true, message: 'Client data not found for this invoice.' });
             return;
         }
         try {
-            generatePDF(invoice, client, businessInfo);
+            await generatePDF(invoice, client, businessInfo);
+            showToast('PDF downloaded', 'success');
         } catch (error) {
             setAlert({ open: true, message: `Failed to generate PDF: ${error.message}` });
         }
     };
 
-    const filteredInvoices = filter === 'all'
-        ? invoices
-        : invoices.filter(inv => inv.status === filter);
+    const displayedInvoices = useMemo(() => {
+        let list = filter === 'all' ? invoices : invoices.filter(inv => inv.status === filter);
+        list = filterInvoicesBySearch(list, search, clients);
+        return sortInvoices(list, sortBy);
+    }, [invoices, clients, filter, search, sortBy]);
 
     return (
         <>
@@ -79,28 +84,53 @@ const Invoices = () => {
                 onConfirm={confirmDelete}
                 onCancel={() => setConfirm({ open: false, invoiceId: null })}
             />
-            <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-primary-700">Invoices</h1>
-                        <p className="mt-2 text-gray-500 text-lg">Manage and track all your invoices</p>
-                    </div>
-                    <button onClick={() => navigate('/invoices/create')} className="bg-primary-600 hover:bg-primary-700 text-white font-semibold flex items-center gap-2 px-6 py-3 rounded-xl shadow-md transition">
+            <div>
+                <PageHeader title="Invoices" subtitle="Manage and track all your invoices">
+                    <button type="button" onClick={() => navigate('/invoices/create')} className="btn-primary">
                         <Plus size={20} />
-                        Create Invoice
+                        Create invoice
                     </button>
+                </PageHeader>
+
+                {/* Search & sort */}
+                <div className="mb-6 flex flex-col sm:flex-row gap-3">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <input
+                            type="search"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Search by invoice #, client, or amount..."
+                            className="input-field pl-10"
+                            aria-label="Search invoices"
+                        />
+                    </div>
+                    <div className="relative sm:w-52">
+                        <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="input-field pl-9 appearance-none cursor-pointer"
+                            aria-label="Sort invoices"
+                        >
+                            <option value="newest">Newest first</option>
+                            <option value="oldest">Oldest first</option>
+                            <option value="dueDate">Due date</option>
+                            <option value="amountHigh">Amount (high to low)</option>
+                            <option value="amountLow">Amount (low to high)</option>
+                        </select>
+                    </div>
                 </div>
+
                 {/* Filter Tabs */}
-                <div className="mb-8 flex justify-center">
-                    <div className="inline-flex bg-gray-100 rounded-full shadow-sm p-1">
+                <div className="mb-8 -mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto">
+                    <div className="inline-flex min-w-min gap-1 bg-slate-100 rounded-xl p-1">
                         {['all', 'pending', 'paid', 'overdue', 'cancelled'].map((status) => (
                             <button
                                 key={status}
+                                type="button"
                                 onClick={() => setFilter(status)}
-                                className={`px-5 py-2 rounded-full font-semibold capitalize transition-colors whitespace-nowrap text-sm focus:outline-none ${filter === status
-                                    ? 'bg-primary-600 text-white shadow'
-                                    : 'text-gray-700 hover:bg-primary-100'
-                                    }`}
+                                className={`filter-pill ${filter === status ? 'filter-pill-active' : 'filter-pill-inactive'}`}
                             >
                                 {status}
                                 {status === 'all' && ` (${invoices.length})`}
@@ -109,21 +139,28 @@ const Invoices = () => {
                         ))}
                     </div>
                 </div>
+
                 {loading ? (
                     <div className="py-24 flex justify-center items-center"><Spinner /></div>
-                ) : filteredInvoices.length === 0 ? (
-                    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 text-center py-16 px-4">
+                ) : displayedInvoices.length === 0 ? (
+                    <div className="card text-center py-16 px-4">
                         <FileText className="mx-auto h-14 w-14 text-gray-300" />
                         <h3 className="mt-5 text-xl font-bold text-gray-900">
-                            {filter === 'all' ? 'No invoices yet' : `No ${filter} invoices`}
+                            {search
+                                ? 'No matching invoices'
+                                : filter === 'all'
+                                    ? 'No invoices yet'
+                                    : `No ${filter} invoices`}
                         </h3>
                         <p className="mt-2 text-gray-500 text-base">
-                            {filter === 'all'
-                                ? 'Create your first invoice to get started'
-                                : `You don't have any ${filter} invoices`}
+                            {search
+                                ? 'Try a different search term'
+                                : filter === 'all'
+                                    ? 'Create your first invoice to get started'
+                                    : `You don't have any ${filter} invoices`}
                         </p>
-                        {filter === 'all' && (
-                            <button onClick={() => navigate('/invoices/create')} className="mt-8 bg-primary-600 hover:bg-primary-700 text-white font-semibold flex items-center gap-2 px-6 py-3 rounded-xl shadow-md transition">
+                        {filter === 'all' && !search && (
+                            <button type="button" onClick={() => navigate('/invoices/create')} className="btn-primary mt-8 mx-auto">
                                 <Plus size={20} />
                                 Create Your First Invoice
                             </button>
@@ -131,8 +168,11 @@ const Invoices = () => {
                     </div>
                 ) : (
                     <div className="space-y-6">
-                        {filteredInvoices.map((invoice) => (
-                            <div key={invoice.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-200">
+                        {displayedInvoices.map((invoice) => {
+                            const client = clients.find((c) => c.id === invoice.clientId);
+                            const business = getClientBusiness(client);
+                            return (
+                            <div key={invoice.id} className="card hover:shadow-card-md transition-shadow duration-200 !p-0 overflow-hidden">
                                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 p-6">
                                     <div className="flex-1">
                                         <div className="flex items-start justify-between mb-2">
@@ -141,7 +181,8 @@ const Invoices = () => {
                                                     {invoice.invoiceNumber}
                                                 </h3>
                                                 <p className="text-sm text-gray-500 mt-1">
-                                                    {getClientName(invoice.clientId)} • {getClientCompany(invoice.clientId)}
+                                                    {getClientName(invoice.clientId)}
+                                                    {business ? ` • ${business}` : ''}
                                                 </p>
                                             </div>
                                             <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(invoice.status)} capitalize`}>
@@ -164,14 +205,14 @@ const Invoices = () => {
                                             </div>
                                             <div>
                                                 <p className="text-gray-400">Amount</p>
-                                                <p className="font-semibold text-primary-600 text-lg">
-                                                    {formatCurrency(invoice.total, invoice.currency || 'USD', true)}
+                                                <p className="font-semibold text-brand text-lg">
+                                                    {formatCurrency(invoice.total)}
                                                 </p>
                                             </div>
                                             <div>
                                                 <p className="text-gray-400">Items</p>
                                                 <p className="font-medium text-gray-900">
-                                                    {invoice.items.length} item{invoice.items.length !== 1 ? 's' : ''}
+                                                    {(invoice.items?.length ?? 0)} item{(invoice.items?.length ?? 0) !== 1 ? 's' : ''}
                                                 </p>
                                             </div>
                                         </div>
@@ -181,15 +222,15 @@ const Invoices = () => {
                                         <button
                                             onClick={() => handleDownload(invoice)}
                                             className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold flex items-center gap-2 px-4 py-2 rounded-lg transition text-sm"
-                                            title="Download PDF"
+                                            aria-label="Download PDF"
                                         >
                                             <Download size={16} />
                                             PDF
                                         </button>
                                         <button
                                             onClick={() => navigate(`/invoices/edit/${invoice.id}`)}
-                                            className="bg-primary-100 hover:bg-primary-200 text-primary-700 font-semibold flex items-center gap-2 px-4 py-2 rounded-lg transition text-sm"
-                                            title="Edit Invoice"
+                                            className="bg-brand-light hover:bg-brand-subtle text-brand font-medium flex items-center gap-2 px-4 py-2 rounded-xl transition text-sm"
+                                            aria-label="Edit invoice"
                                         >
                                             <Edit size={16} />
                                             Edit
@@ -197,7 +238,7 @@ const Invoices = () => {
                                         <button
                                             onClick={() => handleDelete(invoice.id)}
                                             className="bg-red-100 hover:bg-red-200 text-red-700 font-semibold flex items-center gap-2 px-4 py-2 rounded-lg transition text-sm"
-                                            title="Delete Invoice"
+                                            aria-label="Delete invoice"
                                         >
                                             <Trash2 size={16} />
                                             Delete
@@ -205,11 +246,11 @@ const Invoices = () => {
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
-                )
-                }
-            </div >
+                )}
+            </div>
         </>
     );
 };

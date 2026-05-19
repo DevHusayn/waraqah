@@ -5,22 +5,27 @@ import Invoices from './pages/Invoices';
 import CreateInvoice from './pages/CreateInvoice';
 import Clients from './pages/Clients';
 import Settings from './pages/Settings';
-import Auth from './pages/Auth';
-import ResetPassword from './pages/ResetPassword';
+// Auth disabled for local dev — re-enable when backend auth is ready
+// import Auth from './pages/Auth';
+// import ResetPassword from './pages/ResetPassword';
 import PrivateRoute from './utils/PrivateRoute';
 import AdminRoute from './utils/AdminRoute';
 import AdminDashboard from './pages/AdminDashboard';
 import { InvoiceProvider } from './context/InvoiceContext';
 import { SettingsProvider } from './context/SettingsContext';
+import { ToastProvider } from './context/ToastContext';
+import BrandTheme from './components/BrandTheme';
 
 function App() {
     return (
-        <SettingsProvider>
-            <InvoiceProvider>
-                <Router>
+        <ToastProvider>
+            <SettingsProvider>
+                <BrandTheme />
+                <InvoiceProvider>
+                    <Router>
                     <Routes>
-                        <Route path="/auth" element={<Auth />} />
-                        <Route path="/reset-password/:token" element={<ResetPassword />} />
+                        {/* <Route path="/auth" element={<Auth />} /> */}
+                        {/* <Route path="/reset-password/:token" element={<ResetPassword />} /> */}
                         <Route
                             path="*"
                             element={
@@ -38,9 +43,10 @@ function App() {
                             }
                         />
                     </Routes>
-                </Router>
-            </InvoiceProvider>
-        </SettingsProvider>
+                    </Router>
+                </InvoiceProvider>
+            </SettingsProvider>
+        </ToastProvider>
     );
 }
 
