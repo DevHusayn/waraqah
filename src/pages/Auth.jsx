@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import AlertModal from '../components/AlertModal';
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { APP_CURRENCY } from '../utils/currency';
 import { APP_NAME } from '../constants/brand';
-
 import { API_BASE, getNetworkErrorMessage } from '../utils/apiConfig';
 
 const BASE_URL = API_BASE;
@@ -15,7 +15,9 @@ const AUTH_URL = `${BASE_URL}/auth`;
 function Auth() {
     const { setBusinessInfo } = useSettings();
     const { fetchUserData, resetAll } = useInvoice();
-    const [isLogin, setIsLogin] = useState(true);
+    const [searchParams] = useSearchParams();
+    const authMode = searchParams.get('mode');
+    const [isLogin, setIsLogin] = useState(authMode !== 'register');
     const initialForm = {
         email: '',
         password: '',
@@ -36,7 +38,6 @@ function Auth() {
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const navigate = useNavigate();
     const location = useLocation();
-    const [searchParams] = useSearchParams();
     const returnTo = searchParams.get('returnTo');
 
     // Always reset form fields when Auth page is shown, switching login/register, or on logout
@@ -58,13 +59,27 @@ function Auth() {
     }, []);
 
     useEffect(() => {
+        const mode = searchParams.get('mode');
+        if (mode === 'register') setIsLogin(false);
+        else if (mode === 'login') setIsLogin(true);
+    }, [searchParams]);
+
+    useEffect(() => {
         setError('');
     }, [isLogin]);
 
     const toggleMode = () => {
         setError('');
         setAlert({ open: false, message: '', type: 'error' });
-        setIsLogin((current) => !current);
+        const nextIsLogin = !isLogin;
+        setIsLogin(nextIsLogin);
+        const params = new URLSearchParams(searchParams);
+        params.set('mode', nextIsLogin ? 'login' : 'register');
+        if (returnTo) params.set('returnTo', returnTo);
+        navigate(
+            { pathname: '/auth', search: `?${params.toString()}` },
+            { replace: true }
+        );
     };
 
     useEffect(() => {
@@ -177,8 +192,7 @@ function Auth() {
     };
 
     return (
-        <div className="relative min-h-screen w-full flex flex-col items-center justify-center bg-slate-50">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--brand-subtle)_0%,_transparent_50%)] pointer-events-none" aria-hidden />
+        <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-100">
             <AlertModal open={alert.open} message={alert.message} type={alert.type} onClose={() => setAlert({ ...alert, open: false })} />
 
             {/* Password Reset Modal */}
@@ -213,45 +227,55 @@ function Auth() {
 
 
             {/* Right Side: Auth Form */}
-            <div className="flex items-center justify-center min-h-screen p-4 sm:p-10 bg-transparent w-full">
+            <div className="flex items-center justify-center min-h-screen p-4 sm:p-10 w-full">
                 <div className="w-full max-w-md">
                     <div className="md:hidden flex justify-center mb-8">
                         <span className="text-2xl font-semibold text-brand">{APP_NAME}</span>
                     </div>
 
                     <div className="mb-8 text-center md:text-left">
-                        <h1 className="page-title text-3xl sm:text-4xl mb-2">
+                        <Link
+                            to="/"
+                            className="hidden md:inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-brand mb-4 transition-colors"
+                        >
+                            <ArrowLeft className="h-4 w-4" aria-hidden />
+                            Back to home
+                        </Link>
+                        <h1 className="page-title text-3xl sm:text-4xl mb-2 text-slate-900">
                             {isLogin ? 'Welcome back' : 'Create account'}
                         </h1>
-                        <p className="page-subtitle">
+                        <p className="mt-1 text-base text-slate-600">
                             {isLogin ? 'Sign in to manage your invoices.' : 'Register to start invoicing professionally.'}
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="card space-y-6 shadow-card-md">
+                    <form
+                        onSubmit={handleSubmit}
+                        className="bg-white rounded-xl border border-slate-200 shadow-lg shadow-slate-200/50 p-6 space-y-6"
+                    >
 
                         <div className="space-y-5">
                             {/* Email */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+                                <label className="label">Email Address</label>
                                 <input
                                     type="email" name="email" value={form.email} onChange={handleChange}
-                                    className="input-field"
-                                    placeholder="name@company.com" required
+                                    className="input-field placeholder:text-slate-500"
+                                    placeholder="waraqahinvoice@gmail.com" required
                                 />
                             </div>
 
                             {/* Password */}
                             <div className="relative">
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+                                <label className="label">Password</label>
                                 <input
                                     type={showPassword ? "text" : "password"} name="password" value={form.password} onChange={handleChange}
-                                    className="input-field"
+                                    className="input-field placeholder:text-slate-500"
                                     placeholder="••••••••" required
                                 />
                                 <button
                                     type="button" onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-[34px] text-gray-400 hover:text-primary-600 font-bold"
+                                    className="absolute right-3 top-[34px] text-slate-500 hover:text-brand font-semibold text-sm"
                                 >
                                     {showPassword ? "Hide" : "Show"}
                                 </button>
@@ -262,7 +286,7 @@ function Auth() {
                                 <>
                                     {/* Business Name */}
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Business Name</label>
+                                        <label className="label">Business Name</label>
                                         <input
                                             type="text" name="name" value={form.name} onChange={handleChange}
                                             className="input-field"
@@ -271,34 +295,34 @@ function Auth() {
                                     </div>
                                     {/* Business Email */}
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Business Email</label>
+                                        <label className="label">Business Email</label>
                                         <input
                                             type="email" name="businessEmail" value={form.businessEmail} onChange={handleChange}
                                             className="input-field"
-                                            placeholder="business@email.com" required
+                                            placeholder="name@company.com" required
                                         />
                                     </div>
                                     {/* Address */}
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Business Address</label>
+                                        <label className="label">Business Address</label>
                                         <input
                                             type="text" name="address" value={form.address} onChange={handleChange}
                                             className="input-field"
-                                            placeholder="123 Main St, City" required
+                                            placeholder="123 Asokoro, Abuja" required
                                         />
                                     </div>
                                     {/* Phone */}
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
+                                        <label className="label">Phone</label>
                                         <input
                                             type="tel" name="phone" value={form.phone} onChange={handleChange}
                                             className="input-field"
-                                            placeholder="+1 234 567 8900" required
+                                            placeholder="+234 810 000 0000" required
                                         />
                                     </div>
                                     {/* Website */}
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Website</label>
+                                        <label className="label">Website</label>
                                         <input
                                             type="url" name="website" value={form.website} onChange={handleChange}
                                             className="input-field"
@@ -307,7 +331,7 @@ function Auth() {
                                     </div>
 {/* Brand Color */}
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1">Brand Color</label>
+                                        <label className="label">Brand Color</label>
                                         <input
                                             type="color" name="brandColor" value={form.brandColor} onChange={handleChange}
                                             className="w-12 h-12 p-0 border-2 border-gray-200 rounded-full bg-white/90 cursor-pointer"
@@ -322,7 +346,7 @@ function Auth() {
                             <div className="flex justify-end">
                                 <button
                                     type="button"
-                                    className="text-sm font-semibold text-primary-600 hover:text-primary-700"
+                                    className="text-sm font-semibold text-brand hover:text-brand-hover"
                                     onClick={() => setResetModal(true)}
                                 >
                                     Forgot password?
@@ -337,7 +361,7 @@ function Auth() {
                         </button>
                     </form>
 
-                    <p className="mt-8 text-center text-gray-600 text-base">
+                    <p className="mt-8 text-center text-slate-700 text-base">
                         {isLogin ? "Don't have an account?" : "Already have an account?"}
                         <button
                             onClick={toggleMode}

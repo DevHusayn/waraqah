@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
+import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Invoices from './pages/Invoices';
 import CreateInvoice from './pages/CreateInvoice';
@@ -29,6 +30,7 @@ function App() {
                 <InvoiceProvider>
                     <Router>
                         <Routes>
+                            <Route path="/" element={<Home />} />
                             <Route path="/auth" element={<Auth />} />
                             <Route path="/reset-password/:token" element={<ResetPassword />} />
 
@@ -47,7 +49,6 @@ function App() {
                                 element={
                                     <AppLayout>
                                         <Routes>
-                                            <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
                                             <Route path="/invoices" element={<PrivateRoute><Invoices /></PrivateRoute>} />
                                             <Route path="/invoices/create" element={<PrivateRoute><CreateInvoice /></PrivateRoute>} />
                                             <Route path="/invoices/edit/:id" element={<PrivateRoute><CreateInvoice /></PrivateRoute>} />
