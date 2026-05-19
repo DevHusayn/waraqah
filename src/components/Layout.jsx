@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
 import ConfirmModal from './ConfirmModal';
-import { APP_NAME } from '../constants/brand';
+import { APP_NAME, APP_TAGLINE } from '../constants/brand';
 import SidebarAccountFooter from './SidebarAccountFooter';
 
 function NavLinks({ navigation, isActive, onNavigate }) {
@@ -61,7 +61,7 @@ const Layout = ({ children }) => {
         return location.pathname.startsWith(path);
     };
 
-    const brandName = businessInfo.name?.trim() || APP_NAME;
+    const businessName = businessInfo.name?.trim();
 
     const sidebarContent = (onNavigate) => (
         <>
@@ -70,8 +70,8 @@ const Layout = ({ children }) => {
                     <FileText className="h-5 w-5 text-brand" />
                 </div>
                 <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 truncate">{brandName}</p>
-                    <p className="text-xs text-slate-500">{APP_NAME}</p>
+                    <p className="text-sm font-semibold text-slate-900 truncate">{APP_NAME}</p>
+                    <p className="text-xs text-slate-500 truncate">{businessName || APP_TAGLINE}</p>
                 </div>
             </div>
             <nav className="flex flex-1 flex-col gap-1">
@@ -87,7 +87,7 @@ const Layout = ({ children }) => {
                     </button>
                 )}
             </nav>
-            <SidebarAccountFooter />
+            <SidebarAccountFooter onNavigate={onNavigate} />
         </>
     );
 
@@ -124,7 +124,7 @@ const Layout = ({ children }) => {
                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-light flex-shrink-0">
                             <FileText className="h-4 w-4 text-brand" />
                         </div>
-                        <span className="text-base font-semibold text-slate-900 truncate">{brandName}</span>
+                        <span className="text-base font-semibold text-slate-900 truncate">{APP_NAME}</span>
                     </div>
                     <button
                         type="button"

@@ -5,7 +5,6 @@ import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { APP_CURRENCY } from '../utils/currency';
-import { applyBrandTheme } from '../utils/brandTheme';
 import { APP_NAME } from '../constants/brand';
 
 import { API_BASE, getNetworkErrorMessage } from '../utils/apiConfig';
@@ -59,8 +58,14 @@ function Auth() {
     }, []);
 
     useEffect(() => {
-        applyBrandTheme(isLogin ? '#0284c7' : form.brandColor);
-    }, [isLogin, form.brandColor]);
+        setError('');
+    }, [isLogin]);
+
+    const toggleMode = () => {
+        setError('');
+        setAlert({ open: false, message: '', type: 'error' });
+        setIsLogin((current) => !current);
+    };
 
     useEffect(() => {
         if (localStorage.getItem('token')) {
@@ -335,7 +340,7 @@ function Auth() {
                     <p className="mt-8 text-center text-gray-600 text-base">
                         {isLogin ? "Don't have an account?" : "Already have an account?"}
                         <button
-                            onClick={() => setIsLogin(!isLogin)}
+                            onClick={toggleMode}
                             className="ml-2 font-medium text-brand hover:underline"
                         >
                             {isLogin ? 'Register' : 'Sign In'}

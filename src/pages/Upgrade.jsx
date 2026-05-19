@@ -59,11 +59,11 @@ export default function Upgrade() {
     return (
         <div className="max-w-lg mx-auto">
             <Link
-                to="/settings"
+                to="/"
                 className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-brand mb-8 transition-colors"
             >
                 <ArrowLeft className="h-4 w-4" />
-                Back to settings
+                Back to dashboard
             </Link>
 
             <div className="text-center mb-8">

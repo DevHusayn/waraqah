@@ -1,14 +1,11 @@
 import { useEffect } from 'react';
-import { useSettings } from '../context/SettingsContext';
 import { applyBrandTheme } from '../utils/brandTheme';
 
-/** Syncs business brand color to CSS variables for the whole app. */
+/** Keep the app chrome on the Waraqah sky-blue theme. Business colors are for PDFs only. */
 export default function BrandTheme() {
-    const { businessInfo } = useSettings();
-
     useEffect(() => {
-        applyBrandTheme(businessInfo.brandColor);
-    }, [businessInfo.brandColor]);
+        applyBrandTheme('#0284c7');
+    }, []);
 
     return null;
 }

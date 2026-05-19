@@ -10,7 +10,6 @@ function SidebarAvatar({ businessInfo, premium }) {
     const logo = (businessInfo.businessLogo || '').trim();
     const showLogo = premium && logo.length > 0;
     const initials = getBusinessInitials(businessInfo.name);
-    const brandColor = businessInfo.brandColor || '#0ea5e9';
 
     const ringClass = premium
         ? 'ring-2 ring-amber-200/80 ring-offset-2 ring-offset-white'
@@ -28,8 +27,7 @@ function SidebarAvatar({ businessInfo, premium }) {
 
     return (
         <div
-            className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-sm font-semibold text-white shadow-sm ${ringClass}`}
-            style={{ backgroundColor: brandColor }}
+            className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-brand text-sm font-semibold text-white shadow-sm ${ringClass}`}
             aria-hidden
         >
             {initials}
@@ -54,7 +52,7 @@ function AccountSkeleton() {
     );
 }
 
-export default function SidebarAccountFooter() {
+export default function SidebarAccountFooter({ onNavigate }) {
     const { businessInfo, loading } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const displayName = businessInfo.name?.trim() || 'Your business';
@@ -74,6 +72,7 @@ export default function SidebarAccountFooter() {
             >
                 <Link
                     to="/settings"
+                    onClick={onNavigate}
                     className="flex items-center gap-3 rounded-xl outline-none transition-colors hover:bg-white/60 focus-visible:ring-2 focus-visible:ring-brand/30 -m-1 p-1"
                 >
                     <SidebarAvatar businessInfo={businessInfo} premium={premium} />
@@ -103,6 +102,7 @@ export default function SidebarAccountFooter() {
                 {premium ? (
                     <Link
                         to="/settings#premium"
+                        onClick={onNavigate}
                         className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-amber-200/80 bg-white/80 px-3 py-2 text-xs font-medium text-amber-900 transition-colors hover:bg-amber-50"
                     >
                         Manage branding
@@ -111,6 +111,7 @@ export default function SidebarAccountFooter() {
                 ) : (
                     <Link
                         to="/upgrade"
+                        onClick={onNavigate}
                         className="group mt-3 flex w-full items-center justify-between gap-2 rounded-xl border border-brand/15 bg-brand/[0.06] px-3 py-2.5 text-sm font-semibold text-brand shadow-sm transition-all duration-200 hover:border-brand/30 hover:bg-brand hover:text-white hover:shadow-md"
                     >
                         <span className="flex items-center gap-2">

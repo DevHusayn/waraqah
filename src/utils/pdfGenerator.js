@@ -24,6 +24,11 @@ export const generatePDF = async (invoice, client, businessInfo) => {
 
         // Get currency symbol (use 'NGN' for PDF, not ₦)
         const currencySymbol = getCurrencySymbol(false);
+        const formatMoney = (value) =>
+            Number(value || 0).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            });
 
         // Helper function to convert hex color to RGB
         const hexToRgb = (hex) => {
@@ -163,8 +168,8 @@ export const generatePDF = async (invoice, client, businessInfo) => {
         const tableData = invoice.items.map(item => [
             item.description || '',
             (item.quantity || 0).toString(),
-            `${currencySymbol} ${Number(item.rate || 0).toFixed(2)}`,
-            `${currencySymbol} ${(Number(item.quantity || 0) * Number(item.rate || 0)).toFixed(2)}`
+            `${currencySymbol} ${formatMoney(item.rate)}`,
+            `${currencySymbol} ${formatMoney(Number(item.quantity || 0) * Number(item.rate || 0))}`
         ]);
         const columnStyles = {
             0: { cellWidth: 85, halign: 'left', textColor: textColor },
@@ -210,14 +215,14 @@ export const generatePDF = async (invoice, client, businessInfo) => {
         doc.text('Subtotal', totalsX, finalY);
         doc.setTextColor(...textColor);
         doc.setFont(undefined, 'normal');
-        const subtotalText = `${currencySymbol} ${Number(invoice.subtotal || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const subtotalText = `${currencySymbol} ${formatMoney(invoice.subtotal)}`;
         doc.text(subtotalText, 195, finalY, { align: 'right' });
 
         // Tax
         doc.setTextColor(...grayColor);
         doc.text(`Tax (${invoice.taxRate || 10}%)`, totalsX, finalY + 8);
         doc.setTextColor(...textColor);
-        const taxText = `${currencySymbol} ${Number(invoice.tax || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const taxText = `${currencySymbol} ${formatMoney(invoice.tax)}`;
         doc.text(taxText, 195, finalY + 8, { align: 'right' });
 
         // Divider line with accent color
@@ -233,7 +238,7 @@ export const generatePDF = async (invoice, client, businessInfo) => {
 
         doc.setFontSize(11); // Decreased font size for total amount
         doc.setTextColor(...textColor);
-        const totalAmountText = `${currencySymbol} ${Number(invoice.total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const totalAmountText = `${currencySymbol} ${formatMoney(invoice.total)}`;
         doc.text(totalAmountText, 195, finalY + 22, { align: 'right' });
 
         let currentY = finalY + 22;
@@ -255,7 +260,7 @@ export const generatePDF = async (invoice, client, businessInfo) => {
 
         doc.setFontSize(11); // Decreased font size for TOTAL DUE amount
         doc.setTextColor(...primaryColor);
-        const totalText = `${currencySymbol} ${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const totalText = `${currencySymbol} ${formatMoney(total)}`;
         doc.text(totalText, 195, currentY, { align: 'right' });
 
         // ===== NOTES SECTION =====

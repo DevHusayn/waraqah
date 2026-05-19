@@ -298,13 +298,7 @@ const Settings = () => {
                     </form>
                 )}
 
-                <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                        <DollarSign size={18} />
-                        Currency & branding
-                    </h3>
-                    <p className="text-sm text-blue-800">All amounts are in Nigerian Naira (₦). Premium users can add a logo watermark on PDF invoices.</p>
-                </div>
+                
             </div>
         </div>
     );

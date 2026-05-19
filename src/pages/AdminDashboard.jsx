@@ -92,7 +92,7 @@ export default function AdminDashboard() {
         setActionLoading(userId + '-plan');
         const nextPlan = currentPlan === 'premium' ? 'free' : 'premium';
         try {
-            await apiFetch(`/auth/admin/users/${userId}/plan`, {
+            const data = await apiFetch(`/auth/admin/users/${userId}/plan`, {
                 method: 'PATCH',
                 body: JSON.stringify({ plan: nextPlan }),
             });
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
                     u._id === userId
                         ? {
                             ...u,
-                            businessInfo: {
+                            businessInfo: data.businessInfo || {
                                 ...(u.businessInfo || {}),
                                 plan: nextPlan,
                                 businessLogo: nextPlan === 'premium' ? (u.businessInfo?.businessLogo || '') : '',
@@ -191,7 +191,7 @@ export default function AdminDashboard() {
                                     <td className="px-4 py-2 text-center">
                                         <button
                                             className="text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 px-2 py-1 rounded mr-1 disabled:opacity-50"
-                                            disabled={actionLoading === user._id + '-plan' || user._id === currentUserId}
+                                            disabled={actionLoading === user._id + '-plan'}
                                             onClick={() => handlePlan(user._id, user.businessInfo?.plan || 'free')}
                                         >
                                             {user.businessInfo?.plan === 'premium' ? 'Revoke Premium' : 'Grant Premium'}
