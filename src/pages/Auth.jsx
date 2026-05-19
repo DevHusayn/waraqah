@@ -8,8 +8,9 @@ import { APP_CURRENCY } from '../utils/currency';
 import { applyBrandTheme } from '../utils/brandTheme';
 import { APP_NAME } from '../constants/brand';
 
-// Unified URL Configuration
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_BASE, getNetworkErrorMessage } from '../utils/apiConfig';
+
+const BASE_URL = API_BASE;
 const AUTH_URL = `${BASE_URL}/auth`;
 
 function Auth() {
@@ -100,11 +101,16 @@ function Auth() {
                     brandColor: form.brandColor,
                 };
             }
-            const res = await fetch(`${AUTH_URL}/${isLogin ? 'login' : 'register'}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
-            });
+            let res;
+            try {
+                res = await fetch(`${AUTH_URL}/${isLogin ? 'login' : 'register'}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+            } catch {
+                throw new Error(getNetworkErrorMessage());
+            }
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Error');
             localStorage.setItem('token', data.token);
@@ -137,7 +143,7 @@ function Auth() {
                     : '/';
             navigate(safeReturn, { replace: true });
         } catch (err) {
-            setError(err.message);
+            setError(err.message === 'Failed to fetch' ? getNetworkErrorMessage() : err.message);
             resetAll();
         }
     };

@@ -1,5 +1,5 @@
 // Utility for API requests with JWT
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import { API_BASE, getNetworkErrorMessage } from './apiConfig';
 
 export function getToken() {
     return localStorage.getItem('token');
@@ -19,7 +19,7 @@ export async function apiFetch(path, options = {}) {
             headers,
         });
     } catch {
-        throw new Error('Unable to connect to the server. Check your connection and try again.');
+        throw new Error(getNetworkErrorMessage());
     }
     if (!res.ok) {
         const data = await res.json().catch(() => ({}));

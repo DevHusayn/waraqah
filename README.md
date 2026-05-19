@@ -130,5 +130,8 @@ Built with ❤️ as part of a professional portfolio
 
 ---
 
-## Here is the live link of the site 
-https://invoice-pro-d1hh.vercel.app
+## Live site
+
+Production URL: your Vercel domain (e.g. `https://waraqah.vercel.app` or `https://www.waraqah.com`).
+
+See [REBRANDING.md](./REBRANDING.md) for renaming Vercel/GitHub from InvoicePro to Waraqah.

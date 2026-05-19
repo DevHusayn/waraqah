@@ -110,7 +110,7 @@ export default function Upgrade() {
                             {!plan?.paystackConfigured && (
                                 <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
                                     Paystack is not configured on the server. Add your keys to{' '}
-                                    <code className="text-xs">InvoicePro-backend/.env</code>.
+                                    <code className="text-xs">backend .env</code> on your server.
                                 </p>
                             )}
                             <button
