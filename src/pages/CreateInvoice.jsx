@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
@@ -7,11 +7,17 @@ import { Plus, Trash2, Save, ArrowLeft, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { APP_CURRENCY, CURRENCY_INFO, formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
+import InvoiceLimitModal from '../components/InvoiceLimitModal';
+import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
+import { canCreateInvoice, formatInvoiceUsageLabel } from '../utils/invoiceLimits';
 
 const CreateInvoice = () => {
     const { id } = useParams();
+    const location = useLocation();
+    const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const { clients, addInvoice, updateInvoice, invoices } = useInvoice();
+    const { invoiceUsage, limitModalOpen, setLimitModalOpen, atLimit } = useInvoiceCreateGuard();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
     const [saving, setSaving] = useState(false);
@@ -49,6 +55,22 @@ const CreateInvoice = () => {
             }
         }
     }, [id, invoices]);
+
+    useEffect(() => {
+        const clientId = searchParams.get('clientId');
+        if (!clientId || clients.length === 0) return;
+        if (!clients.some((c) => c.id === clientId)) return;
+        setFormData((prev) => ({ ...prev, clientId }));
+        const next = new URLSearchParams(searchParams);
+        next.delete('clientId');
+        setSearchParams(next, { replace: true });
+    }, [clients, searchParams, setSearchParams]);
+
+    useEffect(() => {
+        if (!id && atLimit) {
+            setLimitModalOpen(true);
+        }
+    }, [id, atLimit, setLimitModalOpen]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -104,6 +126,11 @@ const CreateInvoice = () => {
             return;
         }
 
+        if (!id && !canCreateInvoice(invoiceUsage)) {
+            setLimitModalOpen(true);
+            return;
+        }
+
         const invoiceData = {
             ...formData,
             currency: APP_CURRENCY,
@@ -124,16 +151,26 @@ const CreateInvoice = () => {
             }
             navigate('/invoices');
         } catch (err) {
-            showToast(err.message || 'Failed to save invoice', 'error');
+            if (err.code === 'INVOICE_LIMIT_REACHED') {
+                setLimitModalOpen(true);
+            } else {
+                showToast(err.message || 'Failed to save invoice', 'error');
+            }
         } finally {
             setSaving(false);
         }
     };
 
     const selectedClient = clients.find(c => c.id === formData.clientId);
+    const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
 
     return (
         <div className="max-w-5xl mx-auto">
+            <InvoiceLimitModal
+                open={limitModalOpen}
+                onClose={() => setLimitModalOpen(false)}
+                usage={invoiceUsage}
+            />
             <div className="mb-6">
                 <button
                     onClick={() => navigate('/invoices')}
@@ -146,6 +183,14 @@ const CreateInvoice = () => {
                     {id ? 'Edit invoice' : 'Create invoice'}
                 </h1>
                 <p className="page-subtitle">Fill in the details below</p>
+                {!id && usageLabel ? (
+                    <p className="mt-3 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                        {usageLabel}
+                        {invoiceUsage.remaining > 0
+                            ? ` — ${invoiceUsage.remaining} remaining this month`
+                            : ' — upgrade for unlimited invoices'}
+                    </p>
+                ) : null}
             </div>
 
             <form onSubmit={handleSubmit}>
@@ -270,7 +315,7 @@ const CreateInvoice = () => {
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-xl font-semibold text-gray-900">Client Information</h2>
                                 <Link
-                                    to="/clients"
+                                    to={`/clients?returnTo=${encodeURIComponent(location.pathname)}&add=1`}
                                     className="text-primary-600 text-sm font-medium hover:underline whitespace-nowrap"
                                 >
                                     + Add New Client
@@ -428,7 +473,11 @@ const CreateInvoice = () => {
                                 </div>
                             </div>
 
-                            <button type="submit" className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed" disabled={saving}>
+                            <button
+                                type="submit"
+                                className="btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed"
+                                disabled={saving || (!id && atLimit)}
+                            >
                                 {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                                 {saving ? 'Saving...' : id ? 'Update Invoice' : 'Create Invoice'}
                             </button>

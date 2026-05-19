@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSettings } from '../context/SettingsContext';
-import { apiFetch } from '../utils/api';
-// import AlertModal from '../components/AlertModal';
 import { Building2, Save, DollarSign, Edit, X } from 'lucide-react';
-import { CURRENCY_INFO, APP_CURRENCY } from '../utils/currency';
-import { isPremiumUser } from '../utils/premium';
+import { CURRENCY_INFO } from '../utils/currency';
+import { buildBusinessInfoPayload } from '../utils/businessPayload';
 import PremiumLogoSettings from '../components/PremiumLogoSettings';
 
 const Settings = () => {
@@ -14,21 +12,18 @@ const Settings = () => {
     const [saved, setSaved] = useState(false);
     const [errors, setErrors] = useState({});
 
-    // Check if this is first time setup (default placeholder values)
+    // Sync form from context when not editing (avoid wiping in-progress logo upload)
     useEffect(() => {
-        async function refreshBusinessInfo() {
-            try {
-                const info = await apiFetch('/business-info');
-                setFormData(info);
-            } catch {
-                setFormData(businessInfo);
-            }
+        if (!isEditing) {
+            setFormData(businessInfo);
         }
-        refreshBusinessInfo();
-        const isFirstTime = businessInfo.name === 'Your Business Name' ||
-            businessInfo.email === 'your@email.com';
-        setIsEditing(isFirstTime);
-    }, [businessInfo]);
+    }, [businessInfo, isEditing]);
+
+    useEffect(() => {
+        if (!businessInfo.name?.trim() && !businessInfo.email?.trim()) {
+            setIsEditing(true);
+        }
+    }, [businessInfo.name, businessInfo.email]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -46,10 +41,7 @@ const Settings = () => {
         if (!formData.brandColor) newErrors.brandColor = 'Brand color is required.';
         setErrors(newErrors);
         if (Object.keys(newErrors).length > 0) return;
-        const payload = { ...formData, defaultCurrency: APP_CURRENCY };
-        if (!isPremiumUser(formData)) {
-            payload.businessLogo = '';
-        }
+        const payload = buildBusinessInfoPayload(formData, businessInfo);
         updateBusinessInfo(payload)
             .then(() => {
                 setIsEditing(false);
@@ -57,13 +49,7 @@ const Settings = () => {
                 setTimeout(() => setSaved(false), 3000);
             })
             .catch((err) => {
-                if (import.meta.env.DEV) {
-                    setIsEditing(false);
-                    setSaved(true);
-                    setTimeout(() => setSaved(false), 3000);
-                } else {
-                    setErrors({ submit: err.message });
-                }
+                setErrors({ submit: err.message });
             });
     };
 
@@ -296,6 +282,9 @@ const Settings = () => {
                             isEditing
                         />
 
+                        {errors.submit && (
+                            <p className="mt-6 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">{errors.submit}</p>
+                        )}
                         <div className="mt-8 flex items-center gap-4">
                             <button type="submit" className="btn-primary">
                                 <Save size={18} />

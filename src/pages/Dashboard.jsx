@@ -5,11 +5,16 @@ import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '../utils/currency';
 import PageHeader from '../components/PageHeader';
+import InvoiceLimitModal from '../components/InvoiceLimitModal';
+import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
+import { formatInvoiceUsageLabel } from '../utils/invoiceLimits';
+import { isPremiumUser } from '../utils/premium';
 
 const Dashboard = () => {
     const { invoices, clients } = useInvoice();
     const { businessInfo } = useSettings();
     const navigate = useNavigate();
+    const { invoiceUsage, limitModalOpen, setLimitModalOpen, tryNavigateToCreate } = useInvoiceCreateGuard();
 
     const totalRevenue = invoices
         .filter((inv) => inv.status === 'paid')
@@ -47,9 +52,22 @@ const Dashboard = () => {
         return colors[status] || colors.pending;
     };
 
+    const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
+    const premium = isPremiumUser(businessInfo);
+
     return (
         <div>
+            <InvoiceLimitModal
+                open={limitModalOpen}
+                onClose={() => setLimitModalOpen(false)}
+                usage={invoiceUsage}
+            />
             <PageHeader title="Dashboard" subtitle="Welcome back — here's your invoicing overview" />
+            {!premium && usageLabel ? (
+                <p className="mb-6 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5">
+                    {usageLabel}
+                </p>
+            ) : null}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 {stats.map((stat) => {
@@ -71,7 +89,7 @@ const Dashboard = () => {
             <div className="card mb-8">
                 <h2 className="text-lg font-semibold text-slate-900 mb-4">Quick actions</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <button type="button" onClick={() => navigate('/invoices/create')} className="btn-primary justify-start py-3">
+                    <button type="button" onClick={tryNavigateToCreate} className="btn-primary justify-start py-3">
                         <FileText size={18} />
                         Create invoice
                     </button>
@@ -93,7 +111,7 @@ const Dashboard = () => {
                         <div className="text-center py-10">
                             <FileText className="mx-auto h-12 w-12 text-slate-300" />
                             <p className="mt-3 text-slate-500">No invoices yet</p>
-                            <button type="button" onClick={() => navigate('/invoices/create')} className="btn-primary mt-6 mx-auto">
+                            <button type="button" onClick={tryNavigateToCreate} className="btn-primary mt-6 mx-auto">
                                 Create your first invoice
                             </button>
                         </div>

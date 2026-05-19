@@ -1,7 +1,8 @@
 const PAGE_W = 210;
 const PAGE_H = 297;
-const LOGO_MAX_WIDTH_MM = 88;
-const LOGO_MAX_HEIGHT_MM = 88;
+/** Max logo size on A4 (210×297 mm) — large centered watermark */
+const LOGO_MAX_WIDTH_MM = 155;
+const LOGO_MAX_HEIGHT_MM = 155;
 const LOGO_OPACITY = 0.12;
 
 function getImageFormat(dataUrl) {

@@ -1,8 +1,14 @@
-// import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+import { getToken } from './api';
 
-/** Auth bypass — renders children without login. Restore redirect when re-enabling auth. */
 export default function PrivateRoute({ children }) {
-    // const isLoggedIn = Boolean(localStorage.getItem('token'));
-    // return isLoggedIn ? children : <Navigate to="/auth" replace />;
+    const location = useLocation();
+    const isLoggedIn = Boolean(getToken());
+
+    if (!isLoggedIn) {
+        const returnTo = `${location.pathname}${location.search}`;
+        return <Navigate to={`/auth?returnTo=${encodeURIComponent(returnTo)}`} replace />;
+    }
+
     return children;
 }

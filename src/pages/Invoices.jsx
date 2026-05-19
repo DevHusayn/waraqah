@@ -13,10 +13,15 @@ import { formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
 import { filterInvoicesBySearch, sortInvoices } from '../utils/invoiceHelpers';
 import PageHeader from '../components/PageHeader';
+import InvoiceLimitModal from '../components/InvoiceLimitModal';
+import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
+import { formatInvoiceUsageLabel } from '../utils/invoiceLimits';
+import { isPremiumUser } from '../utils/premium';
 
 const Invoices = () => {
     const navigate = useNavigate();
     const { invoices, clients, deleteInvoice, loading } = useInvoice();
+    const { invoiceUsage, limitModalOpen, setLimitModalOpen, tryNavigateToCreate } = useInvoiceCreateGuard();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
     const [filter, setFilter] = useState('all');
@@ -75,8 +80,16 @@ const Invoices = () => {
         return sortInvoices(list, sortBy);
     }, [invoices, clients, filter, search, sortBy]);
 
+    const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
+    const premium = isPremiumUser(businessInfo);
+
     return (
         <>
+            <InvoiceLimitModal
+                open={limitModalOpen}
+                onClose={() => setLimitModalOpen(false)}
+                usage={invoiceUsage}
+            />
             <AlertModal open={alert.open} message={alert.message} type={alert.type} onClose={() => setAlert({ open: false, message: '', type: 'error' })} />
             <ConfirmModal
                 open={confirm.open}
@@ -86,11 +99,17 @@ const Invoices = () => {
             />
             <div>
                 <PageHeader title="Invoices" subtitle="Manage and track all your invoices">
-                    <button type="button" onClick={() => navigate('/invoices/create')} className="btn-primary">
+                    <button type="button" onClick={tryNavigateToCreate} className="btn-primary">
                         <Plus size={20} />
                         Create invoice
                     </button>
                 </PageHeader>
+
+                {!premium && usageLabel ? (
+                    <p className="mb-6 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5">
+                        {usageLabel}
+                    </p>
+                ) : null}
 
                 {/* Search & sort */}
                 <div className="mb-6 flex flex-col sm:flex-row gap-3">
@@ -160,7 +179,7 @@ const Invoices = () => {
                                     : `You don't have any ${filter} invoices`}
                         </p>
                         {filter === 'all' && !search && (
-                            <button type="button" onClick={() => navigate('/invoices/create')} className="btn-primary mt-8 mx-auto">
+                            <button type="button" onClick={tryNavigateToCreate} className="btn-primary mt-8 mx-auto">
                                 <Plus size={20} />
                                 Create Your First Invoice
                             </button>

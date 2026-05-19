@@ -45,7 +45,7 @@ const Layout = ({ children }) => {
         setBusinessInfo({ name: '', address: '', email: '', phone: '', website: '', defaultCurrency: 'NGN', taxRate: 10, brandColor: '#0ea5e9', plan: 'free', businessLogo: '' });
         resetAll();
         window.dispatchEvent(new Event('app-logout'));
-        navigate('/'); // was /auth — auth routes disabled for dev
+        navigate('/auth');
     };
 
     const navigation = [
@@ -76,11 +76,16 @@ const Layout = ({ children }) => {
             </div>
             <nav className="flex flex-1 flex-col gap-1">
                 <NavLinks navigation={navigation} isActive={isActive} onNavigate={onNavigate} />
-                {/* Logout hidden while auth is disabled
                 {isLoggedIn && (
-                    <button ...>Logout</button>
+                    <button
+                        type="button"
+                        onClick={() => setShowLogoutModal(true)}
+                        className="nav-link text-red-600 hover:bg-red-50 mt-2 w-full"
+                    >
+                        <LogOut className="h-5 w-5 flex-shrink-0" />
+                        Log out
+                    </button>
                 )}
-                */}
             </nav>
             <SidebarAccountFooter />
         </>

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import AlertModal from '../components/AlertModal';
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { APP_CURRENCY } from '../utils/currency';
 import { applyBrandTheme } from '../utils/brandTheme';
 import { APP_NAME } from '../constants/brand';
@@ -36,6 +36,8 @@ function Auth() {
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
+    const returnTo = searchParams.get('returnTo');
 
     // Always reset form fields when Auth page is shown, switching login/register, or on logout
     useEffect(() => {
@@ -58,6 +60,16 @@ function Auth() {
     useEffect(() => {
         applyBrandTheme(isLogin ? '#0284c7' : form.brandColor);
     }, [isLogin, form.brandColor]);
+
+    useEffect(() => {
+        if (localStorage.getItem('token')) {
+            const safeReturn =
+                returnTo && returnTo.startsWith('/') && !returnTo.startsWith('/auth')
+                    ? returnTo
+                    : '/';
+            navigate(safeReturn, { replace: true });
+        }
+    }, [navigate, returnTo]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -118,7 +130,12 @@ function Auth() {
             } catch (businessErr) {
                 console.error("Failed to fetch business info:", businessErr);
             }
-            navigate('/');
+            window.dispatchEvent(new Event('app-login'));
+            const safeReturn =
+                returnTo && returnTo.startsWith('/') && !returnTo.startsWith('/auth')
+                    ? returnTo
+                    : '/';
+            navigate(safeReturn, { replace: true });
         } catch (err) {
             setError(err.message);
             resetAll();

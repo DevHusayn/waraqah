@@ -32,16 +32,14 @@ export function getPlanLabel(businessInfo) {
     return isPremiumUser(businessInfo) ? 'Premium' : 'Free plan';
 }
 
+/** True only when the API says plan is premium (source of truth). */
 export function isPremiumUser(businessInfo) {
-    if (isDevPremiumEnabled()) return true;
     if (!businessInfo) return false;
-    if (businessInfo.plan === PLANS.PREMIUM || businessInfo.isPremium === true) {
-        return true;
+    if (businessInfo.plan !== PLANS.PREMIUM && !businessInfo.isPremium) return false;
+    if (businessInfo.premiumUntil) {
+        return new Date(businessInfo.premiumUntil) > new Date();
     }
-    if (import.meta.env.DEV && localStorage.getItem('waraqah_plan') === 'premium') {
-        return true;
-    }
-    return false;
+    return businessInfo.plan === PLANS.PREMIUM || businessInfo.isPremium === true;
 }
 
 export const LOGO_MAX_BYTES = 1.5 * 1024 * 1024;

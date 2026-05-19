@@ -88,6 +88,34 @@ export default function AdminDashboard() {
     };
 
     // Admin unlock handler
+    const handlePlan = async (userId, currentPlan) => {
+        setActionLoading(userId + '-plan');
+        const nextPlan = currentPlan === 'premium' ? 'free' : 'premium';
+        try {
+            await apiFetch(`/auth/admin/users/${userId}/plan`, {
+                method: 'PATCH',
+                body: JSON.stringify({ plan: nextPlan }),
+            });
+            setUsers((users) =>
+                users.map((u) =>
+                    u._id === userId
+                        ? {
+                            ...u,
+                            businessInfo: {
+                                ...(u.businessInfo || {}),
+                                plan: nextPlan,
+                                businessLogo: nextPlan === 'premium' ? (u.businessInfo?.businessLogo || '') : '',
+                            },
+                        }
+                        : u
+                )
+            );
+        } catch (e) {
+            setAlert({ open: true, message: e.message });
+        }
+        setActionLoading('');
+    };
+
     const handleUnlock = async (userId) => {
         setActionLoading(userId + '-unlock');
         try {
@@ -137,6 +165,7 @@ export default function AdminDashboard() {
                                 <th className="px-4 py-2 border-b">Phone</th>
                                 <th className="px-4 py-2 border-b">Website</th>
                                 <th className="px-4 py-2 border-b">Currency</th>
+                                <th className="px-4 py-2 border-b">Plan</th>
                                 <th className="px-4 py-2 border-b">Actions</th>
                             </tr>
                         </thead>
@@ -158,7 +187,15 @@ export default function AdminDashboard() {
                                     <td className="px-4 py-2">{user.businessInfo?.phone || (user.businessInfo ? '-' : <span className="text-red-600 font-semibold">Missing</span>)}</td>
                                     <td className="px-4 py-2">{user.businessInfo?.website || (user.businessInfo ? '-' : <span className="text-red-600 font-semibold">Missing</span>)}</td>
                                     <td className="px-4 py-2">{user.businessInfo?.defaultCurrency || (user.businessInfo ? '-' : <span className="text-red-600 font-semibold">Missing</span>)}</td>
+                                    <td className="px-4 py-2 text-center capitalize">{user.businessInfo?.plan || 'free'}</td>
                                     <td className="px-4 py-2 text-center">
+                                        <button
+                                            className="text-xs bg-amber-100 hover:bg-amber-200 text-amber-900 px-2 py-1 rounded mr-1 disabled:opacity-50"
+                                            disabled={actionLoading === user._id + '-plan' || user._id === currentUserId}
+                                            onClick={() => handlePlan(user._id, user.businessInfo?.plan || 'free')}
+                                        >
+                                            {user.businessInfo?.plan === 'premium' ? 'Revoke Premium' : 'Grant Premium'}
+                                        </button>
                                         <button
                                             className="text-xs bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-2 py-1 rounded mr-1 disabled:opacity-50"
                                             disabled={actionLoading === user._id + '-status' || user._id === currentUserId}

@@ -23,7 +23,16 @@ export async function apiFetch(path, options = {}) {
     }
     if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Something went wrong. Please try again.');
+        if (res.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('isAdmin');
+            window.dispatchEvent(new Event('app-logout'));
+        }
+        const err = new Error(data.message || 'Something went wrong. Please try again.');
+        if (data.code) err.code = data.code;
+        if (data.usage) err.usage = data.usage;
+        err.status = res.status;
+        throw err;
     }
     return res.json();
 }

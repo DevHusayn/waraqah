@@ -1,7 +1,21 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { apiFetch } from '../utils/api';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { apiFetch, getToken } from '../utils/api';
+import { buildBusinessInfoPayload } from '../utils/businessPayload';
 
 const SettingsContext = createContext();
+
+const EMPTY_BUSINESS = {
+    name: '',
+    address: '',
+    email: '',
+    phone: '',
+    website: '',
+    defaultCurrency: 'NGN',
+    taxRate: 10,
+    brandColor: '#0ea5e9',
+    plan: 'free',
+    businessLogo: '',
+};
 
 export const useSettings = () => {
     const context = useContext(SettingsContext);
@@ -11,56 +25,63 @@ export const useSettings = () => {
     return context;
 };
 
-
 export const SettingsProvider = ({ children }) => {
-    const [businessInfo, setBusinessInfo] = useState({
-        name: '', address: '', email: '', phone: '', website: '', defaultCurrency: 'NGN', taxRate: 10, brandColor: '#0ea5e9', plan: 'free', businessLogo: '',
-    });
+    const [businessInfo, setBusinessInfo] = useState(EMPTY_BUSINESS);
     const [loading, setLoading] = useState(true);
 
-    // Load business info from backend on mount
-    useEffect(() => {
-        async function fetchBusinessInfo() {
-            setLoading(true);
-            try {
-                const info = await apiFetch('/business-info');
-                setBusinessInfo(info);
-            } catch {
-                let fallback = { name: '', address: '', email: '', phone: '', website: '', defaultCurrency: 'NGN', taxRate: 10, brandColor: '#0ea5e9', plan: 'free', businessLogo: '' };
-                if (import.meta.env.DEV) {
-                    try {
-                        const stored = localStorage.getItem('waraqah_business');
-                        if (stored) fallback = { ...fallback, ...JSON.parse(stored) };
-                    } catch { /* ignore */ }
-                    if (localStorage.getItem('waraqah_plan') === 'premium') {
-                        fallback.plan = 'premium';
-                    }
-                }
-                setBusinessInfo(fallback);
-            } finally {
-                setLoading(false);
-            }
+    const fetchBusinessInfo = useCallback(async () => {
+        if (!getToken()) {
+            setBusinessInfo(EMPTY_BUSINESS);
+            setLoading(false);
+            return;
         }
-        fetchBusinessInfo();
+        setLoading(true);
+        try {
+            const info = await apiFetch('/business-info');
+            setBusinessInfo(info);
+        } catch {
+            setBusinessInfo(EMPTY_BUSINESS);
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
+    useEffect(() => {
+        fetchBusinessInfo();
+        const onLogin = () => fetchBusinessInfo();
+        const onLogout = () => {
+            setBusinessInfo(EMPTY_BUSINESS);
+            setLoading(false);
+        };
+        window.addEventListener('app-login', onLogin);
+        window.addEventListener('app-logout', onLogout);
+        return () => {
+            window.removeEventListener('app-login', onLogin);
+            window.removeEventListener('app-logout', onLogout);
+        };
+    }, [fetchBusinessInfo]);
+
     const updateBusinessInfo = async (info) => {
-        try {
-            const updated = await apiFetch('/business-info', {
-                method: 'PUT',
-                body: JSON.stringify(info),
-            });
-            setBusinessInfo(updated);
-            if (import.meta.env.DEV) {
-                localStorage.setItem('waraqah_business', JSON.stringify(updated));
-            }
-        } catch {
-            setBusinessInfo(info);
-            if (import.meta.env.DEV) {
-                localStorage.setItem('waraqah_business', JSON.stringify(info));
-            }
-            throw new Error('Could not save settings. Logo and details are stored locally for this session in dev mode.');
-        }
+        const payload = buildBusinessInfoPayload(info, businessInfo);
+        const updated = await apiFetch('/business-info', {
+            method: 'PUT',
+            body: JSON.stringify(payload),
+        });
+        setBusinessInfo(updated);
+        return updated;
+    };
+
+    const saveBusinessLogo = async (logoDataUrl, formSnapshot = {}) => {
+        const payload = buildBusinessInfoPayload(
+            { ...businessInfo, ...formSnapshot, businessLogo: logoDataUrl },
+            businessInfo
+        );
+        const updated = await apiFetch('/business-info', {
+            method: 'PUT',
+            body: JSON.stringify(payload),
+        });
+        setBusinessInfo(updated);
+        return updated;
     };
 
     const value = {
@@ -68,6 +89,8 @@ export const SettingsProvider = ({ children }) => {
         updateBusinessInfo,
         setBusinessInfo,
         loading,
+        refreshBusinessInfo: fetchBusinessInfo,
+        saveBusinessLogo,
     };
 
     return (

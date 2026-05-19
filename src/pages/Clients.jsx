@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import { useInvoice } from '../context/InvoiceContext';
@@ -6,9 +7,19 @@ import { useToast } from '../context/ToastContext';
 import Spinner from '../components/Spinner';
 import { Plus, Edit, Trash2, Building2, Mail, Phone, MapPin } from 'lucide-react';
 
+function safeReturnPath(path) {
+    if (!path || !path.startsWith('/') || path.startsWith('//')) return null;
+    return path;
+}
+
 const Clients = () => {
     const { clients, addClient, updateClient, deleteClient, loading } = useInvoice();
     const { showToast } = useToast();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const returnTo = safeReturnPath(searchParams.get('returnTo'));
+    const shouldOpenAdd = searchParams.get('add') === '1';
+    const openedAddModal = useRef(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingClient, setEditingClient] = useState(null);
     const [formData, setFormData] = useState({
@@ -22,6 +33,21 @@ const Clients = () => {
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [confirm, setConfirm] = useState({ open: false, clientId: null });
 
+    useEffect(() => {
+        if (shouldOpenAdd && !openedAddModal.current) {
+            openedAddModal.current = true;
+            setEditingClient(null);
+            setFormData({
+                name: '',
+                business: '',
+                email: '',
+                phone: '',
+                address: '',
+            });
+            setIsModalOpen(true);
+        }
+    }, [shouldOpenAdd]);
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -33,8 +59,14 @@ const Clients = () => {
                 await updateClient(editingClient.id, formData);
                 showToast('Client updated successfully', 'success');
             } else {
-                await addClient(formData);
+                const newClient = await addClient(formData);
                 showToast('Client added successfully', 'success');
+                closeModal();
+                if (returnTo) {
+                    const join = returnTo.includes('?') ? '&' : '?';
+                    navigate(`${returnTo}${join}clientId=${encodeURIComponent(newClient.id)}`);
+                    return;
+                }
             }
             closeModal();
         } catch (err) {
