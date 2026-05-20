@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
 import ConfirmModal from './ConfirmModal';
-import { APP_TAGLINE } from '../constants/brand';
 import WaraqahLogo from './WaraqahLogo';
 import SidebarAccountFooter from './SidebarAccountFooter';
 
@@ -67,8 +66,12 @@ const Layout = ({ children }) => {
     const sidebarContent = (onNavigate) => (
         <>
             <div className="px-2 mb-8 min-w-0">
-                <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
-                <p className="text-xs text-slate-500 truncate mt-2 pl-0.5">{businessName || APP_TAGLINE}</p>
+                <WaraqahLogo
+                    size="sm"
+                    iconStyle="solid"
+                    showAccent={false}
+                    subtitle={businessName || undefined}
+                />
             </div>
             <nav className="flex flex-1 flex-col gap-1">
                 <NavLinks navigation={navigation} isActive={isActive} onNavigate={onNavigate} />

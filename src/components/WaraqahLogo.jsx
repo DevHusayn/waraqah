@@ -66,6 +66,7 @@ export default function WaraqahLogo({
     showAccent = true,
     inverted = false,
     iconStyle = 'solid',
+    subtitle,
     className = '',
 }) {
     const s = SIZES[size] || SIZES.md;
@@ -80,7 +81,7 @@ export default function WaraqahLogo({
               : 'bg-brand-light text-primary-600';
 
     return (
-        <span className={`inline-flex items-center min-w-0 ${s.wrap} ${className}`}>
+        <span className={`inline-flex items-start min-w-0 ${s.wrap} ${className}`}>
             {showIcon && (
                 <span
                     className={`flex shrink-0 items-center justify-center ${s.iconBox} ${iconBoxClass}`}
@@ -89,7 +90,19 @@ export default function WaraqahLogo({
                     <FileText className={`${s.icon} shrink-0`} strokeWidth={2.25} />
                 </span>
             )}
-            <WaraqahWordmark size={size} inverted={inverted} showAccent={showAccent} />
+            <span className="min-w-0 flex flex-col items-start justify-center pt-0.5">
+                <WaraqahWordmark size={size} inverted={inverted} showAccent={showAccent} />
+                {subtitle?.trim() ? (
+                    <span
+                        className={`block w-full text-xs truncate mt-1.5 leading-tight ${
+                            inverted ? 'text-sky-100/90' : 'text-slate-600 font-medium'
+                        }`}
+                        title={subtitle}
+                    >
+                        {subtitle}
+                    </span>
+                ) : null}
+            </span>
         </span>
     );
 }
