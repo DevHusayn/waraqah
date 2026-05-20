@@ -41,7 +41,7 @@ export default function LandingNav() {
             >
                 <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
                     <a href="#top" className="flex items-center min-w-0">
-                        <WaraqahLogo size="md" />
+                        <WaraqahLogo size="md" iconStyle="solid" />
                     </a>
 
                     <nav className="hidden md:flex items-center gap-8">
@@ -78,7 +78,7 @@ export default function LandingNav() {
                     />
                     <div className="absolute right-0 top-0 flex h-full w-[min(100%,20rem)] flex-col bg-white shadow-2xl landing-menu-panel">
                         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-                            <WaraqahLogo size="sm" />
+                            <WaraqahLogo size="sm" iconStyle="solid" />
                             <button
                                 type="button"
                                 onClick={closeMenu}

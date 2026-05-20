@@ -17,6 +17,10 @@
 }
 
 @layer components {
+    .waraqah-logo-mark {
+        @apply flex shrink-0 items-center justify-center bg-primary-600 text-white shadow-md shadow-primary-600/30;
+    }
+
     .page-title {
         @apply text-2xl sm:text-3xl font-semibold text-slate-900 tracking-tight;
     }

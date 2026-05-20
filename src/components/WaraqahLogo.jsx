@@ -70,17 +70,17 @@ export default function WaraqahLogo({
     const iconBoxClass =
         iconStyle === 'solid'
             ? inverted
-                ? 'bg-white text-brand shadow-md'
-                : 'bg-brand text-white shadow-md shadow-brand/25'
+                ? 'bg-white text-primary-600 shadow-md'
+                : 'waraqah-logo-mark'
             : inverted
               ? 'bg-white/15 text-white'
-              : 'bg-brand-light text-brand';
+              : 'bg-brand-light text-primary-600';
 
     return (
         <span className={`inline-flex items-center min-w-0 ${s.wrap} ${className}`}>
             {showIcon && (
                 <span
-                    className={`flex shrink-0 items-center justify-center ${s.iconBox} ${iconBoxClass}`}
+                    className={`${s.iconBox} ${iconBoxClass}`}
                     aria-hidden
                 >
                     <FileText className={s.icon} />
