@@ -26,7 +26,7 @@ export default function LandingInvoicePreview() {
                     <div className="min-w-0 flex-1">
                         <p className="text-[11px] font-bold text-slate-800 leading-tight">Waraqah Invoice</p>
                         <p className="text-[8px] text-slate-500 mt-0.5 leading-snug">
-                            12 Asokoro, Abuja
+                            123 Asokoro, Abuja
                         </p>
                         <p className="text-[8px] text-slate-500">hello@waraqah.invoice</p>
                         <p className="text-[8px] text-slate-500">+234 818 121 0108</p>
@@ -54,7 +54,7 @@ export default function LandingInvoicePreview() {
                             BILLED TO
                         </p>
                         <p className="text-[9px] font-bold text-slate-800 mt-1">Shopperpoint</p>
-                        <p className="text-[7px] text-slate-500">logisticsg@shopperpoint.com</p>
+                        <p className="text-[7px] text-slate-500">logistics@shopperpoint.com</p>
                     </div>
                     <div className="rounded-md bg-slate-100/90 p-2 relative">
                         <span className="absolute top-1.5 right-1.5 rounded px-1.5 py-0.5 text-[6px] font-bold uppercase bg-amber-400 text-amber-950">

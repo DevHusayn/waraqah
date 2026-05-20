@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, X } from 'lucide-react';
 import AlertModal from '../components/AlertModal';
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { APP_CURRENCY } from '../utils/currency';
+import { isStrongPassword, PASSWORD_REQUIREMENTS_MESSAGE } from '../utils/passwordValidation';
 import WaraqahLogo from '../components/WaraqahLogo';
 import { API_BASE, getNetworkErrorMessage } from '../utils/apiConfig';
 
@@ -101,13 +102,9 @@ function Auth() {
         e.preventDefault();
         setError('');
         // Strong password requirements (only for registration)
-        if (!isLogin) {
-            const password = form.password;
-            const strong = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+\-=]{8,}$/;
-            if (!strong.test(password)) {
-                setError('Password must be at least 8 characters, include uppercase, lowercase, and a number.');
-                return;
-            }
+        if (!isLogin && !isStrongPassword(form.password)) {
+            setError(PASSWORD_REQUIREMENTS_MESSAGE);
+            return;
         }
         setSubmitLoading(true);
         try {
@@ -172,24 +169,44 @@ function Auth() {
         }
     };
 
-    // Password reset handler
-    const handleResetPassword = async (e) => {
+    const handleForgotPassword = async (e) => {
         e.preventDefault();
+        const email = resetEmail.trim().toLowerCase();
+        if (!email) {
+            setAlert({ open: true, message: 'Please enter your email address.', type: 'error' });
+            return;
+        }
         setResetLoading(true);
-        setError('');
         try {
-            const res = await fetch(`${AUTH_URL}/forgot-password`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: resetEmail })
-            });
+            let res;
+            try {
+                res = await fetch(`${AUTH_URL}/forgot-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email }),
+                });
+            } catch {
+                throw new Error(getNetworkErrorMessage());
+            }
             const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Failed to send reset email');
-            setAlert({ open: true, message: 'Password reset link sent! Check your email.', type: 'success' });
+            if (!res.ok) {
+                throw new Error(data.message || 'Could not send reset email. Please try again.');
+            }
+            setAlert({
+                open: true,
+                message:
+                    data.message ||
+                    'If an account exists for that email, we sent a link to reset your password.',
+                type: 'success',
+            });
             setResetModal(false);
             setResetEmail('');
         } catch (err) {
-            setAlert({ open: true, message: err.message, type: 'error' });
+            setAlert({
+                open: true,
+                message: err.message === 'Failed to fetch' ? getNetworkErrorMessage() : err.message,
+                type: 'error',
+            });
         } finally {
             setResetLoading(false);
         }
@@ -201,28 +218,47 @@ function Auth() {
 
             {/* Password Reset Modal */}
             {resetModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md border border-gray-200 relative">
-                        <button onClick={() => setResetModal(false)} className="absolute top-3 right-3 text-gray-400 hover:text-primary-600 text-xl font-bold">&times;</button>
-                        <h2 className="text-2xl font-bold mb-4 text-primary-700 text-center">Reset Password</h2>
-                        <form onSubmit={handleResetPassword} className="space-y-5">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 sm:p-8 w-full max-w-md border border-slate-200 relative">
+                        <button
+                            type="button"
+                            onClick={() => setResetModal(false)}
+                            className="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                            aria-label="Close"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                        <h2 className="text-xl font-semibold text-slate-900 pr-8">Forgot password?</h2>
+                        <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+                            Enter the email on your account. We will send you a link to choose a new password.
+                        </p>
+                        <form onSubmit={handleForgotPassword} className="mt-6 space-y-5">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+                                <label className="label">Email address</label>
                                 <input
                                     type="email"
                                     className="input-field"
-                                    placeholder="Enter your email"
+                                    placeholder="you@example.com"
                                     value={resetEmail}
-                                    onChange={e => setResetEmail(e.target.value)}
+                                    onChange={(e) => setResetEmail(e.target.value)}
                                     required
+                                    autoComplete="email"
                                 />
                             </div>
                             <button
                                 type="submit"
-                                className="w-full bg-gradient-to-r from-primary-600 via-blue-600 to-primary-700 hover:from-primary-700 hover:to-blue-700 text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-primary-200 transition-all text-lg tracking-wide disabled:opacity-60"
+                                className="btn-primary w-full py-3.5 text-base"
                                 disabled={resetLoading}
+                                aria-busy={resetLoading}
                             >
-                                {resetLoading ? 'Sending...' : 'Send Reset Link'}
+                                {resetLoading ? (
+                                    <>
+                                        <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                                        Sending link...
+                                    </>
+                                ) : (
+                                    'Send reset link'
+                                )}
                             </button>
                         </form>
                     </div>

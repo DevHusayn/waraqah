@@ -393,7 +393,7 @@ export default function Landing() {
 
             <footer className="py-10 border-t border-slate-200 bg-white">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-                    <WaraqahLogo size="sm" />
+                    <WaraqahLogo size="sm" iconStyle="solid" />
                     <p>© {new Date().getFullYear()} {APP_NAME}. Professional invoicing, simplified.</p>
                 </div>
             </footer>

@@ -25,12 +25,12 @@ const SIZES = {
 };
 
 /** Stylized wordmark: Wara + gradient qah */
-export function WaraqahWordmark({ size = 'md', inverted = false, className = '' }) {
+export function WaraqahWordmark({ size = 'md', inverted = false, showAccent = true, className = '' }) {
     const s = SIZES[size] || SIZES.md;
     const base = inverted ? 'text-white' : 'text-slate-900';
     const gradient = inverted
         ? 'bg-gradient-to-r from-sky-200 to-white bg-clip-text text-transparent'
-        : 'bg-gradient-to-r from-brand to-sky-400 bg-clip-text text-transparent';
+        : 'bg-gradient-to-r from-primary-600 to-sky-400 bg-clip-text text-transparent';
 
     return (
         <span
@@ -41,12 +41,14 @@ export function WaraqahWordmark({ size = 'md', inverted = false, className = '' 
                 <span>Wara</span>
                 <span className={gradient}>qah</span>
             </span>
-            <span
-                className={`mt-1 rounded-full ${s.accent} ${
-                    inverted ? 'bg-white/70' : 'bg-gradient-to-r from-brand to-sky-400'
-                }`}
-                aria-hidden
-            />
+            {showAccent && (
+                <span
+                    className={`mt-1 rounded-full ${s.accent} ${
+                        inverted ? 'bg-white/70' : 'bg-gradient-to-r from-primary-600 to-sky-400'
+                    }`}
+                    aria-hidden
+                />
+            )}
         </span>
     );
 }
@@ -61,6 +63,7 @@ export function WaraqahWordmark({ size = 'md', inverted = false, className = '' 
 export default function WaraqahLogo({
     size = 'md',
     showIcon = true,
+    showAccent = true,
     inverted = false,
     iconStyle = 'solid',
     className = '',
@@ -80,13 +83,13 @@ export default function WaraqahLogo({
         <span className={`inline-flex items-center min-w-0 ${s.wrap} ${className}`}>
             {showIcon && (
                 <span
-                    className={`${s.iconBox} ${iconBoxClass}`}
+                    className={`flex shrink-0 items-center justify-center ${s.iconBox} ${iconBoxClass}`}
                     aria-hidden
                 >
-                    <FileText className={s.icon} />
+                    <FileText className={`${s.icon} shrink-0`} strokeWidth={2.25} />
                 </span>
             )}
-            <WaraqahWordmark size={size} inverted={inverted} />
+            <WaraqahWordmark size={size} inverted={inverted} showAccent={showAccent} />
         </span>
     );
 }

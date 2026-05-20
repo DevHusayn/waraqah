@@ -67,7 +67,7 @@ const Layout = ({ children }) => {
     const sidebarContent = (onNavigate) => (
         <>
             <div className="px-2 mb-8 min-w-0">
-                <WaraqahLogo size="sm" iconStyle="soft" />
+                <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
                 <p className="text-xs text-slate-500 truncate mt-2 pl-0.5">{businessName || APP_TAGLINE}</p>
             </div>
             <nav className="flex flex-1 flex-col gap-1">
@@ -117,7 +117,7 @@ const Layout = ({ children }) => {
             <div className="md:pl-64 flex flex-col flex-1 min-h-screen">
                 <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200/80 bg-white/90 backdrop-blur-md px-4 py-3 md:hidden">
                     <div className="flex items-center min-w-0">
-                        <WaraqahLogo size="sm" iconStyle="soft" />
+                        <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
                     </div>
                     <button
                         type="button"
