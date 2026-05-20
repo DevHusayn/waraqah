@@ -21,6 +21,7 @@ import WaraqahLogo from '../components/WaraqahLogo';
 import { APP_NAME, APP_TAGLINE } from '../constants/brand';
 import { AUTH_LOGIN_PATH, AUTH_REGISTER_PATH } from '../constants/authRoutes';
 import { FREE_MONTHLY_INVOICE_LIMIT } from '../utils/invoiceLimits';
+import { FREE_PLAN_FEATURES, PREMIUM_PLAN_FEATURES } from '../constants/planFeatures';
 import { useRevealOnScroll, revealClass } from '../hooks/useRevealOnScroll';
 
 const PREMIUM_PRICE = 5000;
@@ -56,22 +57,6 @@ const STEPS = [
     { step: '01', title: 'Add your business', text: 'Set your details and brand color for PDF invoices.' },
     { step: '02', title: 'Save a client', text: 'Store contact info once, then select them on every new invoice.' },
     { step: '03', title: 'Send the PDF', text: 'Download a professional invoice and share it instantly.' },
-];
-
-const FREE_FEATURES = [
-    `${FREE_MONTHLY_INVOICE_LIMIT} invoices per month`,
-    'Client management',
-    'Professional PDF export',
-    'Dashboard & status tracking',
-    'Clear totals and due dates',
-];
-
-const PREMIUM_FEATURES = [
-    'Unlimited invoices every month',
-    'Your logo on PDF invoices',
-    'Logo on your account profile',
-    'Monthly billing statements (PDF & print)',
-    'Premium branding on every invoice',
 ];
 
 const FAQ_ITEMS = [
@@ -282,7 +267,7 @@ export default function Landing() {
                                     <span className="text-base font-normal text-slate-500">/month</span>
                                 </p>
                                 <ul className="mt-8 space-y-3 flex-1">
-                                    {FREE_FEATURES.map((f) => (
+                                    {FREE_PLAN_FEATURES.map((f) => (
                                         <li key={f} className="flex items-start gap-3 text-slate-600 text-sm">
                                             <Check className="h-5 w-5 text-emerald-500 flex-shrink-0" />
                                             {f}
@@ -312,7 +297,7 @@ export default function Landing() {
                                         <Check className="h-5 w-5 text-amber-600 flex-shrink-0" />
                                         Everything in Free, plus:
                                     </li>
-                                    {PREMIUM_FEATURES.map((f) => (
+                                    {PREMIUM_PLAN_FEATURES.map((f) => (
                                         <li key={f} className="flex items-start gap-3 text-slate-700 text-sm">
                                             <Check className="h-5 w-5 text-amber-600 flex-shrink-0" />
                                             {f}

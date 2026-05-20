@@ -20,14 +20,14 @@ function SidebarAvatar({ businessInfo, premium }) {
             <img
                 src={logo}
                 alt=""
-                className={`h-11 w-11 rounded-xl object-cover bg-white shadow-sm ${ringClass}`}
+                className={`h-12 w-12 rounded-xl object-cover bg-white shadow-sm ${ringClass}`}
             />
         );
     }
 
     return (
         <div
-            className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-brand text-sm font-semibold text-white shadow-sm ${ringClass}`}
+            className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brand text-sm font-semibold text-white shadow-sm ${ringClass}`}
             aria-hidden
         >
             {initials}
@@ -37,13 +37,13 @@ function SidebarAvatar({ businessInfo, premium }) {
 
 function AccountSkeleton() {
     return (
-        <div className="mt-auto pt-4 px-2">
-            <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 animate-pulse">
+        <div className="mt-auto pt-6">
+            <div className="rounded-2xl border border-slate-200/80 bg-white p-4 animate-pulse">
                 <div className="flex items-center gap-3">
-                    <div className="h-11 w-11 rounded-xl bg-slate-200" />
+                    <div className="h-12 w-12 rounded-xl bg-slate-200" />
                     <div className="flex-1 space-y-2">
+                        <div className="h-4 w-28 rounded bg-slate-200" />
                         <div className="h-3 w-16 rounded-full bg-slate-200" />
-                        <div className="h-4 w-24 rounded bg-slate-200" />
                     </div>
                 </div>
                 <div className="mt-3 h-10 rounded-xl bg-slate-100" />
@@ -62,48 +62,52 @@ export default function SidebarAccountFooter({ onNavigate }) {
     }
 
     return (
-        <div className="mt-auto pt-4 px-2 pb-1">
+        <div className="mt-auto pt-6">
+            <p className="px-1 mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                Your account
+            </p>
             <div
                 className={
                     premium
-                        ? 'rounded-2xl border border-amber-200/60 bg-gradient-to-br from-amber-50/90 via-white to-white p-3.5 shadow-sm'
-                        : 'rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white to-slate-50/80 p-3.5 shadow-sm'
+                        ? 'rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50/80 via-white to-white p-4 shadow-sm'
+                        : 'rounded-2xl border border-slate-200 bg-white p-4 shadow-sm'
                 }
             >
                 <Link
                     to="/settings"
                     onClick={onNavigate}
-                    className="flex items-center gap-3 rounded-xl outline-none transition-colors hover:bg-white/60 focus-visible:ring-2 focus-visible:ring-brand/30 -m-1 p-1"
+                    className="flex items-center gap-3 rounded-xl outline-none transition-colors hover:bg-slate-50/80 focus-visible:ring-2 focus-visible:ring-brand/30 -m-1 p-1"
                 >
                     <SidebarAvatar businessInfo={businessInfo} premium={premium} />
                     <div className="min-w-0 flex-1">
-                        <span
+                        <p className="truncate text-[15px] font-semibold text-slate-900 leading-snug">
+                            {displayName}
+                        </p>
+                        <p
                             className={
                                 premium
-                                    ? 'inline-flex items-center gap-1 rounded-md bg-amber-100/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-800'
-                                    : 'inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-600'
+                                    ? 'mt-1 inline-flex items-center gap-1 text-xs font-medium text-amber-800'
+                                    : 'mt-1 text-xs font-medium text-slate-500'
                             }
                         >
                             {premium ? (
                                 <>
-                                    <Crown className="h-3 w-3" aria-hidden />
-                                    Premium
+                                    <Crown className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                                    Premium plan
                                 </>
                             ) : (
                                 'Free plan'
                             )}
-                        </span>
-                        <p className="mt-1.5 truncate text-sm font-semibold text-slate-900 leading-tight">
-                            {displayName}
                         </p>
                     </div>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" aria-hidden />
                 </Link>
 
                 {premium ? (
                     <Link
                         to="/settings#premium"
                         onClick={onNavigate}
-                        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-amber-200/80 bg-white/80 px-3 py-2 text-xs font-medium text-amber-900 transition-colors hover:bg-amber-50"
+                        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-amber-200/80 bg-white px-3 py-2.5 text-xs font-semibold text-amber-900 transition-colors hover:bg-amber-50"
                     >
                         Manage branding
                         <ChevronRight className="h-3.5 w-3.5 opacity-60" />
@@ -112,19 +116,16 @@ export default function SidebarAccountFooter({ onNavigate }) {
                     <Link
                         to="/upgrade"
                         onClick={onNavigate}
-                        className="group mt-3 flex w-full items-center justify-between gap-2 rounded-xl border border-brand/15 bg-brand/[0.06] px-3 py-2.5 text-sm font-semibold text-brand shadow-sm transition-all duration-200 hover:border-brand/30 hover:bg-brand hover:text-white hover:shadow-md"
+                        className="group mt-3 flex w-full items-center justify-between gap-2 rounded-xl bg-brand px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-hover hover:shadow-md"
                     >
                         <span className="flex items-center gap-2">
-                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand/10 transition-colors group-hover:bg-white/20">
-                                <Sparkles className="h-3.5 w-3.5" />
-                            </span>
-                            Upgrade
+                            <Sparkles className="h-4 w-4 opacity-90" />
+                            Upgrade to Premium
                         </span>
-                        <ChevronRight className="h-4 w-4 shrink-0 opacity-50 transition-transform group-hover:translate-x-0.5 group-hover:opacity-100" />
+                        <ChevronRight className="h-4 w-4 shrink-0 opacity-80 transition-transform group-hover:translate-x-0.5" />
                     </Link>
                 )}
             </div>
         </div>
     );
 }
-

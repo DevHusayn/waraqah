@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Loader2, X } from 'lucide-react';
 import AlertModal from '../components/AlertModal';
 import { useSettings } from '../context/SettingsContext';
@@ -14,9 +14,86 @@ import {
 import WaraqahLogo from '../components/WaraqahLogo';
 import RequiredLabel from '../components/RequiredLabel';
 import { API_BASE, getNetworkErrorMessage } from '../utils/apiConfig';
+import {
+    validateRequired,
+    validateEmail,
+    firstFieldError,
+    inputClass,
+    focusFieldById,
+} from '../utils/formFieldValidation';
+import FieldValidationMessage from '../components/FieldValidationMessage';
 
 const BASE_URL = API_BASE;
 const AUTH_URL = `${BASE_URL}/auth`;
+
+const LOGIN_FIELD_ORDER = ['email', 'password'];
+const REGISTER_FIELD_ORDER = [
+    'email',
+    'password',
+    'confirmPassword',
+    'name',
+    'businessEmail',
+    'address',
+    'phone',
+];
+
+function getFieldId(key, isLogin) {
+    const ids = {
+        email: isLogin ? 'auth-email' : 'reg-email',
+        password: isLogin ? 'auth-password' : 'reg-password',
+        confirmPassword: 'reg-confirm-password',
+        name: 'reg-name',
+        businessEmail: 'reg-business-email',
+        address: 'reg-address',
+        phone: 'reg-phone',
+    };
+    return ids[key];
+}
+
+function buildLoginFieldErrors(form) {
+    return {
+        email: validateEmail(
+            form.email,
+            'Please enter your email address.',
+            'Please enter a valid email address.'
+        ),
+        password: validateRequired(form.password, 'Please enter your password.'),
+    };
+}
+
+function buildRegisterFieldErrors(form, confirmPassword) {
+    const errors = {
+        email: validateEmail(
+            form.email,
+            'Please enter your email address.',
+            'Please enter a valid email address.'
+        ),
+        password: validateRequired(form.password, 'Please enter your password.'),
+        confirmPassword: !confirmPassword.trim()
+            ? 'Please confirm your password.'
+            : form.password !== confirmPassword
+              ? 'Passwords do not match.'
+              : '',
+        name: validateRequired(form.name, 'Please enter your business name.'),
+        businessEmail: validateEmail(
+            form.businessEmail,
+            'Please enter your business email.',
+            'Please enter a valid business email.'
+        ),
+        address: validateRequired(form.address, 'Please enter your business address.'),
+        phone: validateRequired(form.phone, 'Please enter your phone number.'),
+    };
+
+    if (form.password && !errors.password && !isStrongPassword(form.password)) {
+        errors.password = PASSWORD_REQUIREMENTS_MESSAGE;
+    }
+
+    return errors;
+}
+
+function focusField(fieldKey, isLogin) {
+    focusFieldById(getFieldId(fieldKey, isLogin));
+}
 
 function Auth() {
     const { setBusinessInfo } = useSettings();
@@ -44,7 +121,10 @@ function Auth() {
     const [resetEmail, setResetEmail] = useState('');
     const [resetLoading, setResetLoading] = useState(false);
     const [submitLoading, setSubmitLoading] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState({});
+    const [resetEmailError, setResetEmailError] = useState('');
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
+    const authFormRef = useRef(null);
     const navigate = useNavigate();
     const location = useLocation();
     const returnTo = searchParams.get('returnTo');
@@ -76,13 +156,37 @@ function Auth() {
     useEffect(() => {
         setError('');
         setConfirmPassword('');
+        setFieldErrors({});
     }, [isLogin]);
+
+    useEffect(() => {
+        if (isLogin) return undefined;
+        const timer = window.setTimeout(() => {
+            const hasConfirm = confirmPassword.length > 0;
+            const hasPassword = form.password.length > 0;
+
+            if (!hasConfirm && !hasPassword) {
+                setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
+                return;
+            }
+
+            if (hasConfirm && form.password !== confirmPassword) {
+                setFieldErrors((prev) => ({
+                    ...prev,
+                    confirmPassword: 'Passwords do not match.',
+                }));
+            } else if (hasConfirm) {
+                setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
+            }
+        }, 400);
+        return () => window.clearTimeout(timer);
+    }, [confirmPassword, form.password, isLogin]);
 
     const passwordStrength = !isLogin ? getPasswordStrength(form.password) : null;
 
     const toggleMode = () => {
         setError('');
-        setAlert({ open: false, message: '', type: 'error' });
+        setFieldErrors({});
         const nextIsLogin = !isLogin;
         setIsLogin(nextIsLogin);
         const params = new URLSearchParams(searchParams);
@@ -105,23 +209,37 @@ function Auth() {
     }, [navigate, returnTo]);
 
     const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setForm({ ...form, [name]: value });
+        if (fieldErrors[name]) {
+            setFieldErrors((prev) => ({ ...prev, [name]: '' }));
+        }
+    };
+
+    const handleConfirmPasswordChange = (e) => {
+        setConfirmPassword(e.target.value);
+        if (fieldErrors.confirmPassword) {
+            setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-        // Strong password requirements (only for registration)
-        if (!isLogin) {
-            if (form.password !== confirmPassword) {
-                setError('Passwords do not match.');
-                return;
-            }
-            if (!isStrongPassword(form.password)) {
-                setError(PASSWORD_REQUIREMENTS_MESSAGE);
-                return;
-            }
+
+        const errors = isLogin
+            ? buildLoginFieldErrors(form)
+            : buildRegisterFieldErrors(form, confirmPassword);
+        const order = isLogin ? LOGIN_FIELD_ORDER : REGISTER_FIELD_ORDER;
+        const firstInvalid = firstFieldError(errors, order);
+
+        if (firstInvalid) {
+            setFieldErrors(errors);
+            focusField(firstInvalid, isLogin);
+            return;
         }
+
+        setFieldErrors({});
         setSubmitLoading(true);
         try {
             const email = form.email.trim().toLowerCase();
@@ -188,11 +306,17 @@ function Auth() {
 
     const handleForgotPassword = async (e) => {
         e.preventDefault();
-        const email = resetEmail.trim().toLowerCase();
-        if (!email) {
-            setAlert({ open: true, message: 'Please enter your email address.', type: 'error' });
+        const emailError = validateEmail(
+            resetEmail,
+            'Please enter your email address.',
+            'Please enter a valid email address.'
+        );
+        if (emailError) {
+            setResetEmailError(emailError);
             return;
         }
+        setResetEmailError('');
+        const email = resetEmail.trim().toLowerCase();
         setResetLoading(true);
         try {
             let res;
@@ -209,20 +333,20 @@ function Auth() {
             if (!res.ok) {
                 throw new Error(data.message || 'Could not send reset email. Please try again.');
             }
+            setResetModal(false);
+            setResetEmail('');
             setAlert({
                 open: true,
+                type: 'success',
                 message:
                     data.message ||
                     'If an account exists for that email, we sent a link to reset your password.',
-                type: 'success',
             });
-            setResetModal(false);
-            setResetEmail('');
         } catch (err) {
             setAlert({
                 open: true,
-                message: err.message === 'Failed to fetch' ? getNetworkErrorMessage() : err.message,
                 type: 'error',
+                message: err.message === 'Failed to fetch' ? getNetworkErrorMessage() : err.message,
             });
         } finally {
             setResetLoading(false);
@@ -231,7 +355,12 @@ function Auth() {
 
     return (
         <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-100">
-            <AlertModal open={alert.open} message={alert.message} type={alert.type} onClose={() => setAlert({ ...alert, open: false })} />
+            <AlertModal
+                open={alert.open}
+                message={alert.message}
+                type={alert.type}
+                onClose={() => setAlert({ open: false, message: '', type: 'error' })}
+            />
 
             {/* Password Reset Modal */}
             {resetModal && (
@@ -239,7 +368,10 @@ function Auth() {
                     <div className="bg-white rounded-xl shadow-2xl p-6 sm:p-8 w-full max-w-md border border-slate-200 relative">
                         <button
                             type="button"
-                            onClick={() => setResetModal(false)}
+                            onClick={() => {
+                                setResetModal(false);
+                                setResetEmailError('');
+                            }}
                             className="absolute top-4 right-4 p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
                             aria-label="Close"
                         >
@@ -249,17 +381,26 @@ function Auth() {
                         <p className="mt-2 text-sm text-slate-600 leading-relaxed">
                             Enter the email on your account. We will send you a link to choose a new password.
                         </p>
-                        <form onSubmit={handleForgotPassword} className="mt-6 space-y-5">
+                        <form onSubmit={handleForgotPassword} noValidate className="mt-6 space-y-5">
                             <div>
                                 <label className="label">Email address</label>
                                 <input
+                                    id="reset-email"
                                     type="email"
-                                    className="input-field"
+                                    className={inputClass(Boolean(resetEmailError))}
                                     placeholder="you@example.com"
                                     value={resetEmail}
-                                    onChange={(e) => setResetEmail(e.target.value)}
-                                    required
+                                    onChange={(e) => {
+                                        setResetEmail(e.target.value);
+                                        if (resetEmailError) setResetEmailError('');
+                                    }}
                                     autoComplete="email"
+                                    aria-invalid={Boolean(resetEmailError)}
+                                    aria-describedby={resetEmailError ? 'reset-email-error' : undefined}
+                                />
+                                <FieldValidationMessage
+                                    id="reset-email-error"
+                                    message={resetEmailError}
                                 />
                             </div>
                             <button
@@ -307,7 +448,9 @@ function Auth() {
                     </div>
 
                     <form
+                        ref={authFormRef}
                         onSubmit={handleSubmit}
+                        noValidate
                         className="bg-white rounded-xl border border-slate-200 shadow-lg shadow-slate-200/50 p-6 space-y-6"
                     >
 
@@ -322,11 +465,12 @@ function Auth() {
                                             name="email"
                                             value={form.email}
                                             onChange={handleChange}
-                                            className="input-field placeholder:text-slate-500"
+                                            className={inputClass(Boolean(fieldErrors.email), 'placeholder:text-slate-500')}
                                             placeholder="you@example.com"
-                                            required
                                             autoComplete="email"
+                                            aria-invalid={Boolean(fieldErrors.email)}
                                         />
+                                        <FieldValidationMessage message={fieldErrors.email} />
                                     </div>
                                     <div className="relative">
                                         <RequiredLabel htmlFor="auth-password">Password</RequiredLabel>
@@ -336,11 +480,12 @@ function Auth() {
                                             name="password"
                                             value={form.password}
                                             onChange={handleChange}
-                                            className="input-field placeholder:text-slate-500"
+                                            className={inputClass(Boolean(fieldErrors.password), 'placeholder:text-slate-500')}
                                             placeholder="••••••••"
-                                            required
                                             autoComplete="current-password"
+                                            aria-invalid={Boolean(fieldErrors.password)}
                                         />
+                                        <FieldValidationMessage message={fieldErrors.password} />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
@@ -360,11 +505,12 @@ function Auth() {
                                             name="email"
                                             value={form.email}
                                             onChange={handleChange}
-                                            className="input-field placeholder:text-slate-500"
+                                            className={inputClass(Boolean(fieldErrors.email), 'placeholder:text-slate-500')}
                                             placeholder="you@example.com"
-                                            required
                                             autoComplete="email"
+                                            aria-invalid={Boolean(fieldErrors.email)}
                                         />
+                                        <FieldValidationMessage message={fieldErrors.email} />
                                     </div>
                                     <div className="relative">
                                         <RequiredLabel htmlFor="reg-password">Password</RequiredLabel>
@@ -374,11 +520,12 @@ function Auth() {
                                             name="password"
                                             value={form.password}
                                             onChange={handleChange}
-                                            className="input-field placeholder:text-slate-500"
+                                            className={inputClass(Boolean(fieldErrors.password), 'placeholder:text-slate-500')}
                                             placeholder="••••••••"
-                                            required
                                             autoComplete="new-password"
+                                            aria-invalid={Boolean(fieldErrors.password)}
                                         />
+                                        <FieldValidationMessage message={fieldErrors.password} />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
@@ -416,11 +563,14 @@ function Auth() {
                                             id="reg-confirm-password"
                                             type={showConfirmPassword ? 'text' : 'password'}
                                             value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            className="input-field placeholder:text-slate-500"
+                                            onChange={handleConfirmPasswordChange}
+                                            className={inputClass(
+                                                Boolean(fieldErrors.confirmPassword),
+                                                'placeholder:text-slate-500'
+                                            )}
                                             placeholder="••••••••"
-                                            required
                                             autoComplete="new-password"
+                                            aria-invalid={Boolean(fieldErrors.confirmPassword)}
                                         />
                                         <button
                                             type="button"
@@ -429,6 +579,14 @@ function Auth() {
                                         >
                                             {showConfirmPassword ? 'Hide' : 'Show'}
                                         </button>
+                                        <FieldValidationMessage message={fieldErrors.confirmPassword} />
+                                        {!fieldErrors.confirmPassword &&
+                                            confirmPassword.length > 0 &&
+                                            form.password === confirmPassword && (
+                                                <p className="mt-1.5 text-xs font-medium text-emerald-600">
+                                                    Passwords match.
+                                                </p>
+                                            )}
                                     </div>
                                     <div>
                                         <RequiredLabel htmlFor="reg-name">Business name</RequiredLabel>
@@ -438,10 +596,11 @@ function Auth() {
                                             name="name"
                                             value={form.name}
                                             onChange={handleChange}
-                                            className="input-field"
+                                            className={inputClass(Boolean(fieldErrors.name))}
                                             placeholder="Your business name"
-                                            required
+                                            aria-invalid={Boolean(fieldErrors.name)}
                                         />
+                                        <FieldValidationMessage message={fieldErrors.name} />
                                     </div>
                                     <div>
                                         <RequiredLabel htmlFor="reg-business-email">
@@ -453,11 +612,12 @@ function Auth() {
                                             name="businessEmail"
                                             value={form.businessEmail}
                                             onChange={handleChange}
-                                            className="input-field"
+                                            className={inputClass(Boolean(fieldErrors.businessEmail))}
                                             placeholder="billing@yourbusiness.com"
-                                            required
                                             autoComplete="email"
+                                            aria-invalid={Boolean(fieldErrors.businessEmail)}
                                         />
+                                        <FieldValidationMessage message={fieldErrors.businessEmail} />
                                     </div>
                                     <div>
                                         <RequiredLabel htmlFor="reg-address">Business address</RequiredLabel>
@@ -467,10 +627,11 @@ function Auth() {
                                             name="address"
                                             value={form.address}
                                             onChange={handleChange}
-                                            className="input-field"
+                                            className={inputClass(Boolean(fieldErrors.address))}
                                             placeholder="123 Main Street"
-                                            required
+                                            aria-invalid={Boolean(fieldErrors.address)}
                                         />
+                                        <FieldValidationMessage message={fieldErrors.address} />
                                     </div>
                                     <div>
                                         <RequiredLabel htmlFor="reg-phone">Phone</RequiredLabel>
@@ -480,10 +641,11 @@ function Auth() {
                                             name="phone"
                                             value={form.phone}
                                             onChange={handleChange}
-                                            className="input-field"
+                                            className={inputClass(Boolean(fieldErrors.phone))}
                                             placeholder="+234 810 000 0000"
-                                            required
+                                            aria-invalid={Boolean(fieldErrors.phone)}
                                         />
+                                        <FieldValidationMessage message={fieldErrors.phone} />
                                     </div>
                                     <div>
                                         <label htmlFor="reg-website" className="label">

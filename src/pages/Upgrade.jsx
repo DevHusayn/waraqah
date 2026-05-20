@@ -6,18 +6,9 @@ import { useToast } from '../context/ToastContext';
 import { useSettings } from '../context/SettingsContext';
 import { isPremiumUser } from '../utils/premium';
 import { formatCurrency } from '../utils/currency';
+import { PREMIUM_PLAN_FEATURES } from '../constants/planFeatures';
 import Spinner from '../components/Spinner';
 import DevPlanToggle from '../components/DevPlanToggle';
-
-const FEATURES = [
-    'Unlimited invoice generation every month',
-    'Business logo on PDF invoices (watermark)',
-    'Logo on your sidebar profile',
-    'Premium branding on every invoice',
-    'Monthly client billing statements (PDF & print)',
-    'Auto-renews monthly via Paystack (₦5,000)',
-    'Cancel anytime — keep access until period ends',
-];
 
 export default function Upgrade() {
     const { showToast } = useToast();
@@ -27,6 +18,7 @@ export default function Upgrade() {
     const [paying, setPaying] = useState(false);
 
     const premium = isPremiumUser(businessInfo);
+    const monthlyAmount = plan?.amount ?? 5000;
 
     useEffect(() => {
         apiFetch('/payments/plan')
@@ -73,35 +65,49 @@ export default function Upgrade() {
                 </div>
                 <h1 className="page-title">Upgrade to Premium</h1>
                 <p className="page-subtitle mt-2">
-                    Unlock logo branding on invoices and your account profile.
+                    Unlimited invoices, your logo on PDFs, monthly statements, and profile branding.
                 </p>
             </div>
 
-            <div className="card border-amber-200/60 shadow-card-md overflow-hidden">
-                <div className="bg-gradient-to-br from-amber-50 via-white to-sky-50 px-6 py-5 border-b border-slate-100">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-amber-800 mb-1">
-                        Monthly subscription
-                    </p>
+            <div className="rounded-2xl border-2 border-amber-200/80 bg-gradient-to-br from-amber-50 via-white to-sky-50 shadow-card-md overflow-hidden">
+                <div className="px-6 py-5 border-b border-amber-100/80">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Crown className="h-5 w-5 text-amber-600" />
+                        <span className="text-sm font-semibold text-slate-900">Premium</span>
+                        <span className="ml-auto rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">
+                            Monthly
+                        </span>
+                    </div>
                     <div className="flex items-baseline gap-1">
                         <span className="text-4xl font-bold text-slate-900 tracking-tight">
-                            {formatCurrency(plan?.amount ?? 5000)}
+                            {formatCurrency(monthlyAmount)}
                         </span>
                         <span className="text-slate-500 font-medium">/ month</span>
                     </div>
                 </div>
 
                 <ul className="px-6 py-5 space-y-3">
-                    {FEATURES.map((text) => (
+                    <li className="flex items-start gap-3 text-sm font-semibold text-slate-900 pb-3 border-b border-amber-200/60">
+                        <Check className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" strokeWidth={2.5} />
+                        Everything in Free, plus:
+                    </li>
+                    {PREMIUM_PLAN_FEATURES.map((text) => (
                         <li key={text} className="flex items-start gap-3 text-sm text-slate-700">
-                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 mt-0.5">
-                                <Check className="h-3 w-3" strokeWidth={3} />
-                            </span>
+                            <Check className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" strokeWidth={2.5} />
                             {text}
                         </li>
                     ))}
+                    <li className="flex items-start gap-3 text-xs text-slate-500 pt-2">
+                        <span className="h-5 w-5 shrink-0 flex items-center justify-center text-slate-400">·</span>
+                        Auto-renews monthly via Paystack ({formatCurrency(monthlyAmount)})
+                    </li>
+                    <li className="flex items-start gap-3 text-xs text-slate-500">
+                        <span className="h-5 w-5 shrink-0 flex items-center justify-center text-slate-400">·</span>
+                        Cancel anytime. Keep access until your billing period ends.
+                    </li>
                 </ul>
 
-                <div className="px-6 pb-6 space-y-3">
+                <div className="px-6 pb-6 space-y-3 bg-white/50">
                     {premium ? (
                         <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800 text-center font-medium">
                             You already have Premium active.
@@ -137,7 +143,7 @@ export default function Upgrade() {
 
                     <p className="flex items-center justify-center gap-2 text-xs text-slate-500">
                         <Shield className="h-3.5 w-3.5" />
-                        Secured by Paystack · Card, bank & USSD
+                        Secured by Paystack · Card, bank and USSD
                     </p>
 
                     <DevPlanToggle className="mt-4" />
@@ -145,9 +151,9 @@ export default function Upgrade() {
             </div>
 
             <p className="mt-6 text-center text-xs text-slate-500 leading-relaxed">
-                You will be charged ₦5,000 now and each month until you cancel. Paystack secures your card for renewals.
+                You will be charged {formatCurrency(monthlyAmount)} now and each month until you cancel.
+                Paystack secures your card for renewals.
             </p>
         </div>
     );
 }
-

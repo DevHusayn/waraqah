@@ -5,7 +5,29 @@ import ConfirmModal from '../components/ConfirmModal';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
 import Spinner from '../components/Spinner';
+import FieldValidationMessage from '../components/FieldValidationMessage';
+import RequiredLabel from '../components/RequiredLabel';
+import {
+    validateRequired,
+    validateOptionalEmail,
+    firstFieldError,
+    appendFieldErrorClass,
+    focusFieldById,
+    clearFieldError,
+} from '../utils/formFieldValidation';
 import { Plus, Edit, Trash2, Building2, Mail, Phone, MapPin } from 'lucide-react';
+
+const CLIENT_FIELD_ORDER = ['name', 'email'];
+const CLIENT_INPUT =
+    'block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50';
+
+function buildClientFieldErrors(formData) {
+    const errors = {
+        name: validateRequired(formData.name, 'Please enter the client\'s full name.'),
+        email: validateOptionalEmail(formData.email, 'Please enter a valid email address.'),
+    };
+    return errors;
+}
 
 function safeReturnPath(path) {
     if (!path || !path.startsWith('/') || path.startsWith('//')) return null;
@@ -30,6 +52,7 @@ const Clients = () => {
         address: '',
     });
 
+    const [fieldErrors, setFieldErrors] = useState({});
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [confirm, setConfirm] = useState({ open: false, clientId: null });
 
@@ -49,11 +72,21 @@ const Clients = () => {
     }, [shouldOpenAdd]);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        clearFieldError(setFieldErrors, name);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const errors = buildClientFieldErrors(formData);
+        const firstInvalid = firstFieldError(errors, CLIENT_FIELD_ORDER);
+        if (firstInvalid) {
+            setFieldErrors(errors);
+            focusFieldById(firstInvalid === 'name' ? 'client-name' : 'client-email');
+            return;
+        }
+        setFieldErrors({});
         try {
             if (editingClient) {
                 await updateClient(editingClient.id, formData);
@@ -94,6 +127,7 @@ const Clients = () => {
     const closeModal = () => {
         setIsModalOpen(false);
         setEditingClient(null);
+        setFieldErrors({});
         setFormData({
             name: '',
             business: '',
@@ -209,38 +243,43 @@ const Clients = () => {
                             <h2 className="text-xl font-semibold text-slate-900 mb-6 text-center">
                                 {editingClient ? 'Edit Client' : 'Add New Client'}
                             </h2>
-                            <form onSubmit={handleSubmit} className="space-y-5">
+                            <form onSubmit={handleSubmit} noValidate className="space-y-5">
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
+                                        <RequiredLabel htmlFor="client-name">Full name</RequiredLabel>
                                         <input
+                                            id="client-name"
                                             type="text"
                                             name="name"
                                             value={formData.name}
                                             onChange={handleChange}
-                                            className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50"
-                                            required
+                                            className={appendFieldErrorClass(CLIENT_INPUT, Boolean(fieldErrors.name))}
+                                            aria-invalid={Boolean(fieldErrors.name)}
                                         />
+                                        <FieldValidationMessage message={fieldErrors.name} />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+                                        <label className="label">Business name</label>
                                         <input
                                             type="text"
                                             name="business"
                                             value={formData.business}
                                             onChange={handleChange}
-                                            className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50"
+                                            className={CLIENT_INPUT}
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                        <label htmlFor="client-email" className="label">Email address</label>
                                         <input
+                                            id="client-email"
                                             type="email"
                                             name="email"
                                             value={formData.email}
                                             onChange={handleChange}
-                                            className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50"
+                                            className={appendFieldErrorClass(CLIENT_INPUT, Boolean(fieldErrors.email))}
+                                            aria-invalid={Boolean(fieldErrors.email)}
                                         />
+                                        <FieldValidationMessage message={fieldErrors.email} />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>

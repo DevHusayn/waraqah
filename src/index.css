@@ -55,6 +55,33 @@
         box-shadow: 0 0 0 2px rgb(var(--brand-ring) / 0.25);
     }
 
+    .input-field:user-invalid {
+        @apply border-red-400;
+    }
+
+    .input-field:user-invalid:focus {
+        border-color: rgb(239 68 68);
+        box-shadow: 0 0 0 2px rgb(239 68 68 / 0.2);
+    }
+
+    .input-field--error {
+        @apply border-red-400;
+    }
+
+    .input-field--error:focus {
+        border-color: rgb(239 68 68);
+        box-shadow: 0 0 0 2px rgb(239 68 68 / 0.2);
+    }
+
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .animate-fade-in {
+        animation: fade-in 0.2s ease;
+    }
+
     .card {
         @apply bg-white rounded-xl border border-slate-200/80 shadow-card p-6;
     }

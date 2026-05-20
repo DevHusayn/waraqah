@@ -1,33 +1,86 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import AlertModal from '../components/AlertModal';
 import WaraqahLogo from '../components/WaraqahLogo';
+import RequiredLabel from '../components/RequiredLabel';
+import FieldValidationMessage from '../components/FieldValidationMessage';
 import { API_BASE, getNetworkErrorMessage } from '../utils/apiConfig';
 import { AUTH_LOGIN_PATH } from '../constants/authRoutes';
-import { isStrongPassword, PASSWORD_REQUIREMENTS_MESSAGE } from '../utils/passwordValidation';
+import {
+    isStrongPassword,
+    getPasswordStrength,
+    PASSWORD_REQUIREMENTS_MESSAGE,
+} from '../utils/passwordValidation';
+import {
+    validateRequired,
+    firstFieldError,
+    inputClass,
+    focusFieldById,
+    clearFieldError,
+} from '../utils/formFieldValidation';
 
 const RESET_URL = `${API_BASE}/auth/reset-password`;
+const RESET_FIELD_ORDER = ['password', 'confirm'];
+
+function buildResetFieldErrors(password, confirm) {
+    const errors = {
+        password: validateRequired(password, 'Please enter your new password.'),
+        confirm: !confirm.trim()
+            ? 'Please confirm your new password.'
+            : password !== confirm
+              ? 'Passwords do not match.'
+              : '',
+    };
+    if (password && !errors.password && !isStrongPassword(password)) {
+        errors.password = PASSWORD_REQUIREMENTS_MESSAGE;
+    }
+    return errors;
+}
 
 export default function ResetPassword() {
     const { token } = useParams();
     const [password, setPassword] = useState('');
     const [confirm, setConfirm] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState({});
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
+    const passwordStrength = getPasswordStrength(password);
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => {
+            const hasConfirm = confirm.length > 0;
+            const hasPassword = password.length > 0;
+            if (!hasConfirm && !hasPassword) {
+                setFieldErrors((prev) => ({ ...prev, confirm: '' }));
+                return;
+            }
+            if (hasConfirm && password !== confirm) {
+                setFieldErrors((prev) => ({
+                    ...prev,
+                    confirm: 'Passwords do not match.',
+                }));
+            } else if (hasConfirm) {
+                setFieldErrors((prev) => ({ ...prev, confirm: '' }));
+            }
+        }, 400);
+        return () => window.clearTimeout(timer);
+    }, [confirm, password]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (password !== confirm) {
-            setAlert({ open: true, message: 'Passwords do not match.', type: 'error' });
+        const errors = buildResetFieldErrors(password, confirm);
+        const firstInvalid = firstFieldError(errors, RESET_FIELD_ORDER);
+        if (firstInvalid) {
+            setFieldErrors(errors);
+            focusFieldById(firstInvalid === 'password' ? 'reset-password' : 'reset-confirm');
             return;
         }
-        if (!isStrongPassword(password)) {
-            setAlert({ open: true, message: PASSWORD_REQUIREMENTS_MESSAGE, type: 'error' });
-            return;
-        }
+        setFieldErrors({});
+
         if (!token) {
             setAlert({ open: true, message: 'This reset link is invalid.', type: 'error' });
             return;
@@ -49,15 +102,15 @@ export default function ResetPassword() {
             if (!res.ok) throw new Error(data.message || 'Could not reset password.');
             setAlert({
                 open: true,
-                message: data.message || 'Your password has been updated. You can sign in now.',
                 type: 'success',
+                message: data.message || 'Your password has been updated. You can sign in now.',
             });
             setTimeout(() => navigate(AUTH_LOGIN_PATH), 2000);
         } catch (err) {
             setAlert({
                 open: true,
-                message: err.message === 'Failed to fetch' ? getNetworkErrorMessage() : err.message,
                 type: 'error',
+                message: err.message === 'Failed to fetch' ? getNetworkErrorMessage() : err.message,
             });
         } finally {
             setLoading(false);
@@ -84,19 +137,24 @@ export default function ResetPassword() {
 
                 <form
                     onSubmit={handleSubmit}
+                    noValidate
                     className="bg-white rounded-xl border border-slate-200 shadow-lg shadow-slate-200/50 p-6 space-y-5"
                 >
                     <div>
-                        <label className="label">New password</label>
+                        <RequiredLabel htmlFor="reset-password">New password</RequiredLabel>
                         <div className="relative">
                             <input
+                                id="reset-password"
                                 type={showPassword ? 'text' : 'password'}
-                                className="input-field pr-16"
+                                className={inputClass(Boolean(fieldErrors.password), 'pr-16')}
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
+                                onChange={(e) => {
+                                    setPassword(e.target.value);
+                                    clearFieldError(setFieldErrors, 'password');
+                                }}
                                 autoComplete="new-password"
                                 placeholder="At least 8 characters"
+                                aria-invalid={Boolean(fieldErrors.password)}
                             />
                             <button
                                 type="button"
@@ -106,18 +164,48 @@ export default function ResetPassword() {
                                 {showPassword ? 'Hide' : 'Show'}
                             </button>
                         </div>
+                        {password && (
+                            <div className="mt-2">
+                                <div className="h-1 w-full rounded-full bg-slate-100 overflow-hidden">
+                                    <div
+                                        className={`h-full rounded-full transition-all ${passwordStrength.barClass}`}
+                                        style={{ width: `${passwordStrength.percent}%` }}
+                                    />
+                                </div>
+                                <p
+                                    className={`mt-1 text-xs ${
+                                        passwordStrength.level === 'strong'
+                                            ? 'text-emerald-600'
+                                            : passwordStrength.level === 'fair'
+                                              ? 'text-amber-600'
+                                              : 'text-red-600'
+                                    }`}
+                                >
+                                    {passwordStrength.label}
+                                </p>
+                            </div>
+                        )}
+                        <FieldValidationMessage message={fieldErrors.password} />
                     </div>
                     <div>
-                        <label className="label">Confirm password</label>
+                        <RequiredLabel htmlFor="reset-confirm">Confirm password</RequiredLabel>
                         <input
+                            id="reset-confirm"
                             type={showPassword ? 'text' : 'password'}
-                            className="input-field"
+                            className={inputClass(Boolean(fieldErrors.confirm))}
                             value={confirm}
-                            onChange={(e) => setConfirm(e.target.value)}
-                            required
+                            onChange={(e) => {
+                                setConfirm(e.target.value);
+                                clearFieldError(setFieldErrors, 'confirm');
+                            }}
                             autoComplete="new-password"
                             placeholder="Repeat your password"
+                            aria-invalid={Boolean(fieldErrors.confirm)}
                         />
+                        <FieldValidationMessage message={fieldErrors.confirm} />
+                        {!fieldErrors.confirm && confirm.length > 0 && password === confirm && (
+                            <p className="mt-1.5 text-xs font-medium text-emerald-600">Passwords match.</p>
+                        )}
                     </div>
                     <button
                         type="submit"

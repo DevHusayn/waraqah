@@ -11,6 +11,19 @@ import InvoiceLimitModal from '../components/InvoiceLimitModal';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { canCreateInvoice, formatInvoiceUsageLabel } from '../utils/invoiceLimits';
 import { apiFetch } from '../utils/api';
+import FieldValidationMessage from '../components/FieldValidationMessage';
+import RequiredLabel from '../components/RequiredLabel';
+import {
+    inputClass,
+    focusFieldById,
+    clearFieldError,
+    firstFieldError,
+} from '../utils/formFieldValidation';
+import {
+    buildInvoiceFieldErrors,
+    getFirstInvoiceFieldId,
+    getInvoiceFieldFocusOrder,
+} from '../utils/invoiceFormValidation';
 
 const CreateInvoice = () => {
     const { id } = useParams();
@@ -22,6 +35,7 @@ const CreateInvoice = () => {
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
     const [saving, setSaving] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState({});
 
     const [formData, setFormData] = useState({
         invoiceNumber: '',
@@ -97,13 +111,16 @@ const CreateInvoice = () => {
     }, [id, atLimit, setLimitModalOpen]);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        clearFieldError(setFieldErrors, name);
     };
 
     const handleItemChange = (index, field, value) => {
         const newItems = [...formData.items];
         newItems[index][field] = value;
         setFormData({ ...formData, items: newItems });
+        clearFieldError(setFieldErrors, `item-${index}-${field}`);
     };
 
     const addItem = () => {
@@ -145,10 +162,15 @@ const CreateInvoice = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!formData.clientId) {
-            showToast('Please select a client', 'error');
+        const errors = buildInvoiceFieldErrors(formData);
+        const order = getInvoiceFieldFocusOrder(formData.items.length);
+        const firstInvalid = firstFieldError(errors, order);
+        if (firstInvalid) {
+            setFieldErrors(errors);
+            focusFieldById(getFirstInvoiceFieldId(firstInvalid));
             return;
         }
+        setFieldErrors({});
 
         if (!id && !canCreateInvoice(invoiceUsage)) {
             setLimitModalOpen(true);
@@ -217,7 +239,7 @@ const CreateInvoice = () => {
                 ) : null}
             </div>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Main Form */}
                     <div className="lg:col-span-2 space-y-6">
@@ -251,40 +273,46 @@ const CreateInvoice = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="label">Tax Rate (%)</label>
+                                    <RequiredLabel htmlFor="invoice-tax-rate">Tax rate (%)</RequiredLabel>
                                     <input
+                                        id="invoice-tax-rate"
                                         type="number"
                                         name="taxRate"
                                         value={formData.taxRate}
                                         onChange={handleChange}
-                                        className="input-field"
+                                        className={inputClass(Boolean(fieldErrors.taxRate))}
                                         min="0"
                                         max="100"
                                         step="0.01"
-                                        required
+                                        aria-invalid={Boolean(fieldErrors.taxRate)}
                                     />
+                                    <FieldValidationMessage message={fieldErrors.taxRate} />
                                 </div>
                                 <div>
-                                    <label className="label">Issue Date</label>
+                                    <RequiredLabel htmlFor="invoice-date">Issue date</RequiredLabel>
                                     <input
+                                        id="invoice-date"
                                         type="date"
                                         name="date"
                                         value={formData.date}
                                         onChange={handleChange}
-                                        className="input-field"
-                                        required
+                                        className={inputClass(Boolean(fieldErrors.date))}
+                                        aria-invalid={Boolean(fieldErrors.date)}
                                     />
+                                    <FieldValidationMessage message={fieldErrors.date} />
                                 </div>
                                 <div>
-                                    <label className="label">Due Date</label>
+                                    <RequiredLabel htmlFor="invoice-due-date">Due date</RequiredLabel>
                                     <input
+                                        id="invoice-due-date"
                                         type="date"
                                         name="dueDate"
                                         value={formData.dueDate}
                                         onChange={handleChange}
-                                        className="input-field"
-                                        required
+                                        className={inputClass(Boolean(fieldErrors.dueDate))}
+                                        aria-invalid={Boolean(fieldErrors.dueDate)}
                                     />
+                                    <FieldValidationMessage message={fieldErrors.dueDate} />
                                 </div>
                             </div>
                         </div>
@@ -346,13 +374,14 @@ const CreateInvoice = () => {
                                 </Link>
                             </div>
                             <div>
-                                <label className="label">Select Client</label>
+                                <RequiredLabel htmlFor="invoice-client">Select client</RequiredLabel>
                                 <select
+                                    id="invoice-client"
                                     name="clientId"
                                     value={formData.clientId}
                                     onChange={handleChange}
-                                    className="input-field"
-                                    required
+                                    className={inputClass(Boolean(fieldErrors.clientId))}
+                                    aria-invalid={Boolean(fieldErrors.clientId)}
                                 >
                                     <option value="">Choose a client...</option>
                                     {clients.map(client => (
@@ -361,6 +390,7 @@ const CreateInvoice = () => {
                                         </option>
                                     ))}
                                 </select>
+                                <FieldValidationMessage message={fieldErrors.clientId} />
                                 {clients.length === 0 && (
                                     <p className="mt-2 text-sm text-amber-600">
                                         No clients found. Please add a client first.
@@ -388,37 +418,55 @@ const CreateInvoice = () => {
                                     <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                                         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                                             <div className="md:col-span-5">
-                                                <label className="label">Description</label>
+                                                <RequiredLabel htmlFor={`invoice-item-${index}-description`}>
+                                                    Description
+                                                </RequiredLabel>
                                                 <input
+                                                    id={`invoice-item-${index}-description`}
                                                     type="text"
                                                     value={item.description}
                                                     onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                                                    className="input-field"
+                                                    className={inputClass(Boolean(fieldErrors[`item-${index}-description`]))}
                                                     placeholder="Service or product description"
-                                                    required
+                                                    aria-invalid={Boolean(fieldErrors[`item-${index}-description`])}
+                                                />
+                                                <FieldValidationMessage
+                                                    message={fieldErrors[`item-${index}-description`]}
                                                 />
                                             </div>
                                             <div className="md:col-span-2">
-                                                <label className="label">Quantity</label>
+                                                <RequiredLabel htmlFor={`invoice-item-${index}-quantity`}>
+                                                    Quantity
+                                                </RequiredLabel>
                                                 <input
+                                                    id={`invoice-item-${index}-quantity`}
                                                     type="number"
                                                     value={item.quantity}
                                                     onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                                                    className="input-field"
+                                                    className={inputClass(Boolean(fieldErrors[`item-${index}-quantity`]))}
                                                     min="1"
-                                                    required
+                                                    aria-invalid={Boolean(fieldErrors[`item-${index}-quantity`])}
+                                                />
+                                                <FieldValidationMessage
+                                                    message={fieldErrors[`item-${index}-quantity`]}
                                                 />
                                             </div>
                                             <div className="md:col-span-3">
-                                                <label className="label">Rate ({CURRENCY_INFO.symbol})</label>
+                                                <RequiredLabel htmlFor={`invoice-item-${index}-rate`}>
+                                                    Rate ({CURRENCY_INFO.symbol})
+                                                </RequiredLabel>
                                                 <input
+                                                    id={`invoice-item-${index}-rate`}
                                                     type="number"
                                                     value={item.rate}
                                                     onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
-                                                    className="input-field"
+                                                    className={inputClass(Boolean(fieldErrors[`item-${index}-rate`]))}
                                                     min="0"
                                                     step="0.01"
-                                                    required
+                                                    aria-invalid={Boolean(fieldErrors[`item-${index}-rate`])}
+                                                />
+                                                <FieldValidationMessage
+                                                    message={fieldErrors[`item-${index}-rate`]}
                                                 />
                                             </div>
                                             {/* Removed Amount Paid field for partial payment */}

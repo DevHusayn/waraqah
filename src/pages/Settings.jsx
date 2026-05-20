@@ -4,6 +4,35 @@ import { Building2, Save, DollarSign, Edit, X } from 'lucide-react';
 import { CURRENCY_INFO } from '../utils/currency';
 import { buildBusinessInfoPayload } from '../utils/businessPayload';
 import PremiumLogoSettings from '../components/PremiumLogoSettings';
+import FieldValidationMessage from '../components/FieldValidationMessage';
+import RequiredLabel from '../components/RequiredLabel';
+import {
+    validateRequired,
+    validateEmail,
+    validateHexColor,
+    firstFieldError,
+    appendFieldErrorClass,
+    focusFieldById,
+    clearFieldError,
+} from '../utils/formFieldValidation';
+
+const SETTINGS_FIELD_ORDER = ['name', 'address', 'email', 'phone', 'brandColor'];
+const SETTINGS_INPUT =
+    'block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50';
+
+function buildSettingsFieldErrors(formData) {
+    return {
+        name: validateRequired(formData.name, 'Please enter your business name.'),
+        address: validateRequired(formData.address, 'Please enter your business address.'),
+        email: validateEmail(
+            formData.email,
+            'Please enter your business email.',
+            'Please enter a valid business email.'
+        ),
+        phone: validateRequired(formData.phone, 'Please enter your phone number.'),
+        brandColor: validateHexColor(formData.brandColor, 'Please choose a brand color.'),
+    };
+}
 
 const Settings = () => {
     const { businessInfo, updateBusinessInfo } = useSettings();
@@ -26,21 +55,29 @@ const Settings = () => {
     }, [businessInfo.name, businessInfo.email]);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
         setSaved(false);
+        clearFieldError(setErrors, name);
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Validate required fields and collect errors
-        const newErrors = {};
-        if (!formData.name) newErrors.name = 'Business name is required.';
-        if (!formData.address) newErrors.address = 'Address is required.';
-        if (!formData.email) newErrors.email = 'Email is required.';
-        if (!formData.phone) newErrors.phone = 'Phone is required.';
-        if (!formData.brandColor) newErrors.brandColor = 'Brand color is required.';
-        setErrors(newErrors);
-        if (Object.keys(newErrors).length > 0) return;
+        const newErrors = buildSettingsFieldErrors(formData);
+        const firstInvalid = firstFieldError(newErrors, SETTINGS_FIELD_ORDER);
+        if (firstInvalid) {
+            setErrors(newErrors);
+            const ids = {
+                name: 'settings-name',
+                address: 'settings-address',
+                email: 'settings-email',
+                phone: 'settings-phone',
+                brandColor: 'settings-brand-color',
+            };
+            focusFieldById(ids[firstInvalid]);
+            return;
+        }
+        setErrors({});
         const payload = buildBusinessInfoPayload(formData, businessInfo);
         updateBusinessInfo(payload)
             .then(() => {
@@ -61,6 +98,7 @@ const Settings = () => {
     const handleCancel = () => {
         setFormData(businessInfo);
         setIsEditing(false);
+        setErrors({});
     };
 
     return (
@@ -158,61 +196,68 @@ const Settings = () => {
                     </div>
                 ) : (
                     // Edit Mode - Show form
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} noValidate className="space-y-6">
                         <div className="space-y-5">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Business Name <span className="text-red-500">*</span></label>
+                                <RequiredLabel htmlFor="settings-name">Business name</RequiredLabel>
                                 <input
+                                    id="settings-name"
                                     type="text"
                                     name="name"
                                     value={formData.name || ''}
                                     onChange={handleChange}
-                                    className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50"
+                                    className={appendFieldErrorClass(SETTINGS_INPUT, Boolean(errors.name))}
                                     placeholder="e.g., Waraqah Invoice"
-                                    required
+                                    aria-invalid={Boolean(errors.name)}
                                 />
-                                {errors.brandColor && <p className="text-xs text-red-600 mt-1">{errors.brandColor}</p>}
+                                <FieldValidationMessage message={errors.name} />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Address <span className="text-red-500">*</span></label>
+                                <RequiredLabel htmlFor="settings-address">Address</RequiredLabel>
                                 <textarea
+                                    id="settings-address"
                                     name="address"
                                     value={formData.address || ''}
                                     onChange={handleChange}
-                                    className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50 resize-none"
+                                    className={appendFieldErrorClass(`${SETTINGS_INPUT} resize-none`, Boolean(errors.address))}
                                     rows="2"
                                     placeholder="123 Asokoro, Abuja"
                                     style={{ resize: 'none' }}
-                                    required
+                                    aria-invalid={Boolean(errors.address)}
                                 />
+                                <FieldValidationMessage message={errors.address} />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
+                                    <RequiredLabel htmlFor="settings-email">Email</RequiredLabel>
                                     <input
+                                        id="settings-email"
                                         type="email"
                                         name="email"
                                         value={formData.email || ''}
                                         onChange={handleChange}
-                                        className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50"
+                                        className={appendFieldErrorClass(SETTINGS_INPUT, Boolean(errors.email))}
                                         placeholder="contact@waraqah.invoice"
-                                        required
+                                        aria-invalid={Boolean(errors.email)}
                                     />
+                                    <FieldValidationMessage message={errors.email} />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone <span className="text-red-500">*</span></label>
+                                    <RequiredLabel htmlFor="settings-phone">Phone</RequiredLabel>
                                     <input
+                                        id="settings-phone"
                                         type="tel"
                                         name="phone"
                                         value={formData.phone || ''}
                                         onChange={handleChange}
-                                        className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50"
+                                        className={appendFieldErrorClass(SETTINGS_INPUT, Boolean(errors.phone))}
                                         placeholder="+234 818 121 0108"
-                                        required
+                                        aria-invalid={Boolean(errors.phone)}
                                     />
+                                    <FieldValidationMessage message={errors.phone} />
                                 </div>
                             </div>
 
@@ -228,7 +273,7 @@ const Settings = () => {
                                 />
                             </div>
 <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Brand Color <span className="text-red-500">*</span></label>
+                                <RequiredLabel htmlFor="settings-brand-color">Brand color</RequiredLabel>
                                 <div className="flex items-center gap-3">
                                     <input
                                         type="color"
@@ -236,18 +281,20 @@ const Settings = () => {
                                         value={formData.brandColor || '#0ea5e9'}
                                         onChange={handleChange}
                                         className="h-12 w-20 rounded-xl border border-gray-300 cursor-pointer"
+                                        aria-label="Pick brand color"
                                     />
                                     <input
+                                        id="settings-brand-color"
                                         type="text"
                                         name="brandColor"
                                         value={formData.brandColor || '#0ea5e9'}
                                         onChange={handleChange}
-                                        className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50"
-                                        pattern="^#[0-9A-Fa-f]{6}$"
+                                        className={appendFieldErrorClass(SETTINGS_INPUT, Boolean(errors.brandColor))}
                                         placeholder="#0ea5e9"
-                                        required
+                                        aria-invalid={Boolean(errors.brandColor)}
                                     />
                                 </div>
+                                <FieldValidationMessage message={errors.brandColor} />
                                 <p className="text-xs text-gray-500 mt-2 mb-2">This color will be used in your PDF invoice headers</p>
 
                                 {/* Preset Colors */}
@@ -283,7 +330,7 @@ const Settings = () => {
                         />
 
                         {errors.submit && (
-                            <p className="mt-6 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3">{errors.submit}</p>
+                            <FieldValidationMessage message={errors.submit} />
                         )}
                         <div className="mt-8 flex items-center gap-4">
                             <button type="submit" className="btn-primary">

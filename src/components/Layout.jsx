@@ -78,17 +78,10 @@ const Layout = ({ children }) => {
         return location.pathname.startsWith(path);
     };
 
-    const businessName = businessInfo.name?.trim();
-
     const sidebarContent = (onNavigate) => (
         <>
             <div className="px-2 mb-8 min-w-0">
-                <WaraqahLogo
-                    size="sm"
-                    iconStyle="solid"
-                    showAccent={false}
-                    subtitle={businessName || undefined}
-                />
+                <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
             </div>
             <nav className="flex flex-1 flex-col gap-1">
                 <NavLinks
