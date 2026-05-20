@@ -70,8 +70,8 @@ const PREMIUM_FEATURES = [
     'Unlimited invoices every month',
     'Your logo on PDF invoices',
     'Logo on your account profile',
+    'Monthly billing statements (PDF & print)',
     'Premium branding on every invoice',
-    'Priority feel for your brand',
 ];
 
 const FAQ_ITEMS = [
@@ -308,6 +308,10 @@ export default function Landing() {
                                     <span className="text-base font-normal text-slate-500">/month</span>
                                 </p>
                                 <ul className="mt-8 space-y-3 flex-1">
+                                    <li className="flex items-start gap-3 text-sm font-semibold text-slate-900 pb-3 mb-1 border-b border-amber-200/70">
+                                        <Check className="h-5 w-5 text-amber-600 flex-shrink-0" />
+                                        Everything in Free, plus:
+                                    </li>
                                     {PREMIUM_FEATURES.map((f) => (
                                         <li key={f} className="flex items-start gap-3 text-slate-700 text-sm">
                                             <Check className="h-5 w-5 text-amber-600 flex-shrink-0" />

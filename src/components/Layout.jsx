@@ -1,11 +1,21 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FileText, Users, Settings as SettingsIcon, Menu, X, LogOut } from 'lucide-react';
+import {
+    LayoutDashboard,
+    FileText,
+    Users,
+    Settings as SettingsIcon,
+    Menu,
+    X,
+    LogOut,
+    FileBarChart,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
 import ConfirmModal from './ConfirmModal';
 import WaraqahLogo from './WaraqahLogo';
 import SidebarAccountFooter from './SidebarAccountFooter';
+import { isPremiumUser } from '../utils/premium';
 
 function NavLinks({ navigation, isActive, onNavigate }) {
     return (
@@ -34,6 +44,7 @@ const Layout = ({ children }) => {
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { businessInfo, setBusinessInfo } = useSettings();
+    const premium = isPremiumUser(businessInfo);
     const { resetAll } = useInvoice();
     const isLoggedIn = Boolean(localStorage.getItem('token'));
     const isAdmin = localStorage.getItem('isAdmin') === 'true';
@@ -52,6 +63,9 @@ const Layout = ({ children }) => {
         { name: 'Dashboard', href: '/', icon: LayoutDashboard },
         { name: 'Invoices', href: '/invoices', icon: FileText },
         { name: 'Clients', href: '/clients', icon: Users },
+        ...(premium
+            ? [{ name: 'Statements', href: '/statements', icon: FileBarChart }]
+            : []),
         { name: 'Settings', href: '/settings', icon: SettingsIcon },
         ...(isAdmin ? [{ name: 'Admin', href: '/admin', icon: LayoutDashboard }] : []),
     ];

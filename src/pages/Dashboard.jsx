@@ -1,6 +1,6 @@
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
-import { FileText, Users, DollarSign, TrendingUp, Clock, CheckCircle } from 'lucide-react';
+import { FileText, Users, DollarSign, TrendingUp, Clock, CheckCircle, FileBarChart } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '../utils/currency';
@@ -88,7 +88,7 @@ const Dashboard = () => {
 
             <div className="card mb-8">
                 <h2 className="text-lg font-semibold text-slate-900 mb-4">Quick actions</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className={`grid grid-cols-1 gap-3 ${premium ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-3'}`}>
                     <button type="button" onClick={tryNavigateToCreate} className="btn-primary justify-start py-3">
                         <FileText size={18} />
                         Create invoice
@@ -101,6 +101,16 @@ const Dashboard = () => {
                         <TrendingUp size={18} />
                         View all invoices
                     </button>
+                    {premium ? (
+                        <button
+                            type="button"
+                            onClick={() => navigate('/statements')}
+                            className="btn-secondary justify-start py-3"
+                        >
+                            <FileBarChart size={18} />
+                            Monthly statement
+                        </button>
+                    ) : null}
                 </div>
             </div>
 

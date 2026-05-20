@@ -14,6 +14,7 @@ const FEATURES = [
     'Business logo on PDF invoices (watermark)',
     'Logo on your sidebar profile',
     'Premium branding on every invoice',
+    'Monthly client billing statements (PDF & print)',
     'Auto-renews monthly via Paystack (₦5,000)',
     'Cancel anytime — keep access until period ends',
 ];

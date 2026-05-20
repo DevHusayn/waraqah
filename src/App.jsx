@@ -13,6 +13,7 @@ import AdminRoute from './utils/AdminRoute';
 import AdminDashboard from './pages/AdminDashboard';
 import Upgrade from './pages/Upgrade';
 import UpgradeCallback from './pages/UpgradeCallback';
+import MonthlyStatement from './pages/MonthlyStatement';
 import { InvoiceProvider } from './context/InvoiceContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { ToastProvider } from './context/ToastContext';
@@ -54,6 +55,7 @@ function App() {
                                             <Route path="/invoices/edit/:id" element={<PrivateRoute><CreateInvoice /></PrivateRoute>} />
                                             <Route path="/clients" element={<PrivateRoute><Clients /></PrivateRoute>} />
                                             <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+                                            <Route path="/statements" element={<PrivateRoute><MonthlyStatement /></PrivateRoute>} />
                                             <Route path="/upgrade" element={<PrivateRoute><Upgrade /></PrivateRoute>} />
                                             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
                                         </Routes>

@@ -1,0 +1,242 @@
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Crown, Download, Printer, FileBarChart } from 'lucide-react';
+import { useInvoice } from '../context/InvoiceContext';
+import { useSettings } from '../context/SettingsContext';
+import PageHeader from '../components/PageHeader';
+import Spinner from '../components/Spinner';
+import { formatCurrency } from '../utils/currency';
+import { isPremiumUser } from '../utils/premium';
+import {
+    buildMonthlyStatement,
+    getDefaultStatementMonth,
+    parseStatementMonth,
+} from '../utils/monthlyStatement';
+import { generateMonthlyStatementPdf, statusLabel } from '../utils/monthlyStatementPdf';
+
+const STATUS_COLS = ['paid', 'pending', 'overdue', 'cancelled'];
+
+export default function MonthlyStatement() {
+    const { invoices, clients, loading } = useInvoice();
+    const { businessInfo } = useSettings();
+    const premium = isPremiumUser(businessInfo);
+    const [monthValue, setMonthValue] = useState(getDefaultStatementMonth);
+    const [exporting, setExporting] = useState(false);
+
+    const { year, month } = parseStatementMonth(monthValue);
+
+    const statement = useMemo(
+        () => buildMonthlyStatement({ invoices, clients, year, month }),
+        [invoices, clients, year, month]
+    );
+
+    const handlePdf = async (print = false) => {
+        setExporting(true);
+        try {
+            await generateMonthlyStatementPdf(statement, businessInfo, { print });
+        } catch (err) {
+            console.error(err);
+            window.alert('Could not create the statement. Please try again.');
+        } finally {
+            setExporting(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center py-20">
+                <Spinner />
+            </div>
+        );
+    }
+
+    if (!premium) {
+        return (
+            <div>
+                <PageHeader
+                    title="Monthly statement"
+                    subtitle="Premium feature for professional billing reports"
+                />
+                <div className="card max-w-lg text-center py-12">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
+                        <Crown className="h-7 w-7" />
+                    </div>
+                    <h2 className="mt-5 text-xl font-semibold text-slate-900">Upgrade to Premium</h2>
+                    <p className="mt-2 text-slate-600 text-sm leading-relaxed max-w-sm mx-auto">
+                        Print or download a monthly statement with client totals for paid, pending,
+                        overdue, and cancelled invoices.
+                    </p>
+                    <Link to="/upgrade" className="btn-primary inline-flex mt-8">
+                        View Premium plans
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div>
+            <PageHeader
+                title="Monthly statement"
+                subtitle="Billing summary by client for the selected month"
+            >
+                <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                        type="button"
+                        onClick={() => handlePdf(false)}
+                        disabled={exporting}
+                        className="btn-primary"
+                    >
+                        <Download className="h-4 w-4" />
+                        {exporting ? 'Preparing…' : 'Download PDF'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => handlePdf(true)}
+                        disabled={exporting}
+                        className="btn-secondary"
+                    >
+                        <Printer className="h-4 w-4" />
+                        Print
+                    </button>
+                </div>
+            </PageHeader>
+
+            <div className="card mb-6 flex flex-col sm:flex-row sm:items-end gap-4">
+                <div className="flex-1">
+                    <label className="label" htmlFor="statement-month">
+                        Statement period
+                    </label>
+                    <input
+                        id="statement-month"
+                        type="month"
+                        className="input-field max-w-xs"
+                        value={monthValue}
+                        onChange={(e) => setMonthValue(e.target.value)}
+                    />
+                    <p className="mt-2 text-xs text-slate-500">
+                        Based on invoice issue dates in {statement.periodLabel}.
+                    </p>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                    <FileBarChart className="h-5 w-5 text-brand shrink-0" />
+                    <span>
+                        <strong className="text-slate-900">{statement.totals.invoiceCount}</strong>{' '}
+                        invoice{statement.totals.invoiceCount === 1 ? '' : 's'} this month
+                    </span>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+                {STATUS_COLS.map((status) => (
+                    <div key={status} className="card !p-4">
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                            {statusLabel(status)}
+                        </p>
+                        <p className="mt-1 text-lg font-semibold text-slate-900">
+                            {formatCurrency(statement.totals[status])}
+                        </p>
+                    </div>
+                ))}
+                <div className="card !p-4 col-span-2 lg:col-span-1 bg-brand-light/50 border-brand/20">
+                    <p className="text-xs font-medium text-brand uppercase tracking-wide">
+                        Total billed
+                    </p>
+                    <p className="mt-1 text-lg font-bold text-brand">
+                        {formatCurrency(statement.totals.total)}
+                    </p>
+                </div>
+            </div>
+
+            <div className="card overflow-hidden !p-0">
+                <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/80">
+                    <h2 className="text-lg font-semibold text-slate-900">Client breakdown</h2>
+                    <p className="text-sm text-slate-500 mt-0.5">
+                        Amounts issued to each client in {statement.periodLabel}
+                    </p>
+                </div>
+
+                {!statement.hasData ? (
+                    <div className="text-center py-16 px-6">
+                        <FileBarChart className="mx-auto h-12 w-12 text-slate-300" />
+                        <p className="mt-3 font-medium text-slate-900">No invoices this month</p>
+                        <p className="text-sm text-slate-500 mt-1">
+                            Create invoices with an issue date in {statement.periodLabel} to see them
+                            here.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b border-slate-200 bg-white text-left">
+                                    <th className="px-6 py-3 font-semibold text-slate-700">Client</th>
+                                    <th className="px-4 py-3 font-semibold text-slate-700 text-right">
+                                        Paid
+                                    </th>
+                                    <th className="px-4 py-3 font-semibold text-slate-700 text-right">
+                                        Pending
+                                    </th>
+                                    <th className="px-4 py-3 font-semibold text-slate-700 text-right">
+                                        Overdue
+                                    </th>
+                                    <th className="px-4 py-3 font-semibold text-slate-700 text-right">
+                                        Cancelled
+                                    </th>
+                                    <th className="px-6 py-3 font-semibold text-slate-900 text-right">
+                                        Total
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {statement.rows.map((row) => (
+                                    <tr
+                                        key={row.clientId}
+                                        className="border-b border-slate-100 hover:bg-slate-50/80"
+                                    >
+                                        <td className="px-6 py-3">
+                                            <p className="font-medium text-slate-900">
+                                                {row.clientName}
+                                            </p>
+                                            {row.clientSubtitle ? (
+                                                <p className="text-xs text-slate-500 truncate max-w-[200px]">
+                                                    {row.clientSubtitle}
+                                                </p>
+                                            ) : null}
+                                        </td>
+                                        {STATUS_COLS.map((status) => (
+                                            <td
+                                                key={status}
+                                                className="px-4 py-3 text-right text-slate-700 tabular-nums"
+                                            >
+                                                {row[status] > 0
+                                                    ? formatCurrency(row[status])
+                                                    : '—'}
+                                            </td>
+                                        ))}
+                                        <td className="px-6 py-3 text-right font-semibold text-slate-900 tabular-nums">
+                                            {formatCurrency(row.total)}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                            <tfoot>
+                                <tr className="bg-slate-50 font-semibold text-slate-900">
+                                    <td className="px-6 py-3">Total</td>
+                                    {STATUS_COLS.map((status) => (
+                                        <td key={status} className="px-4 py-3 text-right tabular-nums">
+                                            {formatCurrency(statement.totals[status])}
+                                        </td>
+                                    ))}
+                                    <td className="px-6 py-3 text-right tabular-nums text-brand">
+                                        {formatCurrency(statement.totals.total)}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
