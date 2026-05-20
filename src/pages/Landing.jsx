@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import LandingNav from '../components/LandingNav';
 import LandingInvoicePreview from '../components/LandingInvoicePreview';
+import WaraqahLogo from '../components/WaraqahLogo';
 import { APP_NAME, APP_TAGLINE } from '../constants/brand';
 import { AUTH_LOGIN_PATH, AUTH_REGISTER_PATH } from '../constants/authRoutes';
 import { FREE_MONTHLY_INVOICE_LIMIT } from '../utils/invoiceLimits';
@@ -392,7 +393,7 @@ export default function Landing() {
 
             <footer className="py-10 border-t border-slate-200 bg-white">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-                    <p className="font-semibold text-slate-700">{APP_NAME}</p>
+                    <WaraqahLogo size="sm" />
                     <p>© {new Date().getFullYear()} {APP_NAME}. Professional invoicing, simplified.</p>
                 </div>
             </footer>

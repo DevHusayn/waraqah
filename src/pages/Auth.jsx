@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import AlertModal from '../components/AlertModal';
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { APP_CURRENCY } from '../utils/currency';
-import { APP_NAME } from '../constants/brand';
+import WaraqahLogo from '../components/WaraqahLogo';
 import { API_BASE, getNetworkErrorMessage } from '../utils/apiConfig';
 
 const BASE_URL = API_BASE;
@@ -35,6 +35,7 @@ function Auth() {
     const [resetModal, setResetModal] = useState(false);
     const [resetEmail, setResetEmail] = useState('');
     const [resetLoading, setResetLoading] = useState(false);
+    const [submitLoading, setSubmitLoading] = useState(false);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const navigate = useNavigate();
     const location = useLocation();
@@ -108,6 +109,7 @@ function Auth() {
                 return;
             }
         }
+        setSubmitLoading(true);
         try {
             let body = { email: form.email, password: form.password };
             if (!isLogin) {
@@ -165,6 +167,8 @@ function Auth() {
         } catch (err) {
             setError(err.message === 'Failed to fetch' ? getNetworkErrorMessage() : err.message);
             resetAll();
+        } finally {
+            setSubmitLoading(false);
         }
     };
 
@@ -230,7 +234,7 @@ function Auth() {
             <div className="flex items-center justify-center min-h-screen p-4 sm:p-10 w-full">
                 <div className="w-full max-w-md">
                     <div className="md:hidden flex justify-center mb-8">
-                        <span className="text-2xl font-semibold text-brand">{APP_NAME}</span>
+                        <WaraqahLogo size="lg" />
                     </div>
 
                     <div className="mb-8 text-center md:text-left">
@@ -356,16 +360,30 @@ function Auth() {
 
                         {error && <p className="text-red-500 text-sm text-center font-medium bg-red-50 py-2 rounded-lg">{error}</p>}
 
-                        <button type="submit" className="btn-primary w-full py-3.5 text-base">
-                            {isLogin ? 'Sign in' : 'Create account'}
+                        <button
+                            type="submit"
+                            className="btn-primary w-full py-3.5 text-base"
+                            disabled={submitLoading}
+                            aria-busy={submitLoading}
+                        >
+                            {submitLoading ? (
+                                <>
+                                    <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                                    {isLogin ? 'Signing in...' : 'Creating account...'}
+                                </>
+                            ) : (
+                                isLogin ? 'Sign in' : 'Create account'
+                            )}
                         </button>
                     </form>
 
                     <p className="mt-8 text-center text-slate-700 text-base">
                         {isLogin ? "Don't have an account?" : "Already have an account?"}
                         <button
+                            type="button"
                             onClick={toggleMode}
-                            className="ml-2 font-medium text-brand hover:underline"
+                            disabled={submitLoading}
+                            className="ml-2 font-medium text-brand hover:underline disabled:opacity-50 disabled:pointer-events-none"
                         >
                             {isLogin ? 'Register' : 'Sign In'}
                         </button>

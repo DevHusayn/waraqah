@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, FileText } from 'lucide-react';
-import { APP_NAME } from '../constants/brand';
+import { Menu, X } from 'lucide-react';
+import WaraqahLogo from './WaraqahLogo';
 import { AUTH_LOGIN_PATH, AUTH_REGISTER_PATH } from '../constants/authRoutes';
 
 const NAV_LINKS = [
@@ -40,11 +40,8 @@ export default function LandingNav() {
                 }`}
             >
                 <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-                    <a href="#top" className="flex items-center gap-2.5 min-w-0">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-white shadow-md shadow-brand/25">
-                            <FileText className="h-5 w-5" aria-hidden />
-                        </div>
-                        <span className="text-lg font-bold tracking-tight text-slate-900">{APP_NAME}</span>
+                    <a href="#top" className="flex items-center min-w-0">
+                        <WaraqahLogo size="md" />
                     </a>
 
                     <nav className="hidden md:flex items-center gap-8">
@@ -81,7 +78,7 @@ export default function LandingNav() {
                     />
                     <div className="absolute right-0 top-0 flex h-full w-[min(100%,20rem)] flex-col bg-white shadow-2xl landing-menu-panel">
                         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-                            <span className="font-bold text-slate-900">{APP_NAME}</span>
+                            <WaraqahLogo size="sm" />
                             <button
                                 type="button"
                                 onClick={closeMenu}

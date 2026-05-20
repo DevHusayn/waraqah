@@ -19,9 +19,11 @@ export function getProductionApiMisconfigHint() {
     return null;
 }
 
+/** User-facing message when the app cannot reach the API */
 export function getNetworkErrorMessage() {
-    return (
-        getProductionApiMisconfigHint() ||
-        'Unable to reach the server. Check your connection and that the backend is deployed and running.'
-    );
+    const deployHint = getProductionApiMisconfigHint();
+    if (deployHint) {
+        console.error('[Waraqah API]', deployHint);
+    }
+    return "We couldn't connect right now. Please check your internet connection and try again.";
 }

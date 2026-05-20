@@ -8,6 +8,7 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+                logo: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
             },
             colors: {
                 brand: {

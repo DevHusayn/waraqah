@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
 import ConfirmModal from './ConfirmModal';
-import { APP_NAME, APP_TAGLINE } from '../constants/brand';
+import { APP_TAGLINE } from '../constants/brand';
+import WaraqahLogo from './WaraqahLogo';
 import SidebarAccountFooter from './SidebarAccountFooter';
 
 function NavLinks({ navigation, isActive, onNavigate }) {
@@ -65,14 +66,9 @@ const Layout = ({ children }) => {
 
     const sidebarContent = (onNavigate) => (
         <>
-            <div className="flex items-center gap-3 px-2 mb-8">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-light">
-                    <FileText className="h-5 w-5 text-brand" />
-                </div>
-                <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 truncate">{APP_NAME}</p>
-                    <p className="text-xs text-slate-500 truncate">{businessName || APP_TAGLINE}</p>
-                </div>
+            <div className="px-2 mb-8 min-w-0">
+                <WaraqahLogo size="sm" iconStyle="soft" />
+                <p className="text-xs text-slate-500 truncate mt-2 pl-0.5">{businessName || APP_TAGLINE}</p>
             </div>
             <nav className="flex flex-1 flex-col gap-1">
                 <NavLinks navigation={navigation} isActive={isActive} onNavigate={onNavigate} />
@@ -120,11 +116,8 @@ const Layout = ({ children }) => {
 
             <div className="md:pl-64 flex flex-col flex-1 min-h-screen">
                 <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200/80 bg-white/90 backdrop-blur-md px-4 py-3 md:hidden">
-                    <div className="flex items-center gap-2 min-w-0">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-light flex-shrink-0">
-                            <FileText className="h-4 w-4 text-brand" />
-                        </div>
-                        <span className="text-base font-semibold text-slate-900 truncate">{APP_NAME}</span>
+                    <div className="flex items-center min-w-0">
+                        <WaraqahLogo size="sm" iconStyle="soft" />
                     </div>
                     <button
                         type="button"
