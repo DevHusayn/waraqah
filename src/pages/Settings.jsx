@@ -168,7 +168,7 @@ const Settings = () => {
                                     value={formData.name || ''}
                                     onChange={handleChange}
                                     className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50"
-                                    placeholder="e.g., Acme Corporation"
+                                    placeholder="e.g., Waraqah Invoice"
                                     required
                                 />
                                 {errors.brandColor && <p className="text-xs text-red-600 mt-1">{errors.brandColor}</p>}
@@ -182,7 +182,7 @@ const Settings = () => {
                                     onChange={handleChange}
                                     className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50 resize-none"
                                     rows="2"
-                                    placeholder="123 Business St, Suite 100, City, State 12345"
+                                    placeholder="123 Asokoro, Abuja"
                                     style={{ resize: 'none' }}
                                     required
                                 />
@@ -197,7 +197,7 @@ const Settings = () => {
                                         value={formData.email || ''}
                                         onChange={handleChange}
                                         className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50"
-                                        placeholder="contact@business.com"
+                                        placeholder="contact@waraqah.invoice"
                                         required
                                     />
                                 </div>
@@ -210,7 +210,7 @@ const Settings = () => {
                                         value={formData.phone || ''}
                                         onChange={handleChange}
                                         className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50"
-                                        placeholder="+1 (555) 123-4567"
+                                        placeholder="+234 818 121 0108"
                                         required
                                     />
                                 </div>
@@ -224,7 +224,7 @@ const Settings = () => {
                                     value={formData.website || ''}
                                     onChange={handleChange}
                                     className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50"
-                                    placeholder="https://www.yourbusiness.com"
+                                    placeholder="https://www.waraqah.invoice"
                                 />
                             </div>
 <div>

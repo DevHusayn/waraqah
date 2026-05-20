@@ -6,8 +6,13 @@ import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { APP_CURRENCY } from '../utils/currency';
-import { isStrongPassword, PASSWORD_REQUIREMENTS_MESSAGE } from '../utils/passwordValidation';
+import {
+    isStrongPassword,
+    getPasswordStrength,
+    PASSWORD_REQUIREMENTS_MESSAGE,
+} from '../utils/passwordValidation';
 import WaraqahLogo from '../components/WaraqahLogo';
+import RequiredLabel from '../components/RequiredLabel';
 import { API_BASE, getNetworkErrorMessage } from '../utils/apiConfig';
 
 const BASE_URL = API_BASE;
@@ -33,6 +38,8 @@ function Auth() {
     const [form, setForm] = useState(initialForm);
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [resetModal, setResetModal] = useState(false);
     const [resetEmail, setResetEmail] = useState('');
     const [resetLoading, setResetLoading] = useState(false);
@@ -68,7 +75,10 @@ function Auth() {
 
     useEffect(() => {
         setError('');
+        setConfirmPassword('');
     }, [isLogin]);
+
+    const passwordStrength = !isLogin ? getPasswordStrength(form.password) : null;
 
     const toggleMode = () => {
         setError('');
@@ -102,18 +112,25 @@ function Auth() {
         e.preventDefault();
         setError('');
         // Strong password requirements (only for registration)
-        if (!isLogin && !isStrongPassword(form.password)) {
-            setError(PASSWORD_REQUIREMENTS_MESSAGE);
-            return;
+        if (!isLogin) {
+            if (form.password !== confirmPassword) {
+                setError('Passwords do not match.');
+                return;
+            }
+            if (!isStrongPassword(form.password)) {
+                setError(PASSWORD_REQUIREMENTS_MESSAGE);
+                return;
+            }
         }
         setSubmitLoading(true);
         try {
-            let body = { email: form.email, password: form.password };
+            const email = form.email.trim().toLowerCase();
+            let body = { email, password: form.password };
             if (!isLogin) {
                 body.businessInfo = {
                     name: form.name,
                     address: form.address,
-                    email: form.businessEmail,
+                    email: form.businessEmail.trim().toLowerCase(),
                     phone: form.phone,
                     website: form.website,
                     defaultCurrency: APP_CURRENCY,
@@ -295,85 +312,203 @@ function Auth() {
                     >
 
                         <div className="space-y-5">
-                            {/* Email */}
-                            <div>
-                                <label className="label">Email Address</label>
-                                <input
-                                    type="email" name="email" value={form.email} onChange={handleChange}
-                                    className="input-field placeholder:text-slate-500"
-                                    placeholder="waraqahinvoice@gmail.com" required
-                                />
-                            </div>
-
-                            {/* Password */}
-                            <div className="relative">
-                                <label className="label">Password</label>
-                                <input
-                                    type={showPassword ? "text" : "password"} name="password" value={form.password} onChange={handleChange}
-                                    className="input-field placeholder:text-slate-500"
-                                    placeholder="••••••••" required
-                                />
-                                <button
-                                    type="button" onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-[34px] text-slate-500 hover:text-brand font-semibold text-sm"
-                                >
-                                    {showPassword ? "Hide" : "Show"}
-                                </button>
-                            </div>
-
-                            {/* Registration-only fields */}
-                            {!isLogin && (
+                            {isLogin ? (
                                 <>
-                                    {/* Business Name */}
                                     <div>
-                                        <label className="label">Business Name</label>
+                                        <RequiredLabel htmlFor="auth-email">Email address</RequiredLabel>
                                         <input
-                                            type="text" name="name" value={form.name} onChange={handleChange}
-                                            className="input-field"
-                                            placeholder="Your Business Name" required
+                                            id="auth-email"
+                                            type="email"
+                                            name="email"
+                                            value={form.email}
+                                            onChange={handleChange}
+                                            className="input-field placeholder:text-slate-500"
+                                            placeholder="you@example.com"
+                                            required
+                                            autoComplete="email"
                                         />
                                     </div>
-                                    {/* Business Email */}
-                                    <div>
-                                        <label className="label">Business Email</label>
+                                    <div className="relative">
+                                        <RequiredLabel htmlFor="auth-password">Password</RequiredLabel>
                                         <input
-                                            type="email" name="businessEmail" value={form.businessEmail} onChange={handleChange}
-                                            className="input-field"
-                                            placeholder="name@company.com" required
+                                            id="auth-password"
+                                            type={showPassword ? 'text' : 'password'}
+                                            name="password"
+                                            value={form.password}
+                                            onChange={handleChange}
+                                            className="input-field placeholder:text-slate-500"
+                                            placeholder="••••••••"
+                                            required
+                                            autoComplete="current-password"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-[34px] text-slate-500 hover:text-brand font-semibold text-sm"
+                                        >
+                                            {showPassword ? 'Hide' : 'Show'}
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div>
+                                        <RequiredLabel htmlFor="reg-email">Email address</RequiredLabel>
+                                        <input
+                                            id="reg-email"
+                                            type="email"
+                                            name="email"
+                                            value={form.email}
+                                            onChange={handleChange}
+                                            className="input-field placeholder:text-slate-500"
+                                            placeholder="you@example.com"
+                                            required
+                                            autoComplete="email"
                                         />
                                     </div>
-                                    {/* Address */}
-                                    <div>
-                                        <label className="label">Business Address</label>
+                                    <div className="relative">
+                                        <RequiredLabel htmlFor="reg-password">Password</RequiredLabel>
                                         <input
-                                            type="text" name="address" value={form.address} onChange={handleChange}
+                                            id="reg-password"
+                                            type={showPassword ? 'text' : 'password'}
+                                            name="password"
+                                            value={form.password}
+                                            onChange={handleChange}
+                                            className="input-field placeholder:text-slate-500"
+                                            placeholder="••••••••"
+                                            required
+                                            autoComplete="new-password"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-[34px] text-slate-500 hover:text-brand font-semibold text-sm"
+                                        >
+                                            {showPassword ? 'Hide' : 'Show'}
+                                        </button>
+                                        {passwordStrength && form.password && (
+                                            <div className="mt-2">
+                                                <div className="h-1 w-full rounded-full bg-slate-100 overflow-hidden">
+                                                    <div
+                                                        className={`h-full rounded-full transition-all ${passwordStrength.barClass}`}
+                                                        style={{ width: `${passwordStrength.percent}%` }}
+                                                    />
+                                                </div>
+                                                <p
+                                                    className={`mt-1 text-xs ${
+                                                        passwordStrength.level === 'strong'
+                                                            ? 'text-emerald-600'
+                                                            : passwordStrength.level === 'fair'
+                                                              ? 'text-amber-600'
+                                                              : 'text-red-600'
+                                                    }`}
+                                                >
+                                                    {passwordStrength.label}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="relative">
+                                        <RequiredLabel htmlFor="reg-confirm-password">
+                                            Confirm password
+                                        </RequiredLabel>
+                                        <input
+                                            id="reg-confirm-password"
+                                            type={showConfirmPassword ? 'text' : 'password'}
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            className="input-field placeholder:text-slate-500"
+                                            placeholder="••••••••"
+                                            required
+                                            autoComplete="new-password"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            className="absolute right-3 top-[34px] text-slate-500 hover:text-brand font-semibold text-sm"
+                                        >
+                                            {showConfirmPassword ? 'Hide' : 'Show'}
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <RequiredLabel htmlFor="reg-name">Business name</RequiredLabel>
+                                        <input
+                                            id="reg-name"
+                                            type="text"
+                                            name="name"
+                                            value={form.name}
+                                            onChange={handleChange}
                                             className="input-field"
-                                            placeholder="123 Asokoro, Abuja" required
+                                            placeholder="Your business name"
+                                            required
                                         />
                                     </div>
-                                    {/* Phone */}
                                     <div>
-                                        <label className="label">Phone</label>
+                                        <RequiredLabel htmlFor="reg-business-email">
+                                            Business email
+                                        </RequiredLabel>
                                         <input
-                                            type="tel" name="phone" value={form.phone} onChange={handleChange}
+                                            id="reg-business-email"
+                                            type="email"
+                                            name="businessEmail"
+                                            value={form.businessEmail}
+                                            onChange={handleChange}
                                             className="input-field"
-                                            placeholder="+234 810 000 0000" required
+                                            placeholder="billing@yourbusiness.com"
+                                            required
+                                            autoComplete="email"
                                         />
                                     </div>
-                                    {/* Website */}
                                     <div>
-                                        <label className="label">Website</label>
+                                        <RequiredLabel htmlFor="reg-address">Business address</RequiredLabel>
                                         <input
-                                            type="url" name="website" value={form.website} onChange={handleChange}
+                                            id="reg-address"
+                                            type="text"
+                                            name="address"
+                                            value={form.address}
+                                            onChange={handleChange}
+                                            className="input-field"
+                                            placeholder="123 Main Street"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <RequiredLabel htmlFor="reg-phone">Phone</RequiredLabel>
+                                        <input
+                                            id="reg-phone"
+                                            type="tel"
+                                            name="phone"
+                                            value={form.phone}
+                                            onChange={handleChange}
+                                            className="input-field"
+                                            placeholder="+234 810 000 0000"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="reg-website" className="label">
+                                            Website
+                                        </label>
+                                        <input
+                                            id="reg-website"
+                                            type="url"
+                                            name="website"
+                                            value={form.website}
+                                            onChange={handleChange}
                                             className="input-field"
                                             placeholder="https://yourbusiness.com"
                                         />
                                     </div>
-{/* Brand Color */}
                                     <div>
-                                        <label className="label">Brand Color</label>
+                                        <label htmlFor="reg-brand-color" className="label">
+                                            Brand color
+                                        </label>
                                         <input
-                                            type="color" name="brandColor" value={form.brandColor} onChange={handleChange}
+                                            id="reg-brand-color"
+                                            type="color"
+                                            name="brandColor"
+                                            value={form.brandColor}
+                                            onChange={handleChange}
                                             className="w-12 h-12 p-0 border-2 border-gray-200 rounded-full bg-white/90 cursor-pointer"
                                             title="Choose your brand color"
                                         />

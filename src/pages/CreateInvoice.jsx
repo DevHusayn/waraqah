@@ -10,6 +10,7 @@ import { getClientBusiness } from '../utils/clientHelpers';
 import InvoiceLimitModal from '../components/InvoiceLimitModal';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { canCreateInvoice, formatInvoiceUsageLabel } from '../utils/invoiceLimits';
+import { apiFetch } from '../utils/api';
 
 const CreateInvoice = () => {
     const { id } = useParams();
@@ -23,7 +24,7 @@ const CreateInvoice = () => {
     const [saving, setSaving] = useState(false);
 
     const [formData, setFormData] = useState({
-        invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+        invoiceNumber: '',
         clientId: '',
         date: format(new Date(), 'yyyy-MM-dd'),
         dueDate: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
@@ -46,6 +47,29 @@ const CreateInvoice = () => {
             }));
         }
     }, [id, businessInfo.taxRate]);
+
+    useEffect(() => {
+        if (id) return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const { invoiceNumber } = await apiFetch('/invoices/next-number');
+                if (!cancelled && invoiceNumber) {
+                    setFormData((prev) => ({ ...prev, invoiceNumber }));
+                }
+            } catch {
+                if (!cancelled) {
+                    setFormData((prev) => ({
+                        ...prev,
+                        invoiceNumber: prev.invoiceNumber || 'INV-0001',
+                    }));
+                }
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [id]);
 
     useEffect(() => {
         if (id) {

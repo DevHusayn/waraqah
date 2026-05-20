@@ -18,7 +18,7 @@ const STATUS_COLS = ['paid', 'pending', 'overdue', 'cancelled'];
 
 export default function MonthlyStatement() {
     const { invoices, clients, loading } = useInvoice();
-    const { businessInfo } = useSettings();
+    const { businessInfo, loading: settingsLoading } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const [monthValue, setMonthValue] = useState(getDefaultStatementMonth);
     const [exporting, setExporting] = useState(false);
@@ -42,7 +42,7 @@ export default function MonthlyStatement() {
         }
     };
 
-    if (loading) {
+    if (loading || settingsLoading) {
         return (
             <div className="flex justify-center py-20">
                 <Spinner />
@@ -55,19 +55,22 @@ export default function MonthlyStatement() {
             <div>
                 <PageHeader
                     title="Monthly statement"
-                    subtitle="Premium feature for professional billing reports"
+                    subtitle="A clear picture of how your business billed each month"
                 />
-                <div className="card max-w-lg text-center py-12">
+                <div className="card max-w-lg text-center py-12 px-6">
                     <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
                         <Crown className="h-7 w-7" />
                     </div>
-                    <h2 className="mt-5 text-xl font-semibold text-slate-900">Upgrade to Premium</h2>
-                    <p className="mt-2 text-slate-600 text-sm leading-relaxed max-w-sm mx-auto">
-                        Print or download a monthly statement with client totals for paid, pending,
-                        overdue, and cancelled invoices.
+                    <h2 className="mt-5 text-xl font-semibold text-slate-900">
+                        Keep track of your monthly billing
+                    </h2>
+                    <p className="mt-3 text-slate-600 text-sm leading-relaxed max-w-md mx-auto">
+                        Upgrade to Premium to unlock professional monthly statements. Get automated totals for 
+                      paid, pending, overdue, and cancelled invoices, and a PDF you
+                        can print or share with your team or accountant.
                     </p>
                     <Link to="/upgrade" className="btn-primary inline-flex mt-8">
-                        View Premium plans
+                        Upgrade to Premium
                     </Link>
                 </div>
             </div>
@@ -171,19 +174,19 @@ export default function MonthlyStatement() {
                             <thead>
                                 <tr className="border-b border-slate-200 bg-white text-left">
                                     <th className="px-6 py-3 font-semibold text-slate-700">Client</th>
-                                    <th className="px-4 py-3 font-semibold text-slate-700 text-right">
+                                    <th className="px-4 py-3 font-semibold text-slate-700 text-center">
                                         Paid
                                     </th>
-                                    <th className="px-4 py-3 font-semibold text-slate-700 text-right">
+                                    <th className="px-4 py-3 font-semibold text-slate-700 text-center">
                                         Pending
                                     </th>
-                                    <th className="px-4 py-3 font-semibold text-slate-700 text-right">
+                                    <th className="px-4 py-3 font-semibold text-slate-700 text-center">
                                         Overdue
                                     </th>
-                                    <th className="px-4 py-3 font-semibold text-slate-700 text-right">
+                                    <th className="px-4 py-3 font-semibold text-slate-700 text-center">
                                         Cancelled
                                     </th>
-                                    <th className="px-6 py-3 font-semibold text-slate-900 text-right">
+                                    <th className="px-6 py-3 font-semibold text-slate-900 text-center">
                                         Total
                                     </th>
                                 </tr>
@@ -207,14 +210,14 @@ export default function MonthlyStatement() {
                                         {STATUS_COLS.map((status) => (
                                             <td
                                                 key={status}
-                                                className="px-4 py-3 text-right text-slate-700 tabular-nums"
+                                                className="px-4 py-3 text-center text-slate-700 tabular-nums"
                                             >
                                                 {row[status] > 0
                                                     ? formatCurrency(row[status])
                                                     : '—'}
                                             </td>
                                         ))}
-                                        <td className="px-6 py-3 text-right font-semibold text-slate-900 tabular-nums">
+                                        <td className="px-6 py-3 text-center font-semibold text-slate-900 tabular-nums">
                                             {formatCurrency(row.total)}
                                         </td>
                                     </tr>
@@ -224,11 +227,11 @@ export default function MonthlyStatement() {
                                 <tr className="bg-slate-50 font-semibold text-slate-900">
                                     <td className="px-6 py-3">Total</td>
                                     {STATUS_COLS.map((status) => (
-                                        <td key={status} className="px-4 py-3 text-right tabular-nums">
+                                        <td key={status} className="px-4 py-3 text-center tabular-nums">
                                             {formatCurrency(statement.totals[status])}
                                         </td>
                                     ))}
-                                    <td className="px-6 py-3 text-right tabular-nums text-brand">
+                                    <td className="px-6 py-3 text-center tabular-nums text-brand">
                                         {formatCurrency(statement.totals.total)}
                                     </td>
                                 </tr>

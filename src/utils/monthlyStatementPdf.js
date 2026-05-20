@@ -23,6 +23,15 @@ function statusLabel(status) {
     return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
+/** Apply halign to header/body/footer so labels line up with column data */
+function applyColumnAlignment(data, alignments) {
+    if (data.section !== 'head' && data.section !== 'body' && data.section !== 'foot') {
+        return;
+    }
+    const halign = alignments[data.column.index] || 'left';
+    data.cell.styles.halign = halign;
+}
+
 /**
  * @param {ReturnType<import('./monthlyStatement').buildMonthlyStatement>} statement
  * @param {object} businessInfo
@@ -78,6 +87,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
         head: [['Category', 'Amount']],
         body: summaryBody,
         theme: 'plain',
+        tableWidth: 180,
         styles: { fontSize: 9, cellPadding: 3 },
         headStyles: {
             fillColor: primaryColor,
@@ -85,9 +95,10 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
             fontStyle: 'bold',
         },
         columnStyles: {
-            0: { cellWidth: 50 },
-            1: { halign: 'right' },
+            0: { cellWidth: 55, halign: 'left' },
+            1: { cellWidth: 125, halign: 'right' },
         },
+        didParseCell: (data) => applyColumnAlignment(data, ['left', 'right']),
         margin: { left: 15, right: 15 },
     });
 
@@ -133,12 +144,15 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
             formatMoney(statement.totals.total, currencySymbol),
         ];
 
+        const clientAlign = ['left', 'center', 'center', 'center', 'center', 'center'];
+
         doc.autoTable({
             startY: tableY + 4,
             head: [tableHead],
             body: tableBody,
             foot: [footRow],
             theme: 'striped',
+            tableWidth: 180,
             styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
             headStyles: {
                 fillColor: primaryColor,
@@ -151,13 +165,14 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
                 fontStyle: 'bold',
             },
             columnStyles: {
-                0: { cellWidth: 42 },
-                1: { halign: 'right', cellWidth: 28 },
-                2: { halign: 'right', cellWidth: 28 },
-                3: { halign: 'right', cellWidth: 28 },
-                4: { halign: 'right', cellWidth: 28 },
-                5: { halign: 'right', cellWidth: 30 },
+                0: { cellWidth: 40, halign: 'left' },
+                1: { cellWidth: 28, halign: 'center' },
+                2: { cellWidth: 28, halign: 'center' },
+                3: { cellWidth: 28, halign: 'center' },
+                4: { cellWidth: 28, halign: 'center' },
+                5: { cellWidth: 28, halign: 'center' },
             },
+            didParseCell: (data) => applyColumnAlignment(data, clientAlign),
             margin: { left: 15, right: 15 },
         });
 

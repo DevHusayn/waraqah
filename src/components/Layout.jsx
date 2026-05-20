@@ -8,6 +8,7 @@ import {
     X,
     LogOut,
     FileBarChart,
+    Crown,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
@@ -17,12 +18,13 @@ import WaraqahLogo from './WaraqahLogo';
 import SidebarAccountFooter from './SidebarAccountFooter';
 import { isPremiumUser } from '../utils/premium';
 
-function NavLinks({ navigation, isActive, onNavigate }) {
+function NavLinks({ navigation, isActive, onNavigate, premium }) {
     return (
         <>
             {navigation.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
+                const showPremiumBadge = item.premiumFeature && !premium;
                 return (
                     <Link
                         key={item.name}
@@ -31,7 +33,10 @@ function NavLinks({ navigation, isActive, onNavigate }) {
                         className={active ? 'nav-link nav-link-active' : 'nav-link'}
                     >
                         <Icon className="h-5 w-5 flex-shrink-0" />
-                        {item.name}
+                        <span className="flex-1">{item.name}</span>
+                        {showPremiumBadge ? (
+                            <Crown className="h-4 w-4 text-amber-500 shrink-0" aria-label="Premium" />
+                        ) : null}
                     </Link>
                 );
             })}
@@ -63,9 +68,7 @@ const Layout = ({ children }) => {
         { name: 'Dashboard', href: '/', icon: LayoutDashboard },
         { name: 'Invoices', href: '/invoices', icon: FileText },
         { name: 'Clients', href: '/clients', icon: Users },
-        ...(premium
-            ? [{ name: 'Statements', href: '/statements', icon: FileBarChart }]
-            : []),
+        { name: 'Statements', href: '/statements', icon: FileBarChart, premiumFeature: true },
         { name: 'Settings', href: '/settings', icon: SettingsIcon },
         ...(isAdmin ? [{ name: 'Admin', href: '/admin', icon: LayoutDashboard }] : []),
     ];
@@ -88,7 +91,12 @@ const Layout = ({ children }) => {
                 />
             </div>
             <nav className="flex flex-1 flex-col gap-1">
-                <NavLinks navigation={navigation} isActive={isActive} onNavigate={onNavigate} />
+                <NavLinks
+                    navigation={navigation}
+                    isActive={isActive}
+                    onNavigate={onNavigate}
+                    premium={premium}
+                />
                 {isLoggedIn && (
                     <button
                         type="button"
