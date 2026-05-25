@@ -10,7 +10,7 @@ import {
     FileBarChart,
     Crown,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
 import ConfirmModal from './ConfirmModal';
@@ -55,10 +55,42 @@ const Layout = ({ children }) => {
     const isAdmin = localStorage.getItem('isAdmin') === 'true';
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+    useEffect(() => {
+        if (!sidebarOpen) return undefined;
+
+        const scrollY = window.scrollY;
+        const { style } = document.body;
+        const prev = {
+            position: style.position,
+            top: style.top,
+            left: style.left,
+            right: style.right,
+            overflow: style.overflow,
+            width: style.width,
+        };
+
+        style.position = 'fixed';
+        style.top = `-${scrollY}px`;
+        style.left = '0';
+        style.right = '0';
+        style.width = '100%';
+        style.overflow = 'hidden';
+
+        return () => {
+            style.position = prev.position;
+            style.top = prev.top;
+            style.left = prev.left;
+            style.right = prev.right;
+            style.width = prev.width;
+            style.overflow = prev.overflow;
+            window.scrollTo(0, scrollY);
+        };
+    }, [sidebarOpen]);
+
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('isAdmin');
-        setBusinessInfo({ name: '', address: '', email: '', phone: '', website: '', defaultCurrency: 'NGN', taxRate: 10, brandColor: '#0ea5e9', plan: 'free', businessLogo: '' });
+        setBusinessInfo({ name: '', address: '', email: '', phone: '', website: '', defaultCurrency: 'NGN', taxRate: 10, brandColor: '#0ea5e9', plan: 'free', businessLogo: '', companyLogoUrl: '', companyLogoAvatarUrl: '', companyStampUrl: '', authorizedSignatureUrl: '' });
         resetAll();
         window.dispatchEvent(new Event('app-logout'));
         navigate('/auth');
@@ -114,8 +146,12 @@ const Layout = ({ children }) => {
             </aside>
 
             {sidebarOpen && (
-                <div className="fixed inset-0 z-40 flex md:hidden">
-                    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} aria-hidden />
+                <div className="fixed inset-0 z-40 flex md:hidden overflow-hidden overscroll-none">
+                    <div
+                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm touch-none"
+                        onClick={() => setSidebarOpen(false)}
+                        aria-hidden
+                    />
                     <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white border-r border-slate-200 shadow-card-md">
                         <button
                             type="button"
@@ -132,7 +168,7 @@ const Layout = ({ children }) => {
                 </div>
             )}
 
-            <div className="md:pl-64 flex flex-col flex-1 min-h-screen">
+            <div className="md:pl-64 flex flex-col flex-1 min-h-screen min-w-0">
                 <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200/80 bg-white/90 backdrop-blur-md px-4 py-3 md:hidden">
                     <div className="flex items-center min-w-0">
                         <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
@@ -147,8 +183,8 @@ const Layout = ({ children }) => {
                     </button>
                 </header>
 
-                <main className="flex-1">
-                    <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+                <main className="flex-1 min-w-0 overflow-x-hidden">
+                    <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full min-w-0">
                         {children}
                     </div>
                 </main>
@@ -156,9 +192,12 @@ const Layout = ({ children }) => {
 
             <ConfirmModal
                 open={showLogoutModal}
+                title="Log out?"
+                description="You will need to sign in again to access your account."
+                confirmLabel="Log out"
+                cancelLabel="Stay signed in"
                 onConfirm={() => { setShowLogoutModal(false); handleLogout(); }}
                 onCancel={() => setShowLogoutModal(false)}
-                message="Are you sure you want to log out?"
             />
         </div>
     );

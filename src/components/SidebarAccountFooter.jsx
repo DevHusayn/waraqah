@@ -5,9 +5,10 @@ import {
     isPremiumUser,
     getBusinessInitials,
 } from '../utils/premium';
+import { getCompanyLogoAvatarUrl } from '../utils/brandAssets';
 
 function SidebarAvatar({ businessInfo, premium }) {
-    const logo = (businessInfo.businessLogo || '').trim();
+    const logo = getCompanyLogoAvatarUrl(businessInfo);
     const showLogo = premium && logo.length > 0;
     const initials = getBusinessInitials(businessInfo.name);
 

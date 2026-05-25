@@ -13,6 +13,8 @@ import {
     parseStatementMonth,
 } from '../utils/monthlyStatement';
 import { generateMonthlyStatementPdf, statusLabel } from '../utils/monthlyStatementPdf';
+import MonthPickerField from '../components/MonthPickerField';
+import { format } from 'date-fns';
 
 const STATUS_COLS = ['paid', 'pending', 'overdue', 'cancelled'];
 
@@ -110,12 +112,11 @@ export default function MonthlyStatement() {
                     <label className="label" htmlFor="statement-month">
                         Statement period
                     </label>
-                    <input
+                    <MonthPickerField
                         id="statement-month"
-                        type="month"
-                        className="input-field max-w-xs"
                         value={monthValue}
-                        onChange={(e) => setMonthValue(e.target.value)}
+                        onChange={setMonthValue}
+                        max={format(new Date(), 'yyyy-MM')}
                     />
                     <p className="mt-2 text-xs text-slate-500">
                         Based on invoice issue dates in {statement.periodLabel}.
@@ -130,22 +131,22 @@ export default function MonthlyStatement() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mb-6">
                 {STATUS_COLS.map((status) => (
-                    <div key={status} className="card !p-4">
+                    <div key={status} className="card !p-4 min-w-0">
                         <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                             {statusLabel(status)}
                         </p>
-                        <p className="mt-1 text-lg font-semibold text-slate-900">
+                        <p className="mt-1 text-base sm:text-lg font-semibold text-slate-900 tabular-nums break-words">
                             {formatCurrency(statement.totals[status])}
                         </p>
                     </div>
                 ))}
-                <div className="card !p-4 col-span-2 lg:col-span-1 bg-brand-light/50 border-brand/20">
+                <div className="card !p-4 min-w-0 sm:col-span-2 lg:col-span-3 xl:col-span-1 bg-brand-light/50 border-brand/20">
                     <p className="text-xs font-medium text-brand uppercase tracking-wide">
                         Total billed
                     </p>
-                    <p className="mt-1 text-lg font-bold text-brand">
+                    <p className="mt-1 text-base sm:text-lg font-bold text-brand tabular-nums break-words">
                         {formatCurrency(statement.totals.total)}
                     </p>
                 </div>
@@ -169,8 +170,8 @@ export default function MonthlyStatement() {
                         </p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
+                    <div className="overflow-x-auto scroll-x-touch">
+                        <table className="w-full min-w-[640px] text-sm">
                             <thead>
                                 <tr className="border-b border-slate-200 bg-white text-left">
                                     <th className="px-6 py-3 font-semibold text-slate-700">Client</th>

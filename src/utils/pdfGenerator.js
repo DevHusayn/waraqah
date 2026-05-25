@@ -1,310 +1,356 @@
+import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { format } from 'date-fns';
 import { getCurrencySymbol } from './currency';
 import { getClientBusiness } from './clientHelpers';
 import { isPremiumUser } from './premium';
-import { drawPremiumLogoWatermark } from './pdfLogo';
+import {
+    drawPremiumLogoWatermark,
+    drawHeaderLogo,
+    drawAuthorizedSignature,
+    drawCompanyStamp,
+} from './pdfLogo';
+import {
+    getCompanyLogoUrl,
+    getCompanyStampUrl,
+    getAuthorizedSignatureUrl,
+} from './brandAssets';
+import {
+    getDocumentNumber,
+    getPaymentMethodLabel,
+    getPdfFileName,
+    resolvePdfMode,
+} from './receiptHelpers';
 
-export const generatePDF = async (invoice, client, businessInfo) => {
-    try {
-        if (!invoice || !client || !businessInfo) {
-            throw new Error('Missing required data for PDF generation');
+export const generatePDF = async (invoice, client, businessInfo, options = {}) => {
+    const mode = resolvePdfMode(invoice, options.mode);
+    const isReceiptDoc = mode === 'receipt';
+
+    if (!invoice || !client || !businessInfo) {
+        throw new Error('Missing required data for PDF generation');
+    }
+
+    const doc = new jsPDF();
+    const premium = isPremiumUser(businessInfo);
+    const logoUrl = premium ? getCompanyLogoUrl(businessInfo) : '';
+    const stampUrl = premium ? getCompanyStampUrl(businessInfo) : '';
+    const signatureUrl = premium ? getAuthorizedSignatureUrl(businessInfo) : '';
+    const pngCache = new Map();
+
+    if (logoUrl) {
+        try {
+            await drawPremiumLogoWatermark(doc, logoUrl, pngCache);
+        } catch {
+            /* continue without watermark if logo fails */
         }
+    }
 
-        const doc = new jsPDF();
+    const currencySymbol = getCurrencySymbol(false);
+    const formatMoney = (value) =>
+        Number(value || 0).toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
 
-        if (isPremiumUser(businessInfo) && businessInfo.businessLogo) {
-            try {
-                await drawPremiumLogoWatermark(doc, businessInfo.businessLogo);
-            } catch {
-                /* continue without watermark if logo fails */
+    const hexToRgb = (hex) => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result
+            ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)]
+            : [14, 165, 233];
+    };
+
+    const lightenColor = (rgb, percent) =>
+        rgb.map((c) => Math.min(255, Math.round(c + (255 - c) * percent)));
+
+    const primaryColor = hexToRgb(businessInfo.brandColor || '#0ea5e9');
+    const lightPrimary = lightenColor(primaryColor, 0.85);
+    const textColor = [31, 41, 55];
+    const grayColor = [107, 114, 128];
+    const lightGray = [229, 231, 235];
+    const whiteColor = [255, 255, 255];
+    const docNumber = getDocumentNumber(invoice, mode) || (isReceiptDoc ? 'RCP' : 'INV');
+
+    doc.setFillColor(...primaryColor);
+    doc.rect(0, 0, 210, 3, 'F');
+
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(1);
+    doc.line(15, 12, 15, 50);
+
+    let headerTextX = 22;
+    if (logoUrl) {
+        try {
+            const logoDims = await drawHeaderLogo(doc, logoUrl, pngCache);
+            if (logoDims.width) {
+                headerTextX = 15 + logoDims.width + 6;
             }
+        } catch {
+            /* header text falls back to default position */
         }
+    }
 
-        // Get currency symbol (use 'NGN' for PDF, not ₦)
-        const currencySymbol = getCurrencySymbol(false);
-        const formatMoney = (value) =>
-            Number(value || 0).toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-            });
+    doc.setTextColor(...textColor);
+    doc.setFontSize(22);
+    doc.setFont(undefined, 'bold');
+    doc.text(String(businessInfo.name || 'Your Business'), headerTextX, 20);
 
-        // Helper function to convert hex color to RGB
-        const hexToRgb = (hex) => {
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? [
-                parseInt(result[1], 16),
-                parseInt(result[2], 16),
-                parseInt(result[3], 16)
-            ] : [14, 165, 233];
-        };
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(...grayColor);
+    const businessAddress = doc.splitTextToSize(String(businessInfo.address || ''), 80);
+    doc.text(businessAddress, headerTextX, 28);
 
-        // Helper to lighten color
-        const lightenColor = (rgb, percent) => {
-            return rgb.map(c => Math.min(255, Math.round(c + (255 - c) * percent)));
-        };
+    const contactY = 28 + businessAddress.length * 4;
+    doc.text(String(businessInfo.email || ''), headerTextX, contactY);
+    doc.text(String(businessInfo.phone || ''), headerTextX, contactY + 4);
+    if (businessInfo.website) {
+        doc.text(String(businessInfo.website), headerTextX, contactY + 8);
+    }
 
-        // Colors
-        const primaryColor = hexToRgb(businessInfo.brandColor || '#0ea5e9');
-        const lightPrimary = lightenColor(primaryColor, 0.85);
-        const textColor = [31, 41, 55];
-        const grayColor = [107, 114, 128];
-        const lightGray = [229, 231, 235];
-        const whiteColor = [255, 255, 255];
+    doc.setTextColor(...primaryColor);
+    doc.setFontSize(isReceiptDoc ? 34 : 38);
+    doc.setFont(undefined, 'bold');
+    doc.text(isReceiptDoc ? 'RECEIPT' : 'INVOICE', 195, 22, { align: 'right' });
 
-        // ===== MODERN GEOMETRIC HEADER =====
-        // Top accent stripe only (original design)
-        doc.setFillColor(...primaryColor);
-        doc.rect(0, 0, 210, 3, 'F');
+    doc.setFillColor(...lightPrimary);
+    doc.roundedRect(155, 28, 40, 12, 2, 2, 'F');
+    doc.setTextColor(...primaryColor);
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.text(`#${String(docNumber)}`, 175, 35.5, { align: 'center' });
 
-        // Company info card - left side with subtle border
-        doc.setDrawColor(...primaryColor);
-        doc.setLineWidth(1);
-        doc.line(15, 12, 15, 50);
+    const infoStartY = 62;
 
-        doc.setTextColor(...textColor);
-        doc.setFontSize(22);
-        doc.setFont(undefined, 'bold');
-        doc.text(String(businessInfo.name || 'Your Business'), 22, 20);
+    doc.setFillColor(...lightGray);
+    doc.roundedRect(15, infoStartY, 85, 38, 3, 3, 'F');
 
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'normal');
-        doc.setTextColor(...grayColor);
-        const businessAddress = doc.splitTextToSize(String(businessInfo.address || ''), 80);
-        doc.text(businessAddress, 22, 28);
+    doc.setTextColor(...primaryColor);
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'bold');
+    doc.text('BILLED TO', 20, infoStartY + 6);
 
-        const contactY = 28 + (businessAddress.length * 4);
-        doc.text(String(businessInfo.email || ''), 22, contactY);
-        doc.text(String(businessInfo.phone || ''), 22, contactY + 4);
-        if (businessInfo.website) {
-            doc.text(String(businessInfo.website), 22, contactY + 8);
-        }
+    doc.setTextColor(...textColor);
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text(String(client.name || 'Client'), 20, infoStartY + 13);
 
-        // INVOICE title with modern styling - right side
-        doc.setTextColor(...primaryColor);
-        doc.setFontSize(38);
-        doc.setFont(undefined, 'bold');
-        doc.text('INVOICE', 195, 22, { align: 'right' });
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(...grayColor);
+    doc.text(String(getClientBusiness(client) || ''), 20, infoStartY + 19);
+    doc.text(String(client.email || ''), 20, infoStartY + 24);
+    if (client.phone) {
+        doc.text(String(client.phone), 20, infoStartY + 29);
+    }
 
-        // Invoice number with accent box
-        doc.setFillColor(...lightPrimary);
-        doc.roundedRect(155, 28, 40, 12, 2, 2, 'F');
-        doc.setTextColor(...primaryColor);
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'bold');
-        doc.text(`#${String(invoice.invoiceNumber || 'INV')}`, 175, 35.5, { align: 'center' });
+    const detailsHeight = isReceiptDoc ? 46 : 38;
+    doc.setFillColor(...lightGray);
+    doc.roundedRect(110, infoStartY, 85, detailsHeight, 3, 3, 'F');
 
-        // ===== BILLING & INVOICE INFO SECTION =====
-        const infoStartY = 62;
+    const statusColors = {
+        paid: [34, 197, 94],
+        pending: [234, 179, 8],
+        overdue: [239, 68, 68],
+        cancelled: [156, 163, 175],
+    };
 
-        // Client info card with background
-        doc.setFillColor(...lightGray);
-        doc.roundedRect(15, infoStartY, 85, 38, 3, 3, 'F');
+    const badgeStatus = isReceiptDoc ? 'paid' : invoice.status;
+    doc.setFillColor(...(statusColors[badgeStatus] || statusColors.pending));
+    doc.roundedRect(165, infoStartY + 3, 26, 8, 2, 2, 'F');
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(...whiteColor);
+    doc.text(
+        isReceiptDoc ? 'PAID' : (invoice.status || 'pending').toUpperCase(),
+        178,
+        infoStartY + 8,
+        { align: 'center' }
+    );
 
-        doc.setTextColor(...primaryColor);
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'bold');
-        doc.text('BILLED TO', 20, infoStartY + 6);
+    doc.setTextColor(...grayColor);
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'normal');
+    doc.text('ISSUE DATE', 115, infoStartY + 18);
 
-        doc.setTextColor(...textColor);
-        doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
-        doc.text(String(client.name || 'Client'), 20, infoStartY + 13);
+    doc.setTextColor(...textColor);
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    const issueDate = invoice.date ? format(new Date(invoice.date), 'MMM dd, yyyy') : 'N/A';
+    doc.text(issueDate, 190, infoStartY + 18, { align: 'right' });
 
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'normal');
-        doc.setTextColor(...grayColor);
-        doc.text(String(getClientBusiness(client) || ''), 20, infoStartY + 19);
-        doc.text(String(client.email || ''), 20, infoStartY + 24);
-        if (client.phone) {
-            doc.text(String(client.phone), 20, infoStartY + 29);
-        }
-
-        // Invoice details card with background
-        doc.setFillColor(...lightGray);
-        doc.roundedRect(110, infoStartY, 85, 38, 3, 3, 'F');
-
-        // Status badge at top of details card
-        const statusColors = {
-            paid: [34, 197, 94],
-            pending: [234, 179, 8],
-            overdue: [239, 68, 68],
-            cancelled: [156, 163, 175],
-        };
-
-        doc.setFillColor(...(statusColors[invoice.status] || statusColors.pending));
-        doc.roundedRect(165, infoStartY + 3, 26, 8, 2, 2, 'F');
-        doc.setFontSize(8);
-        doc.setFont(undefined, 'bold');
-        doc.setTextColor(...whiteColor);
-        doc.text(invoice.status.toUpperCase(), 178, infoStartY + 8, { align: 'center' });
-
-        // Date details
+    if (isReceiptDoc) {
         doc.setTextColor(...grayColor);
         doc.setFontSize(8);
         doc.setFont(undefined, 'normal');
-        doc.text('ISSUE DATE', 115, infoStartY + 18);
-        doc.text('DUE DATE', 115, infoStartY + 28);
-
+        doc.text('PAYMENT DATE', 115, infoStartY + 28);
         doc.setTextColor(...textColor);
         doc.setFontSize(10);
         doc.setFont(undefined, 'bold');
-        const issueDate = invoice.date ? format(new Date(invoice.date), 'MMM dd, yyyy') : 'N/A';
+        const paymentDate = invoice.datePaid
+            ? format(new Date(invoice.datePaid), 'MMM dd, yyyy')
+            : issueDate;
+        doc.text(paymentDate, 190, infoStartY + 28, { align: 'right' });
+
+        doc.setTextColor(...grayColor);
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'normal');
+        doc.text('PAYMENT METHOD', 115, infoStartY + 38);
+        doc.setTextColor(...textColor);
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'bold');
+        doc.text(getPaymentMethodLabel(invoice.paymentMethod), 190, infoStartY + 38, { align: 'right' });
+    } else {
+        doc.setTextColor(...grayColor);
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'normal');
+        doc.text('DUE DATE', 115, infoStartY + 28);
+        doc.setTextColor(...textColor);
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'bold');
         const dueDate = invoice.dueDate ? format(new Date(invoice.dueDate), 'MMM dd, yyyy') : 'N/A';
-        doc.text(issueDate, 190, infoStartY + 18, { align: 'right' });
         doc.text(dueDate, 190, infoStartY + 28, { align: 'right' });
+    }
 
-        // ===== ITEMS TABLE WITH MODERN DESIGN =====
-        const tableStartY = 112;
+    const tableStartY = 112;
 
-        // Validate items array
-        if (!invoice.items || !Array.isArray(invoice.items) || invoice.items.length === 0) {
-            throw new Error('Invoice must have at least one item');
-        }
+    if (!invoice.items || !Array.isArray(invoice.items) || invoice.items.length === 0) {
+        throw new Error('Invoice must have at least one item');
+    }
 
-        // Regular table only
-        const tableHead = [['DESCRIPTION', 'QTY', 'RATE', 'AMOUNT']];
-        const tableData = invoice.items.map(item => [
-            item.description || '',
-            (item.quantity || 0).toString(),
-            `${currencySymbol} ${formatMoney(item.rate)}`,
-            `${currencySymbol} ${formatMoney(Number(item.quantity || 0) * Number(item.rate || 0))}`
-        ]);
-        const columnStyles = {
+    const tableHead = [['DESCRIPTION', 'QTY', 'RATE', 'AMOUNT']];
+    const tableData = invoice.items.map((item) => [
+        item.description || '',
+        (item.quantity || 0).toString(),
+        `${currencySymbol} ${formatMoney(item.rate)}`,
+        `${currencySymbol} ${formatMoney(Number(item.quantity || 0) * Number(item.rate || 0))}`,
+    ]);
+
+    doc.autoTable({
+        startY: tableStartY,
+        head: tableHead,
+        body: tableData,
+        theme: 'plain',
+        headStyles: {
+            fillColor: primaryColor,
+            textColor: whiteColor,
+            fontStyle: 'bold',
+            fontSize: 9,
+            cellPadding: { top: 5, bottom: 5, left: 8, right: 8 },
+        },
+        styles: {
+            fontSize: 9,
+            cellPadding: { top: 7, bottom: 7, left: 8, right: 8 },
+            lineColor: lightGray,
+            lineWidth: 0.5,
+        },
+        columnStyles: {
             0: { cellWidth: 85, halign: 'left', textColor: textColor },
             1: { cellWidth: 25, halign: 'center', textColor: grayColor },
             2: { cellWidth: 42, halign: 'center', textColor: grayColor },
             3: { cellWidth: 42, halign: 'center', fontStyle: 'bold', textColor: textColor },
-        };
+        },
+        alternateRowStyles: { fillColor: [252, 252, 253] },
+        margin: { left: 15, right: 15 },
+    });
 
-        doc.autoTable({
-            startY: tableStartY,
-            head: tableHead,
-            body: tableData,
-            theme: 'plain',
-            headStyles: {
-                fillColor: primaryColor,
-                textColor: whiteColor,
-                fontStyle: 'bold',
-                fontSize: 9,
-                cellPadding: { top: 5, bottom: 5, left: 8, right: 8 },
-            },
-            styles: {
-                fontSize: 9,
-                cellPadding: { top: 7, bottom: 7, left: 8, right: 8 },
-                lineColor: lightGray,
-                lineWidth: 0.5,
-            },
-            columnStyles: columnStyles,
-            alternateRowStyles: {
-                fillColor: [252, 252, 253],
-            },
-            margin: { left: 15, right: 15 },
-        });
+    const finalY = doc.lastAutoTable.finalY + 15;
+    const totalsX = 130;
 
-        // ===== MODERN TOTALS SECTION =====
-        const finalY = doc.lastAutoTable.finalY + 15;
-        const totalsX = 130;
+    doc.setFontSize(9);
+    doc.setTextColor(...grayColor);
+    doc.setFont(undefined, 'normal');
+    doc.text('Subtotal', totalsX, finalY);
+    doc.setTextColor(...textColor);
+    doc.text(`${currencySymbol} ${formatMoney(invoice.subtotal)}`, 195, finalY, { align: 'right' });
 
+    doc.setTextColor(...grayColor);
+    doc.text(`Tax (${invoice.taxRate || 10}%)`, totalsX, finalY + 8);
+    doc.setTextColor(...textColor);
+    doc.text(`${currencySymbol} ${formatMoney(invoice.tax)}`, 195, finalY + 8, { align: 'right' });
 
-        // Subtotal
-        doc.setFontSize(9);
-        doc.setTextColor(...grayColor);
-        doc.setFont(undefined, 'normal');
-        doc.text('Subtotal', totalsX, finalY);
-        doc.setTextColor(...textColor);
-        doc.setFont(undefined, 'normal');
-        const subtotalText = `${currencySymbol} ${formatMoney(invoice.subtotal)}`;
-        doc.text(subtotalText, 195, finalY, { align: 'right' });
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(1);
+    doc.line(totalsX, finalY + 13, 195, finalY + 13);
 
-        // Tax
-        doc.setTextColor(...grayColor);
-        doc.text(`Tax (${invoice.taxRate || 10}%)`, totalsX, finalY + 8);
-        doc.setTextColor(...textColor);
-        const taxText = `${currencySymbol} ${formatMoney(invoice.tax)}`;
-        doc.text(taxText, 195, finalY + 8, { align: 'right' });
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(...textColor);
+    doc.text('Total', totalsX, finalY + 22);
+    doc.setFontSize(11);
+    doc.text(`${currencySymbol} ${formatMoney(invoice.total)}`, 195, finalY + 22, { align: 'right' });
 
-        // Divider line with accent color
-        doc.setDrawColor(...primaryColor);
-        doc.setLineWidth(1);
-        doc.line(totalsX, finalY + 13, 195, finalY + 13);
+    let currentY = finalY + 22;
+    let total = Number(invoice.total);
+    if (isNaN(total) || total < 0) total = 0;
 
-        // Total - clean layout without background
-        doc.setFontSize(10); // Decreased font size for total label
-        doc.setFont(undefined, 'bold');
-        doc.setTextColor(...textColor);
-        doc.text('Total', totalsX, finalY + 22);
+    currentY += 5;
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(0.5);
+    doc.line(totalsX, currentY, 195, currentY);
 
-        doc.setFontSize(11); // Decreased font size for total amount
-        doc.setTextColor(...textColor);
-        const totalAmountText = `${currencySymbol} ${formatMoney(invoice.total)}`;
-        doc.text(totalAmountText, 195, finalY + 22, { align: 'right' });
+    currentY += 8;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(...primaryColor);
+    doc.text(isReceiptDoc ? 'TOTAL PAID' : 'TOTAL DUE', totalsX, currentY);
+    doc.setFontSize(11);
+    doc.text(`${currencySymbol} ${formatMoney(total)}`, 195, currentY, { align: 'right' });
 
-        let currentY = finalY + 22;
-
-        // Only show TOTAL DUE (no partial/amount paid/balance logic)
-        let total = Number(invoice.total);
-        if (isNaN(total) || total < 0) total = 0;
-
-        currentY += 5;
+    let contentEndY = currentY;
+    if (invoice.notes) {
+        const notesY = currentY + 20;
         doc.setDrawColor(...primaryColor);
         doc.setLineWidth(0.5);
-        doc.line(totalsX, currentY, 195, currentY);
-
-        currentY += 8;
-        doc.setFontSize(10); // Decreased font size for TOTAL DUE label
+        doc.line(15, notesY, 25, notesY);
+        doc.setTextColor(...primaryColor);
+        doc.setFontSize(9);
         doc.setFont(undefined, 'bold');
-        doc.setTextColor(...primaryColor);
-        doc.text('TOTAL DUE', totalsX, currentY);
-
-        doc.setFontSize(11); // Decreased font size for TOTAL DUE amount
-        doc.setTextColor(...primaryColor);
-        const totalText = `${currencySymbol} ${formatMoney(total)}`;
-        doc.text(totalText, 195, currentY, { align: 'right' });
-
-        // ===== NOTES SECTION =====
-        if (invoice.notes) {
-            const notesY = currentY + 20;
-
-            doc.setDrawColor(...primaryColor);
-            doc.setLineWidth(0.5);
-            doc.line(15, notesY, 25, notesY);
-
-            doc.setTextColor(...primaryColor);
-            doc.setFontSize(9);
-            doc.setFont(undefined, 'bold');
-            doc.text('NOTES', 15, notesY + 6);
-
-            doc.setFont(undefined, 'normal');
-            doc.setFontSize(8);
-            doc.setTextColor(...grayColor);
-            const splitNotes = doc.splitTextToSize(invoice.notes, 175);
-            doc.text(splitNotes, 15, notesY + 12);
-        }
-
-        // ===== MODERN FOOTER =====
-        // Decorative line
-        doc.setDrawColor(...lightGray);
-        doc.setLineWidth(1);
-        doc.line(15, 278, 195, 278);
-
-        doc.setTextColor(...grayColor);
-        doc.setFontSize(8);
+        doc.text('NOTES', 15, notesY + 6);
         doc.setFont(undefined, 'normal');
-        doc.text('Thank you for your business!', 105, 285, { align: 'center' });
-
-        doc.setFontSize(7);
-        const footerText = `${String(businessInfo.name || 'Business')} • ${String(businessInfo.email || '')} • ${String(businessInfo.phone || '')}`;
-        doc.text(footerText, 105, 290, { align: 'center' });
-
-        // Bottom accent stripe
-        doc.setFillColor(...primaryColor);
-        doc.rect(0, 294, 210, 3, 'F');
-
-        const fileName = `${String(invoice.invoiceNumber || 'invoice')}.pdf`;
-        doc.save(fileName);
-    } catch (error) {
-        throw error;
+        doc.setFontSize(8);
+        doc.setTextColor(...grayColor);
+        const splitNotes = doc.splitTextToSize(invoice.notes, 175);
+        doc.text(splitNotes, 15, notesY + 12);
+        contentEndY = notesY + 12 + splitNotes.length * 4;
     }
-}
+
+    const footerLineY = Math.min(Math.max(contentEndY + 16, 268), 278);
+
+    try {
+        if (signatureUrl) {
+            await drawAuthorizedSignature(doc, signatureUrl, footerLineY - 18, pngCache);
+        }
+        if (isReceiptDoc && stampUrl) {
+            await drawCompanyStamp(doc, stampUrl, footerLineY - 22, pngCache);
+        }
+    } catch {
+        /* continue without stamp/signature if assets fail */
+    }
+
+    doc.setDrawColor(...lightGray);
+    doc.setLineWidth(1);
+    doc.line(15, footerLineY, 195, footerLineY);
+
+    doc.setTextColor(...grayColor);
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'normal');
+    doc.text(
+        isReceiptDoc ? 'Payment received. Thank you!' : 'Thank you for your business!',
+        105,
+        footerLineY + 7,
+        { align: 'center' }
+    );
+
+    doc.setFontSize(7);
+    doc.text(
+        `${String(businessInfo.name || 'Business')} • ${String(businessInfo.email || '')} • ${String(businessInfo.phone || '')}`,
+        105,
+        footerLineY + 12,
+        { align: 'center' }
+    );
+
+    doc.setFillColor(...primaryColor);
+    doc.rect(0, footerLineY + 16, 210, 3, 'F');
+
+    doc.save(getPdfFileName(invoice, mode));
+};

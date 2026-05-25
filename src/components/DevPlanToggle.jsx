@@ -48,6 +48,10 @@ export default function DevPlanToggle({ formData, setFormData, className = '' })
                     ...updated,
                     plan: updated.plan,
                     businessLogo: updated.businessLogo || '',
+                    companyLogoUrl: updated.companyLogoUrl || '',
+                    companyLogoAvatarUrl: updated.companyLogoAvatarUrl || '',
+                    companyStampUrl: updated.companyStampUrl || '',
+                    authorizedSignatureUrl: updated.authorizedSignatureUrl || '',
                 }));
             }
             showToast(

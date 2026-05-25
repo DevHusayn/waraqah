@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { getCurrencySymbol } from './currency';
 import { isPremiumUser } from './premium';
 import { drawPremiumLogoWatermark } from './pdfLogo';
+import { getCompanyLogoUrl } from './brandAssets';
 
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -45,9 +46,11 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
     const grayColor = [107, 114, 128];
     const currencySymbol = getCurrencySymbol(false);
 
-    if (isPremiumUser(businessInfo) && businessInfo.businessLogo) {
+    const logoUrl = isPremiumUser(businessInfo) ? getCompanyLogoUrl(businessInfo) : '';
+    const pngCache = new Map();
+    if (logoUrl) {
         try {
-            await drawPremiumLogoWatermark(doc, businessInfo.businessLogo);
+            await drawPremiumLogoWatermark(doc, logoUrl, pngCache);
         } catch {
             /* optional watermark */
         }

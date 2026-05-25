@@ -37,6 +37,7 @@ export function filterInvoicesBySearch(invoices, query, clients = []) {
         const client = clients.find((c) => c.id === inv.clientId);
         const haystack = [
             inv.invoiceNumber,
+            inv.receiptNumber,
             client?.name,
             getClientBusiness(client),
             client?.email,

@@ -1,37 +1,107 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import {
+    Plus,
+    Edit,
+    Trash2,
+    Building2,
+    Mail,
+    Phone,
+    MapPin,
+    Search,
+    Users,
+} from 'lucide-react';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
+import ClientFormModal, { EMPTY_CLIENT } from '../components/ClientFormModal';
+import PageHeader from '../components/PageHeader';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
+import { getBusinessInitials } from '../utils/premium';
 import Spinner from '../components/Spinner';
-import FieldValidationMessage from '../components/FieldValidationMessage';
-import RequiredLabel from '../components/RequiredLabel';
-import {
-    validateRequired,
-    validateOptionalEmail,
-    firstFieldError,
-    appendFieldErrorClass,
-    focusFieldById,
-    clearFieldError,
-} from '../utils/formFieldValidation';
-import { Plus, Edit, Trash2, Building2, Mail, Phone, MapPin } from 'lucide-react';
-
-const CLIENT_FIELD_ORDER = ['name', 'email'];
-const CLIENT_INPUT =
-    'block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50';
-
-function buildClientFieldErrors(formData) {
-    const errors = {
-        name: validateRequired(formData.name, 'Please enter the client\'s full name.'),
-        email: validateOptionalEmail(formData.email, 'Please enter a valid email address.'),
-    };
-    return errors;
-}
 
 function safeReturnPath(path) {
     if (!path || !path.startsWith('/') || path.startsWith('//')) return null;
     return path;
+}
+
+function filterClients(clients, query) {
+    const q = query.trim().toLowerCase();
+    if (!q) return clients;
+    return clients.filter(
+        (c) =>
+            c.name?.toLowerCase().includes(q) ||
+            c.business?.toLowerCase().includes(q) ||
+            c.email?.toLowerCase().includes(q) ||
+            c.phone?.toLowerCase().includes(q) ||
+            c.address?.toLowerCase().includes(q)
+    );
+}
+
+function ClientCard({ client, onEdit, onDelete }) {
+    const initials = getBusinessInitials(client.name);
+
+    return (
+        <article className="card hover:shadow-card-md transition-shadow duration-200 flex flex-col h-full">
+            <div className="flex items-start gap-3 mb-4">
+                <div className="h-11 w-11 rounded-xl bg-brand-light text-brand flex items-center justify-center text-sm font-bold shrink-0">
+                    {initials}
+                </div>
+                <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-slate-900 truncate">{client.name}</h3>
+                    {client.business ? (
+                        <p className="text-sm text-slate-500 mt-0.5 flex items-center gap-1 truncate">
+                            <Building2 size={13} className="shrink-0" aria-hidden />
+                            {client.business}
+                        </p>
+                    ) : null}
+                </div>
+            </div>
+
+            <dl className="space-y-2 text-sm flex-1">
+                {client.email ? (
+                    <div className="flex items-start gap-2 text-slate-600">
+                        <Mail size={14} className="shrink-0 mt-0.5 text-slate-400" aria-hidden />
+                        <dd className="break-all">{client.email}</dd>
+                    </div>
+                ) : null}
+                {client.phone ? (
+                    <div className="flex items-start gap-2 text-slate-600">
+                        <Phone size={14} className="shrink-0 mt-0.5 text-slate-400" aria-hidden />
+                        <dd>{client.phone}</dd>
+                    </div>
+                ) : null}
+                {client.address ? (
+                    <div className="flex items-start gap-2 text-slate-600">
+                        <MapPin size={14} className="shrink-0 mt-0.5 text-slate-400" aria-hidden />
+                        <dd className="line-clamp-2">{client.address}</dd>
+                    </div>
+                ) : null}
+                {!client.email && !client.phone && !client.address ? (
+                    <p className="text-xs text-slate-400 italic">No contact details yet</p>
+                ) : null}
+            </dl>
+
+            <div className="flex gap-2 mt-5 pt-4 border-t border-slate-100">
+                <button
+                    type="button"
+                    onClick={() => onEdit(client)}
+                    className="btn-secondary flex-1 text-sm py-2"
+                >
+                    <Edit size={15} aria-hidden />
+                    Edit
+                </button>
+                <button
+                    type="button"
+                    onClick={() => onDelete(client.id)}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 text-sm font-medium py-2 px-3 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
+                >
+                    <Trash2 size={15} aria-hidden />
+                    Delete
+                </button>
+            </div>
+        </article>
+    );
 }
 
 const Clients = () => {
@@ -42,84 +112,42 @@ const Clients = () => {
     const returnTo = safeReturnPath(searchParams.get('returnTo'));
     const shouldOpenAdd = searchParams.get('add') === '1';
     const openedAddModal = useRef(false);
+
+    const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingClient, setEditingClient] = useState(null);
-    const [formData, setFormData] = useState({
-        name: '',
-        business: '',
-        email: '',
-        phone: '',
-        address: '',
-    });
-
-    const [fieldErrors, setFieldErrors] = useState({});
+    const [modalInitialData, setModalInitialData] = useState(EMPTY_CLIENT);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [confirm, setConfirm] = useState({ open: false, clientId: null });
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         if (shouldOpenAdd && !openedAddModal.current) {
             openedAddModal.current = true;
             setEditingClient(null);
-            setFormData({
-                name: '',
-                business: '',
-                email: '',
-                phone: '',
-                address: '',
-            });
+            setModalInitialData(EMPTY_CLIENT);
             setIsModalOpen(true);
         }
     }, [shouldOpenAdd]);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
-        clearFieldError(setFieldErrors, name);
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const errors = buildClientFieldErrors(formData);
-        const firstInvalid = firstFieldError(errors, CLIENT_FIELD_ORDER);
-        if (firstInvalid) {
-            setFieldErrors(errors);
-            focusFieldById(firstInvalid === 'name' ? 'client-name' : 'client-email');
-            return;
-        }
-        setFieldErrors({});
-        try {
-            if (editingClient) {
-                await updateClient(editingClient.id, formData);
-                showToast('Client updated successfully', 'success');
-            } else {
-                const newClient = await addClient(formData);
-                showToast('Client added successfully', 'success');
-                closeModal();
-                if (returnTo) {
-                    const join = returnTo.includes('?') ? '&' : '?';
-                    navigate(`${returnTo}${join}clientId=${encodeURIComponent(newClient.id)}`);
-                    return;
-                }
-            }
-            closeModal();
-        } catch (err) {
-            setAlert({ open: true, message: err.message || 'Failed to save client.', type: 'error' });
-        }
-    };
+    const filteredClients = useMemo(
+        () => filterClients(clients, search),
+        [clients, search]
+    );
 
     const openModal = (client = null) => {
         if (client) {
             setEditingClient(client);
-            setFormData(client);
+            setModalInitialData({
+                name: client.name || '',
+                business: client.business || '',
+                email: client.email || '',
+                phone: client.phone || '',
+                address: client.address || '',
+            });
         } else {
             setEditingClient(null);
-            setFormData({
-                name: '',
-                business: '',
-                email: '',
-                phone: '',
-                address: '',
-            });
+            setModalInitialData(EMPTY_CLIENT);
         }
         setIsModalOpen(true);
     };
@@ -127,193 +155,165 @@ const Clients = () => {
     const closeModal = () => {
         setIsModalOpen(false);
         setEditingClient(null);
-        setFieldErrors({});
-        setFormData({
-            name: '',
-            business: '',
-            email: '',
-            phone: '',
-            address: '',
-        });
+        setModalInitialData(EMPTY_CLIENT);
     };
 
-    const handleDelete = (id) => {
-        setConfirm({ open: true, clientId: id });
+    const handleSubmit = async (formData, editing) => {
+        try {
+            if (editing) {
+                await updateClient(editing.id, formData);
+                showToast('Client updated successfully', 'success');
+                closeModal();
+            } else {
+                const newClient = await addClient(formData);
+                showToast('Client added successfully', 'success');
+                closeModal();
+                if (returnTo) {
+                    const join = returnTo.includes('?') ? '&' : '?';
+                    navigate(`${returnTo}${join}clientId=${encodeURIComponent(newClient.id)}`);
+                }
+            }
+        } catch (err) {
+            setAlert({
+                open: true,
+                message: err.message || 'Failed to save client.',
+                type: 'error',
+            });
+            throw err;
+        }
     };
+
+    const handleDelete = (id) => setConfirm({ open: true, clientId: id });
 
     const confirmDelete = async () => {
         const id = confirm.clientId;
+        setDeleting(true);
         try {
             await deleteClient(id);
             showToast('Client deleted successfully', 'success');
+            setConfirm({ open: false, clientId: null });
         } catch (err) {
-            setAlert({ open: true, message: err.message || 'Failed to delete client.', type: 'error' });
+            setAlert({
+                open: true,
+                message: err.message || 'Failed to delete client.',
+                type: 'error',
+            });
+        } finally {
+            setDeleting(false);
         }
-        setConfirm({ open: false, clientId: null });
     };
 
     return (
         <>
-            <AlertModal open={alert.open} message={alert.message} type={alert.type} onClose={() => setAlert({ open: false, message: '', type: 'error' })} />
+            <AlertModal
+                open={alert.open}
+                message={alert.message}
+                type={alert.type}
+                onClose={() => setAlert({ open: false, message: '', type: 'error' })}
+            />
             <ConfirmModal
                 open={confirm.open}
-                message={"Are you sure you want to delete this client?"}
+                title="Delete client?"
+                description="This client will be removed from your database. Existing invoices linked to them will not be deleted."
+                confirmLabel="Delete client"
+                cancelLabel="Keep client"
+                variant="danger"
+                loading={deleting}
                 onConfirm={confirmDelete}
-                onCancel={() => setConfirm({ open: false, clientId: null })}
+                onCancel={() => !deleting && setConfirm({ open: false, clientId: null })}
             />
+            <ClientFormModal
+                open={isModalOpen}
+                onClose={closeModal}
+                onSubmit={handleSubmit}
+                editingClient={editingClient}
+                initialData={modalInitialData}
+            />
+
             <div className="max-w-7xl mx-auto">
-                <div className="flex items-center justify-between mb-6">
-                    <div>
-                        <h1 className="page-title">Clients</h1>
-                        <p className="page-subtitle">Manage your client database</p>
-                    </div>
-                    <button onClick={() => openModal()} className="btn-primary">
-                        <Plus size={20} />
-                        Add Client
+                <PageHeader title="Clients" subtitle="Manage contacts for your invoices">
+                    <button type="button" onClick={() => openModal()} className="btn-primary">
+                        <Plus size={20} aria-hidden />
+                        Add client
                     </button>
-                </div>
+                </PageHeader>
 
                 {loading ? (
-                    <div className="py-20"><Spinner /></div>
+                    <div className="py-24 flex justify-center">
+                        <Spinner />
+                    </div>
                 ) : clients.length === 0 ? (
-                    <div className="card text-center py-12">
-                        <Building2 className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-4 text-lg font-medium text-gray-900">No clients yet</h3>
-                        <p className="mt-2 text-gray-500">Get started by adding your first client</p>
-                        <button onClick={() => openModal()} className="btn-primary mt-6">
-                            <Plus size={20} />
-                            Add Your First Client
+                    <div className="card text-center py-16 px-6 max-w-lg mx-auto">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-light text-brand">
+                            <Users className="h-7 w-7" aria-hidden />
+                        </div>
+                        <h3 className="mt-5 text-xl font-semibold text-slate-900">No clients yet</h3>
+                        <p className="mt-2 text-slate-500 text-sm max-w-sm mx-auto">
+                            Add your first client to start creating invoices with their contact details
+                            pre-filled.
+                        </p>
+                        <button type="button" onClick={() => openModal()} className="btn-primary mt-8 mx-auto">
+                            <Plus size={20} aria-hidden />
+                            Add your first client
                         </button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {clients.map((client) => (
-                            <div key={client.id} className="card hover:shadow-md transition-shadow duration-200">
-                                <div className="flex items-start justify-between mb-4">
-                                    <div className="flex-1">
-                                        <h3 className="text-lg font-semibold text-gray-900">{client.name}</h3>
-                                        <p className="text-sm text-gray-600 mt-1 flex items-center">
-                                            <Building2 size={14} className="mr-1" />
-                                            {client.business}
-                                        </p>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => openModal(client)}
-                                            className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                                        >
-                                            <Edit size={18} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(client.id)}
-                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2 text-sm">
-                                    <p className="text-gray-600 flex items-center">
-                                        <Mail size={14} className="mr-2 text-gray-400" />
-                                        {client.email}
-                                    </p>
-                                    {client.phone && (
-                                        <p className="text-gray-600 flex items-center">
-                                            <Phone size={14} className="mr-2 text-gray-400" />
-                                            {client.phone}
-                                        </p>
-                                    )}
-                                    {client.address && (
-                                        <p className="text-gray-600 flex items-start">
-                                            <MapPin size={14} className="mr-2 mt-0.5 text-gray-400 flex-shrink-0" />
-                                            <span>{client.address}</span>
-                                        </p>
-                                    )}
-                                </div>
+                    <>
+                        <div className="card !p-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <p className="text-sm text-slate-600 flex items-center gap-2">
+                                <Users size={16} className="text-slate-400" aria-hidden />
+                                <span>
+                                    <strong className="text-slate-900">{clients.length}</strong> client
+                                    {clients.length === 1 ? '' : 's'}
+                                    {search ? (
+                                        <>
+                                            {' '}
+                                            · <strong className="text-slate-900">{filteredClients.length}</strong>{' '}
+                                            shown
+                                        </>
+                                    ) : null}
+                                </span>
+                            </p>
+                            <div className="relative w-full sm:max-w-xs">
+                                <Search
+                                    className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                                    aria-hidden
+                                />
+                                <input
+                                    type="search"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Search clients…"
+                                    className="input-field pl-9"
+                                    aria-label="Search clients"
+                                />
                             </div>
-                        ))}
-                    </div>
-                )}
-
-                {/* Modal */}
-                {isModalOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-gray-100">
-                            <h2 className="text-xl font-semibold text-slate-900 mb-6 text-center">
-                                {editingClient ? 'Edit Client' : 'Add New Client'}
-                            </h2>
-                            <form onSubmit={handleSubmit} noValidate className="space-y-5">
-                                <div className="space-y-4">
-                                    <div>
-                                        <RequiredLabel htmlFor="client-name">Full name</RequiredLabel>
-                                        <input
-                                            id="client-name"
-                                            type="text"
-                                            name="name"
-                                            value={formData.name}
-                                            onChange={handleChange}
-                                            className={appendFieldErrorClass(CLIENT_INPUT, Boolean(fieldErrors.name))}
-                                            aria-invalid={Boolean(fieldErrors.name)}
-                                        />
-                                        <FieldValidationMessage message={fieldErrors.name} />
-                                    </div>
-                                    <div>
-                                        <label className="label">Business name</label>
-                                        <input
-                                            type="text"
-                                            name="business"
-                                            value={formData.business}
-                                            onChange={handleChange}
-                                            className={CLIENT_INPUT}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="client-email" className="label">Email address</label>
-                                        <input
-                                            id="client-email"
-                                            type="email"
-                                            name="email"
-                                            value={formData.email}
-                                            onChange={handleChange}
-                                            className={appendFieldErrorClass(CLIENT_INPUT, Boolean(fieldErrors.email))}
-                                            aria-invalid={Boolean(fieldErrors.email)}
-                                        />
-                                        <FieldValidationMessage message={fieldErrors.email} />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                                        <input
-                                            type="tel"
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleChange}
-                                            className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                        <textarea
-                                            name="address"
-                                            value={formData.address}
-                                            onChange={handleChange}
-                                            className="block w-full rounded-xl border border-gray-300 px-4 py-3 text-base shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition placeholder-gray-400 bg-gray-50 resize-none"
-                                            rows="3"
-                                            style={{ resize: 'none' }}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="flex gap-3 mt-6">
-                                    <button type="button" onClick={closeModal} className="w-1/2 py-3 rounded-xl bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition">
-                                        Cancel
-                                    </button>
-                                    <button type="submit" className="btn-primary w-1/2 py-3">
-                                        {editingClient ? 'Update' : 'Add'} Client
-                                    </button>
-                                </div>
-                            </form>
                         </div>
-                    </div>
+
+                        {filteredClients.length === 0 ? (
+                            <div className="card text-center py-12">
+                                <p className="text-slate-600 font-medium">No clients match your search</p>
+                                <button
+                                    type="button"
+                                    onClick={() => setSearch('')}
+                                    className="btn-secondary mt-4 mx-auto text-sm"
+                                >
+                                    Clear search
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                                {filteredClients.map((client) => (
+                                    <ClientCard
+                                        key={client.id}
+                                        client={client}
+                                        onEdit={openModal}
+                                        onDelete={handleDelete}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </>

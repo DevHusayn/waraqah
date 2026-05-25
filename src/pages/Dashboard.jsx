@@ -1,9 +1,10 @@
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
-import { FileText, Users, DollarSign, TrendingUp, Clock, CheckCircle, FileBarChart, Crown } from 'lucide-react';
+import { FileText, Users, Wallet, TrendingUp, Clock, CheckCircle, FileBarChart, Crown } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '../utils/currency';
+import { getDisplayNumber } from '../utils/receiptHelpers';
 import PageHeader from '../components/PageHeader';
 import InvoiceLimitModal from '../components/InvoiceLimitModal';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
@@ -33,7 +34,7 @@ const Dashboard = () => {
     const stats = [
         { name: 'Total Invoices', value: invoices.length, icon: FileText, iconBg: 'bg-brand-light', iconColor: 'text-brand' },
         { name: 'Total Clients', value: clients.length, icon: Users, iconBg: 'bg-violet-50', iconColor: 'text-violet-600' },
-        { name: 'Revenue (Paid)', value: formatCurrency(totalRevenue), icon: DollarSign, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600' },
+        { name: 'Revenue (Paid)', value: formatCurrency(totalRevenue), icon: Wallet, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600' },
         { name: 'Pending Revenue', value: formatCurrency(pendingRevenue), icon: Clock, iconBg: 'bg-amber-50', iconColor: 'text-amber-600' },
     ];
 
@@ -69,17 +70,17 @@ const Dashboard = () => {
                 </p>
             ) : null}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-4 mb-8">
                 {stats.map((stat) => {
                     const Icon = stat.icon;
                     return (
                         <div key={stat.name} className="stat-card">
-                            <div className={`${stat.iconBg} p-3 rounded-xl flex items-center justify-center`}>
+                            <div className={`stat-card-icon ${stat.iconBg}`}>
                                 <Icon className={`h-6 w-6 ${stat.iconColor}`} />
                             </div>
-                            <div>
-                                <p className="text-sm text-slate-500 font-medium">{stat.name}</p>
-                                <p className="text-xl font-semibold text-slate-900 mt-0.5">{stat.value}</p>
+                            <div className="stat-card-body">
+                                <p className="text-sm text-slate-500 font-medium leading-snug">{stat.name}</p>
+                                <p className="stat-card-value">{stat.value}</p>
                             </div>
                         </div>
                     );
@@ -88,7 +89,7 @@ const Dashboard = () => {
 
             <div className="card mb-8">
                 <h2 className="text-lg font-semibold text-slate-900 mb-4">Quick actions</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
                     <button type="button" onClick={tryNavigateToCreate} className="btn-primary justify-start py-3">
                         <FileText size={18} />
                         Create invoice
@@ -133,10 +134,10 @@ const Dashboard = () => {
                                     type="button"
                                     key={invoice.id}
                                     className="w-full flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-left border border-slate-100"
-                                    onClick={() => navigate(`/invoices/edit/${invoice.id}`)}
+                                    onClick={() => navigate(`/invoices/${invoice.id}`)}
                                 >
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-slate-900 truncate">{invoice.invoiceNumber}</p>
+                                        <p className="font-medium text-slate-900 truncate">{getDisplayNumber(invoice)}</p>
                                         <p className="text-sm text-slate-500 truncate">{getClientName(invoice.clientId)}</p>
                                     </div>
                                     <div className="text-right ml-3 flex-shrink-0">
@@ -165,7 +166,7 @@ const Dashboard = () => {
                                 <div key={invoice.id} className="p-4 bg-red-50 border border-red-100 rounded-xl">
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0">
-                                            <p className="font-medium text-slate-900">{invoice.invoiceNumber}</p>
+                                            <p className="font-medium text-slate-900">{getDisplayNumber(invoice)}</p>
                                             <p className="text-sm text-slate-500">{getClientName(invoice.clientId)}</p>
                                             <p className="text-xs text-red-600 mt-1">
                                                 Due {format(new Date(invoice.dueDate), 'MMM dd, yyyy')}

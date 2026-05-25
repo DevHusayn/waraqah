@@ -7,6 +7,8 @@ import { useSettings } from '../context/SettingsContext';
 import { isPremiumUser } from '../utils/premium';
 import { formatCurrency } from '../utils/currency';
 import { PREMIUM_PLAN_FEATURES } from '../constants/planFeatures';
+import { PREMIUM_PRICE_NGN } from '../constants/pricing';
+import PremiumPrice from '../components/PremiumPrice';
 import Spinner from '../components/Spinner';
 import DevPlanToggle from '../components/DevPlanToggle';
 
@@ -18,7 +20,7 @@ export default function Upgrade() {
     const [paying, setPaying] = useState(false);
 
     const premium = isPremiumUser(businessInfo);
-    const monthlyAmount = plan?.amount ?? 5000;
+    const monthlyAmount = plan?.amount ?? PREMIUM_PRICE_NGN;
 
     useEffect(() => {
         apiFetch('/payments/plan')
@@ -78,12 +80,7 @@ export default function Upgrade() {
                             Monthly
                         </span>
                     </div>
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-4xl font-bold text-slate-900 tracking-tight">
-                            {formatCurrency(monthlyAmount)}
-                        </span>
-                        <span className="text-slate-500 font-medium">/ month</span>
-                    </div>
+                    <PremiumPrice amount={monthlyAmount} size="sm" className="mt-1" />
                 </div>
 
                 <ul className="px-6 py-5 space-y-3">

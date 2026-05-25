@@ -3,10 +3,8 @@ import { Link } from 'react-router-dom';
 import {
     FileText,
     Users,
-    Download,
     Clock,
     Shield,
-    Zap,
     Crown,
     Check,
     ChevronDown,
@@ -22,9 +20,11 @@ import { APP_NAME, APP_TAGLINE } from '../constants/brand';
 import { AUTH_LOGIN_PATH, AUTH_REGISTER_PATH } from '../constants/authRoutes';
 import { FREE_MONTHLY_INVOICE_LIMIT } from '../utils/invoiceLimits';
 import { FREE_PLAN_FEATURES, PREMIUM_PLAN_FEATURES } from '../constants/planFeatures';
+import { PREMIUM_PRICE_NGN, formatPremiumPrice } from '../constants/pricing';
+import PremiumPrice from '../components/PremiumPrice';
 import { useRevealOnScroll, revealClass } from '../hooks/useRevealOnScroll';
 
-const PREMIUM_PRICE = 5000;
+const PREMIUM_PRICE = PREMIUM_PRICE_NGN;
 
 function formatPrice(amount) {
     return Number(amount).toLocaleString('en-US', { maximumFractionDigits: 0 });
@@ -34,47 +34,51 @@ const WHY_ITEMS = [
     {
         icon: Clock,
         title: 'Stop rebuilding invoices from scratch',
-        text: 'Save clients once, reuse their details, and send polished PDFs in minutes, not hours.',
+        text: 'Save clients once, reuse their details, and send polished PDFs in minutes — not hours.',
     },
     {
         icon: TrendingUp,
         title: 'Look professional, get paid faster',
-        text: 'Clear totals, due dates, and branded PDFs help you appear established and serious about your work.',
+        text: 'Clear totals, due dates, and branded PDFs help you look established. Mark invoices paid to issue receipts instantly.',
     },
     {
         icon: Smartphone,
         title: 'Work from anywhere',
-        text: 'Create and track invoices on your phone or laptop. Your workspace travels with you.',
+        text: 'Create invoices, track payments, and download PDFs on your phone or laptop. Your workspace travels with you.',
     },
     {
         icon: Shield,
         title: 'Stay organised as you grow',
-        text: 'Dashboard overview, client records, and status tracking keep pending and overdue invoices visible.',
+        text: 'Dashboard overview, client records, and pending, overdue, and paid status keep every invoice easy to find.',
     },
 ];
 
 const STEPS = [
-    { step: '01', title: 'Add your business', text: 'Set your details and brand color for PDF invoices.' },
+    { step: '01', title: 'Add your business', text: 'Set your profile and brand color. Premium adds your logo, stamp, and signature on PDFs.' },
     { step: '02', title: 'Save a client', text: 'Store contact info once, then select them on every new invoice.' },
-    { step: '03', title: 'Send the PDF', text: 'Download a professional invoice and share it instantly.' },
+    { step: '03', title: 'Send and track', text: 'Download the invoice PDF, share it, and mark it paid when you receive payment to generate a receipt.' },
 ];
 
 const FAQ_ITEMS = [
     {
         q: 'Who is Waraqah for?',
-        a: 'Freelancers and small businesses who want polished PDF invoices, client records, and a simple dashboard without spreadsheets.',
+        a: 'Freelancers and small businesses in Nigeria who want polished PDF invoices, client records, payment tracking, and a simple dashboard — without spreadsheets.',
     },
     {
         q: 'What happens on the Free plan?',
-        a: `You can create up to ${FREE_MONTHLY_INVOICE_LIMIT} invoices per calendar month. Deleting an invoice does not reset your monthly allowance.`,
+        a: `You can create up to ${FREE_MONTHLY_INVOICE_LIMIT} invoices per calendar month, manage clients, mark invoices paid, and download PDF receipts. Deleting an invoice does not reset your monthly allowance.`,
+    },
+    {
+        q: 'What does Premium include?',
+        a: 'Unlimited invoices, your logo as a watermark on PDFs, a company stamp on paid receipts, an authorized signature, and monthly billing statements you can print or export.',
     },
     {
         q: 'How does Premium billing work?',
-        a: `Premium is ${formatPrice(PREMIUM_PRICE)}/month through Paystack. You can cancel auto-renewal and keep access until the period ends.`,
+        a: `Premium is ₦${formatPremiumPrice(PREMIUM_PRICE)}/month (launch price) through Paystack. You can cancel auto-renewal and keep access until the period ends.`,
     },
     {
         q: 'Can I use Waraqah on my phone?',
-        a: 'Yes. Waraqah works in your mobile browser. Create invoices, manage clients, and download PDFs on the go.',
+        a: 'Yes. Waraqah works in your mobile browser. Create invoices, manage clients, mark payments, and download PDFs on the go.',
     },
 ];
 
@@ -95,7 +99,7 @@ function FaqItem({ item, open, onToggle }) {
             </button>
             <div
                 className={`overflow-hidden transition-all duration-300 ${
-                    open ? 'max-h-48 pb-5 opacity-100' : 'max-h-0 opacity-0'
+                    open ? 'max-h-64 pb-5 opacity-100' : 'max-h-0 opacity-0'
                 }`}
             >
                 <p className="text-slate-600 text-sm leading-relaxed pr-8">{item.a}</p>
@@ -255,7 +259,7 @@ export default function Landing() {
                             Free to start. Premium when you scale.
                         </h2>
                         <p className="mt-4 text-slate-600 text-lg">
-                            Try {APP_NAME} at no cost, then upgrade when you need unlimited invoices and your logo on every PDF.
+                            Try {APP_NAME} at no cost, then upgrade for unlimited invoices, branded PDFs, and monthly billing statements.
                         </p>
                     </SectionReveal>
                     <div className="mt-14 grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -288,10 +292,7 @@ export default function Landing() {
                                     <Crown className="h-5 w-5 text-amber-600" />
                                     <h3 className="text-lg font-semibold text-slate-900">Premium</h3>
                                 </div>
-                                <p className="mt-2 text-4xl font-bold text-slate-900">
-                                    {formatPrice(PREMIUM_PRICE)}
-                                    <span className="text-base font-normal text-slate-500">/month</span>
-                                </p>
+                                <PremiumPrice className="mt-2" />
                                 <ul className="mt-8 space-y-3 flex-1">
                                     <li className="flex items-start gap-3 text-sm font-semibold text-slate-900 pb-3 mb-1 border-b border-amber-200/70">
                                         <Check className="h-5 w-5 text-amber-600 flex-shrink-0" />
@@ -316,10 +317,10 @@ export default function Landing() {
                 <div className="mx-auto max-w-6xl px-4 sm:px-6">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
                         {[
-                            { icon: FileText, label: 'PDF invoices' },
-                            { icon: Users, label: 'Client CRM' },
-                            { icon: Download, label: 'One-click export' },
-                            { icon: Zap, label: 'Fast workflow' },
+                            { icon: FileText, label: 'Invoices & receipts' },
+                            { icon: Users, label: 'Client records' },
+                            { icon: TrendingUp, label: 'Payment tracking' },
+                            { icon: Crown, label: 'Premium branding' },
                         ].map(({ icon: Icon, label }) => (
                             <div key={label} className="flex flex-col items-center gap-3">
                                 <Icon className="h-8 w-8 text-sky-400" />

@@ -5,6 +5,7 @@ import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
 import { isPremiumUser } from '../utils/premium';
+import { premiumPriceLabel } from '../constants/pricing';
 
 export default function SubscriptionBilling() {
     const { businessInfo, refreshBusinessInfo } = useSettings();
@@ -39,7 +40,7 @@ export default function SubscriptionBilling() {
                 className="inline-flex items-center gap-2 text-sm font-semibold text-brand hover:underline"
             >
                 <Sparkles className="h-4 w-4" />
-                Subscribe — ₦5,000/month
+                Subscribe — {premiumPriceLabel()}/month
             </Link>
         );
     }

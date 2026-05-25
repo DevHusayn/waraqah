@@ -15,6 +15,10 @@ const EMPTY_BUSINESS = {
     brandColor: '#0ea5e9',
     plan: 'free',
     businessLogo: '',
+    companyLogoUrl: '',
+    companyLogoAvatarUrl: '',
+    companyStampUrl: '',
+    authorizedSignatureUrl: '',
 };
 
 export const useSettings = () => {
@@ -71,9 +75,9 @@ export const SettingsProvider = ({ children }) => {
         return updated;
     };
 
-    const saveBusinessLogo = async (logoDataUrl, formSnapshot = {}) => {
+    const saveBusinessAsset = async (field, dataUrl, formSnapshot = {}) => {
         const payload = buildBusinessInfoPayload(
-            { ...businessInfo, ...formSnapshot, businessLogo: logoDataUrl },
+            { ...businessInfo, ...formSnapshot, [field]: dataUrl },
             businessInfo
         );
         const updated = await apiFetch('/business-info', {
@@ -84,6 +88,32 @@ export const SettingsProvider = ({ children }) => {
         return updated;
     };
 
+    const saveCompanyLogo = async (
+        { companyLogoUrl, companyLogoAvatarUrl },
+        formSnapshot = {}
+    ) => {
+        const payload = buildBusinessInfoPayload(
+            {
+                ...businessInfo,
+                ...formSnapshot,
+                companyLogoUrl,
+                companyLogoAvatarUrl,
+                businessLogo: companyLogoUrl,
+            },
+            businessInfo
+        );
+        const updated = await apiFetch('/business-info', {
+            method: 'PUT',
+            body: JSON.stringify(payload),
+        });
+        setBusinessInfo(updated);
+        return updated;
+    };
+
+    const saveBusinessLogo = async (logoDataUrl, formSnapshot = {}) => {
+        return saveBusinessAsset('companyLogoUrl', logoDataUrl, formSnapshot);
+    };
+
     const value = {
         businessInfo,
         updateBusinessInfo,
@@ -91,6 +121,8 @@ export const SettingsProvider = ({ children }) => {
         loading,
         refreshBusinessInfo: fetchBusinessInfo,
         saveBusinessLogo,
+        saveCompanyLogo,
+        saveBusinessAsset,
     };
 
     return (

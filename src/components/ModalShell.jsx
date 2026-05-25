@@ -1,0 +1,99 @@
+import { useEffect } from 'react';
+import { X } from 'lucide-react';
+
+/**
+ * Shared modal backdrop + panel. Locks body scroll while open.
+ */
+export default function ModalShell({
+    open,
+    onClose,
+    children,
+    className = '',
+    panelClassName = '',
+    ariaLabelledby,
+    ariaDescribedby,
+    role = 'dialog',
+    showClose = false,
+    size = 'sm',
+}) {
+    useEffect(() => {
+        if (!open) return undefined;
+
+        const scrollY = window.scrollY;
+        const { style } = document.body;
+        const prev = {
+            position: style.position,
+            top: style.top,
+            left: style.left,
+            right: style.right,
+            overflow: style.overflow,
+            width: style.width,
+        };
+
+        style.position = 'fixed';
+        style.top = `-${scrollY}px`;
+        style.left = '0';
+        style.right = '0';
+        style.width = '100%';
+        style.overflow = 'hidden';
+
+        const onKeyDown = (e) => {
+            if (e.key === 'Escape' && onClose) {
+                onClose();
+            }
+        };
+        document.addEventListener('keydown', onKeyDown);
+
+        return () => {
+            document.removeEventListener('keydown', onKeyDown);
+            style.position = prev.position;
+            style.top = prev.top;
+            style.left = prev.left;
+            style.right = prev.right;
+            style.width = prev.width;
+            style.overflow = prev.overflow;
+            window.scrollTo(0, scrollY);
+        };
+    }, [open, onClose]);
+
+    if (!open) return null;
+
+    const sizes = {
+        sm: 'max-w-sm',
+        md: 'max-w-md',
+        lg: 'max-w-lg',
+    };
+
+    return (
+        <div
+            className={`fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 ${className}`}
+            role="presentation"
+        >
+            <button
+                type="button"
+                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                aria-label="Close dialog"
+                onClick={onClose}
+            />
+            <div
+                role={role}
+                aria-modal="true"
+                aria-labelledby={ariaLabelledby}
+                aria-describedby={ariaDescribedby}
+                className={`relative w-full ${sizes[size] || sizes.sm} bg-white rounded-t-2xl sm:rounded-2xl shadow-xl border border-slate-200 animate-modal-scale max-h-[90vh] overflow-y-auto ${panelClassName}`}
+            >
+                {showClose && onClose && (
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors z-10"
+                        aria-label="Close"
+                    >
+                        <X size={18} aria-hidden />
+                    </button>
+                )}
+                {children}
+            </div>
+        </div>
+    );
+}
