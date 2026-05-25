@@ -66,7 +66,7 @@ export default function ModalShell({
 
     return (
         <div
-            className={`fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 ${className}`}
+            className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 ${className}`}
             role="presentation"
         >
             <button
@@ -80,7 +80,7 @@ export default function ModalShell({
                 aria-modal="true"
                 aria-labelledby={ariaLabelledby}
                 aria-describedby={ariaDescribedby}
-                className={`relative w-full ${sizes[size] || sizes.sm} bg-white rounded-t-2xl sm:rounded-2xl shadow-xl border border-slate-200 animate-modal-scale max-h-[90vh] overflow-y-auto ${panelClassName}`}
+                className={`relative w-full ${sizes[size] || sizes.sm} bg-white rounded-2xl shadow-xl border border-slate-200 animate-modal-scale max-h-[min(90vh,100%)] overflow-y-auto ${panelClassName}`}
             >
                 {showClose && onClose && (
                     <button

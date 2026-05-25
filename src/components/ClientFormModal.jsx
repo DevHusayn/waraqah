@@ -113,7 +113,7 @@ export default function ClientFormModal({
                         value={formData.name}
                         onChange={handleChange}
                         className={inputClass(Boolean(fieldErrors.name))}
-                        placeholder="e.g. Ada Okonkwo"
+                        placeholder="John Doe"
                         aria-invalid={Boolean(fieldErrors.name)}
                     />
                     <FieldValidationMessage message={fieldErrors.name} />
