@@ -92,7 +92,7 @@ function AssetUploadCard({
                         ) : (
                             <p className="text-xs text-slate-500">Not uploaded</p>
                         )}
-                        <p className="text-[11px] text-slate-400 mt-2">PNG or JPEG · max 1.5 MB</p>
+                        <p className="text-[11px] text-slate-400 mt-2">PNG (recommended) or JPEG · max 1.5 MB</p>
                     </div>
                 </div>
             )}
@@ -254,7 +254,7 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <AssetUploadCard
                         title="Company logo"
-                        description="JPEG in sidebar · PNG on PDF invoices"
+                        description="PNG with transparent background for PDF · JPEG or PNG for sidebar"
                         value={logo}
                         isEditing={isEditing}
                         saving={savingField === 'companyLogoUrl'}

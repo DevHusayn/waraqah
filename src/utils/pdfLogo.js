@@ -1,10 +1,10 @@
-import { ensurePngDataUrl } from './imageToPng';
+import { ensurePngDataUrl, flattenImageForPdf } from './imageToPng';
 
 const PAGE_W = 210;
 const PAGE_H = 297;
-const LOGO_MAX_WIDTH_MM = 155;
-const LOGO_MAX_HEIGHT_MM = 155;
-const WATERMARK_OPACITY = 0.12;
+const LOGO_MAX_WIDTH_MM = 120;
+const LOGO_MAX_HEIGHT_MM = 120;
+const WATERMARK_OPACITY = 0.08;
 
 function loadImageMeta(pngDataUrl) {
     return new Promise((resolve, reject) => {
@@ -36,17 +36,32 @@ function addPngWithOpacity(doc, pngDataUrl, x, y, w, h, opacity, rotation = 0) {
     doc.addImage(pngDataUrl, 'PNG', x, y, w, h, undefined, 'FAST', rotation);
 }
 
-async function resolvePng(dataUrl, cache) {
+async function resolvePdfPng(dataUrl, cache) {
+    const trimmed = (dataUrl || '').trim();
+    if (!trimmed) return '';
+
+    const cacheKey = `pdf-flat:${trimmed}`;
+    if (cache?.has(cacheKey)) {
+        return cache.get(cacheKey);
+    }
+
     try {
-        return await ensurePngDataUrl(dataUrl, cache);
+        const flat = await flattenImageForPdf(trimmed, '#ffffff');
+        cache?.set(cacheKey, flat);
+        return flat;
     } catch {
-        return '';
+        try {
+            const png = await ensurePngDataUrl(trimmed, cache);
+            return png;
+        } catch {
+            return '';
+        }
     }
 }
 
 /** Centered watermark behind document content */
 export async function drawPremiumLogoWatermark(doc, logoDataUrl, cache) {
-    const png = await resolvePng(logoDataUrl, cache);
+    const png = await resolvePdfPng(logoDataUrl, cache);
     if (!png) return;
 
     const { width, height } = await loadImageMeta(png);
@@ -56,40 +71,44 @@ export async function drawPremiumLogoWatermark(doc, logoDataUrl, cache) {
     addPngWithOpacity(doc, png, x, y, w, h, WATERMARK_OPACITY);
 }
 
-/** Top-left header logo */
-export async function drawHeaderLogo(doc, logoDataUrl, cache) {
-    const png = await resolvePng(logoDataUrl, cache);
-    if (!png) return { width: 0, height: 0 };
+/** Top-left header logo — sized to sit beside the business name */
+export async function drawHeaderLogo(doc, logoDataUrl, cache, options = {}) {
+    const { x = 22, nameBaselineY = 20, maxW = 28, maxH = 14 } = options;
+    const png = await resolvePdfPng(logoDataUrl, cache);
+    if (!png) return { width: 0, height: 0, x, y: nameBaselineY };
 
     const { width, height } = await loadImageMeta(png);
-    const { w, h } = fitImage(width / height, 38, 18);
-    addPngWithOpacity(doc, png, 15, 10, w, h, 1);
-    return { width: w, height: h };
+    const { w, h } = fitImage(width / height, maxW, maxH);
+    const y = nameBaselineY - h + 1.5;
+    addPngWithOpacity(doc, png, x, y, w, h, 1);
+    return { width: w, height: h, x, y };
 }
 
-/** Authorized signature above footer */
-export async function drawAuthorizedSignature(doc, signatureDataUrl, y = 258, cache) {
-    const png = await resolvePng(signatureDataUrl, cache);
+/** Authorized signature in the footer block */
+export async function drawAuthorizedSignature(doc, signatureDataUrl, y, cache, options = {}) {
+    const png = await resolvePdfPng(signatureDataUrl, cache);
     if (!png) return;
 
+    const { x = 22, maxW = 52, maxH = 14 } = options;
     const { width, height } = await loadImageMeta(png);
-    const { w, h } = fitImage(width / height, 50, 16);
-    const x = (PAGE_W - w) / 2;
+    const { w, h } = fitImage(width / height, maxW, maxH);
     addPngWithOpacity(doc, png, x, y, w, h, 1);
 }
 
-/** Company stamp on paid receipts — slight rotation + ink opacity */
-export async function drawCompanyStamp(doc, stampDataUrl, y = 248, cache) {
-    const png = await resolvePng(stampDataUrl, cache);
+/** Company stamp on paid receipts — bottom-right, above footer rule */
+export async function drawCompanyStamp(doc, stampDataUrl, y, cache, options = {}) {
+    const png = await resolvePdfPng(stampDataUrl, cache);
     if (!png) return;
 
+    const { x = PAGE_W - 50, maxW = 34, maxH = 34, rotation = -10, opacity = 0.9 } = options;
     const { width, height } = await loadImageMeta(png);
-    const { w, h } = fitImage(width / height, 42, 42);
-    const x = PAGE_W - w - 22;
-    addPngWithOpacity(doc, png, x, y, w, h, 0.85, -5);
+    const { w, h } = fitImage(width / height, maxW, maxH);
+    addPngWithOpacity(doc, png, x, y, w, h, opacity, rotation);
 }
 
-/** @deprecated jsPDF always receives PNG after ensurePngDataUrl */
+/** @deprecated jsPDF always receives flattened PNG after resolvePdfPng */
 export function getImageFormat() {
     return 'PNG';
 }
+
+export { PAGE_W, PAGE_H };

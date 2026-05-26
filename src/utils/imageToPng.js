@@ -26,6 +26,29 @@ export async function convertDataUrlToPng(dataUrl) {
     canvas.height = img.naturalHeight || img.height;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Could not process image');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
+    return canvas.toDataURL('image/png');
+}
+
+/**
+ * jsPDF renders transparent PNG pixels as black. Flatten onto a solid backdrop before PDF embed.
+ * @param {string} dataUrl
+ * @param {string} background — hex or css color (default white page)
+ */
+export async function flattenImageForPdf(dataUrl, background = '#ffffff') {
+    const png = await ensurePngDataUrl(dataUrl);
+    if (!png) return '';
+
+    const img = await loadImage(png);
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth || img.width;
+    canvas.height = img.naturalHeight || img.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Could not process image');
+
+    ctx.fillStyle = background;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0);
     return canvas.toDataURL('image/png');
 }

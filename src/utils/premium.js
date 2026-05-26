@@ -1,6 +1,6 @@
 /** Premium plan helpers — backend should set businessInfo.plan to "premium" */
 
-import { convertDataUrlToPng } from './imageToPng';
+import { convertDataUrlToPng, convertDataUrlToJpeg } from './imageToPng';
 
 export const PLANS = {
     FREE: 'free',

@@ -2,9 +2,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { getCurrencySymbol } from './currency';
-import { isPremiumUser } from './premium';
-import { drawPremiumLogoWatermark } from './pdfLogo';
-import { getCompanyLogoUrl } from './brandAssets';
+import { drawPdfGeometricBackground } from './pdfBackground';
 
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -46,15 +44,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
     const grayColor = [107, 114, 128];
     const currencySymbol = getCurrencySymbol(false);
 
-    const logoUrl = isPremiumUser(businessInfo) ? getCompanyLogoUrl(businessInfo) : '';
-    const pngCache = new Map();
-    if (logoUrl) {
-        try {
-            await drawPremiumLogoWatermark(doc, logoUrl, pngCache);
-        } catch {
-            /* optional watermark */
-        }
-    }
+    drawPdfGeometricBackground(doc, primaryColor);
 
     doc.setFillColor(...primaryColor);
     doc.rect(0, 0, 210, 3, 'F');

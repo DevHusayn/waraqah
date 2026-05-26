@@ -5,11 +5,13 @@ import { getCurrencySymbol } from './currency';
 import { getClientBusiness } from './clientHelpers';
 import { isPremiumUser } from './premium';
 import {
-    drawPremiumLogoWatermark,
     drawHeaderLogo,
     drawAuthorizedSignature,
     drawCompanyStamp,
+    PAGE_H,
+    PAGE_W,
 } from './pdfLogo';
+import { drawPdfGeometricBackground } from './pdfBackground';
 import {
     getCompanyLogoUrl,
     getCompanyStampUrl,
@@ -37,21 +39,6 @@ export const generatePDF = async (invoice, client, businessInfo, options = {}) =
     const signatureUrl = premium ? getAuthorizedSignatureUrl(businessInfo) : '';
     const pngCache = new Map();
 
-    if (logoUrl) {
-        try {
-            await drawPremiumLogoWatermark(doc, logoUrl, pngCache);
-        } catch {
-            /* continue without watermark if logo fails */
-        }
-    }
-
-    const currencySymbol = getCurrencySymbol(false);
-    const formatMoney = (value) =>
-        Number(value || 0).toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
-
     const hexToRgb = (hex) => {
         const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result
@@ -68,44 +55,76 @@ export const generatePDF = async (invoice, client, businessInfo, options = {}) =
     const grayColor = [107, 114, 128];
     const lightGray = [229, 231, 235];
     const whiteColor = [255, 255, 255];
+    const currencySymbol = getCurrencySymbol(false);
+
+    drawPdfGeometricBackground(doc, primaryColor);
+
+    const formatMoney = (value) =>
+        Number(value || 0).toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+
     const docNumber = getDocumentNumber(invoice, mode) || (isReceiptDoc ? 'RCP' : 'INV');
 
     doc.setFillColor(...primaryColor);
     doc.rect(0, 0, 210, 3, 'F');
 
+    const HEADER_LEFT = 22;
+    const NAME_Y = 20;
+    const ACCENT_X = 15;
+
     doc.setDrawColor(...primaryColor);
     doc.setLineWidth(1);
-    doc.line(15, 12, 15, 50);
 
-    let headerTextX = 22;
+    let logoDims = null;
+    let detailsStartY = 28;
+
     if (logoUrl) {
         try {
-            const logoDims = await drawHeaderLogo(doc, logoUrl, pngCache);
-            if (logoDims.width) {
-                headerTextX = 15 + logoDims.width + 6;
-            }
+            logoDims = await drawHeaderLogo(doc, logoUrl, pngCache, {
+                x: HEADER_LEFT,
+                nameBaselineY: NAME_Y,
+                maxW: 28,
+                maxH: 14,
+            });
         } catch {
-            /* header text falls back to default position */
+            logoDims = null;
         }
     }
 
     doc.setTextColor(...textColor);
     doc.setFontSize(22);
     doc.setFont(undefined, 'bold');
-    doc.text(String(businessInfo.name || 'Your Business'), headerTextX, 20);
+
+    if (logoDims?.width) {
+        doc.text(
+            String(businessInfo.name || 'Your Business'),
+            HEADER_LEFT + logoDims.width + 4,
+            NAME_Y
+        );
+        detailsStartY = logoDims.y + logoDims.height + 4;
+    } else {
+        doc.text(String(businessInfo.name || 'Your Business'), HEADER_LEFT, NAME_Y);
+        detailsStartY = 28;
+    }
 
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
     doc.setTextColor(...grayColor);
-    const businessAddress = doc.splitTextToSize(String(businessInfo.address || ''), 80);
-    doc.text(businessAddress, headerTextX, 28);
+    const businessAddress = doc.splitTextToSize(String(businessInfo.address || ''), 92);
+    doc.text(businessAddress, HEADER_LEFT, detailsStartY);
 
-    const contactY = 28 + businessAddress.length * 4;
-    doc.text(String(businessInfo.email || ''), headerTextX, contactY);
-    doc.text(String(businessInfo.phone || ''), headerTextX, contactY + 4);
+    const contactY = detailsStartY + businessAddress.length * 4;
+    doc.text(String(businessInfo.email || ''), HEADER_LEFT, contactY);
+    doc.text(String(businessInfo.phone || ''), HEADER_LEFT, contactY + 4);
+    let headerBottomY = contactY + 4;
     if (businessInfo.website) {
-        doc.text(String(businessInfo.website), headerTextX, contactY + 8);
+        doc.text(String(businessInfo.website), HEADER_LEFT, contactY + 8);
+        headerBottomY = contactY + 8;
     }
+
+    doc.line(ACCENT_X, 12, ACCENT_X, Math.min(headerBottomY + 5, 56));
 
     doc.setTextColor(...primaryColor);
     doc.setFontSize(isReceiptDoc ? 34 : 38);
@@ -119,7 +138,7 @@ export const generatePDF = async (invoice, client, businessInfo, options = {}) =
     doc.setFont(undefined, 'bold');
     doc.text(`#${String(docNumber)}`, 175, 35.5, { align: 'center' });
 
-    const infoStartY = 62;
+    const infoStartY = Math.max(62, headerBottomY + 14);
 
     doc.setFillColor(...lightGray);
     doc.roundedRect(15, infoStartY, 85, 38, 3, 3, 'F');
@@ -314,14 +333,38 @@ export const generatePDF = async (invoice, client, businessInfo, options = {}) =
         contentEndY = notesY + 12 + splitNotes.length * 4;
     }
 
-    const footerLineY = Math.min(Math.max(contentEndY + 16, 268), 278);
+    const footerReserve = isReceiptDoc && (stampUrl || signatureUrl) ? 38 : signatureUrl ? 28 : 18;
+    const bottomLimit = PAGE_H - 22;
+    let footerLineY = contentEndY + footerReserve;
+
+    if (footerLineY > bottomLimit) {
+        doc.addPage();
+        drawPdfGeometricBackground(doc, primaryColor);
+        doc.setFillColor(...primaryColor);
+        doc.rect(0, 0, 210, 3, 'F');
+        contentEndY = 20;
+        footerLineY = contentEndY + footerReserve;
+    }
+
+    const signatureY = contentEndY + 10;
+    const stampY = footerLineY - 36;
 
     try {
         if (signatureUrl) {
-            await drawAuthorizedSignature(doc, signatureUrl, footerLineY - 18, pngCache);
+            await drawAuthorizedSignature(doc, signatureUrl, signatureY, pngCache, {
+                x: 22,
+                maxW: 50,
+                maxH: 13,
+            });
         }
         if (isReceiptDoc && stampUrl) {
-            await drawCompanyStamp(doc, stampUrl, footerLineY - 22, pngCache);
+            await drawCompanyStamp(doc, stampUrl, stampY, pngCache, {
+                x: PAGE_W - 48,
+                maxW: 32,
+                maxH: 32,
+                rotation: -10,
+                opacity: 0.92,
+            });
         }
     } catch {
         /* continue without stamp/signature if assets fail */
