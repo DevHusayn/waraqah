@@ -57,7 +57,7 @@ export const generatePDF = async (invoice, client, businessInfo, options = {}) =
     const whiteColor = [255, 255, 255];
     const currencySymbol = getCurrencySymbol(false);
 
-    drawPdfGeometricBackground(doc, primaryColor);
+    drawPdfGeometricBackground(doc);
 
     const formatMoney = (value) =>
         Number(value || 0).toLocaleString('en-US', {
@@ -230,6 +230,33 @@ export const generatePDF = async (invoice, client, businessInfo, options = {}) =
         doc.text(dueDate, 190, infoStartY + 28, { align: 'right' });
     }
 
+    const footerLineY = PAGE_H - 22;
+    const signatureReserve = signatureUrl ? 18 : 0;
+    const stampReserve = isReceiptDoc && stampUrl ? 28 : 0;
+    const assetZoneHeight = Math.max(signatureReserve, stampReserve);
+    const FOOTER_ZONE = 22 + assetZoneHeight + 6;
+    const CONTENT_BOTTOM = PAGE_H - FOOTER_ZONE;
+    const LINE_HEIGHT = 4;
+
+    const drawPageTopBar = () => {
+        doc.setFillColor(...primaryColor);
+        doc.rect(0, 0, 210, 3, 'F');
+    };
+
+    const startNewPage = () => {
+        doc.addPage();
+        drawPdfGeometricBackground(doc);
+        drawPageTopBar();
+        return 20;
+    };
+
+    const ensureSpace = (currentY, neededHeight) => {
+        if (currentY + neededHeight > CONTENT_BOTTOM) {
+            return startNewPage();
+        }
+        return currentY;
+    };
+
     const tableStartY = 112;
 
     if (!invoice.items || !Array.isArray(invoice.items) || invoice.items.length === 0) {
@@ -249,6 +276,7 @@ export const generatePDF = async (invoice, client, businessInfo, options = {}) =
         head: tableHead,
         body: tableData,
         theme: 'plain',
+        showHead: 'everyPage',
         headStyles: {
             fillColor: primaryColor,
             textColor: whiteColor,
@@ -269,36 +297,41 @@ export const generatePDF = async (invoice, client, businessInfo, options = {}) =
             3: { cellWidth: 42, halign: 'center', fontStyle: 'bold', textColor: textColor },
         },
         alternateRowStyles: { fillColor: [252, 252, 253] },
-        margin: { left: 15, right: 15 },
+        margin: { left: 15, right: 15, bottom: FOOTER_ZONE + 4 },
+        didDrawPage: (data) => {
+            if (data.pageNumber > 1) {
+                drawPageTopBar();
+            }
+        },
     });
 
-    const finalY = doc.lastAutoTable.finalY + 15;
+    let currentY = ensureSpace(doc.lastAutoTable.finalY + 15, 52);
     const totalsX = 130;
 
     doc.setFontSize(9);
     doc.setTextColor(...grayColor);
     doc.setFont(undefined, 'normal');
-    doc.text('Subtotal', totalsX, finalY);
+    doc.text('Subtotal', totalsX, currentY);
     doc.setTextColor(...textColor);
-    doc.text(`${currencySymbol} ${formatMoney(invoice.subtotal)}`, 195, finalY, { align: 'right' });
+    doc.text(`${currencySymbol} ${formatMoney(invoice.subtotal)}`, 195, currentY, { align: 'right' });
 
     doc.setTextColor(...grayColor);
-    doc.text(`Tax (${invoice.taxRate || 10}%)`, totalsX, finalY + 8);
+    doc.text(`Tax (${invoice.taxRate || 10}%)`, totalsX, currentY + 8);
     doc.setTextColor(...textColor);
-    doc.text(`${currencySymbol} ${formatMoney(invoice.tax)}`, 195, finalY + 8, { align: 'right' });
+    doc.text(`${currencySymbol} ${formatMoney(invoice.tax)}`, 195, currentY + 8, { align: 'right' });
 
     doc.setDrawColor(...primaryColor);
     doc.setLineWidth(1);
-    doc.line(totalsX, finalY + 13, 195, finalY + 13);
+    doc.line(totalsX, currentY + 13, 195, currentY + 13);
 
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(...textColor);
-    doc.text('Total', totalsX, finalY + 22);
+    doc.text('Total', totalsX, currentY + 22);
     doc.setFontSize(11);
-    doc.text(`${currencySymbol} ${formatMoney(invoice.total)}`, 195, finalY + 22, { align: 'right' });
+    doc.text(`${currencySymbol} ${formatMoney(invoice.total)}`, 195, currentY + 22, { align: 'right' });
 
-    let currentY = finalY + 22;
+    currentY += 22;
     let total = Number(invoice.total);
     if (isNaN(total) || total < 0) total = 0;
 
@@ -315,9 +348,12 @@ export const generatePDF = async (invoice, client, businessInfo, options = {}) =
     doc.setFontSize(11);
     doc.text(`${currencySymbol} ${formatMoney(total)}`, 195, currentY, { align: 'right' });
 
-    let contentEndY = currentY;
     if (invoice.notes) {
-        const notesY = currentY + 20;
+        const splitNotes = doc.splitTextToSize(String(invoice.notes), 175);
+        const notesBlockHeight = 20 + splitNotes.length * LINE_HEIGHT;
+        currentY = ensureSpace(currentY + 16, notesBlockHeight);
+
+        const notesY = currentY + 4;
         doc.setDrawColor(...primaryColor);
         doc.setLineWidth(0.5);
         doc.line(15, notesY, 25, notesY);
@@ -328,26 +364,21 @@ export const generatePDF = async (invoice, client, businessInfo, options = {}) =
         doc.setFont(undefined, 'normal');
         doc.setFontSize(8);
         doc.setTextColor(...grayColor);
-        const splitNotes = doc.splitTextToSize(invoice.notes, 175);
-        doc.text(splitNotes, 15, notesY + 12);
-        contentEndY = notesY + 12 + splitNotes.length * 4;
+
+        let noteLineY = notesY + 12;
+        for (const line of splitNotes) {
+            if (noteLineY + LINE_HEIGHT > CONTENT_BOTTOM) {
+                currentY = startNewPage();
+                noteLineY = currentY;
+            }
+            doc.text(line, 15, noteLineY);
+            noteLineY += LINE_HEIGHT;
+        }
+        currentY = noteLineY;
     }
 
-    const footerReserve = isReceiptDoc && (stampUrl || signatureUrl) ? 38 : signatureUrl ? 28 : 18;
-    const bottomLimit = PAGE_H - 22;
-    let footerLineY = contentEndY + footerReserve;
-
-    if (footerLineY > bottomLimit) {
-        doc.addPage();
-        drawPdfGeometricBackground(doc, primaryColor);
-        doc.setFillColor(...primaryColor);
-        doc.rect(0, 0, 210, 3, 'F');
-        contentEndY = 20;
-        footerLineY = contentEndY + footerReserve;
-    }
-
-    const signatureY = contentEndY + 10;
-    const stampY = footerLineY - 36;
+    const signatureY = footerLineY - signatureReserve - 4;
+    const stampY = footerLineY - stampReserve - 2;
 
     try {
         if (signatureUrl) {
@@ -370,6 +401,7 @@ export const generatePDF = async (invoice, client, businessInfo, options = {}) =
         /* continue without stamp/signature if assets fail */
     }
 
+    doc.setPage(doc.getNumberOfPages());
     doc.setDrawColor(...lightGray);
     doc.setLineWidth(1);
     doc.line(15, footerLineY, 195, footerLineY);
@@ -393,7 +425,7 @@ export const generatePDF = async (invoice, client, businessInfo, options = {}) =
     );
 
     doc.setFillColor(...primaryColor);
-    doc.rect(0, footerLineY + 16, 210, 3, 'F');
+    doc.rect(0, PAGE_H - 3, 210, 3, 'F');
 
     doc.save(getPdfFileName(invoice, mode));
 };

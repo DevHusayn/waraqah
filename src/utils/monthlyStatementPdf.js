@@ -44,7 +44,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
     const grayColor = [107, 114, 128];
     const currencySymbol = getCurrencySymbol(false);
 
-    drawPdfGeometricBackground(doc, primaryColor);
+    drawPdfGeometricBackground(doc);
 
     doc.setFillColor(...primaryColor);
     doc.rect(0, 0, 210, 3, 'F');
