@@ -114,39 +114,6 @@ function PasswordToggle({ visible, onToggle, label }) {
     );
 }
 
-function AuthModeTabs({ isLogin, switchMode, submitLoading, className = '' }) {
-    return (
-        <div
-            className={`flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm ${className}`}
-        >
-            <button
-                type="button"
-                onClick={() => switchMode(true)}
-                disabled={submitLoading}
-                className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${
-                    isLogin
-                        ? 'bg-brand text-white shadow-sm'
-                        : 'text-slate-600 hover:bg-slate-50'
-                }`}
-            >
-                Sign in
-            </button>
-            <button
-                type="button"
-                onClick={() => switchMode(false)}
-                disabled={submitLoading}
-                className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${
-                    !isLogin
-                        ? 'bg-brand text-white shadow-sm'
-                        : 'text-slate-600 hover:bg-slate-50'
-                }`}
-            >
-                Register
-            </button>
-        </div>
-    );
-}
-
 function Auth() {
     const { setBusinessInfo } = useSettings();
     const { fetchUserData, resetAll } = useInvoice();
@@ -419,51 +386,61 @@ function Auth() {
             </div>
 
             {/* Form panel */}
-            <div className="min-h-screen bg-slate-50 lg:flex lg:flex-col lg:justify-center lg:p-10">
-                <header className="lg:hidden sticky top-0 z-20 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/80 px-6 pt-6 pb-4">
-                    <div className="w-full max-w-md mx-auto">
-                        <div className="flex justify-center">
+            <div className="flex flex-col h-[100dvh] overflow-hidden bg-slate-50 p-6 sm:p-10 lg:h-auto lg:min-h-screen lg:justify-center lg:overflow-visible">
+                <div className="flex w-full max-w-md mx-auto min-h-0 flex-1 flex-col lg:block lg:flex-none">
+                    <div className="shrink-0 bg-slate-50 pb-4 lg:pb-0">
+                        <div className="lg:hidden flex justify-center mb-8">
                             <WaraqahLogo size="lg" />
                         </div>
-                        <AuthModeTabs
-                            isLogin={isLogin}
-                            switchMode={switchMode}
-                            submitLoading={submitLoading}
-                            className="mt-4 mb-0"
-                        />
+
+                        <Link
+                            to="/"
+                            className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-brand mb-6 transition-colors"
+                        >
+                            <ArrowLeft size={16} aria-hidden />
+                            Back to home
+                        </Link>
+
+                        <div className="mb-6">
+                            <h1 className="page-title text-2xl sm:text-3xl">
+                                {isLogin ? 'Welcome back' : 'Create your account'}
+                            </h1>
+                            <p className="page-subtitle mt-1">
+                                {isLogin
+                                    ? 'Sign in to manage your invoices'
+                                    : 'Start invoicing in under a minute'}
+                            </p>
+                        </div>
+
+                        <div className="flex rounded-xl border border-slate-200 bg-white p-1 mb-0 lg:mb-6 shadow-sm">
+                            <button
+                                type="button"
+                                onClick={() => switchMode(true)}
+                                disabled={submitLoading}
+                                className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${
+                                    isLogin
+                                        ? 'bg-brand text-white shadow-sm'
+                                        : 'text-slate-600 hover:bg-slate-50'
+                                }`}
+                            >
+                                Sign in
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => switchMode(false)}
+                                disabled={submitLoading}
+                                className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${
+                                    !isLogin
+                                        ? 'bg-brand text-white shadow-sm'
+                                        : 'text-slate-600 hover:bg-slate-50'
+                                }`}
+                            >
+                                Register
+                            </button>
+                        </div>
                     </div>
-                </header>
 
-                <div className="w-full max-w-md mx-auto px-6 pb-8 sm:px-10 lg:px-0 lg:pb-0">
-                    <div className="hidden lg:flex justify-center mb-8">
-                        <WaraqahLogo size="lg" />
-                    </div>
-
-                    <Link
-                        to="/"
-                        className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-brand mb-6 transition-colors"
-                    >
-                        <ArrowLeft size={16} aria-hidden />
-                        Back to home
-                    </Link>
-
-                    <div className="mb-6">
-                        <h1 className="page-title text-2xl sm:text-3xl">
-                            {isLogin ? 'Welcome back' : 'Create your account'}
-                        </h1>
-                        <p className="page-subtitle mt-1">
-                            {isLogin
-                                ? 'Sign in to manage your invoices'
-                                : 'Start invoicing in under a minute'}
-                        </p>
-                    </div>
-
-                    <AuthModeTabs
-                        isLogin={isLogin}
-                        switchMode={switchMode}
-                        submitLoading={submitLoading}
-                        className="hidden lg:flex mb-6"
-                    />
+                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain -mx-6 px-6 pt-4 pb-2 lg:mx-0 lg:overflow-visible lg:flex-none lg:px-0 lg:pt-0 lg:pb-0">
 
                     <form
                         ref={authFormRef}
@@ -742,6 +719,7 @@ function Auth() {
                             {isLogin ? 'Register free' : 'Sign in'}
                         </button>
                     </p>
+                    </div>
                 </div>
             </div>
         </div>
