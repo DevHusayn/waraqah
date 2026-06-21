@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "Waraqah",
+    "slug": "waraqah",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "waraqah",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0284c7"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.waraqah.invoice",
+      "associatedDomains": []
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0284c7",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.waraqah.invoice",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": false,
+          "data": [
+            {
+              "scheme": "waraqah"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "waraqah-mobile"
+      }
+    },
+    "plugins": [
+      "expo-asset",
+      "expo-font",
+      "expo-secure-store",
+      "expo-sharing",
+      "expo-web-browser"
+    ]
+  }
+}

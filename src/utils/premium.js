@@ -1,11 +1,16 @@
-/** Premium plan helpers — backend should set businessInfo.plan to "premium" */
+export {
+    PLANS,
+    isPremiumUser,
+    getBusinessInitials,
+    getPlanLabel,
+    LOGO_MAX_BYTES,
+} from '@waraqah/shared';
 
 import { convertDataUrlToPng, convertDataUrlToJpeg } from './imageToPng';
 
-export const PLANS = {
-    FREE: 'free',
-    PREMIUM: 'premium',
-};
+export const PNG_ACCEPT = 'image/png';
+export const BRAND_IMAGE_ACCEPT = 'image/png,image/jpeg';
+export const LOGO_ACCEPT = BRAND_IMAGE_ACCEPT;
 
 const DEV_PREMIUM_KEY = 'waraqah_premium';
 
@@ -21,35 +26,6 @@ export function setDevPremiumEnabled(enabled) {
         localStorage.removeItem(DEV_PREMIUM_KEY);
     }
 }
-
-export function getBusinessInitials(name) {
-    const trimmed = (name || '').trim();
-    if (!trimmed) return '?';
-    const parts = trimmed.split(/\s+/).filter(Boolean);
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
-export function getPlanLabel(businessInfo) {
-    return isPremiumUser(businessInfo) ? 'Premium' : 'Free plan';
-}
-
-/** True only when the API says plan is premium (source of truth). */
-export function isPremiumUser(businessInfo) {
-    if (!businessInfo) return false;
-    if (businessInfo.plan !== PLANS.PREMIUM && !businessInfo.isPremium) return false;
-    if (businessInfo.premiumUntil) {
-        return new Date(businessInfo.premiumUntil) > new Date();
-    }
-    return businessInfo.plan === PLANS.PREMIUM || businessInfo.isPremium === true;
-}
-
-export const LOGO_MAX_BYTES = 1.5 * 1024 * 1024;
-export const PNG_ACCEPT = 'image/png';
-/** Upload picker — JPEG is converted to PNG before save/PDF. */
-export const BRAND_IMAGE_ACCEPT = 'image/png,image/jpeg';
-/** @deprecated use BRAND_IMAGE_ACCEPT */
-export const LOGO_ACCEPT = BRAND_IMAGE_ACCEPT;
 
 const ACCEPTED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/jpg']);
 const ACCEPTED_EXTENSIONS = ['.png', '.jpg', '.jpeg'];
