@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Loader2, UserPlus, Pencil } from 'lucide-react';
+import { UserPlus, Pencil } from 'lucide-react';
+import Spinner from './Spinner';
 import ModalShell from './ModalShell';
 import FieldValidationMessage from './FieldValidationMessage';
 import RequiredLabel from './RequiredLabel';
@@ -197,7 +198,7 @@ export default function ClientFormModal({
                     <button type="submit" disabled={saving} className="btn-primary flex-1">
                         {saving ? (
                             <>
-                                <Loader2 size={18} className="animate-spin" aria-hidden />
+                                <Spinner size="sm" inline />
                                 Saving…
                             </>
                         ) : isEdit ? (

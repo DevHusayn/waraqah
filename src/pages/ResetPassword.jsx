@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import Spinner from '../components/Spinner';
 import AlertModal from '../components/AlertModal';
 import WaraqahLogo from '../components/WaraqahLogo';
 import RequiredLabel from '../components/RequiredLabel';
@@ -215,7 +216,7 @@ export default function ResetPassword() {
                     >
                         {loading ? (
                             <>
-                                <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                                <Spinner size="sm" inline />
                                 Updating password...
                             </>
                         ) : (

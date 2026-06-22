@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { CheckCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { CheckCircle, AlertTriangle } from 'lucide-react';
+import Spinner from './Spinner';
 import { MARK_PAID_METHODS } from '../utils/receiptHelpers';
 import ModalShell from './ModalShell';
 import RequiredLabel from './RequiredLabel';
@@ -104,7 +105,7 @@ export default function MarkAsPaidModal({ open, onConfirm, onCancel, saving = fa
                 <button type="button" onClick={handleConfirm} className="btn-primary flex-1" disabled={saving}>
                     {saving ? (
                         <>
-                            <Loader2 size={18} className="animate-spin" aria-hidden />
+                            <Spinner size="sm" inline />
                             Saving…
                         </>
                     ) : (

@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
+import Spinner from '../components/Spinner';
 import { apiFetch, getToken } from '../utils/api';
 import { useSettings } from '../context/SettingsContext';
 
@@ -50,9 +51,9 @@ export default function UpgradeCallback() {
     if (status === 'loading') {
         return (
             <div className="max-w-md mx-auto text-center py-20">
-                <Loader2 className="h-12 w-12 text-brand animate-spin mx-auto mb-4" />
-                <h1 className="text-xl font-semibold text-zinc-900">Confirming payment…</h1>
-                <p className="text-zinc-500 mt-2 text-sm">Please wait while we verify with Paystack.</p>
+                <Spinner size="xl" centered className="mx-auto mb-4" />
+                <h1 className="text-lg font-semibold text-zinc-950 tracking-tight">Confirming payment…</h1>
+                <p className="text-zinc-500 mt-2 text-[13px]">Please wait while we verify with Paystack.</p>
             </div>
         );
     }

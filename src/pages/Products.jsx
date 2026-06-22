@@ -8,7 +8,7 @@ import PageHeader from '../components/PageHeader';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
 import { formatCurrency } from '../utils/currency';
-import Spinner from '../components/Spinner';
+import Spinner, { PageLoader } from '../components/Spinner';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 import Toolbar, { ToolbarSearch } from '../components/Toolbar';
@@ -107,7 +107,7 @@ export default function Products() {
         }
     };
 
-    if (loading) return <Spinner />;
+    if (loading) return <PageLoader />;
 
     return (
         <>

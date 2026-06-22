@@ -4,7 +4,7 @@ import { Crown, Download, Printer, FileBarChart } from 'lucide-react';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import PageHeader from '../components/PageHeader';
-import Spinner from '../components/Spinner';
+import Spinner, { PageLoader } from '../components/Spinner';
 import { formatCurrency } from '../utils/currency';
 import { isPremiumUser } from '../utils/premium';
 import {
@@ -47,9 +47,7 @@ export default function MonthlyStatement() {
 
     if (loading || settingsLoading) {
         return (
-            <div className="flex justify-center py-20">
-                <Spinner />
-            </div>
+            <PageLoader />
         );
     }
 

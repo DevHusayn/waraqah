@@ -9,6 +9,7 @@ import {
     Check,
     ChevronDown,
     ArrowRight,
+    Sparkles,
     TrendingUp,
     Smartphone,
 } from 'lucide-react';
@@ -109,7 +110,7 @@ function FaqItem({ item, open, onToggle }) {
 
 function CtaButton({ className = '', children = 'Get started' }) {
     return (
-        <Link to={AUTH_REGISTER_PATH} className={`btn-primary ${className}`}>
+        <Link to={AUTH_REGISTER_PATH} className={`btn-primary shadow-lg shadow-brand/25 hover:shadow-xl hover:shadow-brand/30 ${className}`}>
             {children}
             <ArrowRight className="h-4 w-4" />
         </Link>
@@ -134,39 +135,51 @@ export default function Landing() {
             <LandingNav />
 
             {/* Hero */}
-            <section className="relative pt-28 pb-20 sm:pt-32 sm:pb-28 landing-hero-gradient border-b border-zinc-200/80">
-                <div className="mx-auto max-w-6xl px-4 sm:px-6">
+            <section className="relative pt-28 pb-20 sm:pt-32 sm:pb-28 landing-hero-gradient border-b border-zinc-200/80 overflow-hidden">
+                <div className="landing-blob landing-blob-1" aria-hidden />
+                <div className="landing-blob landing-blob-2" aria-hidden />
+                <div className="mx-auto max-w-6xl px-4 sm:px-6 relative z-10">
                     <div
                         ref={heroRef}
                         className={`grid lg:grid-cols-2 gap-12 lg:gap-16 items-center ${revealClass(heroVisible)}`}
                     >
                         <div>
-                            <p className="inline-flex items-center gap-2 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-600">
+                            <p className="inline-flex items-center gap-2 rounded-full bg-white/80 border border-brand/20 px-4 py-1.5 text-sm font-medium text-brand shadow-sm landing-float-badge">
+                                <Sparkles className="h-4 w-4" />
                                 {APP_TAGLINE}
                             </p>
-                            <h1 className="mt-5 text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-zinc-950 leading-[1.15]">
-                                Create a professional invoice in seconds
+                            <h1 className="mt-6 text-3xl sm:text-4xl lg:text-[3.25rem] font-bold tracking-tight text-zinc-950 leading-[1.1]">
+                                Create a professional invoice in{' '}
+                                <span className="landing-text-shimmer">seconds</span>
                             </h1>
-                            <p className="mt-4 text-base text-zinc-500 max-w-xl leading-relaxed">
+                            <p className="mt-6 text-lg text-zinc-600 max-w-xl leading-relaxed">
                                 {APP_NAME} helps freelancers and small businesses send polished invoices,
                                 manage clients, and track payments without spreadsheets or design stress.
                             </p>
-                            <div className="mt-7 flex flex-col sm:flex-row gap-2">
-                                <CtaButton />
-                                <a href="#pricing" className="btn-secondary">
+                            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                                <CtaButton className="py-3.5 px-8 text-base shadow-lg shadow-brand/25 hover:shadow-xl hover:shadow-brand/30" />
+                                <a href="#pricing" className="btn-secondary py-3.5 px-8 text-base border-zinc-200/80 bg-white/70">
                                     Compare plans
                                 </a>
                             </div>
-                            <p className="mt-3 text-xs text-zinc-400">
+                            <p className="mt-4 text-sm text-zinc-500">
                                 Free to start · No card required · {FREE_MONTHLY_INVOICE_LIMIT} invoices/month
                             </p>
                         </div>
 
-                        <div className="rounded-lg border border-zinc-200/80 bg-white p-4 sm:p-5">
-                            <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-400 mb-3">
-                                Sample invoice
-                            </p>
-                            <LandingInvoicePreview />
+                        <div className="relative">
+                            <div className="rounded-xl border border-zinc-200/80 bg-white shadow-card-md p-4 sm:p-5 landing-float-card">
+                                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3 text-center sm:text-left">
+                                    Sample invoice
+                                </p>
+                                <LandingInvoicePreview />
+                                <div className="mt-4 flex gap-2 items-center px-1">
+                                    <div className="flex-1 h-2 rounded-full bg-brand-light overflow-hidden">
+                                        <div className="h-full w-4/5 bg-brand rounded-full landing-progress-bar" />
+                                    </div>
+                                    <span className="text-xs text-zinc-400 font-medium">~seconds</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -268,28 +281,28 @@ export default function Landing() {
                             </div>
                         </SectionReveal>
                         <SectionReveal delay={2}>
-                            <div className="rounded-lg border border-zinc-900 bg-zinc-950 text-white p-6 h-full flex flex-col relative overflow-hidden">
-                                <div className="absolute top-4 right-4 rounded-md bg-white/10 px-2.5 py-0.5 text-[10px] font-medium text-zinc-300 uppercase tracking-wide">
+                            <div className="rounded-2xl border-2 border-amber-300/80 bg-gradient-to-br from-amber-50 via-white to-sky-50 p-8 h-full flex flex-col relative overflow-hidden landing-premium-glow">
+                                <div className="absolute top-4 right-4 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 uppercase tracking-wide">
                                     Popular
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Crown className="h-4 w-4 text-amber-400" />
-                                    <h3 className="text-base font-semibold text-white">Premium</h3>
+                                    <Crown className="h-5 w-5 text-amber-600" />
+                                    <h3 className="text-lg font-semibold text-zinc-900">Premium</h3>
                                 </div>
-                                <PremiumPrice className="mt-2 [&_*]:text-white" />
-                                <ul className="mt-6 space-y-2.5 flex-1">
-                                    <li className="flex items-start gap-2 text-sm font-medium text-zinc-300 pb-2 mb-1 border-b border-white/10">
-                                        <Check className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                                <PremiumPrice className="mt-2" />
+                                <ul className="mt-8 space-y-3 flex-1">
+                                    <li className="flex items-start gap-3 text-sm font-semibold text-zinc-900 pb-3 mb-1 border-b border-amber-200/70">
+                                        <Check className="h-5 w-5 text-amber-600 flex-shrink-0" />
                                         Everything in Free, plus:
                                     </li>
                                     {PREMIUM_PLAN_FEATURES.map((f) => (
-                                        <li key={f} className="flex items-start gap-2 text-zinc-300 text-sm">
-                                            <Check className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                                        <li key={f} className="flex items-start gap-3 text-zinc-700 text-sm">
+                                            <Check className="h-5 w-5 text-amber-600 flex-shrink-0" />
                                             {f}
                                         </li>
                                     ))}
                                 </ul>
-                                <CtaButton className="w-full mt-6 justify-center bg-white text-zinc-950 hover:bg-zinc-100" />
+                                <CtaButton className="w-full mt-8 py-3 justify-center" />
                             </div>
                         </SectionReveal>
                     </div>

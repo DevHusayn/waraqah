@@ -39,7 +39,7 @@ export function WaraqahWordmark({ size = 'md', inverted = false, showAccent = tr
             {showAccent && (
                 <span
                     className={`mt-1 rounded-full ${s.accent} ${
-                        inverted ? 'bg-white/50' : 'bg-zinc-900'
+                        inverted ? 'bg-white/50' : 'bg-brand'
                     }`}
                     aria-hidden
                 />

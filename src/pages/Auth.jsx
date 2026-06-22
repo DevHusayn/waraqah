@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Loader2, Eye, EyeOff, FileText, Shield, Zap } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, FileText, Shield, Zap } from 'lucide-react';
+import Spinner from '../components/Spinner';
 import AlertModal from '../components/AlertModal';
 import ForgotPasswordModal from '../components/ForgotPasswordModal';
 import { useSettings } from '../context/SettingsContext';
@@ -346,7 +347,7 @@ function Auth() {
     };
 
     return (
-        <div className="min-h-screen lg:grid lg:grid-cols-2">
+        <div className="min-h-screen lg:grid lg:grid-cols-2 lg:max-h-screen lg:overflow-hidden">
             <AlertModal
                 open={alert.open}
                 message={alert.message}
@@ -361,93 +362,91 @@ function Auth() {
             />
 
             {/* Brand panel */}
-            <div className="hidden lg:flex flex-col justify-between bg-zinc-950 text-white p-12">
+            <div className="hidden lg:flex lg:h-screen lg:sticky lg:top-0 flex-col justify-between bg-gradient-to-br from-brand via-brand to-brand-hover text-white p-10 xl:p-12">
                 <div>
                     <WaraqahLogo size="lg" inverted className="[&_*]:text-white" />
-                    <h2 className="mt-10 text-2xl font-semibold leading-tight max-w-sm tracking-tight">
+                    <h2 className="mt-10 text-3xl font-semibold leading-tight max-w-sm">
                         Invoice professionally. Get paid faster.
                     </h2>
-                    <p className="mt-3 text-zinc-400 text-sm leading-relaxed max-w-md">
+                    <p className="mt-4 text-white/80 text-base leading-relaxed max-w-md">
                         Create branded invoices, track payments, and manage clients — all in one
                         place.
                     </p>
-                    <ul className="mt-8 space-y-3">
+                    <ul className="mt-10 space-y-4">
                         {FEATURES.map(({ icon: Icon, text }) => (
-                            <li key={text} className="flex items-center gap-3 text-zinc-300">
-                                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-zinc-800">
-                                    <Icon size={16} aria-hidden />
+                            <li key={text} className="flex items-center gap-3 text-white/90">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
+                                    <Icon size={18} aria-hidden />
                                 </span>
-                                <span className="text-sm">{text}</span>
+                                <span className="text-sm font-medium">{text}</span>
                             </li>
                         ))}
                     </ul>
                 </div>
-                <p className="text-xs text-zinc-500">Trusted by businesses across Nigeria</p>
+                <p className="text-sm text-white/60">Trusted by businesses across Nigeria</p>
             </div>
 
-            {/* Form panel */}
-            <div className="flex flex-col h-[100dvh] overflow-hidden bg-zinc-50 p-6 sm:p-10 lg:h-auto lg:min-h-screen lg:justify-center lg:overflow-visible">
-                <div className="flex w-full max-w-md mx-auto min-h-0 flex-1 flex-col lg:block lg:flex-none">
-                    <div className="shrink-0 bg-zinc-50 pb-4 lg:pb-0">
-                        <div className="lg:hidden flex justify-center mb-8">
-                            <WaraqahLogo size="lg" />
+            {/* Form panel — Vercel softness + Stripe clarity */}
+            <div className="min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col bg-zinc-50/80">
+                <div className="flex-1 flex flex-col justify-center px-5 py-8 sm:px-8 sm:py-10">
+                    <div className="w-full max-w-[420px] mx-auto">
+                        <div className="lg:hidden flex justify-center mb-6">
+                            <WaraqahLogo size="md" />
                         </div>
 
                         <Link
                             to="/"
-                            className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-brand mb-6 transition-colors"
+                            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-500 hover:text-zinc-900 mb-5 transition-colors"
                         >
-                            <ArrowLeft size={16} aria-hidden />
+                            <ArrowLeft size={15} aria-hidden />
                             Back to home
                         </Link>
 
-                        <div className="mb-6">
-                            <h1 className="page-title text-2xl sm:text-3xl">
-                                {isLogin ? 'Welcome back' : 'Create your account'}
-                            </h1>
-                            <p className="page-subtitle mt-1">
-                                {isLogin
-                                    ? 'Sign in to manage your invoices'
-                                    : 'Start invoicing in seconds'}
-                            </p>
-                        </div>
+                        <div className="rounded-xl border border-zinc-200/60 bg-white shadow-soft p-6 sm:p-8">
+                            <div className="mb-6">
+                                <h1 className="page-title">
+                                    {isLogin ? 'Welcome back' : 'Create your account'}
+                                </h1>
+                                <p className="page-subtitle">
+                                    {isLogin
+                                        ? 'Sign in to manage your invoices'
+                                        : 'Start invoicing in seconds'}
+                                </p>
+                            </div>
 
-                        <div className="flex rounded-lg border border-zinc-200 bg-white p-1 mb-0 lg:mb-6">
-                            <button
-                                type="button"
-                                onClick={() => switchMode(true)}
-                                disabled={submitLoading}
-                                className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
-                                    isLogin
-                                        ? 'bg-zinc-900 text-white'
-                                        : 'text-zinc-600 hover:bg-zinc-50'
-                                }`}
+                            <div className="flex rounded-md border border-zinc-200/80 bg-zinc-50/50 p-1 mb-6">
+                                <button
+                                    type="button"
+                                    onClick={() => switchMode(true)}
+                                    disabled={submitLoading}
+                                    className={`flex-1 rounded-[5px] py-2 text-[13px] font-medium transition-all duration-200 ${
+                                        isLogin
+                                            ? 'bg-brand-light text-brand shadow-soft'
+                                            : 'text-zinc-500 hover:text-zinc-800'
+                                    }`}
+                                >
+                                    Sign in
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => switchMode(false)}
+                                    disabled={submitLoading}
+                                    className={`flex-1 rounded-[5px] py-2 text-[13px] font-medium transition-all duration-200 ${
+                                        !isLogin
+                                            ? 'bg-brand-light text-brand shadow-soft'
+                                            : 'text-zinc-500 hover:text-zinc-800'
+                                    }`}
+                                >
+                                    Register
+                                </button>
+                            </div>
+
+                            <form
+                                ref={authFormRef}
+                                onSubmit={handleSubmit}
+                                noValidate
+                                className="space-y-4"
                             >
-                                Sign in
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => switchMode(false)}
-                                disabled={submitLoading}
-                                className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
-                                    !isLogin
-                                        ? 'bg-zinc-900 text-white'
-                                        : 'text-zinc-600 hover:bg-zinc-50'
-                                }`}
-                            >
-                                Register
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain -mx-6 px-6 pt-4 pb-2 lg:mx-0 lg:overflow-visible lg:flex-none lg:px-0 lg:pt-0 lg:pb-0">
-
-                    <form
-                        ref={authFormRef}
-                        onSubmit={handleSubmit}
-                        noValidate
-                        className="card !p-6 space-y-5"
-                    >
                         {isLogin ? (
                             <>
                                 <div>
@@ -488,7 +487,7 @@ function Auth() {
                                 <div className="flex justify-end">
                                     <button
                                         type="button"
-                                        className="text-sm font-medium text-brand hover:underline"
+                                        className="text-[13px] font-medium text-brand hover:underline"
                                         onClick={() => setResetModal(true)}
                                     >
                                         Forgot password?
@@ -684,20 +683,20 @@ function Auth() {
                         )}
 
                         {error && (
-                            <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5">
+                            <p className="text-[13px] text-red-700 bg-red-50 border border-red-200/80 rounded-md px-3 py-2">
                                 {error}
                             </p>
                         )}
 
                         <button
                             type="submit"
-                            className="btn-primary w-full py-3"
+                            className="btn-primary w-full !py-2.5"
                             disabled={submitLoading}
                             aria-busy={submitLoading}
                         >
                             {submitLoading ? (
                                 <>
-                                    <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                                    <Spinner size="sm" inline />
                                     {isLogin ? 'Signing in…' : 'Creating account…'}
                                 </>
                             ) : isLogin ? (
@@ -706,19 +705,20 @@ function Auth() {
                                 'Create account'
                             )}
                         </button>
-                    </form>
+                            </form>
 
-                    <p className="mt-6 text-center text-sm text-zinc-600">
-                        {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
-                        <button
-                            type="button"
-                            onClick={() => switchMode(!isLogin)}
-                            disabled={submitLoading}
-                            className="font-semibold text-brand hover:underline disabled:opacity-50"
-                        >
-                            {isLogin ? 'Register free' : 'Sign in'}
-                        </button>
-                    </p>
+                            <p className="mt-5 pt-5 border-t border-zinc-100 text-center text-[13px] text-zinc-500">
+                                {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
+                                <button
+                                    type="button"
+                                    onClick={() => switchMode(!isLogin)}
+                                    disabled={submitLoading}
+                                    className="font-medium text-brand hover:underline disabled:opacity-50"
+                                >
+                                    {isLogin ? 'Register free' : 'Sign in'}
+                                </button>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

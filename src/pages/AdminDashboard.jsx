@@ -10,7 +10,6 @@ import {
     Unlock,
     MoreHorizontal,
     RotateCcw,
-    Loader2,
     Users,
     FileText,
 } from 'lucide-react';
@@ -19,7 +18,8 @@ import { FREE_MONTHLY_INVOICE_LIMIT } from '../utils/invoiceLimits';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import PageHeader from '../components/PageHeader';
-import Spinner from '../components/Spinner';
+import Spinner, { PageLoader } from '../components/Spinner';
+import EmptyState from '../components/EmptyState';
 
 function StatusBadge({ status }) {
     const active = status === 'active';
@@ -145,7 +145,7 @@ function AdminActionsMenu({
                 aria-haspopup="menu"
             >
                 {busy ? (
-                    <Loader2 size={16} className="animate-spin" aria-hidden />
+                    <Spinner size="sm" inline />
                 ) : (
                     <MoreHorizontal size={16} aria-hidden />
                 )}
@@ -243,9 +243,9 @@ export default function AdminDashboard() {
         async function fetchUsers() {
             try {
                 const data = await apiFetch('/auth/admin/users');
-                setUsers(data);
+                setUsers(Array.isArray(data) ? data : []);
             } catch (e) {
-                setError(e.message);
+                setError(e.message || 'Could not load users.');
             } finally {
                 setLoading(false);
             }
@@ -390,9 +390,7 @@ export default function AdminDashboard() {
 
     if (loading) {
         return (
-            <div className="py-24 flex justify-center">
-                <Spinner />
-            </div>
+            <PageLoader />
         );
     }
 
@@ -571,9 +569,22 @@ export default function AdminDashboard() {
                     </div>
 
                     {filteredUsers.length === 0 && (
-                        <div className="px-6 py-12 text-center text-zinc-500">
-                            No users match your search.
-                        </div>
+                        <EmptyState
+                            icon={Users}
+                            title={users.length === 0 ? 'No users yet' : 'No users match your search'}
+                            description={
+                                search
+                                    ? 'Try a different search term.'
+                                    : 'Registered accounts will appear here.'
+                            }
+                            action={
+                                search ? (
+                                    <button type="button" onClick={() => setSearch('')} className="btn-secondary">
+                                        Clear search
+                                    </button>
+                                ) : null
+                            }
+                        />
                     )}
                 </div>
             </div>

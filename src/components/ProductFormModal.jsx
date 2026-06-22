@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Loader2, Package, Pencil } from 'lucide-react';
+import { Package, Pencil } from 'lucide-react';
+import Spinner from './Spinner';
 import ModalShell from './ModalShell';
 import FieldValidationMessage from './FieldValidationMessage';
 import RequiredLabel from './RequiredLabel';
@@ -157,7 +158,7 @@ export default function ProductFormModal({
                     <button type="submit" disabled={saving} className="btn-primary flex-1">
                         {saving ? (
                             <>
-                                <Loader2 size={18} className="animate-spin" aria-hidden />
+                                <Spinner size="sm" inline />
                                 Saving…
                             </>
                         ) : isEdit ? (

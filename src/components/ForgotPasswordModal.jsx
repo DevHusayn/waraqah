@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Loader2, KeyRound } from 'lucide-react';
+import { KeyRound } from 'lucide-react';
+import Spinner from './Spinner';
 import ModalShell from './ModalShell';
 import FieldValidationMessage from './FieldValidationMessage';
 import { validateEmail, inputClass } from '../utils/formFieldValidation';
@@ -76,7 +77,7 @@ export default function ForgotPasswordModal({ open, onClose, onSubmit, loading =
                 <button type="submit" className="btn-primary w-full" disabled={loading}>
                     {loading ? (
                         <>
-                            <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
+                            <Spinner size="sm" inline />
                             Sending link…
                         </>
                     ) : (

@@ -46,10 +46,10 @@ const Dashboard = () => {
         .slice(0, 5);
 
     const stats = [
-        { name: 'Total Invoices', value: activeInvoices.length, icon: FileText },
-        { name: 'Total Clients', value: clients.length, icon: Users },
-        { name: 'Revenue (Paid)', value: formatCurrency(totalRevenue), icon: Wallet },
-        { name: 'Pending Revenue', value: formatCurrency(pendingRevenue), icon: Clock },
+        { name: 'Total Invoices', value: activeInvoices.length, icon: FileText, iconBg: 'bg-brand-light', iconColor: 'text-brand' },
+        { name: 'Total Clients', value: clients.length, icon: Users, iconBg: 'bg-violet-50', iconColor: 'text-violet-600' },
+        { name: 'Revenue (Paid)', value: formatCurrency(totalRevenue), icon: Wallet, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600' },
+        { name: 'Pending Revenue', value: formatCurrency(pendingRevenue), icon: Clock, iconBg: 'bg-amber-50', iconColor: 'text-amber-600' },
     ];
 
     const getClientName = (clientId) => {
@@ -79,8 +79,8 @@ const Dashboard = () => {
                     const Icon = stat.icon;
                     return (
                         <div key={stat.name} className="stat-card">
-                            <div className="stat-card-icon">
-                                <Icon className="h-4 w-4" />
+                            <div className={`stat-card-icon ${stat.iconBg}`}>
+                                <Icon className={`h-5 w-5 ${stat.iconColor}`} />
                             </div>
                             <div className="stat-card-body">
                                 <p className="text-xs text-zinc-500 font-medium">{stat.name}</p>

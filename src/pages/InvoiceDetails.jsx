@@ -18,7 +18,7 @@ import {
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
-import Spinner from '../components/Spinner';
+import Spinner, { PageLoader } from '../components/Spinner';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import MarkAsPaidModal from '../components/MarkAsPaidModal';
@@ -128,13 +128,6 @@ function InvoiceActionsPanel({
                     </p>
                 )}
 
-                {canMarkPaid && (
-                    <button type="button" onClick={onMarkPaid} className="btn-primary w-full" disabled={saving}>
-                        <CheckCircle size={18} aria-hidden />
-                        Mark as paid
-                    </button>
-                )}
-
                 {!cancelled && (
                     <DocumentActions
                         documentMode={documentMode}
@@ -142,6 +135,13 @@ function InvoiceActionsPanel({
                         onDocumentModeChange={setDocumentMode}
                         onShare={onShare}
                     />
+                )}
+
+                {canMarkPaid && (
+                    <button type="button" onClick={onMarkPaid} className="btn-primary w-full" disabled={saving}>
+                        <CheckCircle size={18} aria-hidden />
+                        Mark as paid
+                    </button>
                 )}
 
                 {canCancel && (
@@ -307,9 +307,7 @@ const InvoiceDetails = () => {
 
     if (loading || !invoice) {
         return (
-            <div className="py-24 flex justify-center">
-                <Spinner />
-            </div>
+            <PageLoader />
         );
     }
 

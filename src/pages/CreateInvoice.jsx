@@ -4,7 +4,6 @@ import {
     Plus,
     Save,
     ArrowLeft,
-    Loader2,
     FileText,
     PenLine,
     Users,
@@ -14,6 +13,7 @@ import {
     X,
     Package,
 } from 'lucide-react';
+import Spinner from '../components/Spinner';
 import { format } from 'date-fns';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
@@ -493,13 +493,17 @@ const CreateInvoice = () => {
 
     const pageTitle = isDraftEdit ? 'Complete invoice' : id ? 'Edit invoice' : 'Create invoice';
 
-    const actionButtons = () => {
+    const actionButtons = (variant = 'mobile') => {
         const actionBtn =
             'w-full text-sm py-2.5 px-4 gap-2 whitespace-nowrap min-h-[44px]';
+        const layoutClass =
+            variant === 'desktop'
+                ? 'flex flex-col gap-2 w-full'
+                : 'grid grid-cols-2 gap-2 sm:gap-3 w-full';
 
         if (isDraftFlow) {
             return (
-                <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full">
+                <div className={layoutClass}>
                     <button
                         type="button"
                         onClick={handleSaveDraft}
@@ -508,7 +512,7 @@ const CreateInvoice = () => {
                     >
                         {saving ? (
                             <>
-                                <Loader2 size={16} className="animate-spin shrink-0" aria-hidden />
+                                <Spinner size="sm" inline />
                                 Saving…
                             </>
                         ) : (
@@ -526,7 +530,7 @@ const CreateInvoice = () => {
                     >
                         {sending ? (
                             <>
-                                <Loader2 size={16} className="animate-spin shrink-0" aria-hidden />
+                                <Spinner size="sm" inline />
                                 Saving…
                             </>
                         ) : (
@@ -544,12 +548,12 @@ const CreateInvoice = () => {
             <button
                 type="submit"
                 form="invoice-form"
-                className={`btn-primary ${actionBtn} w-full sm:max-w-md sm:ml-auto disabled:opacity-60`}
+                className={`btn-primary ${actionBtn} disabled:opacity-60`}
                 disabled={saving}
             >
                 {saving ? (
                     <>
-                        <Loader2 size={16} className="animate-spin shrink-0" aria-hidden />
+                        <Spinner size="sm" inline />
                         Saving…
                     </>
                 ) : (
@@ -563,7 +567,7 @@ const CreateInvoice = () => {
     };
 
     return (
-        <div className="max-w-6xl mx-auto pb-24">
+        <div className="max-w-6xl mx-auto pb-24 xl:pb-8">
             <InvoiceLimitModal
                 open={limitModalOpen}
                 onClose={() => setLimitModalOpen(false)}
@@ -971,7 +975,7 @@ const CreateInvoice = () => {
                         </FormSection>
                     </div>
 
-                    <div className="xl:col-span-1 space-y-4">
+                    <div className="xl:col-span-1 space-y-4 xl:sticky xl:top-24">
                         <div className="card space-y-5">
                             <h3 className="text-sm font-semibold text-zinc-900">Summary</h3>
 
@@ -1021,11 +1025,15 @@ const CreateInvoice = () => {
                                 </div>
                             </dl>
                         </div>
+
+                        <div className="hidden xl:block card p-4">
+                            {actionButtons('desktop')}
+                        </div>
                     </div>
                 </div>
             </form>
 
-            <div className="fixed bottom-0 left-0 right-0 md:left-64 z-40 border-t border-zinc-200 bg-white/95 backdrop-blur-sm shadow-[0_-4px_16px_rgba(15,23,42,0.06)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="fixed bottom-0 left-0 right-0 md:left-64 z-40 xl:hidden border-t border-zinc-200 bg-white/95 backdrop-blur-sm shadow-[0_-4px_16px_rgba(15,23,42,0.06)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
                 <div className="max-w-6xl mx-auto w-full">
                     {actionButtons()}
                 </div>

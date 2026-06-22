@@ -9,7 +9,7 @@ import { formatCurrency } from '../utils/currency';
 import { PREMIUM_PLAN_FEATURES } from '../constants/planFeatures';
 import { PREMIUM_PRICE_NGN } from '../constants/pricing';
 import PremiumPrice from '../components/PremiumPrice';
-import Spinner from '../components/Spinner';
+import Spinner, { PageLoader } from '../components/Spinner';
 import DevPlanToggle from '../components/DevPlanToggle';
 
 export default function Upgrade() {
@@ -45,9 +45,7 @@ export default function Upgrade() {
 
     if (loading) {
         return (
-            <div className="flex justify-center py-24">
-                <Spinner />
-            </div>
+            <PageLoader />
         );
     }
 
@@ -125,7 +123,7 @@ export default function Upgrade() {
                             >
                                 {paying ? (
                                     <>
-                                        <Spinner className="!h-5 !w-5" />
+                                        <Spinner size="sm" inline />
                                         Redirecting to Paystack…
                                     </>
                                 ) : (

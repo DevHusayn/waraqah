@@ -17,14 +17,14 @@ function SidebarAvatar({ businessInfo, premium }) {
             <img
                 src={logo}
                 alt=""
-                className="h-8 w-8 rounded-md object-cover bg-white border border-zinc-200/80"
+                className="h-7 w-7 rounded-md object-cover bg-white border border-zinc-200/60 shadow-soft"
             />
         );
     }
 
     return (
         <div
-            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-zinc-900 text-xs font-medium text-white"
+            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-brand text-[10px] font-medium text-white shadow-soft"
             aria-hidden
         >
             {initials}
@@ -34,13 +34,13 @@ function SidebarAvatar({ businessInfo, premium }) {
 
 function AccountSkeleton() {
     return (
-        <div className="mt-auto pt-4">
-            <div className="rounded-lg border border-zinc-200/80 bg-white p-3 animate-pulse">
+        <div className="mt-auto pt-4 border-t border-zinc-200/40">
+            <div className="rounded-lg border border-zinc-200/50 bg-white/60 p-2.5 animate-pulse shadow-soft">
                 <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-md bg-zinc-200" />
+                    <div className="h-7 w-7 rounded-md bg-zinc-200/80" />
                     <div className="flex-1 space-y-1.5">
-                        <div className="h-3.5 w-24 rounded bg-zinc-200" />
-                        <div className="h-2.5 w-14 rounded bg-zinc-200" />
+                        <div className="h-3 w-24 rounded bg-zinc-200/80" />
+                        <div className="h-2.5 w-14 rounded bg-zinc-200/60" />
                     </div>
                 </div>
             </div>
@@ -58,12 +58,12 @@ export default function SidebarAccountFooter({ onNavigate }) {
     }
 
     return (
-        <div className="mt-auto pt-4 border-t border-zinc-100">
-            <div className="rounded-lg border border-zinc-200/80 bg-zinc-50/50 p-2.5">
+        <div className="mt-auto pt-4 border-t border-zinc-200/40">
+            <div className="rounded-lg border border-zinc-200/50 bg-white/70 p-2 shadow-soft backdrop-blur-sm">
                 <Link
                     to="/settings"
                     onClick={onNavigate}
-                    className="flex items-center gap-2.5 rounded-md outline-none transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-zinc-900/10 p-1 -m-1"
+                    className="flex items-center gap-2.5 rounded-md outline-none transition-colors hover:bg-zinc-50/80 focus-visible:ring-2 focus-visible:ring-zinc-900/10 p-1 -m-1"
                 >
                     <SidebarAvatar businessInfo={businessInfo} premium={premium} />
                     <div className="min-w-0 flex-1">
@@ -88,7 +88,7 @@ export default function SidebarAccountFooter({ onNavigate }) {
                     <Link
                         to="/settings#premium"
                         onClick={onNavigate}
-                        className="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+                        className="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-zinc-200/60 bg-zinc-50/80 px-2.5 py-1.5 text-[11px] font-medium text-zinc-600 transition-all hover:bg-white hover:border-zinc-300/80 hover:text-zinc-900"
                     >
                         Manage branding
                     </Link>
@@ -96,10 +96,10 @@ export default function SidebarAccountFooter({ onNavigate }) {
                     <Link
                         to="/upgrade"
                         onClick={onNavigate}
-                        className="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-zinc-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:border-zinc-300"
+                        className="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-zinc-200/60 bg-zinc-50/80 px-2.5 py-1.5 text-[11px] font-medium text-zinc-700 transition-all hover:bg-white hover:border-zinc-300/80 hover:text-zinc-950"
                     >
-                        Upgrade to Premium
-                        <ChevronRight className="h-3 w-3 opacity-50" />
+                        Upgrade
+                        <ChevronRight className="h-3 w-3 opacity-40" />
                     </Link>
                 )}
             </div>

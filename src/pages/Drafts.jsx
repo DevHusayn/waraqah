@@ -7,7 +7,7 @@ import { getDraftLabel } from '../utils/invoiceHelpers';
 import { formatCurrency } from '../utils/currency';
 import PageHeader from '../components/PageHeader';
 import ConfirmModal from '../components/ConfirmModal';
-import Spinner from '../components/Spinner';
+import Spinner, { PageLoader } from '../components/Spinner';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 
@@ -40,11 +40,7 @@ const Drafts = () => {
     };
 
     if (loading) {
-        return (
-            <div className="py-20 flex justify-center">
-                <Spinner />
-            </div>
-        );
+        return <PageLoader />;
     }
 
     return (
@@ -62,7 +58,11 @@ const Drafts = () => {
             />
 
             <PageHeader title="Drafts" subtitle="Resume unfinished invoices">
-                <button type="button" onClick={() => navigate('/invoices/create')} className="btn-primary">
+                <button
+                    type="button"
+                    onClick={() => navigate('/invoices/create')}
+                    className={`btn-primary ${sortedDrafts.length === 0 ? 'hidden xl:inline-flex' : ''}`}
+                >
                     <Plus size={16} aria-hidden />
                     New invoice
                 </button>
@@ -75,7 +75,12 @@ const Drafts = () => {
                         title="No drafts yet"
                         description="Start an invoice and save it as a draft when you want to finish later."
                         action={
-                            <button type="button" onClick={() => navigate('/invoices/create')} className="btn-primary">
+                            <button
+                                type="button"
+                                onClick={() => navigate('/invoices/create')}
+                                className="btn-primary xl:hidden"
+                            >
+                                <Plus size={16} aria-hidden />
                                 Create invoice
                             </button>
                         }

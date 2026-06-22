@@ -1,5 +1,6 @@
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import ModalShell from './ModalShell';
+import Spinner from './Spinner';
 
 export default function ConfirmModal({
     open,
@@ -60,7 +61,7 @@ export default function ConfirmModal({
                     >
                         {loading ? (
                             <>
-                                <Loader2 size={18} className="animate-spin" aria-hidden />
+                                <Spinner size="sm" inline />
                                 Please wait…
                             </>
                         ) : (

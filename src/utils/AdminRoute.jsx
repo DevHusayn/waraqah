@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { getToken, apiFetch } from '../utils/api';
 import { useEffect, useState } from 'react';
+import { PageLoader } from '../components/Spinner';
 
 export default function AdminRoute({ children }) {
     const [isAdmin, setIsAdmin] = useState(null);
@@ -8,23 +9,34 @@ export default function AdminRoute({ children }) {
 
     useEffect(() => {
         async function checkAdmin() {
+            if (!getToken()) {
+                setIsAdmin(false);
+                setLoading(false);
+                return;
+            }
+
             try {
-                const res = await apiFetch('/auth/admin/users'); // Only admins can access
+                await apiFetch('/auth/admin/users');
                 setIsAdmin(true);
+                localStorage.setItem('isAdmin', 'true');
             } catch {
                 setIsAdmin(false);
+                localStorage.removeItem('isAdmin');
             } finally {
                 setLoading(false);
             }
         }
-        if (getToken()) checkAdmin();
-        else {
-            setIsAdmin(false);
-            setLoading(false);
-        }
+
+        checkAdmin();
     }, []);
 
-    if (loading) return null;
-    if (!isAdmin) return <Navigate to="/" replace />;
+    if (loading) {
+        return <PageLoader />;
+    }
+
+    if (!isAdmin) {
+        return <Navigate to="/" replace />;
+    }
+
     return children;
 }

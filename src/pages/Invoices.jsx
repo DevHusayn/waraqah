@@ -14,7 +14,7 @@ import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { formatInvoiceUsageLabel } from '../utils/invoiceLimits';
 import { isPremiumUser } from '../utils/premium';
 import CustomSelect from '../components/CustomSelect';
-import Spinner from '../components/Spinner';
+import Spinner, { PageLoader } from '../components/Spinner';
 import FilterTabs from '../components/FilterTabs';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
@@ -123,9 +123,7 @@ const Invoices = () => {
                 <FilterTabs tabs={filterTabs} value={filter} onChange={setFilter} className="mb-4" />
 
                 {loading ? (
-                    <div className="py-20 flex justify-center items-center">
-                        <Spinner />
-                    </div>
+                    <PageLoader />
                 ) : displayedInvoices.length === 0 ? (
                     <div className="data-table-wrap">
                         <EmptyState

@@ -1,11 +1,83 @@
-// Simple spinner component for loading states
-export default function Spinner({ className = '' }) {
+const SIZES = {
+    xs: { svg: 'h-3.5 w-3.5', stroke: 3 },
+    sm: { svg: 'h-4 w-4', stroke: 2.5 },
+    md: { svg: 'h-5 w-5', stroke: 2.25 },
+    lg: { svg: 'h-7 w-7', stroke: 2 },
+    xl: { svg: 'h-9 w-9', stroke: 1.75 },
+};
+
+/**
+ * Hybrid Linear / Vercel loading indicator — smooth arc on soft track.
+ */
+export default function Spinner({
+    size = 'md',
+    className = '',
+    label,
+    centered = false,
+    inline = false,
+}) {
+    const s = SIZES[size] || SIZES.md;
+    const radius = 10;
+    const circumference = 2 * Math.PI * radius;
+    const arc = circumference * 0.72;
+
+    const wrapClass = inline
+        ? 'inline-flex items-center gap-2'
+        : centered
+          ? 'flex flex-col items-center justify-center gap-2.5'
+          : 'inline-flex flex-col items-center gap-2.5';
+
     return (
-        <div className={`flex justify-center items-center ${className}`}>
-            <svg className="animate-spin h-8 w-8 text-brand" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        <div
+            role="status"
+            aria-live="polite"
+            aria-busy="true"
+            className={`${wrapClass} ${className}`.trim()}
+        >
+            <svg
+                className={`waraqah-spinner ${s.svg}`}
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden
+            >
+                <circle
+                    className="waraqah-spinner-track"
+                    cx="12"
+                    cy="12"
+                    r={radius}
+                    strokeWidth={s.stroke}
+                />
+                <circle
+                    className="waraqah-spinner-arc"
+                    cx="12"
+                    cy="12"
+                    r={radius}
+                    strokeWidth={s.stroke}
+                    strokeDasharray={`${arc} ${circumference}`}
+                    strokeDashoffset={0}
+                />
             </svg>
+            {label ? (
+                <span className="text-[12px] font-medium text-zinc-500 tracking-normal">{label}</span>
+            ) : (
+                <span className="sr-only">Loading</span>
+            )}
+        </div>
+    );
+}
+
+export function SpinnerOverlay({ label = 'Loading…' }) {
+    return (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px] rounded-lg">
+            <Spinner size="lg" label={label} centered />
+        </div>
+    );
+}
+
+export function PageLoader({ className = '' }) {
+    return (
+        <div className={`py-24 flex items-center justify-center ${className}`.trim()}>
+            <Spinner size="lg" centered />
         </div>
     );
 }

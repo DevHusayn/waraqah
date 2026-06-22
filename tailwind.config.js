@@ -20,6 +20,7 @@ export default {
                 surface: {
                     DEFAULT: 'var(--surface)',
                     muted: 'var(--surface-muted)',
+                    elevated: 'var(--surface-elevated)',
                 },
                 primary: {
                     50: '#f0f9ff',
@@ -35,14 +36,27 @@ export default {
                 },
             },
             boxShadow: {
-                card: '0 1px 2px 0 rgb(24 24 27 / 0.03)',
-                'card-md': '0 2px 8px -2px rgb(24 24 27 / 0.06)',
+                soft: '0 1px 2px 0 rgb(0 0 0 / 0.03), 0 1px 3px 0 rgb(0 0 0 / 0.04)',
+                card: '0 1px 2px 0 rgb(0 0 0 / 0.04), 0 2px 4px -1px rgb(0 0 0 / 0.03)',
+                'card-md': '0 4px 12px -2px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04)',
+                lift: '0 8px 24px -4px rgb(0 0 0 / 0.08), 0 2px 6px -2px rgb(0 0 0 / 0.04)',
             },
             borderRadius: {
                 DEFAULT: '0.5rem',
                 lg: '0.5rem',
                 xl: '0.625rem',
                 '2xl': '0.75rem',
+            },
+            transitionTimingFunction: {
+                smooth: 'cubic-bezier(0.22, 1, 0.36, 1)',
+            },
+            animation: {
+                'spin-smooth': 'spin-smooth 0.75s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+            },
+            keyframes: {
+                'spin-smooth': {
+                    to: { transform: 'rotate(360deg)' },
+                },
             },
         },
     },

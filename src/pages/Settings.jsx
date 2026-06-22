@@ -12,9 +12,9 @@ import {
     MapPin,
     Globe,
     Sparkles,
-    Loader2,
     Landmark,
 } from 'lucide-react';
+import Spinner from '../components/Spinner';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { CURRENCY_INFO } from '../utils/currency';
@@ -151,7 +151,7 @@ function SectionNav({ activeId, onSelect }) {
                         onClick={() => onSelect(id)}
                         className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors text-left ${
                             active
-                                ? 'bg-zinc-100 text-zinc-950'
+                                ? 'bg-brand-light text-brand'
                                 : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'
                         }`}
                     >
@@ -493,7 +493,7 @@ const Settings = () => {
             <button type="submit" disabled={saving} className="btn-primary sm:min-w-[160px]">
                 {saving ? (
                     <>
-                        <Loader2 size={18} className="animate-spin" aria-hidden />
+                        <Spinner size="sm" inline />
                         Saving…
                     </>
                 ) : (
@@ -797,7 +797,7 @@ const Settings = () => {
                             >
                                 {saving ? (
                                     <>
-                                        <Loader2 size={18} className="animate-spin" aria-hidden />
+                                        <Spinner size="sm" inline />
                                         Saving…
                                     </>
                                 ) : (
