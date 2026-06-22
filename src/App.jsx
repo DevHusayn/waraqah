@@ -6,6 +6,7 @@ import Invoices from './pages/Invoices';
 import CreateInvoice from './pages/CreateInvoice';
 import InvoiceDetails from './pages/InvoiceDetails';
 import Clients from './pages/Clients';
+import Products from './pages/Products';
 import Settings from './pages/Settings';
 import Auth from './pages/Auth';
 import ResetPassword from './pages/ResetPassword';
@@ -56,6 +57,7 @@ function App() {
                                             <Route path="/invoices/edit/:id" element={<PrivateRoute><CreateInvoice /></PrivateRoute>} />
                                             <Route path="/invoices/:id" element={<PrivateRoute><InvoiceDetails /></PrivateRoute>} />
                                             <Route path="/clients" element={<PrivateRoute><Clients /></PrivateRoute>} />
+                                            <Route path="/products" element={<PrivateRoute><Products /></PrivateRoute>} />
                                             <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
                                             <Route path="/statements" element={<PrivateRoute><MonthlyStatement /></PrivateRoute>} />
                                             <Route path="/upgrade" element={<PrivateRoute><Upgrade /></PrivateRoute>} />

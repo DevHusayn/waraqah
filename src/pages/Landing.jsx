@@ -34,7 +34,7 @@ const WHY_ITEMS = [
     {
         icon: Clock,
         title: 'Stop rebuilding invoices from scratch',
-        text: 'Save clients once, reuse their details, and send polished PDFs in minutes — not hours.',
+        text: 'Save clients and products once, reuse their details, and send polished PDFs in seconds — not hours.',
     },
     {
         icon: TrendingUp,
@@ -54,9 +54,9 @@ const WHY_ITEMS = [
 ];
 
 const STEPS = [
-    { step: '01', title: 'Add your business', text: 'Set your profile and brand color. Premium adds your logo, stamp, and signature on PDFs.' },
-    { step: '02', title: 'Save a client', text: 'Store contact info once, then select them on every new invoice.' },
-    { step: '03', title: 'Send and track', text: 'Download the invoice PDF, share it, and mark it paid when you receive payment to generate a receipt.' },
+    { step: '01', title: 'Add your business', text: 'Set your profile, bank account details, and brand color. Premium adds your logo, stamp, and signature on PDFs.' },
+    { step: '02', title: 'Save clients & products', text: 'Store contacts and catalog items once, then pick them on every new invoice.' },
+    { step: '03', title: 'Send and track', text: 'Download a polished PDF invoice with your bank details, share it, and mark it paid when you receive payment.' },
 ];
 
 const FAQ_ITEMS = [
@@ -66,11 +66,11 @@ const FAQ_ITEMS = [
     },
     {
         q: 'What happens on the Free plan?',
-        a: `You can create up to ${FREE_MONTHLY_INVOICE_LIMIT} invoices per calendar month, manage clients, mark invoices paid, and download PDF receipts. Deleting an invoice does not reset your monthly allowance.`,
+        a: `You can create up to ${FREE_MONTHLY_INVOICE_LIMIT} invoices per calendar month, manage clients and products, add bank details to invoices, mark invoices paid, and download PDF receipts. Deleting an invoice does not reset your monthly allowance.`,
     },
     {
         q: 'What does Premium include?',
-        a: 'Unlimited invoices, your logo as a watermark on PDFs, a company stamp on paid receipts, an authorized signature, and monthly billing statements you can print or export.',
+        a: 'Unlimited invoices, your logo on PDF invoices, a company stamp on paid receipts, an authorized signature, and monthly billing statements you can print or export.',
     },
     {
         q: 'How does Premium billing work?',
@@ -150,7 +150,7 @@ export default function Landing() {
                             </p>
                             <h1 className="mt-6 text-4xl sm:text-5xl lg:text-[3.25rem] font-bold tracking-tight text-slate-900 leading-[1.1]">
                                 Create a professional invoice in{' '}
-                                <span className="text-brand landing-text-shimmer">1 minute</span>
+                                <span className="text-brand landing-text-shimmer">seconds</span>
                             </h1>
                             <p className="mt-6 text-lg text-slate-600 max-w-xl leading-relaxed">
                                 {APP_NAME} helps freelancers and small businesses send polished invoices,
@@ -180,7 +180,7 @@ export default function Landing() {
                                     <div className="flex-1 h-2 rounded-full bg-brand-light overflow-hidden">
                                         <div className="h-full w-4/5 bg-brand rounded-full landing-progress-bar" />
                                     </div>
-                                    <span className="text-xs text-slate-400 font-medium">~1 min</span>
+                                    <span className="text-xs text-slate-400 font-medium">~seconds</span>
                                 </div>
                             </div>
                         </div>
@@ -259,7 +259,7 @@ export default function Landing() {
                             Free to start. Premium when you scale.
                         </h2>
                         <p className="mt-4 text-slate-600 text-lg">
-                            Try {APP_NAME} at no cost, then upgrade for unlimited invoices, branded PDFs, and monthly billing statements.
+                            Try {APP_NAME} at no cost, then upgrade for unlimited invoices, your logo on PDFs, and monthly billing statements.
                         </p>
                     </SectionReveal>
                     <div className="mt-14 grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -318,7 +318,7 @@ export default function Landing() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
                         {[
                             { icon: FileText, label: 'Invoices & receipts' },
-                            { icon: Users, label: 'Client records' },
+                            { icon: Users, label: 'Clients & products' },
                             { icon: TrendingUp, label: 'Payment tracking' },
                             { icon: Crown, label: 'Premium branding' },
                         ].map(({ icon: Icon, label }) => (
@@ -360,7 +360,7 @@ export default function Landing() {
                             Ready to invoice like a pro?
                         </h2>
                         <p className="mt-4 text-lg text-sky-100">
-                            Join {APP_NAME} today and send your next invoice in under a minute.
+                            Join {APP_NAME} today and send your next invoice in seconds.
                         </p>
                         <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
                             <Link

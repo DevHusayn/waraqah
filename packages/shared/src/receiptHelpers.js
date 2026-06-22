@@ -70,4 +70,8 @@ export function resolvePdfMode(invoice, mode = 'auto') {
     return isReceipt(invoice) ? 'receipt' : 'invoice';
 }
 
+export function getDownloadLabel(invoice, mode = 'auto') {
+    return resolvePdfMode(invoice, mode) === 'receipt' ? 'Download receipt' : 'Download invoice';
+}
+
 export { INV_PREFIX, RCP_PREFIX };

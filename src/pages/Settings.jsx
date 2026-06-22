@@ -13,6 +13,7 @@ import {
     Globe,
     Sparkles,
     Loader2,
+    Landmark,
 } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
@@ -52,12 +53,13 @@ const BRAND_PRESETS = [
 
 const SECTIONS = [
     { id: 'profile', label: 'Company', icon: Building2 },
+    { id: 'account', label: 'Account details', icon: Landmark },
     { id: 'branding', label: 'Branding', icon: Palette },
     { id: 'plan', label: 'Plan & billing', icon: Crown },
 ];
 
 function buildSettingsFieldErrors(formData) {
-    return {
+    const errors = {
         name: validateRequired(formData.name, 'Please enter your business name.'),
         address: validateRequired(formData.address, 'Please enter your business address.'),
         email: validateEmail(
@@ -68,6 +70,25 @@ function buildSettingsFieldErrors(formData) {
         phone: validateRequired(formData.phone, 'Please enter your phone number.'),
         brandColor: validateHexColor(formData.brandColor, 'Please choose a brand color.'),
     };
+
+    const hasPartialPayment =
+        formData.paymentAccountName?.trim() ||
+        formData.paymentBankName?.trim() ||
+        formData.paymentAccountNumber?.trim();
+
+    if (hasPartialPayment) {
+        if (!formData.paymentAccountName?.trim()) {
+            errors.paymentAccountName = 'Please enter the account name.';
+        }
+        if (!formData.paymentBankName?.trim()) {
+            errors.paymentBankName = 'Please enter the bank name.';
+        }
+        if (!formData.paymentAccountNumber?.trim()) {
+            errors.paymentAccountNumber = 'Please enter the account number.';
+        }
+    }
+
+    return errors;
 }
 
 function SettingsSection({ id, icon: Icon, title, description, children }) {
@@ -191,9 +212,18 @@ const Settings = () => {
                 email: 'settings-email',
                 phone: 'settings-phone',
                 brandColor: 'settings-brand-color',
+                paymentAccountName: 'settings-payment-account-name',
+                paymentBankName: 'settings-payment-bank-name',
+                paymentAccountNumber: 'settings-payment-account-number',
+            };
+            const sectionMap = {
+                brandColor: 'branding',
+                paymentAccountName: 'account',
+                paymentBankName: 'account',
+                paymentAccountNumber: 'account',
             };
             focusFieldById(ids[firstInvalid]);
-            scrollToSection(firstInvalid === 'brandColor' ? 'branding' : 'profile');
+            scrollToSection(sectionMap[firstInvalid] || (firstInvalid === 'brandColor' ? 'branding' : 'profile'));
             return;
         }
         setErrors({});
@@ -297,6 +327,78 @@ const Settings = () => {
                     onChange={handleChange}
                     className="input-field"
                     placeholder="https://www.example.com"
+                />
+            </div>
+        </div>
+    );
+
+    const accountForm = (
+        <div className="space-y-5">
+            <p className="text-sm text-slate-500">
+                Bank details appear on invoice PDFs so clients know where to pay you.
+            </p>
+            <div>
+                <label htmlFor="settings-payment-account-name" className="label">
+                    Account name
+                </label>
+                <input
+                    id="settings-payment-account-name"
+                    type="text"
+                    name="paymentAccountName"
+                    value={formData.paymentAccountName || ''}
+                    onChange={handleChange}
+                    className={inputClass(Boolean(errors.paymentAccountName))}
+                    placeholder="e.g. Waraqah Ltd"
+                    aria-invalid={Boolean(errors.paymentAccountName)}
+                />
+                <FieldValidationMessage message={errors.paymentAccountName} />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                    <label htmlFor="settings-payment-bank-name" className="label">
+                        Bank name
+                    </label>
+                    <input
+                        id="settings-payment-bank-name"
+                        type="text"
+                        name="paymentBankName"
+                        value={formData.paymentBankName || ''}
+                        onChange={handleChange}
+                        className={inputClass(Boolean(errors.paymentBankName))}
+                        placeholder="e.g. GTBank"
+                        aria-invalid={Boolean(errors.paymentBankName)}
+                    />
+                    <FieldValidationMessage message={errors.paymentBankName} />
+                </div>
+                <div>
+                    <label htmlFor="settings-payment-account-number" className="label">
+                        Account number
+                    </label>
+                    <input
+                        id="settings-payment-account-number"
+                        type="text"
+                        name="paymentAccountNumber"
+                        value={formData.paymentAccountNumber || ''}
+                        onChange={handleChange}
+                        className={inputClass(Boolean(errors.paymentAccountNumber))}
+                        placeholder="0123456789"
+                        aria-invalid={Boolean(errors.paymentAccountNumber)}
+                    />
+                    <FieldValidationMessage message={errors.paymentAccountNumber} />
+                </div>
+            </div>
+            <div>
+                <label htmlFor="settings-payment-instructions" className="label">
+                    Payment instructions <span className="text-slate-400 font-normal">(optional)</span>
+                </label>
+                <textarea
+                    id="settings-payment-instructions"
+                    name="paymentInstructions"
+                    value={formData.paymentInstructions || ''}
+                    onChange={handleChange}
+                    className="input-field resize-none min-h-[72px]"
+                    rows={2}
+                    placeholder="e.g. Use invoice number as payment reference"
                 />
             </div>
         </div>
@@ -531,6 +633,25 @@ const Settings = () => {
                             </SettingsSection>
 
                             <SettingsSection
+                                id="account"
+                                icon={Landmark}
+                                title="Account details"
+                                description="Bank information printed on invoices for client payments"
+                            >
+                                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+                                    <ViewField label="Account name" value={businessInfo.paymentAccountName} />
+                                    <ViewField label="Bank name" value={businessInfo.paymentBankName} />
+                                    <ViewField label="Account number" value={businessInfo.paymentAccountNumber} />
+                                    <div className="sm:col-span-2">
+                                        <ViewField
+                                            label="Payment instructions"
+                                            value={businessInfo.paymentInstructions}
+                                        />
+                                    </div>
+                                </dl>
+                            </SettingsSection>
+
+                            <SettingsSection
                                 id="branding"
                                 icon={Palette}
                                 title="Branding"
@@ -602,6 +723,15 @@ const Settings = () => {
                                 description="Contact details shown on every invoice and receipt"
                             >
                                 {profileForm}
+                            </SettingsSection>
+
+                            <SettingsSection
+                                id="account"
+                                icon={Landmark}
+                                title="Account details"
+                                description="Bank information printed on invoices for client payments"
+                            >
+                                {accountForm}
                             </SettingsSection>
 
                             <SettingsSection

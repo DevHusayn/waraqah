@@ -9,6 +9,7 @@ import {
     LogOut,
     FileBarChart,
     Crown,
+    Package,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSettings } from '../context/SettingsContext';
@@ -90,7 +91,7 @@ const Layout = ({ children }) => {
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('isAdmin');
-        setBusinessInfo({ name: '', address: '', email: '', phone: '', website: '', defaultCurrency: 'NGN', taxRate: 10, brandColor: '#0ea5e9', plan: 'free', businessLogo: '', companyLogoUrl: '', companyLogoAvatarUrl: '', companyStampUrl: '', authorizedSignatureUrl: '' });
+        setBusinessInfo({ name: '', address: '', email: '', phone: '', website: '', defaultCurrency: 'NGN', taxRate: 10, brandColor: '#0ea5e9', plan: 'free', businessLogo: '', companyLogoUrl: '', companyLogoAvatarUrl: '', companyStampUrl: '', authorizedSignatureUrl: '', paymentAccountName: '', paymentBankName: '', paymentAccountNumber: '', paymentInstructions: '', invoiceTemplateId: 'classic' });
         resetAll();
         window.dispatchEvent(new Event('app-logout'));
         navigate('/auth');
@@ -100,6 +101,7 @@ const Layout = ({ children }) => {
         { name: 'Dashboard', href: '/', icon: LayoutDashboard },
         { name: 'Invoices', href: '/invoices', icon: FileText },
         { name: 'Clients', href: '/clients', icon: Users },
+        { name: 'Products', href: '/products', icon: Package },
         { name: 'Statements', href: '/statements', icon: FileBarChart, premiumFeature: true },
         { name: 'Settings', href: '/settings', icon: SettingsIcon },
         ...(isAdmin ? [{ name: 'Admin', href: '/admin', icon: LayoutDashboard }] : []),

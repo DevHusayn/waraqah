@@ -19,6 +19,11 @@ const EMPTY_BUSINESS = {
     companyLogoAvatarUrl: '',
     companyStampUrl: '',
     authorizedSignatureUrl: '',
+    paymentAccountName: '',
+    paymentBankName: '',
+    paymentAccountNumber: '',
+    paymentInstructions: '',
+    invoiceTemplateId: 'classic',
 };
 
 export const useSettings = () => {

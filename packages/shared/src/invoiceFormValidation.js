@@ -1,6 +1,6 @@
 import { validateRequired } from './formFieldValidation.js';
 
-export const INVOICE_FIELD_ORDER = ['clientId', 'date', 'dueDate', 'taxRate'];
+export const INVOICE_FIELD_ORDER = ['clientId', 'date', 'dueDate', 'taxRate', 'discountValue'];
 
 export function buildInvoiceFieldErrors(formData) {
     const errors = {};
@@ -19,6 +19,16 @@ export function buildInvoiceFieldErrors(formData) {
         errors.taxRate = 'Please enter a tax rate.';
     } else if (Number(taxRate) < 0 || Number(taxRate) > 100) {
         errors.taxRate = 'Tax rate must be between 0 and 100.';
+    }
+
+    const discountValue = formData.discountValue;
+    if (discountValue !== '' && discountValue !== null && discountValue !== undefined) {
+        const discountNum = Number(discountValue);
+        if (Number.isNaN(discountNum) || discountNum < 0) {
+            errors.discountValue = 'Discount cannot be negative.';
+        } else if (formData.discountType === 'percent' && discountNum > 100) {
+            errors.discountValue = 'Discount cannot exceed 100%.';
+        }
     }
 
     (formData.items || []).forEach((item, index) => {
@@ -60,6 +70,7 @@ export function getFirstInvoiceFieldId(fieldKey) {
     if (fieldKey === 'date') return 'invoice-date';
     if (fieldKey === 'dueDate') return 'invoice-due-date';
     if (fieldKey === 'taxRate') return 'invoice-tax-rate';
+    if (fieldKey === 'discountValue') return 'invoice-discount-value';
     const itemMatch = fieldKey.match(/^item-(\d+)-(description|quantity|rate)$/);
     if (itemMatch) {
         return `invoice-item-${itemMatch[1]}-${itemMatch[2]}`;

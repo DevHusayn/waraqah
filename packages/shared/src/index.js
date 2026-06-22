@@ -7,6 +7,7 @@ export * from './businessPayload.js';
 export * from './premium.js';
 export * from './invoiceLimits.js';
 export * from './invoiceFormValidation.js';
+export * from './invoiceTotals.js';
 export * from './invoiceHelpers.js';
 export * from './receiptHelpers.js';
 export * from './monthlyStatement.js';

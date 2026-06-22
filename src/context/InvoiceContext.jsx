@@ -15,11 +15,13 @@ export const useInvoice = () => {
 export const InvoiceProvider = ({ children }) => {
     const [invoices, setInvoices] = useState([]);
     const [clients, setClients] = useState([]);
+    const [products, setProducts] = useState([]);
     const [invoiceUsage, setInvoiceUsage] = useState(null);
     const [loading, setLoading] = useState(true);
 
     const mapInvoice = (i) => ({ ...i, id: i._id || i.id });
     const mapClient = (c) => ({ ...c, id: c._id || c.id });
+    const mapProduct = (p) => ({ ...p, id: p._id || p.id });
 
     const syncOverdueStatuses = async (invoiceList) => {
         const toUpdate = invoicesNeedingOverdueSync(invoiceList);
@@ -41,15 +43,17 @@ export const InvoiceProvider = ({ children }) => {
         if (!getToken()) {
             setInvoices([]);
             setClients([]);
+            setProducts([]);
             setInvoiceUsage(null);
             setLoading(false);
             return;
         }
         setLoading(true);
         try {
-            const [inv, cli, usage] = await Promise.all([
+            const [inv, cli, pro, usage] = await Promise.all([
                 apiFetch('/invoices'),
                 apiFetch('/clients'),
+                apiFetch('/products').catch(() => []),
                 apiFetch('/invoices/usage').catch(() => null),
             ]);
             setInvoiceUsage(usage);
@@ -57,9 +61,11 @@ export const InvoiceProvider = ({ children }) => {
             mappedInvoices = await syncOverdueStatuses(mappedInvoices);
             setInvoices(mappedInvoices);
             setClients(cli.map(mapClient));
+            setProducts(pro.map(mapProduct));
         } catch {
             setInvoices([]);
             setClients([]);
+            setProducts([]);
             setInvoiceUsage(null);
         } finally {
             setLoading(false);
@@ -72,6 +78,7 @@ export const InvoiceProvider = ({ children }) => {
         const onLogout = () => {
             setInvoices([]);
             setClients([]);
+            setProducts([]);
             setInvoiceUsage(null);
             setLoading(false);
         };
@@ -86,6 +93,7 @@ export const InvoiceProvider = ({ children }) => {
     const resetAll = () => {
         setInvoices([]);
         setClients([]);
+        setProducts([]);
         setInvoiceUsage(null);
     };
 
@@ -135,9 +143,33 @@ export const InvoiceProvider = ({ children }) => {
         setClients(clients.filter((client) => client.id !== id));
     };
 
+    const addProduct = async (product) => {
+        const newProduct = await apiFetch('/products', {
+            method: 'POST',
+            body: JSON.stringify(product),
+        });
+        await fetchUserData();
+        return { ...newProduct, id: newProduct._id };
+    };
+
+    const updateProduct = async (id, updatedProduct) => {
+        const updated = await apiFetch(`/products/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(updatedProduct),
+        });
+        const mapped = { ...updated, id: updated._id };
+        setProducts(products.map((product) => (product.id === id ? mapped : product)));
+    };
+
+    const deleteProduct = async (id) => {
+        await apiFetch(`/products/${id}`, { method: 'DELETE' });
+        setProducts(products.filter((product) => product.id !== id));
+    };
+
     const value = {
         invoices,
         clients,
+        products,
         invoiceUsage,
         addInvoice,
         updateInvoice,
@@ -145,6 +177,9 @@ export const InvoiceProvider = ({ children }) => {
         addClient,
         updateClient,
         deleteClient,
+        addProduct,
+        updateProduct,
+        deleteProduct,
         fetchUserData,
         resetAll,
         loading,

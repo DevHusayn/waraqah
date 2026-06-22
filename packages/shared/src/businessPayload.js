@@ -30,6 +30,10 @@ export function buildBusinessInfoPayload(formData, businessInfo = {}) {
         authorizedSignatureUrl: premium
             ? (formData.authorizedSignatureUrl ?? businessInfo.authorizedSignatureUrl ?? '')
             : '',
+        paymentAccountName: formData.paymentAccountName ?? businessInfo.paymentAccountName ?? '',
+        paymentBankName: formData.paymentBankName ?? businessInfo.paymentBankName ?? '',
+        paymentAccountNumber: formData.paymentAccountNumber ?? businessInfo.paymentAccountNumber ?? '',
+        paymentInstructions: formData.paymentInstructions ?? businessInfo.paymentInstructions ?? '',
     };
 }
 

@@ -408,7 +408,7 @@ function Auth() {
                             <p className="page-subtitle mt-1">
                                 {isLogin
                                     ? 'Sign in to manage your invoices'
-                                    : 'Start invoicing in under a minute'}
+                                    : 'Start invoicing in seconds'}
                             </p>
                         </div>
 

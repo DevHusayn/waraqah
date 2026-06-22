@@ -12,6 +12,7 @@ import {
     StickyNote,
     Repeat,
     X,
+    Package,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useInvoice } from '../context/InvoiceContext';
@@ -37,6 +38,7 @@ import {
     getFirstInvoiceFieldId,
     getInvoiceFieldFocusOrder,
 } from '../utils/invoiceFormValidation';
+import { calculateInvoiceTotals } from '../utils/invoiceTotals';
 import CustomSelect from '../components/CustomSelect';
 import DatePickerField from '../components/DatePickerField';
 
@@ -48,12 +50,17 @@ const RECURRING_FREQUENCY_OPTIONS = [
     { value: 'yearly', label: 'Yearly' },
 ];
 
+const DISCOUNT_TYPE_OPTIONS = [
+    { value: 'fixed', label: 'Fixed amount' },
+    { value: 'percent', label: 'Percentage' },
+];
+
 const CreateInvoice = () => {
     const { id } = useParams();
     const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { clients, addInvoice, updateInvoice, invoices } = useInvoice();
+    const { clients, products, addInvoice, updateInvoice, invoices } = useInvoice();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen, atLimit } = useInvoiceCreateGuard();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
@@ -70,6 +77,8 @@ const CreateInvoice = () => {
         status: 'pending',
         currency: APP_CURRENCY,
         taxRate: businessInfo.taxRate ?? 10,
+        discountType: 'fixed',
+        discountValue: '',
         isRecurring: false,
         recurringFrequency: 'monthly',
         recurringEndDate: '',
@@ -116,8 +125,19 @@ const CreateInvoice = () => {
             navigate(`/invoices/${id}`, { replace: true });
             return;
         }
-        setFormData(invoice);
+        setFormData({
+            ...invoice,
+            discountType: invoice.discountType || 'fixed',
+            discountValue: invoice.discountValue ?? '',
+        });
     }, [id, invoices, navigate]);
+
+    const getTotals = () =>
+        calculateInvoiceTotals(formData.items, {
+            taxRate: formData.taxRate,
+            discountType: formData.discountType || 'fixed',
+            discountValue: formData.discountValue || 0,
+        });
 
     useEffect(() => {
         const clientId = searchParams.get('clientId');
@@ -155,22 +175,23 @@ const CreateInvoice = () => {
         });
     };
 
+    const addProductItem = (productId) => {
+        const product = products.find((p) => p.id === productId);
+        if (!product) return;
+        const description = product.description
+            ? `${product.name} — ${product.description}`
+            : product.name;
+        setFormData({
+            ...formData,
+            items: [...formData.items, { description, quantity: 1, rate: product.unitPrice || 0 }],
+        });
+    };
+
     const removeItem = (index) => {
         if (formData.items.length > 1) {
             setFormData({ ...formData, items: formData.items.filter((_, i) => i !== index) });
         }
     };
-
-    const calculateSubtotal = () =>
-        formData.items.reduce((sum, item) => sum + Number(item.quantity) * Number(item.rate), 0);
-
-    const calculateTax = () => {
-        const taxRate = Number(formData.taxRate);
-        if (isNaN(taxRate) || taxRate <= 0) return 0;
-        return calculateSubtotal() * (taxRate / 100);
-    };
-
-    const calculateTotal = () => calculateSubtotal() + calculateTax();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -189,14 +210,19 @@ const CreateInvoice = () => {
             return;
         }
 
+        const totals = getTotals();
+
         const invoiceData = {
             ...formData,
             status: id ? formData.status : 'pending',
             currency: APP_CURRENCY,
-            subtotal: calculateSubtotal(),
-            tax: calculateTax(),
-            total: calculateTotal(),
-            balance: calculateTotal(),
+            discountType: formData.discountType || 'fixed',
+            discountValue: Number(formData.discountValue) || 0,
+            subtotal: totals.subtotal,
+            discount: totals.discount,
+            tax: totals.tax,
+            total: totals.total,
+            balance: totals.total,
         };
 
         if (!id) {
@@ -231,6 +257,11 @@ const CreateInvoice = () => {
     const selectedClient = clients.find((c) => c.id === formData.clientId);
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
     const backHref = id ? `/invoices/${id}` : '/invoices';
+    const totals = getTotals();
+    const discountLabel =
+        formData.discountType === 'percent' && Number(formData.discountValue) > 0
+            ? `Discount (${formData.discountValue}%)`
+            : 'Discount';
 
     const saveButton = (fullWidth = false) => (
         <button
@@ -290,7 +321,7 @@ const CreateInvoice = () => {
                         <FormSection
                             icon={FileText}
                             title="Invoice details"
-                            description="Number, dates, and tax"
+                            description="Number, dates, tax, and discount"
                         >
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -318,6 +349,42 @@ const CreateInvoice = () => {
                                         aria-invalid={Boolean(fieldErrors.taxRate)}
                                     />
                                     <FieldValidationMessage message={fieldErrors.taxRate} />
+                                </div>
+                                <div>
+                                    <label className="label" htmlFor="invoice-discount-type">
+                                        Discount type
+                                    </label>
+                                    <CustomSelect
+                                        id="invoice-discount-type"
+                                        value={formData.discountType || 'fixed'}
+                                        onChange={(val) => {
+                                            setFormData((prev) => ({ ...prev, discountType: val }));
+                                        }}
+                                        options={DISCOUNT_TYPE_OPTIONS}
+                                        placeholder="Discount type"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="label" htmlFor="invoice-discount-value">
+                                        Discount{' '}
+                                        {formData.discountType === 'percent'
+                                            ? '(%)'
+                                            : `(${CURRENCY_INFO.symbol})`}
+                                    </label>
+                                    <input
+                                        id="invoice-discount-value"
+                                        type="number"
+                                        name="discountValue"
+                                        value={formData.discountValue}
+                                        onChange={handleChange}
+                                        className={inputClass(Boolean(fieldErrors.discountValue))}
+                                        min="0"
+                                        max={formData.discountType === 'percent' ? '100' : undefined}
+                                        step={formData.discountType === 'percent' ? '0.01' : '0.01'}
+                                        placeholder="0"
+                                        aria-invalid={Boolean(fieldErrors.discountValue)}
+                                    />
+                                    <FieldValidationMessage message={fieldErrors.discountValue} />
                                 </div>
                                 <div>
                                     <RequiredLabel htmlFor="invoice-date">Issue date</RequiredLabel>
@@ -405,6 +472,37 @@ const CreateInvoice = () => {
                                 </button>
                             }
                         >
+                            {products.length > 0 ? (
+                                <div className="mb-4 flex flex-col sm:flex-row sm:items-end gap-3 p-4 rounded-xl border border-brand/20 bg-brand-subtle/30">
+                                    <div className="flex-1 min-w-0">
+                                        <label htmlFor="invoice-product-pick" className="label">
+                                            Add from product
+                                        </label>
+                                        <CustomSelect
+                                            id="invoice-product-pick"
+                                            value=""
+                                            onChange={(productId) => {
+                                                if (productId) addProductItem(productId);
+                                            }}
+                                            options={products.map((product) => ({
+                                                value: product.id,
+                                                label: `${product.name} — ${formatCurrency(product.unitPrice || 0)}`,
+                                            }))}
+                                            placeholder="Select a saved product…"
+                                            leadingIcon={<Package size={18} aria-hidden />}
+                                            aria-label="Add line item from saved product"
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="mb-4 text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                                    Save products in{' '}
+                                    <Link to="/products" className="text-brand font-medium hover:underline">
+                                        Products
+                                    </Link>{' '}
+                                    to add line items in one click.
+                                </p>
+                            )}
                             <div className="space-y-4">
                                 {formData.items.map((item, index) => (
                                     <div
@@ -597,19 +695,27 @@ const CreateInvoice = () => {
                                 <div className="flex justify-between">
                                     <dt className="text-slate-500">Subtotal</dt>
                                     <dd className="font-medium text-slate-900">
-                                        {formatCurrency(calculateSubtotal())}
+                                        {formatCurrency(totals.subtotal)}
                                     </dd>
                                 </div>
+                                {totals.discount > 0 && (
+                                    <div className="flex justify-between">
+                                        <dt className="text-slate-500">{discountLabel}</dt>
+                                        <dd className="font-medium text-red-600">
+                                            −{formatCurrency(totals.discount)}
+                                        </dd>
+                                    </div>
+                                )}
                                 <div className="flex justify-between">
                                     <dt className="text-slate-500">Tax ({formData.taxRate}%)</dt>
                                     <dd className="font-medium text-slate-900">
-                                        {formatCurrency(calculateTax())}
+                                        {formatCurrency(totals.tax)}
                                     </dd>
                                 </div>
                                 <div className="pt-3 border-t border-slate-200 flex justify-between items-center">
                                     <dt className="font-semibold text-slate-900">Total</dt>
                                     <dd className="text-2xl font-bold text-brand">
-                                        {formatCurrency(calculateTotal())}
+                                        {formatCurrency(totals.total)}
                                     </dd>
                                 </div>
                             </dl>

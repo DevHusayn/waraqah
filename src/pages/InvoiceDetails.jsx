@@ -15,6 +15,7 @@ import {
     Mail,
     Phone,
     Building2,
+    Share2,
 } from 'lucide-react';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
@@ -25,7 +26,12 @@ import ConfirmModal from '../components/ConfirmModal';
 import MarkAsPaidModal from '../components/MarkAsPaidModal';
 import FormSection from '../components/FormSection';
 import StatusBadge from '../components/StatusBadge';
-import { generatePDF } from '../utils/pdfGenerator';
+import { generateInvoicePdfBlob } from '../utils/pdfGenerator';
+import {
+    shareInvoicePdf,
+    downloadPdfBlob,
+    getShareFallbackHint,
+} from '../utils/shareInvoicePdf';
 import { formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
 import {
@@ -44,6 +50,83 @@ function SummaryRow({ label, value }) {
     );
 }
 
+function DocumentActions({
+    documentMode,
+    showDocumentToggle,
+    onDocumentModeChange,
+    pdfLoading,
+    pdfReady,
+    onShare,
+    onDownload,
+}) {
+    const loadingShare = pdfLoading === `share-${documentMode}`;
+    const loadingDownload = pdfLoading === `download-${documentMode}`;
+    const busy = Boolean(pdfLoading);
+    const docLabel = documentMode === 'receipt' ? 'receipt' : 'invoice';
+
+    return (
+        <div className="space-y-3">
+            {showDocumentToggle && (
+                <div
+                    className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100"
+                    role="tablist"
+                    aria-label="Document type"
+                >
+                    {[
+                        { value: 'receipt', label: 'Receipt' },
+                        { value: 'invoice', label: 'Invoice' },
+                    ].map(({ value, label }) => (
+                        <button
+                            key={value}
+                            type="button"
+                            role="tab"
+                            aria-selected={documentMode === value}
+                            onClick={() => onDocumentModeChange(value)}
+                            className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                                documentMode === value
+                                    ? 'bg-white text-slate-900 shadow-sm'
+                                    : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            {!pdfReady ? (
+                <button
+                    type="button"
+                    onClick={() => onDownload(documentMode)}
+                    className="btn-primary w-full"
+                    disabled={busy}
+                >
+                    {loadingDownload ? (
+                        <Loader2 size={18} className="animate-spin" aria-hidden />
+                    ) : (
+                        <Download size={18} aria-hidden />
+                    )}
+                    Download {docLabel}
+                </button>
+            ) : (
+                <button
+                    type="button"
+                    onClick={() => onShare(documentMode)}
+                    className="btn-primary w-full"
+                    disabled={busy}
+                >
+                    {loadingShare ? (
+                        <Loader2 size={18} className="animate-spin" aria-hidden />
+                    ) : (
+                        <Share2 size={18} aria-hidden />
+                    )}
+                    Share PDF
+                </button>
+            )}
+        </div>
+    );
+}
+
 function InvoiceActionsPanel({
     invoice,
     paid,
@@ -57,14 +140,25 @@ function InvoiceActionsPanel({
     onCancel,
     onDelete,
     onDownload,
+    onShare,
+    pdfCache,
     editId,
 }) {
-    return (
-        <div className="card space-y-2">
-            <h3 className="text-sm font-semibold text-slate-900 mb-3">Actions</h3>
+    const [documentMode, setDocumentMode] = useState(paid ? 'receipt' : 'invoice');
 
+    useEffect(() => {
+        setDocumentMode(paid ? 'receipt' : 'invoice');
+    }, [paid]);
+
+    return (
+        <div className="card">
+            <h3 className="text-sm font-semibold text-slate-900 pb-3 mb-4 border-b border-slate-200">
+                Actions
+            </h3>
+
+            <div className="space-y-3">
             {cancelled && (
-                <p className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 mb-2">
+                <p className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
                     Cancelled — kept for your records
                 </p>
             )}
@@ -76,49 +170,16 @@ function InvoiceActionsPanel({
                 </button>
             )}
 
-            {paid ? (
-                <>
-                    <button
-                        type="button"
-                        onClick={() => onDownload('invoice')}
-                        className="btn-secondary w-full"
-                        disabled={pdfLoading === 'invoice'}
-                    >
-                        {pdfLoading === 'invoice' ? (
-                            <Loader2 size={18} className="animate-spin" aria-hidden />
-                        ) : (
-                            <Download size={18} aria-hidden />
-                        )}
-                        Download invoice
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => onDownload('receipt')}
-                        className="btn-primary w-full"
-                        disabled={pdfLoading === 'receipt'}
-                    >
-                        {pdfLoading === 'receipt' ? (
-                            <Loader2 size={18} className="animate-spin" aria-hidden />
-                        ) : (
-                            <Download size={18} aria-hidden />
-                        )}
-                        Download receipt
-                    </button>
-                </>
-            ) : (
-                <button
-                    type="button"
-                    onClick={() => onDownload('invoice')}
-                    className="btn-secondary w-full"
-                    disabled={pdfLoading === 'invoice'}
-                >
-                    {pdfLoading === 'invoice' ? (
-                        <Loader2 size={18} className="animate-spin" aria-hidden />
-                    ) : (
-                        <Download size={18} aria-hidden />
-                    )}
-                    Print invoice
-                </button>
+            {!cancelled && (
+                <DocumentActions
+                    documentMode={documentMode}
+                    showDocumentToggle={paid}
+                    onDocumentModeChange={setDocumentMode}
+                    pdfLoading={pdfLoading}
+                    pdfReady={Boolean(pdfCache[documentMode]?.blob)}
+                    onShare={onShare}
+                    onDownload={onDownload}
+                />
             )}
 
             {canCancel && (
@@ -149,6 +210,7 @@ function InvoiceActionsPanel({
                     </button>
                 </div>
             )}
+            </div>
         </div>
     );
 }
@@ -163,6 +225,7 @@ const InvoiceDetails = () => {
     const [markPaidOpen, setMarkPaidOpen] = useState(false);
     const [saving, setSaving] = useState(false);
     const [pdfLoading, setPdfLoading] = useState(null);
+    const [pdfCache, setPdfCache] = useState({});
     const [alert, setAlert] = useState({ open: false, message: '' });
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [confirmCancel, setConfirmCancel] = useState(false);
@@ -185,17 +248,48 @@ const InvoiceDetails = () => {
         }
     }, [loading, invoice, id, navigate]);
 
+    useEffect(() => {
+        setPdfCache({});
+    }, [id]);
+
     const handleDownload = async (mode) => {
         if (!client) {
             setAlert({ open: true, message: 'Client data not found for this invoice.' });
             return;
         }
-        setPdfLoading(mode);
+        setPdfLoading(`download-${mode}`);
         try {
-            await generatePDF(invoice, client, businessInfo, { mode });
+            const cached = await generateInvoicePdfBlob(invoice, client, businessInfo, { mode });
+            downloadPdfBlob(cached.blob, cached.filename);
+            setPdfCache((prev) => ({ ...prev, [mode]: cached }));
             showToast(mode === 'receipt' ? 'Receipt downloaded' : 'Invoice downloaded', 'success');
         } catch (err) {
             setAlert({ open: true, message: err.message || 'Failed to generate PDF.' });
+        } finally {
+            setPdfLoading(null);
+        }
+    };
+
+    const handleShare = async (mode) => {
+        if (!client) {
+            setAlert({ open: true, message: 'Client data not found for this invoice.' });
+            return;
+        }
+        const cached = pdfCache[mode];
+        if (!cached?.blob) {
+            setAlert({ open: true, message: 'Download the PDF first.' });
+            return;
+        }
+        setPdfLoading(`share-${mode}`);
+        try {
+            const result = await shareInvoicePdf(invoice, client, businessInfo, { mode, cached });
+            if (result.method !== 'share') {
+                const hint = getShareFallbackHint();
+                if (hint) showToast(hint, 'info');
+            }
+        } catch (err) {
+            if (err?.name === 'AbortError') return;
+            setAlert({ open: true, message: err.message || 'Failed to share PDF.' });
         } finally {
             setPdfLoading(null);
         }
@@ -262,6 +356,8 @@ const InvoiceDetails = () => {
         onCancel: () => setConfirmCancel(true),
         onDelete: () => setConfirmDelete(true),
         onDownload: handleDownload,
+        onShare: handleShare,
+        pdfCache,
         editId: id,
     };
 
@@ -448,6 +544,20 @@ const InvoiceDetails = () => {
                                                 ? format(new Date(invoice.dueDate), 'MMM dd, yyyy')
                                                 : '—'
                                         }
+                                    />
+                                )}
+                                <SummaryRow
+                                    label="Subtotal"
+                                    value={formatCurrency(invoice.subtotal)}
+                                />
+                                {Number(invoice.discount) > 0 && (
+                                    <SummaryRow
+                                        label={
+                                            invoice.discountType === 'percent' && invoice.discountValue
+                                                ? `Discount (${invoice.discountValue}%)`
+                                                : 'Discount'
+                                        }
+                                        value={`−${formatCurrency(invoice.discount)}`}
                                     />
                                 )}
                                 <SummaryRow

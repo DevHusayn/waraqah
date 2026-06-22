@@ -14,6 +14,7 @@ import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { formatInvoiceUsageLabel } from '../utils/invoiceLimits';
 import { isPremiumUser } from '../utils/premium';
 import CustomSelect from '../components/CustomSelect';
+import Spinner from '../components/Spinner';
 
 const SORT_OPTIONS = [
     { value: 'newest', label: 'Newest first' },
