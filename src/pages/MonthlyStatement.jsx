@@ -14,6 +14,7 @@ import {
 } from '../utils/monthlyStatement';
 import { generateMonthlyStatementPdf, statusLabel } from '../utils/monthlyStatementPdf';
 import MonthPickerField from '../components/MonthPickerField';
+import EmptyState from '../components/EmptyState';
 import { format } from 'date-fns';
 
 const STATUS_COLS = ['paid', 'pending', 'overdue', 'cancelled'];
@@ -59,21 +60,17 @@ export default function MonthlyStatement() {
                     title="Monthly statement"
                     subtitle="A clear picture of how your business billed each month"
                 />
-                <div className="card max-w-lg text-center py-12 px-6">
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
-                        <Crown className="h-7 w-7" />
-                    </div>
-                    <h2 className="mt-5 text-xl font-semibold text-slate-900">
-                        Keep track of your monthly billing
-                    </h2>
-                    <p className="mt-3 text-slate-600 text-sm leading-relaxed max-w-md mx-auto">
-                        Upgrade to Premium to unlock professional monthly statements. Get automated totals for 
-                      paid, pending, overdue, and cancelled invoices, and a PDF you
-                        can print or share with your team or accountant.
-                    </p>
-                    <Link to="/upgrade" className="btn-primary inline-flex mt-8">
-                        Upgrade to Premium
-                    </Link>
+                <div className="data-table-wrap max-w-lg mx-auto">
+                    <EmptyState
+                        icon={Crown}
+                        title="Keep track of your monthly billing"
+                        description="Upgrade to Premium to unlock professional monthly statements with automated totals and PDF export."
+                        action={
+                            <Link to="/upgrade" className="btn-primary inline-flex">
+                                Upgrade to Premium
+                            </Link>
+                        }
+                    />
                 </div>
             </div>
         );
@@ -118,14 +115,14 @@ export default function MonthlyStatement() {
                         onChange={setMonthValue}
                         max={format(new Date(), 'yyyy-MM')}
                     />
-                    <p className="mt-2 text-xs text-slate-500">
+                    <p className="mt-2 text-xs text-zinc-500">
                         Based on invoice issue dates in {statement.periodLabel}.
                     </p>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                <div className="flex items-center gap-2 text-sm text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3">
                     <FileBarChart className="h-5 w-5 text-brand shrink-0" />
                     <span>
-                        <strong className="text-slate-900">{statement.totals.invoiceCount}</strong>{' '}
+                        <strong className="text-zinc-900">{statement.totals.invoiceCount}</strong>{' '}
                         invoice{statement.totals.invoiceCount === 1 ? '' : 's'} this month
                     </span>
                 </div>
@@ -134,10 +131,10 @@ export default function MonthlyStatement() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mb-6">
                 {STATUS_COLS.map((status) => (
                     <div key={status} className="card !p-4 min-w-0">
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                             {statusLabel(status)}
                         </p>
-                        <p className="mt-1 text-base sm:text-lg font-semibold text-slate-900 tabular-nums break-words">
+                        <p className="mt-1 text-base sm:text-lg font-semibold text-zinc-900 tabular-nums break-words">
                             {formatCurrency(statement.totals[status])}
                         </p>
                     </div>
@@ -153,18 +150,18 @@ export default function MonthlyStatement() {
             </div>
 
             <div className="card overflow-hidden !p-0">
-                <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/80">
-                    <h2 className="text-lg font-semibold text-slate-900">Client breakdown</h2>
-                    <p className="text-sm text-slate-500 mt-0.5">
+                <div className="px-6 py-4 border-b border-zinc-200 bg-zinc-50/80">
+                    <h2 className="text-lg font-semibold text-zinc-900">Client breakdown</h2>
+                    <p className="text-sm text-zinc-500 mt-0.5">
                         Amounts issued to each client in {statement.periodLabel}
                     </p>
                 </div>
 
                 {!statement.hasData ? (
                     <div className="text-center py-16 px-6">
-                        <FileBarChart className="mx-auto h-12 w-12 text-slate-300" />
-                        <p className="mt-3 font-medium text-slate-900">No invoices this month</p>
-                        <p className="text-sm text-slate-500 mt-1">
+                        <FileBarChart className="mx-auto h-12 w-12 text-zinc-300" />
+                        <p className="mt-3 font-medium text-zinc-900">No invoices this month</p>
+                        <p className="text-sm text-zinc-500 mt-1">
                             Create invoices with an issue date in {statement.periodLabel} to see them
                             here.
                         </p>
@@ -173,21 +170,21 @@ export default function MonthlyStatement() {
                     <div className="overflow-x-auto scroll-x-touch">
                         <table className="w-full min-w-[640px] text-sm">
                             <thead>
-                                <tr className="border-b border-slate-200 bg-white text-left">
-                                    <th className="px-6 py-3 font-semibold text-slate-700">Client</th>
-                                    <th className="px-4 py-3 font-semibold text-slate-700 text-center">
+                                <tr className="border-b border-zinc-200 bg-white text-left">
+                                    <th className="px-6 py-3 font-semibold text-zinc-700">Client</th>
+                                    <th className="px-4 py-3 font-semibold text-zinc-700 text-center">
                                         Paid
                                     </th>
-                                    <th className="px-4 py-3 font-semibold text-slate-700 text-center">
+                                    <th className="px-4 py-3 font-semibold text-zinc-700 text-center">
                                         Pending
                                     </th>
-                                    <th className="px-4 py-3 font-semibold text-slate-700 text-center">
+                                    <th className="px-4 py-3 font-semibold text-zinc-700 text-center">
                                         Overdue
                                     </th>
-                                    <th className="px-4 py-3 font-semibold text-slate-700 text-center">
+                                    <th className="px-4 py-3 font-semibold text-zinc-700 text-center">
                                         Cancelled
                                     </th>
-                                    <th className="px-6 py-3 font-semibold text-slate-900 text-center">
+                                    <th className="px-6 py-3 font-semibold text-zinc-900 text-center">
                                         Total
                                     </th>
                                 </tr>
@@ -196,14 +193,14 @@ export default function MonthlyStatement() {
                                 {statement.rows.map((row) => (
                                     <tr
                                         key={row.clientId}
-                                        className="border-b border-slate-100 hover:bg-slate-50/80"
+                                        className="border-b border-zinc-100 hover:bg-zinc-50/80"
                                     >
                                         <td className="px-6 py-3">
-                                            <p className="font-medium text-slate-900">
+                                            <p className="font-medium text-zinc-900">
                                                 {row.clientName}
                                             </p>
                                             {row.clientSubtitle ? (
-                                                <p className="text-xs text-slate-500 truncate max-w-[200px]">
+                                                <p className="text-xs text-zinc-500 truncate max-w-[200px]">
                                                     {row.clientSubtitle}
                                                 </p>
                                             ) : null}
@@ -211,21 +208,21 @@ export default function MonthlyStatement() {
                                         {STATUS_COLS.map((status) => (
                                             <td
                                                 key={status}
-                                                className="px-4 py-3 text-center text-slate-700 tabular-nums"
+                                                className="px-4 py-3 text-center text-zinc-700 tabular-nums"
                                             >
                                                 {row[status] > 0
                                                     ? formatCurrency(row[status])
                                                     : '—'}
                                             </td>
                                         ))}
-                                        <td className="px-6 py-3 text-center font-semibold text-slate-900 tabular-nums">
+                                        <td className="px-6 py-3 text-center font-semibold text-zinc-900 tabular-nums">
                                             {formatCurrency(row.total)}
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                             <tfoot>
-                                <tr className="bg-slate-50 font-semibold text-slate-900">
+                                <tr className="bg-zinc-50 font-semibold text-zinc-900">
                                     <td className="px-6 py-3">Total</td>
                                     {STATUS_COLS.map((status) => (
                                         <td key={status} className="px-4 py-3 text-center tabular-nums">

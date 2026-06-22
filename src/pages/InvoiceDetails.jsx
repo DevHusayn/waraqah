@@ -39,8 +39,8 @@ import {
 function SummaryRow({ label, value }) {
     return (
         <div className="flex justify-between gap-4 text-sm">
-            <dt className="text-slate-500 shrink-0">{label}</dt>
-            <dd className="font-medium text-slate-900 text-right">{value}</dd>
+            <dt className="text-zinc-500 shrink-0">{label}</dt>
+            <dd className="font-medium text-zinc-900 text-right">{value}</dd>
         </div>
     );
 }
@@ -57,7 +57,7 @@ function DocumentActions({
         <div className="space-y-3">
             {showDocumentToggle && (
                 <div
-                    className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100"
+                    className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-zinc-100"
                     role="tablist"
                     aria-label="Document type"
                 >
@@ -73,8 +73,8 @@ function DocumentActions({
                             onClick={() => onDocumentModeChange(value)}
                             className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                                 documentMode === value
-                                    ? 'bg-white text-slate-900 shadow-sm'
-                                    : 'text-slate-600 hover:text-slate-900'
+                                    ? 'bg-white text-zinc-900 shadow-sm'
+                                    : 'text-zinc-600 hover:text-zinc-900'
                             }`}
                         >
                             {label}
@@ -117,13 +117,13 @@ function InvoiceActionsPanel({
 
     return (
         <div className="card">
-            <h3 className="text-sm font-semibold text-slate-900 pb-3 mb-4 border-b border-slate-200">
+            <h3 className="text-sm font-semibold text-zinc-900 pb-3 mb-4 border-b border-zinc-200">
                 Actions
             </h3>
 
             <div className="space-y-3">
                 {cancelled && (
-                    <p className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
+                    <p className="text-sm text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5">
                         Cancelled — kept for your records
                     </p>
                 )}
@@ -148,7 +148,7 @@ function InvoiceActionsPanel({
                     <button
                         type="button"
                         onClick={onCancel}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 font-medium hover:bg-slate-50 transition-colors text-sm"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-300 bg-white text-zinc-700 font-medium hover:bg-zinc-50 transition-colors text-sm"
                         disabled={saving}
                     >
                         <XCircle size={18} aria-hidden />
@@ -364,7 +364,7 @@ const InvoiceDetails = () => {
             <div className="max-w-6xl mx-auto pb-8">
                 <Link
                     to="/invoices"
-                    className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-brand mb-6 transition-colors"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-brand mb-6 transition-colors"
                 >
                     <ArrowLeft size={16} aria-hidden />
                     Back to invoices
@@ -389,54 +389,54 @@ const InvoiceDetails = () => {
                         <FormSection icon={User} title="Client" description="Bill-to contact">
                             {client ? (
                                 <div className="space-y-2">
-                                    <p className="font-semibold text-slate-900 text-lg">{client.name}</p>
+                                    <p className="font-semibold text-zinc-900 text-lg">{client.name}</p>
                                     {getClientBusiness(client) && (
-                                        <p className="text-sm text-slate-600 flex items-center gap-1.5">
-                                            <Building2 size={14} className="text-slate-400" aria-hidden />
+                                        <p className="text-sm text-zinc-600 flex items-center gap-1.5">
+                                            <Building2 size={14} className="text-zinc-400" aria-hidden />
                                             {getClientBusiness(client)}
                                         </p>
                                     )}
                                     {client.email && (
-                                        <p className="text-sm text-slate-600 flex items-center gap-1.5">
-                                            <Mail size={14} className="text-slate-400" aria-hidden />
+                                        <p className="text-sm text-zinc-600 flex items-center gap-1.5">
+                                            <Mail size={14} className="text-zinc-400" aria-hidden />
                                             {client.email}
                                         </p>
                                     )}
                                     {client.phone && (
-                                        <p className="text-sm text-slate-600 flex items-center gap-1.5">
-                                            <Phone size={14} className="text-slate-400" aria-hidden />
+                                        <p className="text-sm text-zinc-600 flex items-center gap-1.5">
+                                            <Phone size={14} className="text-zinc-400" aria-hidden />
                                             {client.phone}
                                         </p>
                                     )}
                                 </div>
                             ) : (
-                                <p className="text-slate-500 text-sm">Client not found</p>
+                                <p className="text-zinc-500 text-sm">Client not found</p>
                             )}
                         </FormSection>
 
                         <div className="card !p-0 overflow-hidden">
-                            <div className="px-4 sm:px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+                            <div className="px-4 sm:px-6 py-4 border-b border-zinc-100 flex items-center gap-3">
                                 <div className="p-2 rounded-lg bg-brand-subtle">
                                     <FileText className="h-4 w-4 text-brand" aria-hidden />
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-semibold text-slate-900">Items</h2>
-                                    <p className="text-xs text-slate-500">
+                                    <h2 className="text-lg font-semibold text-zinc-900">Items</h2>
+                                    <p className="text-xs text-zinc-500">
                                         {(invoice.items || []).length} line item
                                         {(invoice.items || []).length === 1 ? '' : 's'}
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="md:hidden divide-y divide-slate-100">
+                            <div className="md:hidden divide-y divide-zinc-100">
                                 {(invoice.items || []).map((item, index) => (
                                     <div key={index} className="px-4 py-4">
-                                        <p className="font-medium text-slate-900">{item.description}</p>
+                                        <p className="font-medium text-zinc-900">{item.description}</p>
                                         <div className="mt-2 flex items-center justify-between gap-3 text-sm">
-                                            <span className="text-slate-500">
+                                            <span className="text-zinc-500">
                                                 Qty {item.quantity} · {formatCurrency(item.rate)}
                                             </span>
-                                            <span className="font-semibold text-slate-900 shrink-0">
+                                            <span className="font-semibold text-zinc-900 shrink-0">
                                                 {formatCurrency(Number(item.quantity) * Number(item.rate))}
                                             </span>
                                         </div>
@@ -445,7 +445,7 @@ const InvoiceDetails = () => {
                             </div>
 
                             <table className="hidden md:table w-full text-sm">
-                                <thead className="bg-slate-50 text-slate-500 uppercase text-xs">
+                                <thead className="bg-zinc-50 text-zinc-500 uppercase text-xs">
                                     <tr>
                                         <th className="text-left px-6 py-3 font-semibold">Description</th>
                                         <th className="text-center px-4 py-3 w-20 font-semibold">Qty</th>
@@ -453,15 +453,15 @@ const InvoiceDetails = () => {
                                         <th className="text-right px-6 py-3 font-semibold">Amount</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100">
+                                <tbody className="divide-y divide-zinc-100">
                                     {(invoice.items || []).map((item, index) => (
                                         <tr key={index}>
-                                            <td className="px-6 py-4 text-slate-900">{item.description}</td>
-                                            <td className="px-4 py-4 text-center text-slate-600">{item.quantity}</td>
-                                            <td className="px-4 py-4 text-right text-slate-600 whitespace-nowrap">
+                                            <td className="px-6 py-4 text-zinc-900">{item.description}</td>
+                                            <td className="px-4 py-4 text-center text-zinc-600">{item.quantity}</td>
+                                            <td className="px-4 py-4 text-right text-zinc-600 whitespace-nowrap">
                                                 {formatCurrency(item.rate)}
                                             </td>
-                                            <td className="px-6 py-4 text-right font-medium text-slate-900 whitespace-nowrap">
+                                            <td className="px-6 py-4 text-right font-medium text-zinc-900 whitespace-nowrap">
                                                 {formatCurrency(Number(item.quantity) * Number(item.rate))}
                                             </td>
                                         </tr>
@@ -472,7 +472,7 @@ const InvoiceDetails = () => {
 
                         {invoice.notes && (
                             <FormSection icon={StickyNote} title="Notes" description="Additional information">
-                                <p className="text-slate-600 whitespace-pre-wrap text-sm leading-relaxed">
+                                <p className="text-zinc-600 whitespace-pre-wrap text-sm leading-relaxed">
                                     {invoice.notes}
                                 </p>
                             </FormSection>
@@ -481,7 +481,7 @@ const InvoiceDetails = () => {
 
                     <div className="space-y-6 order-1 xl:order-2">
                         <div className="card xl:sticky xl:top-24">
-                            <h3 className="text-sm font-semibold text-slate-900 mb-4">Summary</h3>
+                            <h3 className="text-sm font-semibold text-zinc-900 mb-4">Summary</h3>
                             <dl className="space-y-3">
                                 <SummaryRow
                                     label="Issue date"
@@ -534,8 +534,8 @@ const InvoiceDetails = () => {
                                     label={`Tax (${invoice.taxRate}%)`}
                                     value={formatCurrency(invoice.tax)}
                                 />
-                                <div className="pt-3 border-t border-slate-200 flex justify-between items-center">
-                                    <dt className="text-base font-semibold text-slate-900">Total</dt>
+                                <div className="pt-3 border-t border-zinc-200 flex justify-between items-center">
+                                    <dt className="text-base font-semibold text-zinc-900">Total</dt>
                                     <dd className="text-2xl font-bold text-brand">
                                         {formatCurrency(invoice.total)}
                                     </dd>

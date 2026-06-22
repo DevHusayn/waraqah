@@ -42,7 +42,7 @@ function PlanBadge({ plan }) {
     return (
         <span
             className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold capitalize ${
-                premium ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'
+                premium ? 'bg-amber-100 text-amber-800' : 'bg-zinc-100 text-zinc-600'
             }`}
         >
             {premium ? <Crown size={12} aria-hidden /> : null}
@@ -54,7 +54,7 @@ function PlanBadge({ plan }) {
 function UsageBadge({ usage }) {
     if (!usage || usage.unlimited) {
         return (
-            <span className="text-xs font-medium text-slate-500">Unlimited</span>
+            <span className="text-xs font-medium text-zinc-500">Unlimited</span>
         );
     }
     const atLimit = !usage.canCreate;
@@ -79,7 +79,7 @@ function AdminActionItem({
     tone = 'default',
 }) {
     const tones = {
-        default: 'text-slate-700 hover:bg-slate-50',
+        default: 'text-zinc-700 hover:bg-zinc-50',
         premium: 'text-amber-800 hover:bg-amber-50',
         success: 'text-emerald-800 hover:bg-emerald-50',
         danger: 'text-red-700 hover:bg-red-50',
@@ -140,7 +140,7 @@ function AdminActionsMenu({
                 type="button"
                 onClick={() => setOpen((v) => !v)}
                 disabled={busy}
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50 min-w-[108px]"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-200 bg-white text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors disabled:opacity-50 min-w-[108px]"
                 aria-expanded={open}
                 aria-haspopup="menu"
             >
@@ -154,10 +154,10 @@ function AdminActionsMenu({
 
             {open && (
                 <div
-                    className="absolute right-0 z-30 mt-2 w-56 rounded-xl border border-slate-200 bg-white shadow-lg p-1.5"
+                    className="absolute right-0 z-30 mt-2 w-56 rounded-xl border border-zinc-200 bg-white shadow-lg p-1.5"
                     role="menu"
                 >
-                    <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                    <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
                         Plan & billing
                     </p>
                     <AdminActionItem
@@ -181,8 +181,8 @@ function AdminActionsMenu({
                         />
                     )}
 
-                    <div className="my-1 border-t border-slate-100" />
-                    <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                    <div className="my-1 border-t border-zinc-100" />
+                    <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
                         Account
                     </p>
                     <AdminActionItem
@@ -205,7 +205,7 @@ function AdminActionsMenu({
                         onClick={() => closeAnd(() => onUnlock(user._id))}
                     />
 
-                    <div className="my-1 border-t border-slate-100" />
+                    <div className="my-1 border-t border-zinc-100" />
                     <AdminActionItem
                         icon={Trash2}
                         label="Delete user"
@@ -435,7 +435,7 @@ export default function AdminDashboard() {
                             <Users className="h-6 w-6 text-brand" aria-hidden />
                         </div>
                         <div className="stat-card-body">
-                            <p className="text-sm text-slate-500">Total users</p>
+                            <p className="text-sm text-zinc-500">Total users</p>
                             <p className="stat-card-value">{stats.total}</p>
                         </div>
                     </div>
@@ -444,7 +444,7 @@ export default function AdminDashboard() {
                             <Crown className="h-6 w-6 text-amber-600" aria-hidden />
                         </div>
                         <div className="stat-card-body">
-                            <p className="text-sm text-slate-500">Premium</p>
+                            <p className="text-sm text-zinc-500">Premium</p>
                             <p className="stat-card-value">{stats.premium}</p>
                         </div>
                     </div>
@@ -453,15 +453,15 @@ export default function AdminDashboard() {
                             <Ban className="h-6 w-6 text-red-600" aria-hidden />
                         </div>
                         <div className="stat-card-body">
-                            <p className="text-sm text-slate-500">Suspended</p>
+                            <p className="text-sm text-zinc-500">Suspended</p>
                             <p className="stat-card-value">{stats.suspended}</p>
                         </div>
                     </div>
                 </div>
 
                 <div className="card !p-0 overflow-hidden">
-                    <div className="px-4 sm:px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <div className="px-4 sm:px-6 py-4 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div className="flex items-center gap-2 text-sm text-zinc-600">
                             <FileText size={16} aria-hidden />
                             <span>
                                 {filteredUsers.length} user{filteredUsers.length === 1 ? '' : 's'}
@@ -469,7 +469,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="relative max-w-xs w-full sm:w-72">
                             <Search
-                                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400"
                                 aria-hidden
                             />
                             <input
@@ -485,7 +485,7 @@ export default function AdminDashboard() {
                     <div className="overflow-x-auto scroll-x-touch">
                         <table className="w-full min-w-[960px] text-sm">
                             <thead>
-                                <tr className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                <tr className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
                                     <th className="px-4 sm:px-6 py-3">User</th>
                                     <th className="px-4 py-3">Status</th>
                                     <th className="px-4 py-3">Plan</th>
@@ -495,12 +495,12 @@ export default function AdminDashboard() {
                                     <th className="px-4 sm:px-6 py-3 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-zinc-100">
                                 {filteredUsers.map((user) => (
-                                    <tr key={user._id} className="hover:bg-slate-50/80 transition-colors">
+                                    <tr key={user._id} className="hover:bg-zinc-50/80 transition-colors">
                                         <td className="px-4 sm:px-6 py-4">
                                             <div className="min-w-[180px]">
-                                                <p className="font-semibold text-slate-900 flex items-center gap-2">
+                                                <p className="font-semibold text-zinc-900 flex items-center gap-2">
                                                     {user.name || '—'}
                                                     {user.isAdmin ? (
                                                         <Shield
@@ -510,7 +510,7 @@ export default function AdminDashboard() {
                                                         />
                                                     ) : null}
                                                 </p>
-                                                <p className="text-slate-500 text-xs mt-0.5 truncate max-w-[220px]">
+                                                <p className="text-zinc-500 text-xs mt-0.5 truncate max-w-[220px]">
                                                     {user.email}
                                                 </p>
                                             </div>
@@ -524,9 +524,9 @@ export default function AdminDashboard() {
                                         <td className="px-4 py-4">
                                             <UsageBadge usage={user.invoiceUsage} />
                                         </td>
-                                        <td className="px-4 py-4 text-slate-600 whitespace-nowrap">
+                                        <td className="px-4 py-4 text-zinc-600 whitespace-nowrap">
                                             <p>{user.invoiceCount ?? 0} inv · {user.clientCount ?? 0} clients</p>
-                                            <p className="text-xs text-slate-400 mt-0.5">
+                                            <p className="text-xs text-zinc-400 mt-0.5">
                                                 Joined{' '}
                                                 {user.createdAt
                                                     ? new Date(user.createdAt).toLocaleDateString('en-NG', {
@@ -540,10 +540,10 @@ export default function AdminDashboard() {
                                         <td className="px-4 py-4">
                                             {user.businessInfo?.name ? (
                                                 <div className="min-w-[120px]">
-                                                    <p className="font-medium text-slate-800 truncate max-w-[160px]">
+                                                    <p className="font-medium text-zinc-800 truncate max-w-[160px]">
                                                         {user.businessInfo.name}
                                                     </p>
-                                                    <p className="text-xs text-slate-400 truncate max-w-[160px]">
+                                                    <p className="text-xs text-zinc-400 truncate max-w-[160px]">
                                                         {user.businessInfo.phone || user.businessInfo.email || '—'}
                                                     </p>
                                                 </div>
@@ -571,7 +571,7 @@ export default function AdminDashboard() {
                     </div>
 
                     {filteredUsers.length === 0 && (
-                        <div className="px-6 py-12 text-center text-slate-500">
+                        <div className="px-6 py-12 text-center text-zinc-500">
                             No users match your search.
                         </div>
                     )}

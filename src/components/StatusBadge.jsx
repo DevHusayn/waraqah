@@ -1,17 +1,20 @@
-const STYLES = {
-    draft: 'bg-slate-100 text-slate-700 border-slate-200',
-    pending: 'bg-amber-100 text-amber-800 border-amber-200',
-    paid: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    overdue: 'bg-red-100 text-red-800 border-red-200',
-    cancelled: 'bg-slate-100 text-slate-700 border-slate-200',
+const DOT_COLORS = {
+    draft: 'bg-zinc-400',
+    pending: 'bg-amber-500',
+    paid: 'bg-emerald-500',
+    overdue: 'bg-red-500',
+    cancelled: 'bg-zinc-400',
 };
 
 export default function StatusBadge({ status, className = '' }) {
     const key = (status || 'pending').toLowerCase();
+    const dotColor = DOT_COLORS[key] || DOT_COLORS.pending;
+
     return (
         <span
-            className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border capitalize ${STYLES[key] || STYLES.pending} ${className}`.trim()}
+            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium bg-zinc-100 text-zinc-700 capitalize ${className}`.trim()}
         >
+            <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotColor}`} aria-hidden />
             {status || 'pending'}
         </span>
     );

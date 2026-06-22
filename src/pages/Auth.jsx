@@ -106,7 +106,7 @@ function PasswordToggle({ visible, onToggle, label }) {
         <button
             type="button"
             onClick={onToggle}
-            className="absolute right-3 top-[34px] p-1 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+            className="absolute right-3 top-[34px] p-1 rounded-lg text-zinc-400 hover:text-zinc-600 transition-colors"
             aria-label={visible ? `Hide ${label}` : `Show ${label}`}
         >
             {visible ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -361,41 +361,41 @@ function Auth() {
             />
 
             {/* Brand panel */}
-            <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-brand via-brand to-brand-hover text-white p-12">
+            <div className="hidden lg:flex flex-col justify-between bg-zinc-950 text-white p-12">
                 <div>
-                    <WaraqahLogo size="lg" className="[&_*]:text-white" />
-                    <h2 className="mt-10 text-3xl font-semibold leading-tight max-w-sm">
+                    <WaraqahLogo size="lg" inverted className="[&_*]:text-white" />
+                    <h2 className="mt-10 text-2xl font-semibold leading-tight max-w-sm tracking-tight">
                         Invoice professionally. Get paid faster.
                     </h2>
-                    <p className="mt-4 text-white/80 text-base leading-relaxed max-w-md">
+                    <p className="mt-3 text-zinc-400 text-sm leading-relaxed max-w-md">
                         Create branded invoices, track payments, and manage clients — all in one
                         place.
                     </p>
-                    <ul className="mt-10 space-y-4">
+                    <ul className="mt-8 space-y-3">
                         {FEATURES.map(({ icon: Icon, text }) => (
-                            <li key={text} className="flex items-center gap-3 text-white/90">
-                                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
-                                    <Icon size={18} aria-hidden />
+                            <li key={text} className="flex items-center gap-3 text-zinc-300">
+                                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-zinc-800">
+                                    <Icon size={16} aria-hidden />
                                 </span>
-                                <span className="text-sm font-medium">{text}</span>
+                                <span className="text-sm">{text}</span>
                             </li>
                         ))}
                     </ul>
                 </div>
-                <p className="text-sm text-white/60">Trusted by businesses across Nigeria</p>
+                <p className="text-xs text-zinc-500">Trusted by businesses across Nigeria</p>
             </div>
 
             {/* Form panel */}
-            <div className="flex flex-col h-[100dvh] overflow-hidden bg-slate-50 p-6 sm:p-10 lg:h-auto lg:min-h-screen lg:justify-center lg:overflow-visible">
+            <div className="flex flex-col h-[100dvh] overflow-hidden bg-zinc-50 p-6 sm:p-10 lg:h-auto lg:min-h-screen lg:justify-center lg:overflow-visible">
                 <div className="flex w-full max-w-md mx-auto min-h-0 flex-1 flex-col lg:block lg:flex-none">
-                    <div className="shrink-0 bg-slate-50 pb-4 lg:pb-0">
+                    <div className="shrink-0 bg-zinc-50 pb-4 lg:pb-0">
                         <div className="lg:hidden flex justify-center mb-8">
                             <WaraqahLogo size="lg" />
                         </div>
 
                         <Link
                             to="/"
-                            className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-brand mb-6 transition-colors"
+                            className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-brand mb-6 transition-colors"
                         >
                             <ArrowLeft size={16} aria-hidden />
                             Back to home
@@ -412,15 +412,15 @@ function Auth() {
                             </p>
                         </div>
 
-                        <div className="flex rounded-xl border border-slate-200 bg-white p-1 mb-0 lg:mb-6 shadow-sm">
+                        <div className="flex rounded-lg border border-zinc-200 bg-white p-1 mb-0 lg:mb-6">
                             <button
                                 type="button"
                                 onClick={() => switchMode(true)}
                                 disabled={submitLoading}
-                                className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${
+                                className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
                                     isLogin
-                                        ? 'bg-brand text-white shadow-sm'
-                                        : 'text-slate-600 hover:bg-slate-50'
+                                        ? 'bg-zinc-900 text-white'
+                                        : 'text-zinc-600 hover:bg-zinc-50'
                                 }`}
                             >
                                 Sign in
@@ -429,10 +429,10 @@ function Auth() {
                                 type="button"
                                 onClick={() => switchMode(false)}
                                 disabled={submitLoading}
-                                className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${
+                                className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
                                     !isLogin
-                                        ? 'bg-brand text-white shadow-sm'
-                                        : 'text-slate-600 hover:bg-slate-50'
+                                        ? 'bg-zinc-900 text-white'
+                                        : 'text-zinc-600 hover:bg-zinc-50'
                                 }`}
                             >
                                 Register
@@ -498,7 +498,7 @@ function Auth() {
                         ) : (
                             <>
                                 <div className="space-y-4">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
                                         Account
                                     </p>
                                     <div>
@@ -537,7 +537,7 @@ function Auth() {
                                         <FieldValidationMessage message={fieldErrors.password} />
                                         {passwordStrength && form.password && (
                                             <div className="mt-2">
-                                                <div className="h-1 w-full rounded-full bg-slate-100 overflow-hidden">
+                                                <div className="h-1 w-full rounded-full bg-zinc-100 overflow-hidden">
                                                     <div
                                                         className={`h-full rounded-full transition-all ${passwordStrength.barClass}`}
                                                         style={{ width: `${passwordStrength.percent}%` }}
@@ -585,8 +585,8 @@ function Auth() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-4 pt-2 border-t border-slate-100">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                <div className="space-y-4 pt-2 border-t border-zinc-100">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
                                         Business details
                                     </p>
                                     <div>
@@ -649,7 +649,7 @@ function Auth() {
                                     </div>
                                     <div>
                                         <label htmlFor="reg-website" className="label">
-                                            Website <span className="text-slate-400 font-normal">(optional)</span>
+                                            Website <span className="text-zinc-400 font-normal">(optional)</span>
                                         </label>
                                         <input
                                             id="reg-website"
@@ -672,9 +672,9 @@ function Auth() {
                                                 name="brandColor"
                                                 value={form.brandColor}
                                                 onChange={handleChange}
-                                                className="h-11 w-14 rounded-lg border border-slate-200 cursor-pointer p-1"
+                                                className="h-11 w-14 rounded-lg border border-zinc-200 cursor-pointer p-1"
                                             />
-                                            <span className="text-sm font-mono text-slate-500">
+                                            <span className="text-sm font-mono text-zinc-500">
                                                 {form.brandColor}
                                             </span>
                                         </div>
@@ -708,7 +708,7 @@ function Auth() {
                         </button>
                     </form>
 
-                    <p className="mt-6 text-center text-sm text-slate-600">
+                    <p className="mt-6 text-center text-sm text-zinc-600">
                         {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
                         <button
                             type="button"

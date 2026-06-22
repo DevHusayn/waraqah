@@ -88,7 +88,7 @@ export default function MonthPickerField({
                 aria-haspopup="dialog"
                 aria-expanded={open}
                 className={`input-field mt-1 flex items-center justify-between gap-2 text-left max-w-xs ${
-                    !selected ? 'text-slate-400' : 'text-slate-900'
+                    !selected ? 'text-zinc-400' : 'text-zinc-900'
                 }`}
             >
                 <span className="flex items-center gap-2 truncate">
@@ -97,7 +97,7 @@ export default function MonthPickerField({
                 </span>
                 <ChevronDown
                     size={18}
-                    className={`shrink-0 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}
+                    className={`shrink-0 text-zinc-400 transition-transform ${open ? 'rotate-180' : ''}`}
                 />
             </button>
 
@@ -105,22 +105,22 @@ export default function MonthPickerField({
                 <div
                     role="dialog"
                     aria-label="Choose month"
-                    className="absolute z-30 mt-1.5 w-full min-w-[288px] max-w-xs rounded-xl border border-slate-200 bg-white p-4 shadow-lg animate-fade-in"
+                    className="absolute z-30 mt-1.5 w-full min-w-[288px] max-w-xs rounded-xl border border-zinc-200 bg-white p-4 shadow-lg animate-fade-in"
                 >
                     <div className="mb-3 flex items-center justify-between">
                         <button
                             type="button"
                             onClick={() => setViewYear((y) => y - 1)}
-                            className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+                            className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 transition-colors"
                             aria-label="Previous year"
                         >
                             <ChevronLeft size={18} />
                         </button>
-                        <p className="text-sm font-semibold text-slate-900">{viewYear}</p>
+                        <p className="text-sm font-semibold text-zinc-900">{viewYear}</p>
                         <button
                             type="button"
                             onClick={() => setViewYear((y) => y + 1)}
-                            className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+                            className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 transition-colors"
                             aria-label="Next year"
                         >
                             <ChevronRight size={18} />
@@ -143,8 +143,8 @@ export default function MonthPickerField({
                                         isSelected
                                             ? 'bg-brand text-white shadow-sm'
                                             : monthDisabled
-                                              ? 'text-slate-300 cursor-not-allowed'
-                                              : 'text-slate-700 hover:bg-brand-light hover:text-brand'
+                                              ? 'text-zinc-300 cursor-not-allowed'
+                                              : 'text-zinc-700 hover:bg-brand-light hover:text-brand'
                                     }`}
                                 >
                                     {label}
@@ -153,7 +153,7 @@ export default function MonthPickerField({
                         })}
                     </div>
 
-                    <div className="mt-3 flex justify-end border-t border-slate-100 pt-3">
+                    <div className="mt-3 flex justify-end border-t border-zinc-100 pt-3">
                         <button
                             type="button"
                             onClick={() => {

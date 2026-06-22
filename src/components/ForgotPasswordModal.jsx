@@ -37,16 +37,16 @@ export default function ForgotPasswordModal({ open, onClose, onSubmit, loading =
             showClose
             ariaLabelledby="forgot-password-title"
         >
-            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+            <div className="px-6 pt-6 pb-4 border-b border-zinc-100">
                 <div className="flex items-start gap-3 pr-8">
                     <div className="p-2.5 rounded-xl bg-brand-subtle shrink-0">
                         <KeyRound className="h-5 w-5 text-brand" aria-hidden />
                     </div>
                     <div>
-                        <h2 id="forgot-password-title" className="text-lg font-semibold text-slate-900">
+                        <h2 id="forgot-password-title" className="text-lg font-semibold text-zinc-900">
                             Reset password
                         </h2>
-                        <p className="text-sm text-slate-500 mt-0.5">
+                        <p className="text-sm text-zinc-500 mt-0.5">
                             We&apos;ll email you a link to choose a new password
                         </p>
                     </div>

@@ -83,7 +83,7 @@ export default function ClientFormModal({
             ariaLabelledby="client-modal-title"
             panelClassName="sm:max-h-[85vh]"
         >
-            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+            <div className="px-6 pt-6 pb-4 border-b border-zinc-100">
                 <div className="flex items-start gap-3 pr-8">
                     <div className="p-2.5 rounded-xl bg-brand-subtle shrink-0">
                         {isEdit ? (
@@ -93,10 +93,10 @@ export default function ClientFormModal({
                         )}
                     </div>
                     <div>
-                        <h2 id="client-modal-title" className="text-lg font-semibold text-slate-900">
+                        <h2 id="client-modal-title" className="text-lg font-semibold text-zinc-900">
                             {isEdit ? 'Edit client' : 'Add client'}
                         </h2>
-                        <p className="text-sm text-slate-500 mt-0.5">
+                        <p className="text-sm text-zinc-500 mt-0.5">
                             Contact details used on invoices and receipts
                         </p>
                     </div>
@@ -122,7 +122,7 @@ export default function ClientFormModal({
                 <div>
                     <label htmlFor="client-business" className="label">
                         Business name{' '}
-                        <span className="text-slate-400 font-normal">(optional)</span>
+                        <span className="text-zinc-400 font-normal">(optional)</span>
                     </label>
                     <input
                         id="client-business"
@@ -139,7 +139,7 @@ export default function ClientFormModal({
                     <div>
                         <label htmlFor="client-email" className="label">
                             Email{' '}
-                            <span className="text-slate-400 font-normal">(optional)</span>
+                            <span className="text-zinc-400 font-normal">(optional)</span>
                         </label>
                         <input
                             id="client-email"
@@ -156,7 +156,7 @@ export default function ClientFormModal({
                     <div>
                         <label htmlFor="client-phone" className="label">
                             Phone{' '}
-                            <span className="text-slate-400 font-normal">(optional)</span>
+                            <span className="text-zinc-400 font-normal">(optional)</span>
                         </label>
                         <input
                             id="client-phone"
@@ -172,7 +172,7 @@ export default function ClientFormModal({
 
                 <div>
                     <label htmlFor="client-address" className="label">
-                        Address <span className="text-slate-400 font-normal">(optional)</span>
+                        Address <span className="text-zinc-400 font-normal">(optional)</span>
                     </label>
                     <textarea
                         id="client-address"

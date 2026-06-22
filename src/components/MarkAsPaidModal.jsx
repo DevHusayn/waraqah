@@ -40,16 +40,16 @@ export default function MarkAsPaidModal({ open, onConfirm, onCancel, saving = fa
             showClose
             ariaLabelledby="mark-paid-title"
         >
-            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+            <div className="px-6 pt-6 pb-4 border-b border-zinc-100">
                 <div className="flex items-start gap-3 pr-8">
                     <div className="p-2.5 rounded-xl bg-emerald-100 shrink-0">
                         <CheckCircle className="h-5 w-5 text-emerald-600" aria-hidden />
                     </div>
                     <div>
-                        <h2 id="mark-paid-title" className="text-lg font-semibold text-slate-900">
+                        <h2 id="mark-paid-title" className="text-lg font-semibold text-zinc-900">
                             Mark as paid
                         </h2>
-                        <p className="text-sm text-slate-500 mt-0.5">
+                        <p className="text-sm text-zinc-500 mt-0.5">
                             Record payment details and generate a receipt
                         </p>
                     </div>
@@ -97,7 +97,7 @@ export default function MarkAsPaidModal({ open, onConfirm, onCancel, saving = fa
                 </div>
             </div>
 
-            <div className="flex flex-col-reverse sm:flex-row gap-3 p-6 border-t border-slate-100">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 p-6 border-t border-zinc-100">
                 <button type="button" onClick={onCancel} className="btn-secondary flex-1" disabled={saving}>
                     Cancel
                 </button>

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
-import { FileText, Users, Wallet, TrendingUp, Clock, CheckCircle, FileBarChart, Crown } from 'lucide-react';
+import { FileText, Users, Wallet, Clock, TrendingUp, CheckCircle, FileBarChart, Crown } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '../utils/currency';
@@ -12,6 +12,16 @@ import InvoiceLimitModal from '../components/InvoiceLimitModal';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { formatInvoiceUsageLabel } from '../utils/invoiceLimits';
 import { isPremiumUser } from '../utils/premium';
+import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
+import StatusBadge from '../components/StatusBadge';
+import EmptyState from '../components/EmptyState';
+
+const RECENT_COLUMNS = [
+    { key: 'number', label: 'Invoice' },
+    { key: 'client', label: 'Client' },
+    { key: 'amount', label: 'Amount', className: 'text-right' },
+    { key: 'status', label: 'Status' },
+];
 
 const Dashboard = () => {
     const { invoices, clients } = useInvoice();
@@ -36,25 +46,15 @@ const Dashboard = () => {
         .slice(0, 5);
 
     const stats = [
-        { name: 'Total Invoices', value: activeInvoices.length, icon: FileText, iconBg: 'bg-brand-light', iconColor: 'text-brand' },
-        { name: 'Total Clients', value: clients.length, icon: Users, iconBg: 'bg-violet-50', iconColor: 'text-violet-600' },
-        { name: 'Revenue (Paid)', value: formatCurrency(totalRevenue), icon: Wallet, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600' },
-        { name: 'Pending Revenue', value: formatCurrency(pendingRevenue), icon: Clock, iconBg: 'bg-amber-50', iconColor: 'text-amber-600' },
+        { name: 'Total Invoices', value: activeInvoices.length, icon: FileText },
+        { name: 'Total Clients', value: clients.length, icon: Users },
+        { name: 'Revenue (Paid)', value: formatCurrency(totalRevenue), icon: Wallet },
+        { name: 'Pending Revenue', value: formatCurrency(pendingRevenue), icon: Clock },
     ];
 
     const getClientName = (clientId) => {
         const client = clients.find((c) => c.id === clientId);
         return client ? client.name : 'Unknown Client';
-    };
-
-    const getStatusColor = (status) => {
-        const colors = {
-            pending: 'bg-amber-100 text-amber-800',
-            paid: 'bg-emerald-100 text-emerald-800',
-            overdue: 'bg-red-100 text-red-800',
-            cancelled: 'bg-slate-100 text-slate-600',
-        };
-        return colors[status] || colors.pending;
     };
 
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
@@ -67,23 +67,23 @@ const Dashboard = () => {
                 onClose={() => setLimitModalOpen(false)}
                 usage={invoiceUsage}
             />
-            <PageHeader title="Dashboard" subtitle="Welcome back — here's your invoicing overview" />
+            <PageHeader title="Dashboard" subtitle="Your invoicing overview" />
             {!premium && usageLabel ? (
-                <p className="mb-6 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5">
+                <p className="mb-4 text-sm text-zinc-700 bg-zinc-100 border border-zinc-200 rounded-md px-3 py-2">
                     {usageLabel}
                 </p>
             ) : null}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-3 mb-6">
                 {stats.map((stat) => {
                     const Icon = stat.icon;
                     return (
                         <div key={stat.name} className="stat-card">
-                            <div className={`stat-card-icon ${stat.iconBg}`}>
-                                <Icon className={`h-6 w-6 ${stat.iconColor}`} />
+                            <div className="stat-card-icon">
+                                <Icon className="h-4 w-4" />
                             </div>
                             <div className="stat-card-body">
-                                <p className="text-sm text-slate-500 font-medium leading-snug">{stat.name}</p>
+                                <p className="text-xs text-zinc-500 font-medium">{stat.name}</p>
                                 <p className="stat-card-value">{stat.value}</p>
                             </div>
                         </div>
@@ -91,95 +91,123 @@ const Dashboard = () => {
                 })}
             </div>
 
-            <div className="card mb-8">
-                <h2 className="text-lg font-semibold text-slate-900 mb-4">Quick actions</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-                    <button type="button" onClick={tryNavigateToCreate} className="btn-primary justify-start py-3">
-                        <FileText size={18} />
+            <div className="card mb-6">
+                <h2 className="text-sm font-semibold text-zinc-950 mb-3">Quick actions</h2>
+                <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={tryNavigateToCreate} className="btn-primary">
+                        <FileText size={16} />
                         Create invoice
                     </button>
-                    <button type="button" onClick={() => navigate('/clients')} className="btn-secondary justify-start py-3 bg-brand-light border-brand/20 text-brand hover:bg-brand-subtle">
-                        <Users size={18} />
-                        Manage clients
+                    <button type="button" onClick={() => navigate('/clients')} className="btn-secondary">
+                        <Users size={16} />
+                        Clients
                     </button>
-                    <button type="button" onClick={() => navigate('/invoices')} className="btn-secondary justify-start py-3">
-                        <TrendingUp size={18} />
-                        View all invoices
+                    <button type="button" onClick={() => navigate('/invoices')} className="btn-secondary">
+                        <TrendingUp size={16} />
+                        All invoices
                     </button>
-                    <button
-                        type="button"
-                        onClick={() => navigate('/statements')}
-                        className="btn-secondary justify-start py-3"
-                    >
-                        <FileBarChart size={18} />
-                        Monthly statement
-                        {!premium ? (
-                            <Crown className="h-4 w-4 text-amber-500 ml-auto" aria-hidden />
-                        ) : null}
+                    <button type="button" onClick={() => navigate('/statements')} className="btn-secondary">
+                        <FileBarChart size={16} />
+                        Statements
+                        {!premium ? <Crown className="h-3.5 w-3.5 text-amber-500" aria-hidden /> : null}
                     </button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="card">
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">Recent invoices</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                    <h2 className="text-sm font-semibold text-zinc-950 mb-3">Recent invoices</h2>
                     {recentInvoices.length === 0 ? (
-                        <div className="text-center py-10">
-                            <FileText className="mx-auto h-12 w-12 text-slate-300" />
-                            <p className="mt-3 text-slate-500">No invoices yet</p>
-                            <button type="button" onClick={tryNavigateToCreate} className="btn-primary mt-6 mx-auto">
-                                Create your first invoice
-                            </button>
+                        <div className="data-table-wrap">
+                            <EmptyState
+                                icon={FileText}
+                                title="No invoices yet"
+                                action={
+                                    <button type="button" onClick={tryNavigateToCreate} className="btn-primary">
+                                        Create invoice
+                                    </button>
+                                }
+                            />
                         </div>
                     ) : (
-                        <div className="space-y-2">
+                        <DataTable columns={RECENT_COLUMNS}>
                             {recentInvoices.map((invoice) => (
-                                <button
-                                    type="button"
+                                <DataTableRow
                                     key={invoice.id}
-                                    className="w-full flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-left border border-slate-100"
                                     onClick={() => navigate(`/invoices/${invoice.id}`)}
                                 >
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-slate-900 truncate">{getDisplayNumber(invoice)}</p>
-                                        <p className="text-sm text-slate-500 truncate">{getClientName(invoice.clientId)}</p>
-                                    </div>
-                                    <div className="text-right ml-3 flex-shrink-0">
-                                        <p className="font-semibold text-brand">{formatCurrency(invoice.total)}</p>
-                                        <span className={`inline-block px-2 py-0.5 rounded-lg text-xs font-medium ${getStatusColor(invoice.status)} capitalize mt-1`}>
-                                            {invoice.status}
+                                    <DataTableCell>
+                                        <span className="font-medium text-zinc-950">
+                                            {getDisplayNumber(invoice)}
                                         </span>
-                                    </div>
-                                </button>
+                                    </DataTableCell>
+                                    <DataTableCell>
+                                        <span className="truncate max-w-[160px] block">
+                                            {getClientName(invoice.clientId)}
+                                        </span>
+                                    </DataTableCell>
+                                    <DataTableCell className="text-right">
+                                        <span className="font-medium tabular-nums">
+                                            {formatCurrency(invoice.total)}
+                                        </span>
+                                    </DataTableCell>
+                                    <DataTableCell>
+                                        <StatusBadge status={invoice.status} />
+                                    </DataTableCell>
+                                </DataTableRow>
                             ))}
-                        </div>
+                        </DataTable>
                     )}
                 </div>
 
-                <div className="card">
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">Alerts</h2>
+                <div>
+                    <h2 className="text-sm font-semibold text-zinc-950 mb-3">Alerts</h2>
                     {overdueInvoices.length === 0 ? (
-                        <div className="text-center py-10">
-                            <CheckCircle className="mx-auto h-12 w-12 text-emerald-500" />
-                            <p className="mt-3 font-medium text-slate-900">All caught up</p>
-                            <p className="text-slate-500 text-sm">No overdue invoices</p>
+                        <div className="card">
+                            <EmptyState
+                                icon={CheckCircle}
+                                title="All caught up"
+                                description="No overdue invoices"
+                            />
                         </div>
                     ) : (
-                        <div className="space-y-2">
-                            {overdueInvoices.map((invoice) => (
-                                <div key={invoice.id} className="p-4 bg-red-50 border border-red-100 rounded-xl">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="min-w-0">
-                                            <p className="font-medium text-slate-900">{getDisplayNumber(invoice)}</p>
-                                            <p className="text-sm text-slate-500">{getClientName(invoice.clientId)}</p>
-                                            <p className="text-xs text-red-600 mt-1">
-                                                Due {format(new Date(invoice.dueDate), 'MMM dd, yyyy')}
-                                            </p>
-                                        </div>
-                                        <p className="font-semibold text-red-600 flex-shrink-0">{formatCurrency(invoice.total)}</p>
-                                    </div>
-                                </div>
-                            ))}
+                        <div className="data-table-wrap">
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Invoice</th>
+                                        <th>Due</th>
+                                        <th className="text-right">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {overdueInvoices.map((invoice) => (
+                                        <DataTableRow
+                                            key={invoice.id}
+                                            onClick={() => navigate(`/invoices/${invoice.id}`)}
+                                        >
+                                            <DataTableCell>
+                                                <p className="font-medium text-zinc-950">
+                                                    {getDisplayNumber(invoice)}
+                                                </p>
+                                                <p className="text-xs text-zinc-500">
+                                                    {getClientName(invoice.clientId)}
+                                                </p>
+                                            </DataTableCell>
+                                            <DataTableCell>
+                                                <span className="text-red-600 text-xs">
+                                                    {format(new Date(invoice.dueDate), 'MMM d, yyyy')}
+                                                </span>
+                                            </DataTableCell>
+                                            <DataTableCell className="text-right">
+                                                <span className="font-medium text-red-600 tabular-nums">
+                                                    {formatCurrency(invoice.total)}
+                                                </span>
+                                            </DataTableCell>
+                                        </DataTableRow>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     )}
                 </div>

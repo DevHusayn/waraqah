@@ -17,6 +17,10 @@ export default {
                     light: 'var(--brand-light)',
                     subtle: 'var(--brand-subtle)',
                 },
+                surface: {
+                    DEFAULT: 'var(--surface)',
+                    muted: 'var(--surface-muted)',
+                },
                 primary: {
                     50: '#f0f9ff',
                     100: '#e0f2fe',
@@ -31,11 +35,14 @@ export default {
                 },
             },
             boxShadow: {
-                card: '0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06)',
-                'card-md': '0 4px 6px -1px rgb(15 23 42 / 0.05), 0 2px 4px -2px rgb(15 23 42 / 0.05)',
+                card: '0 1px 2px 0 rgb(24 24 27 / 0.03)',
+                'card-md': '0 2px 8px -2px rgb(24 24 27 / 0.06)',
             },
             borderRadius: {
-                DEFAULT: '0.75rem',
+                DEFAULT: '0.5rem',
+                lg: '0.5rem',
+                xl: '0.625rem',
+                '2xl': '0.75rem',
             },
         },
     },

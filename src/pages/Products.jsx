@@ -9,6 +9,9 @@ import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
 import { formatCurrency } from '../utils/currency';
 import Spinner from '../components/Spinner';
+import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
+import EmptyState from '../components/EmptyState';
+import Toolbar, { ToolbarSearch } from '../components/Toolbar';
 
 function filterProducts(products, query) {
     const q = query.trim().toLowerCase();
@@ -20,42 +23,12 @@ function filterProducts(products, query) {
     );
 }
 
-function ProductCard({ product, onEdit, onDelete }) {
-    return (
-        <article className="card hover:shadow-card-md transition-shadow duration-200 flex flex-col h-full">
-            <div className="flex items-start gap-3 mb-3">
-                <div className="h-11 w-11 rounded-xl bg-brand-light text-brand flex items-center justify-center shrink-0">
-                    <Package size={20} aria-hidden />
-                </div>
-                <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-slate-900 truncate">{product.name}</h3>
-                    <p className="text-sm font-medium text-brand mt-0.5">
-                        {formatCurrency(product.unitPrice || 0)}
-                    </p>
-                </div>
-            </div>
-            {product.description ? (
-                <p className="text-sm text-slate-600 line-clamp-3 flex-1">{product.description}</p>
-            ) : (
-                <p className="text-xs text-slate-400 italic flex-1">No description</p>
-            )}
-            <div className="flex gap-2 mt-5 pt-4 border-t border-slate-100">
-                <button type="button" onClick={() => onEdit(product)} className="btn-secondary flex-1 text-sm py-2">
-                    <Edit size={15} aria-hidden />
-                    Edit
-                </button>
-                <button
-                    type="button"
-                    onClick={() => onDelete(product.id)}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 text-sm font-medium py-2 px-3 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
-                >
-                    <Trash2 size={15} aria-hidden />
-                    Delete
-                </button>
-            </div>
-        </article>
-    );
-}
+const COLUMNS = [
+    { key: 'name', label: 'Product' },
+    { key: 'price', label: 'Price', className: 'text-right' },
+    { key: 'description', label: 'Description' },
+    { key: 'actions', label: '', className: 'text-right w-24' },
+];
 
 export default function Products() {
     const { products, addProduct, updateProduct, deleteProduct, loading } = useInvoice();
@@ -162,64 +135,90 @@ export default function Products() {
                 initialData={modalInitialData}
             />
 
-            <PageHeader
-                title="Products"
-                subtitle="Save products and services to add them quickly when creating invoices"
-            >
+            <PageHeader title="Products" subtitle="Catalog items for quick invoice line entries">
                 <button type="button" onClick={() => openModal()} className="btn-primary">
-                    <Plus size={18} aria-hidden />
+                    <Plus size={16} aria-hidden />
                     Add product
                 </button>
             </PageHeader>
 
-            <div className="mb-6 relative">
-                <Search
-                    className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
-                    aria-hidden
-                />
-                <input
-                    type="search"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search products…"
-                    className="input-field pl-10"
-                />
-            </div>
-
-            {filteredProducts.length === 0 ? (
-                <div className="card text-center py-16">
-                    <Package className="h-12 w-12 text-slate-300 mx-auto mb-4" aria-hidden />
-                    <h3 className="text-lg font-semibold text-slate-900">
-                        {products.length === 0 ? 'No products yet' : 'No matches'}
-                    </h3>
-                    <p className="text-sm text-slate-500 mt-2 max-w-md mx-auto">
-                        {products.length === 0
-                            ? 'Build your catalog once, then pick items in seconds when invoicing.'
-                            : 'Try a different search term.'}
-                    </p>
-                    {products.length === 0 && (
-                        <button type="button" onClick={() => openModal()} className="btn-primary mt-6">
-                            <Plus size={18} aria-hidden />
-                            Add your first product
-                        </button>
-                    )}
+            {products.length === 0 ? (
+                <div className="data-table-wrap">
+                    <EmptyState
+                        icon={Package}
+                        title="No products yet"
+                        description="Build your catalog once, then pick items in seconds when invoicing."
+                        action={
+                            <button type="button" onClick={() => openModal()} className="btn-primary">
+                                Add product
+                            </button>
+                        }
+                    />
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredProducts.map((product) => (
-                        <ProductCard
-                            key={product.id}
-                            product={product}
-                            onEdit={openModal}
-                            onDelete={handleDelete}
+                <>
+                    <Toolbar className="mb-4">
+                        <ToolbarSearch
+                            icon={Search}
+                            type="search"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Search products..."
+                            aria-label="Search products"
                         />
-                    ))}
-                </div>
+                    </Toolbar>
+
+                    {filteredProducts.length === 0 ? (
+                        <div className="data-table-wrap">
+                            <EmptyState title="No matches" description="Try a different search term." />
+                        </div>
+                    ) : (
+                        <DataTable columns={COLUMNS}>
+                            {filteredProducts.map((product) => (
+                                <DataTableRow key={product.id}>
+                                    <DataTableCell>
+                                        <span className="font-medium text-zinc-950">{product.name}</span>
+                                    </DataTableCell>
+                                    <DataTableCell className="text-right">
+                                        <span className="font-medium tabular-nums">
+                                            {formatCurrency(product.unitPrice || 0)}
+                                        </span>
+                                    </DataTableCell>
+                                    <DataTableCell>
+                                        <span className="text-zinc-500 truncate max-w-[280px] block">
+                                            {product.description || '—'}
+                                        </span>
+                                    </DataTableCell>
+                                    <DataTableCell className="text-right">
+                                        <div className="flex items-center justify-end gap-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => openModal(product)}
+                                                className="btn-ghost text-xs py-1 px-2"
+                                                aria-label="Edit product"
+                                            >
+                                                <Edit size={14} />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDelete(product.id)}
+                                                className="btn-ghost text-xs py-1 px-2 text-red-600 hover:bg-red-50"
+                                                aria-label="Delete product"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    </DataTableCell>
+                                </DataTableRow>
+                            ))}
+                        </DataTable>
+                    )}
+                </>
             )}
 
-            <p className="mt-8 text-sm text-slate-500 text-center">
+            <p className="mt-6 text-xs text-zinc-500">
                 Products appear in the{' '}
-                <Link to="/invoices/create" className="text-brand font-medium hover:underline">
+                <Link to="/invoices/create" className="text-zinc-950 font-medium hover:underline">
                     invoice creator
                 </Link>{' '}
                 for one-click line items.

@@ -33,7 +33,7 @@ export default function PremiumPrice({
                     <span
                         className={`${
                             isLarge ? 'text-xl' : 'text-base'
-                        } font-semibold text-slate-400 line-through`}
+                        } font-semibold text-zinc-400 line-through`}
                     >
                         ₦{formatPremiumPrice(listAmount)}
                     </span>
@@ -41,12 +41,12 @@ export default function PremiumPrice({
                 <span
                     className={`${
                         isLarge ? 'text-4xl' : 'text-2xl'
-                    } font-bold text-slate-900 tracking-tight`}
+                    } font-bold text-zinc-900 tracking-tight`}
                 >
                     ₦{formatPremiumPrice(amount)}
                 </span>
                 {suffix ? (
-                    <span className={`${isLarge ? 'text-base' : 'text-sm'} font-normal text-slate-500`}>
+                    <span className={`${isLarge ? 'text-base' : 'text-sm'} font-normal text-zinc-500`}>
                         {suffix}
                     </span>
                 ) : null}

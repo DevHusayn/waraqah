@@ -35,8 +35,8 @@ export default function DraftSidebar({
     if (drafts.length === 0 && !compact) {
         return (
             <div className="card">
-                <h3 className="text-sm font-semibold text-slate-900 mb-2">Your drafts</h3>
-                <p className="text-sm text-slate-500">
+                <h3 className="text-sm font-semibold text-zinc-900 mb-2">Your drafts</h3>
+                <p className="text-sm text-zinc-500">
                     Save a draft anytime with the button below, or pick up an existing draft.
                 </p>
             </div>
@@ -58,7 +58,7 @@ export default function DraftSidebar({
             />
             <div className="card space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-sm font-semibold text-slate-900">Your drafts</h3>
+                    <h3 className="text-sm font-semibold text-zinc-900">Your drafts</h3>
                     {drafts.length > 0 ? (
                         <Link to="/invoices/drafts" className="text-xs font-medium text-brand hover:underline">
                             View all
@@ -66,7 +66,7 @@ export default function DraftSidebar({
                     ) : null}
                 </div>
                 {visibleDrafts.length === 0 ? (
-                    <p className="text-sm text-slate-500">No other drafts saved yet.</p>
+                    <p className="text-sm text-zinc-500">No other drafts saved yet.</p>
                 ) : (
                     <ul className="space-y-3">
                         {visibleDrafts.map((draft) => {
@@ -76,11 +76,11 @@ export default function DraftSidebar({
                             return (
                                 <li
                                     key={draft.id}
-                                    className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 space-y-2"
+                                    className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 space-y-2"
                                 >
                                     <div>
-                                        <p className="font-medium text-slate-900 text-sm truncate">{label}</p>
-                                        <p className="text-xs text-slate-500 mt-0.5">
+                                        <p className="font-medium text-zinc-900 text-sm truncate">{label}</p>
+                                        <p className="text-xs text-zinc-500 mt-0.5">
                                             {updated
                                                 ? `Edited ${formatDistanceToNow(new Date(updated), { addSuffix: true })}`
                                                 : 'Draft'}

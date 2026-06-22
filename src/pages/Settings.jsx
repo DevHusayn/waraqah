@@ -26,6 +26,7 @@ import SubscriptionBilling from '../components/SubscriptionBilling';
 import DevPlanToggle from '../components/DevPlanToggle';
 import { premiumUpgradeLabel } from '../constants/pricing';
 import PageHeader from '../components/PageHeader';
+import FilterTabs from '../components/FilterTabs';
 import FieldValidationMessage from '../components/FieldValidationMessage';
 import RequiredLabel from '../components/RequiredLabel';
 import {
@@ -94,13 +95,13 @@ function buildSettingsFieldErrors(formData) {
 function SettingsSection({ id, icon: Icon, title, description, children }) {
     return (
         <section id={id} className="card scroll-mt-28">
-            <div className="flex items-start gap-3 mb-6 pb-5 border-b border-slate-100">
+            <div className="flex items-start gap-3 mb-6 pb-5 border-b border-zinc-100">
                 <div className="p-2.5 rounded-xl bg-brand-subtle shrink-0">
                     <Icon className="h-5 w-5 text-brand" aria-hidden />
                 </div>
                 <div className="min-w-0">
-                    <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-                    <p className="text-sm text-slate-500 mt-0.5">{description}</p>
+                    <h2 className="text-lg font-semibold text-zinc-900">{title}</h2>
+                    <p className="text-sm text-zinc-500 mt-0.5">{description}</p>
                 </div>
             </div>
             {children}
@@ -111,11 +112,11 @@ function SettingsSection({ id, icon: Icon, title, description, children }) {
 function ViewField({ label, value, icon: Icon, children }) {
     return (
         <div className="min-w-0">
-            <dt className="flex items-center gap-1.5 text-xs font-medium text-slate-500 uppercase tracking-wide">
+            <dt className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 uppercase tracking-wide">
                 {Icon && <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />}
                 {label}
             </dt>
-            <dd className="mt-1.5 text-sm font-medium text-slate-900 break-words">
+            <dd className="mt-1.5 text-sm font-medium text-zinc-900 break-words">
                 {children ?? (value?.trim() ? value : '—')}
             </dd>
         </div>
@@ -132,7 +133,7 @@ function PlanBadge({ premium }) {
         );
     }
     return (
-        <span className="inline-flex items-center text-xs font-semibold uppercase tracking-wide bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg">
+        <span className="inline-flex items-center text-xs font-semibold uppercase tracking-wide bg-zinc-100 text-zinc-600 px-2.5 py-1 rounded-lg">
             Free plan
         </span>
     );
@@ -148,10 +149,10 @@ function SectionNav({ activeId, onSelect }) {
                         key={id}
                         type="button"
                         onClick={() => onSelect(id)}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left ${
+                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors text-left ${
                             active
-                                ? 'bg-brand-light text-brand'
-                                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                                ? 'bg-zinc-100 text-zinc-950'
+                                : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'
                         }`}
                     >
                         <Icon className="h-4 w-4 shrink-0" aria-hidden />
@@ -317,7 +318,7 @@ const Settings = () => {
 
             <div>
                 <label htmlFor="settings-website" className="label">
-                    Website <span className="text-slate-400 font-normal">(optional)</span>
+                    Website <span className="text-zinc-400 font-normal">(optional)</span>
                 </label>
                 <input
                     id="settings-website"
@@ -334,7 +335,7 @@ const Settings = () => {
 
     const accountForm = (
         <div className="space-y-5">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-zinc-500">
                 Bank details appear on invoice PDFs so clients know where to pay you.
             </p>
             <div>
@@ -389,7 +390,7 @@ const Settings = () => {
             </div>
             <div>
                 <label htmlFor="settings-payment-instructions" className="label">
-                    Payment instructions <span className="text-slate-400 font-normal">(optional)</span>
+                    Payment instructions <span className="text-zinc-400 font-normal">(optional)</span>
                 </label>
                 <textarea
                     id="settings-payment-instructions"
@@ -408,10 +409,10 @@ const Settings = () => {
         <div className="space-y-6">
             <div>
                 <RequiredLabel htmlFor="settings-brand-color">Brand color</RequiredLabel>
-                <p className="text-sm text-slate-500 mb-4">
+                <p className="text-sm text-zinc-500 mb-4">
                     Used in PDF headers, accents, and your invoice theme.
                 </p>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-slate-200 bg-slate-50/60">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-zinc-200 bg-zinc-50/60">
                     <div
                         className="w-full sm:w-24 h-16 sm:h-24 rounded-xl border-2 border-white shadow-md shrink-0"
                         style={{ backgroundColor: formData.brandColor || '#0284c7' }}
@@ -424,7 +425,7 @@ const Settings = () => {
                                 name="brandColor"
                                 value={formData.brandColor || '#0284c7'}
                                 onChange={handleChange}
-                                className="h-11 w-14 rounded-lg border border-slate-200 cursor-pointer bg-white p-1"
+                                className="h-11 w-14 rounded-lg border border-zinc-200 cursor-pointer bg-white p-1"
                                 aria-label="Pick brand color"
                             />
                             <input
@@ -442,7 +443,7 @@ const Settings = () => {
                     </div>
                 </div>
                 <div className="mt-4">
-                    <p className="text-xs font-medium text-slate-500 mb-2.5">Quick picks</p>
+                    <p className="text-xs font-medium text-zinc-500 mb-2.5">Quick picks</p>
                     <div className="flex flex-wrap gap-2">
                         {BRAND_PRESETS.map((preset) => {
                             const selected = (formData.brandColor || '#0284c7').toLowerCase() === preset.color;
@@ -457,8 +458,8 @@ const Settings = () => {
                                     }}
                                     className={`w-9 h-9 rounded-xl border-2 transition-all hover:scale-105 ${
                                         selected
-                                            ? 'border-slate-900 ring-2 ring-offset-2 ring-slate-400'
-                                            : 'border-white shadow-sm hover:border-slate-200'
+                                            ? 'border-zinc-900 ring-2 ring-offset-2 ring-zinc-400'
+                                            : 'border-white shadow-sm hover:border-zinc-200'
                                     }`}
                                     style={{ backgroundColor: preset.color }}
                                     aria-label={`${preset.name}${selected ? ' (selected)' : ''}`}
@@ -528,7 +529,7 @@ const Settings = () => {
                 <div className="card mb-6 flex flex-col sm:flex-row sm:items-center gap-4">
                     <div className="flex items-center gap-4 min-w-0 flex-1">
                         {logoUrl ? (
-                            <div className="h-16 w-16 rounded-xl border border-slate-200 bg-white p-1.5 shrink-0 overflow-hidden flex items-center justify-center">
+                            <div className="h-16 w-16 rounded-xl border border-zinc-200 bg-white p-1.5 shrink-0 overflow-hidden flex items-center justify-center">
                                 <img
                                     src={logoUrl}
                                     alt=""
@@ -545,12 +546,12 @@ const Settings = () => {
                         )}
                         <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                                <h2 className="text-lg font-semibold text-slate-900 truncate">
+                                <h2 className="text-lg font-semibold text-zinc-900 truncate">
                                     {displayInfo.name?.trim() || 'Your business'}
                                 </h2>
                                 <PlanBadge premium={premium} />
                             </div>
-                            <p className="text-sm text-slate-500 mt-0.5 truncate">
+                            <p className="text-sm text-zinc-500 mt-0.5 truncate">
                                 {displayInfo.email || 'Add your business email to get started'}
                             </p>
                         </div>
@@ -565,7 +566,7 @@ const Settings = () => {
             )}
 
             {isEditing && (
-                <div className="mb-6 rounded-xl border border-brand/20 bg-brand-subtle/60 px-4 py-3 text-sm text-slate-700">
+                <div className="mb-6 rounded-xl border border-brand/20 bg-brand-subtle/60 px-4 py-3 text-sm text-zinc-700">
                     You are editing your settings. Changes apply to all future invoices and PDFs.
                 </div>
             )}
@@ -573,22 +574,12 @@ const Settings = () => {
             <div className="lg:grid lg:grid-cols-12 lg:gap-8">
                 <aside className="lg:col-span-3 mb-6 lg:mb-0">
                     <div className="lg:sticky lg:top-24 space-y-4">
-                        <div className="flex gap-2 overflow-x-auto scroll-x-touch pb-1 lg:hidden -mx-1 px-1">
-                            {SECTIONS.map(({ id, label, icon: Icon }) => (
-                                <button
-                                    key={id}
-                                    type="button"
-                                    onClick={() => scrollToSection(id)}
-                                    className={`filter-pill shrink-0 flex items-center gap-1.5 ${
-                                        activeSection === id
-                                            ? 'filter-pill-active'
-                                            : 'filter-pill-inactive'
-                                    }`}
-                                >
-                                    <Icon className="h-3.5 w-3.5" aria-hidden />
-                                    {label}
-                                </button>
-                            ))}
+                        <div className="lg:hidden mb-4">
+                            <FilterTabs
+                                tabs={SECTIONS.map(({ id, label }) => ({ value: id, label }))}
+                                value={activeSection}
+                                onChange={scrollToSection}
+                            />
                         </div>
                         <div className="hidden lg:block card !p-3">
                             <SectionNav activeId={activeSection} onSelect={scrollToSection} />
@@ -662,15 +653,15 @@ const Settings = () => {
                                         {CURRENCY_INFO.symbol} {CURRENCY_INFO.name} ({CURRENCY_INFO.code})
                                     </ViewField>
                                     <div>
-                                        <dt className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                                        <dt className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                                             Brand color
                                         </dt>
                                         <dd className="mt-2 flex items-center gap-3">
                                             <div
-                                                className="w-10 h-10 rounded-xl border border-slate-200 shadow-sm"
+                                                className="w-10 h-10 rounded-xl border border-zinc-200 shadow-sm"
                                                 style={{ backgroundColor: brandColor }}
                                             />
-                                            <span className="text-sm font-mono font-medium text-slate-700">
+                                            <span className="text-sm font-mono font-medium text-zinc-700">
                                                 {brandColor}
                                             </span>
                                         </dd>
@@ -691,12 +682,12 @@ const Settings = () => {
                                 description="Subscription status and invoice limits"
                             >
                                 <div className="space-y-4">
-                                    <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/60">
+                                    <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border border-zinc-200 bg-zinc-50/60">
                                         <div>
-                                            <p className="text-sm font-semibold text-slate-900">
+                                            <p className="text-sm font-semibold text-zinc-900">
                                                 {premium ? 'Premium plan' : 'Free plan'}
                                             </p>
-                                            <p className="text-sm text-slate-500 mt-0.5">
+                                            <p className="text-sm text-zinc-500 mt-0.5">
                                                 {premium
                                                     ? 'Unlimited invoices, brand assets, and PDF customization'
                                                     : 'Limited monthly invoices — upgrade for full branding'}
@@ -750,12 +741,12 @@ const Settings = () => {
                                 description="Subscription status and invoice limits"
                             >
                                 <div className="space-y-4">
-                                    <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50/60">
+                                    <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border border-zinc-200 bg-zinc-50/60">
                                         <div>
-                                            <p className="text-sm font-semibold text-slate-900">
+                                            <p className="text-sm font-semibold text-zinc-900">
                                                 {isPremiumUser(formData) ? 'Premium plan' : 'Free plan'}
                                             </p>
-                                            <p className="text-sm text-slate-500 mt-0.5">
+                                            <p className="text-sm text-zinc-500 mt-0.5">
                                                 Brand assets require an active Premium subscription.
                                             </p>
                                         </div>
@@ -786,7 +777,7 @@ const Settings = () => {
             </div>
 
             {isEditing && (
-                <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden border-t border-slate-200 bg-white/95 backdrop-blur-sm shadow-[0_-4px_24px_rgba(15,23,42,0.08)]">
+                <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden border-t border-zinc-200 bg-white/95 backdrop-blur-sm shadow-[0_-4px_24px_rgba(15,23,42,0.08)]">
                     <div className="max-w-6xl mx-auto px-4 py-3">
                         <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3">
                             <button

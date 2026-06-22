@@ -583,7 +583,7 @@ const CreateInvoice = () => {
             <button
                 type="button"
                 onClick={handleLeavePage}
-                className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-brand mb-6 transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-brand mb-6 transition-colors"
             >
                 <ArrowLeft size={16} aria-hidden />
                 {isDraftEdit ? 'Back to drafts' : id ? 'Back to invoice' : 'Back to invoices'}
@@ -624,7 +624,7 @@ const CreateInvoice = () => {
                                     <input
                                         type="text"
                                         value={invoiceNumberDisplay}
-                                        className="input-field bg-slate-50 text-slate-500 cursor-not-allowed"
+                                        className="input-field bg-zinc-50 text-zinc-500 cursor-not-allowed"
                                         readOnly
                                         disabled
                                     />
@@ -793,7 +793,7 @@ const CreateInvoice = () => {
                                     </div>
                                 </div>
                             ) : (
-                                <p className="mb-4 text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
+                                <p className="mb-4 text-sm text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3">
                                     Save products in{' '}
                                     <Link to="/products" className="text-brand font-medium hover:underline">
                                         Products
@@ -805,10 +805,10 @@ const CreateInvoice = () => {
                                 {formData.items.map((item, index) => (
                                     <div
                                         key={index}
-                                        className="rounded-xl border border-slate-200 bg-slate-50/60 p-4"
+                                        className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-4"
                                     >
                                         <div className="flex items-center justify-between mb-3">
-                                            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                            <span className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
                                                 Item {index + 1}
                                             </span>
                                             {formData.items.length > 1 && (
@@ -891,7 +891,7 @@ const CreateInvoice = () => {
                                             </div>
                                             <div className="sm:col-span-4 md:col-span-2 flex flex-col justify-end">
                                                 <span className="label">Amount</span>
-                                                <p className="text-base font-semibold text-slate-900 py-2.5">
+                                                <p className="text-base font-semibold text-zinc-900 py-2.5">
                                                     {formatCurrency(item.quantity * item.rate)}
                                                 </p>
                                             </div>
@@ -915,14 +915,14 @@ const CreateInvoice = () => {
                                         markDirty();
                                         setFormData({ ...formData, isRecurring: e.target.checked });
                                     }}
-                                    className="h-5 w-5 rounded border-slate-300 text-brand focus:ring-brand/30"
+                                    className="h-5 w-5 rounded border-zinc-300 text-brand focus:ring-brand/30"
                                 />
-                                <span className="text-sm font-medium text-slate-700">
+                                <span className="text-sm font-medium text-zinc-700">
                                     Make this a recurring invoice
                                 </span>
                             </label>
                             {formData.isRecurring && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-zinc-100">
                                     <div>
                                         <label className="label">Frequency</label>
                                         <CustomSelect
@@ -973,48 +973,48 @@ const CreateInvoice = () => {
 
                     <div className="xl:col-span-1 space-y-4">
                         <div className="card space-y-5">
-                            <h3 className="text-sm font-semibold text-slate-900">Summary</h3>
+                            <h3 className="text-sm font-semibold text-zinc-900">Summary</h3>
 
                             {selectedClient && (
-                                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1.5">
+                                <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-100">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-1.5">
                                         Bill to
                                     </p>
-                                    <p className="font-semibold text-slate-900">{selectedClient.name}</p>
+                                    <p className="font-semibold text-zinc-900">{selectedClient.name}</p>
                                     {getClientBusiness(selectedClient) && (
-                                        <p className="text-sm text-slate-600 mt-0.5">
+                                        <p className="text-sm text-zinc-600 mt-0.5">
                                             {getClientBusiness(selectedClient)}
                                         </p>
                                     )}
                                     {selectedClient.email && (
-                                        <p className="text-sm text-slate-500 mt-0.5">{selectedClient.email}</p>
+                                        <p className="text-sm text-zinc-500 mt-0.5">{selectedClient.email}</p>
                                     )}
                                 </div>
                             )}
 
                             <dl className="space-y-2 text-sm">
                                 <div className="flex justify-between">
-                                    <dt className="text-slate-500">Subtotal</dt>
-                                    <dd className="font-medium text-slate-900">
+                                    <dt className="text-zinc-500">Subtotal</dt>
+                                    <dd className="font-medium text-zinc-900">
                                         {formatCurrency(totals.subtotal)}
                                     </dd>
                                 </div>
                                 {totals.discount > 0 && (
                                     <div className="flex justify-between">
-                                        <dt className="text-slate-500">{discountLabel}</dt>
+                                        <dt className="text-zinc-500">{discountLabel}</dt>
                                         <dd className="font-medium text-red-600">
                                             −{formatCurrency(totals.discount)}
                                         </dd>
                                     </div>
                                 )}
                                 <div className="flex justify-between">
-                                    <dt className="text-slate-500">Tax ({formData.taxRate}%)</dt>
-                                    <dd className="font-medium text-slate-900">
+                                    <dt className="text-zinc-500">Tax ({formData.taxRate}%)</dt>
+                                    <dd className="font-medium text-zinc-900">
                                         {formatCurrency(totals.tax)}
                                     </dd>
                                 </div>
-                                <div className="pt-3 border-t border-slate-200 flex justify-between items-center">
-                                    <dt className="font-semibold text-slate-900">Total</dt>
+                                <div className="pt-3 border-t border-zinc-200 flex justify-between items-center">
+                                    <dt className="font-semibold text-zinc-900">Total</dt>
                                     <dd className="text-2xl font-bold text-brand">
                                         {formatCurrency(totals.total)}
                                     </dd>
@@ -1025,7 +1025,7 @@ const CreateInvoice = () => {
                 </div>
             </form>
 
-            <div className="fixed bottom-0 left-0 right-0 md:left-64 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-sm shadow-[0_-4px_16px_rgba(15,23,42,0.06)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="fixed bottom-0 left-0 right-0 md:left-64 z-40 border-t border-zinc-200 bg-white/95 backdrop-blur-sm shadow-[0_-4px_16px_rgba(15,23,42,0.06)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
                 <div className="max-w-6xl mx-auto w-full">
                     {actionButtons()}
                 </div>

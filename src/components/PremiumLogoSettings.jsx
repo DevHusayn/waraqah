@@ -31,20 +31,20 @@ function AssetUploadCard({
     const fileRef = useRef(null);
 
     return (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 flex flex-col h-full">
+        <div className="rounded-xl border border-zinc-200 bg-white p-4 flex flex-col h-full">
             <div className="flex items-start gap-2.5 mb-4">
-                <div className="p-1.5 rounded-lg bg-slate-100 shrink-0">
+                <div className="p-1.5 rounded-lg bg-zinc-100 shrink-0">
                     <Icon className="h-4 w-4 text-brand" aria-hidden />
                 </div>
                 <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900">{title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{description}</p>
+                    <p className="text-sm font-semibold text-zinc-900">{title}</p>
+                    <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">{description}</p>
                 </div>
             </div>
 
             {value ? (
                 <div className="flex flex-col items-center gap-3 flex-1">
-                    <div className="relative w-full aspect-[4/3] flex items-center justify-center bg-slate-50 rounded-lg border border-slate-100 overflow-hidden">
+                    <div className="relative w-full aspect-[4/3] flex items-center justify-center bg-zinc-50 rounded-lg border border-zinc-100 overflow-hidden">
                         <img src={value} alt={title} className="max-w-full max-h-full object-contain p-3" />
                     </div>
                     {isEditing && (
@@ -78,7 +78,7 @@ function AssetUploadCard({
                 </div>
             ) : (
                 <div className="flex-1 flex flex-col justify-center">
-                    <div className="rounded-lg border-2 border-dashed border-slate-200 p-5 text-center bg-slate-50/50 min-h-[120px] flex flex-col items-center justify-center">
+                    <div className="rounded-lg border-2 border-dashed border-zinc-200 p-5 text-center bg-zinc-50/50 min-h-[120px] flex flex-col items-center justify-center">
                         {isEditing ? (
                             <button
                                 type="button"
@@ -90,9 +90,9 @@ function AssetUploadCard({
                                 {saving ? 'Saving…' : 'Upload image'}
                             </button>
                         ) : (
-                            <p className="text-xs text-slate-500">Not uploaded</p>
+                            <p className="text-xs text-zinc-500">Not uploaded</p>
                         )}
-                        <p className="text-[11px] text-slate-400 mt-2">PNG (recommended) or JPEG · max 1.5 MB</p>
+                        <p className="text-[11px] text-zinc-400 mt-2">PNG (recommended) or JPEG · max 1.5 MB</p>
                     </div>
                 </div>
             )}
@@ -221,18 +221,18 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
     };
 
     const wrapperClass = embedded
-        ? 'mt-8 pt-8 border-t border-slate-100'
-        : 'pt-6 border-t border-slate-200 scroll-mt-6';
+        ? 'mt-8 pt-8 border-t border-zinc-100'
+        : 'pt-6 border-t border-zinc-200 scroll-mt-6';
 
     return (
         <div id="premium" className={wrapperClass}>
             <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
                 <div>
-                    <h3 className="text-base font-semibold text-slate-900 flex items-center gap-2">
+                    <h3 className="text-base font-semibold text-zinc-900 flex items-center gap-2">
                         <Crown className="h-4 w-4 text-amber-500" aria-hidden />
                         Brand assets
                     </h3>
-                    <p className="text-sm text-slate-500 mt-0.5">
+                    <p className="text-sm text-zinc-500 mt-0.5">
                         Logo, stamp, and signature on PDF invoices and receipts
                     </p>
                 </div>
@@ -240,9 +240,9 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
             </div>
 
             {!premium ? (
-                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center space-y-3">
-                    <Lock className="mx-auto h-7 w-7 text-slate-400" aria-hidden />
-                    <p className="text-sm text-slate-600 max-w-sm mx-auto">
+                <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-center space-y-3">
+                    <Lock className="mx-auto h-7 w-7 text-zinc-400" aria-hidden />
+                    <p className="text-sm text-zinc-600 max-w-sm mx-auto">
                         Upgrade to Premium to upload your logo, company stamp, and authorized signature.
                     </p>
                     <Link to="/upgrade" className="btn-primary mx-auto gap-2 inline-flex text-sm py-2">
@@ -298,7 +298,7 @@ function PlanBadge({ premium }) {
         );
     }
     return (
-        <span className="text-xs font-semibold uppercase tracking-wide bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg shrink-0">
+        <span className="text-xs font-semibold uppercase tracking-wide bg-zinc-100 text-zinc-600 px-2.5 py-1 rounded-lg shrink-0">
             Premium required
         </span>
     );

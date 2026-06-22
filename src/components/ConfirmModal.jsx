@@ -23,27 +23,27 @@ export default function ConfirmModal({
             ariaLabelledby="confirm-modal-title"
             ariaDescribedby="confirm-modal-message"
         >
-            <div className="p-6 sm:p-8">
+            <div className="p-5 sm:p-6">
                 <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
                     <div
-                        className={`flex h-11 w-11 items-center justify-center rounded-xl mb-4 ${
-                            isDanger ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'
+                        className={`flex h-9 w-9 items-center justify-center rounded-md mb-3 ${
+                            isDanger ? 'bg-red-50 text-red-600' : 'bg-zinc-100 text-zinc-600'
                         }`}
                     >
-                        <AlertTriangle size={22} aria-hidden />
+                        <AlertTriangle size={18} aria-hidden />
                     </div>
-                    <h2 id="confirm-modal-title" className="text-lg font-semibold text-slate-900">
+                    <h2 id="confirm-modal-title" className="text-base font-semibold text-zinc-950">
                         {title}
                     </h2>
                     <p
                         id="confirm-modal-message"
-                        className="mt-2 text-sm text-slate-600 leading-relaxed"
+                        className="mt-1.5 text-sm text-zinc-500 leading-relaxed"
                     >
                         {description || message || 'Are you sure you want to continue?'}
                     </p>
                 </div>
 
-                <div className="mt-6 flex flex-col-reverse sm:flex-row gap-3">
+                <div className="mt-5 flex flex-col-reverse sm:flex-row gap-2">
                     <button
                         type="button"
                         className="btn-secondary flex-1"
@@ -54,11 +54,7 @@ export default function ConfirmModal({
                     </button>
                     <button
                         type="button"
-                        className={`flex-1 flex items-center justify-center gap-2 font-medium py-2.5 px-5 rounded-xl transition-colors disabled:opacity-60 ${
-                            isDanger
-                                ? 'bg-red-600 hover:bg-red-700 text-white'
-                                : 'btn-primary'
-                        }`}
+                        className={`flex-1 ${isDanger ? 'btn-danger' : 'btn-primary'}`}
                         onClick={onConfirm}
                         disabled={loading}
                     >

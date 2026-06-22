@@ -51,8 +51,8 @@ export default function UpgradeCallback() {
         return (
             <div className="max-w-md mx-auto text-center py-20">
                 <Loader2 className="h-12 w-12 text-brand animate-spin mx-auto mb-4" />
-                <h1 className="text-xl font-semibold text-slate-900">Confirming payment…</h1>
-                <p className="text-slate-500 mt-2 text-sm">Please wait while we verify with Paystack.</p>
+                <h1 className="text-xl font-semibold text-zinc-900">Confirming payment…</h1>
+                <p className="text-zinc-500 mt-2 text-sm">Please wait while we verify with Paystack.</p>
             </div>
         );
     }
@@ -62,7 +62,7 @@ export default function UpgradeCallback() {
             <div className="max-w-md mx-auto text-center py-16">
                 <CheckCircle2 className="h-14 w-14 text-emerald-500 mx-auto mb-4" />
                 <h1 className="page-title">Payment successful</h1>
-                <p className="text-slate-600 mt-2 mb-8">{message}</p>
+                <p className="text-zinc-600 mt-2 mb-8">{message}</p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Link to="/settings#premium" className="btn-primary">
                         Upload your logo
@@ -79,7 +79,7 @@ export default function UpgradeCallback() {
         <div className="max-w-md mx-auto text-center py-16">
             <XCircle className="h-14 w-14 text-red-500 mx-auto mb-4" />
             <h1 className="page-title">Payment incomplete</h1>
-            <p className="text-slate-600 mt-2 mb-8">{message}</p>
+            <p className="text-zinc-600 mt-2 mb-8">{message}</p>
             <div className="flex flex-col gap-3 items-center">
                 <Link to="/upgrade" className="btn-primary">
                     Try again

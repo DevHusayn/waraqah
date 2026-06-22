@@ -4,23 +4,23 @@ import ModalShell from './ModalShell';
 const VARIANTS = {
     error: {
         icon: AlertCircle,
-        iconWrap: 'bg-red-100 text-red-600',
-        titleClass: 'text-slate-900',
-        messageClass: 'text-slate-600',
+        iconWrap: 'bg-red-50 text-red-600',
+        titleClass: 'text-zinc-950',
+        messageClass: 'text-zinc-500',
         buttonClass: 'btn-primary',
     },
     success: {
         icon: CheckCircle2,
-        iconWrap: 'bg-emerald-100 text-emerald-600',
-        titleClass: 'text-slate-900',
-        messageClass: 'text-slate-600',
-        buttonClass: 'bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-5 rounded-xl transition-colors',
+        iconWrap: 'bg-emerald-50 text-emerald-600',
+        titleClass: 'text-zinc-950',
+        messageClass: 'text-zinc-500',
+        buttonClass: 'btn-primary',
     },
     info: {
         icon: Info,
-        iconWrap: 'bg-brand-light text-brand',
-        titleClass: 'text-slate-900',
-        messageClass: 'text-slate-600',
+        iconWrap: 'bg-zinc-100 text-zinc-600',
+        titleClass: 'text-zinc-950',
+        messageClass: 'text-zinc-500',
         buttonClass: 'btn-primary',
     },
 };
@@ -48,16 +48,16 @@ export default function AlertModal({
             ariaDescribedby="alert-modal-message"
             role="alertdialog"
         >
-            <div className="p-6 sm:p-8">
+            <div className="p-5 sm:p-6">
                 <div className="flex flex-col items-center text-center">
                     <div
-                        className={`flex h-12 w-12 items-center justify-center rounded-2xl mb-4 ${variant.iconWrap}`}
+                        className={`flex h-9 w-9 items-center justify-center rounded-md mb-3 ${variant.iconWrap}`}
                     >
-                        <Icon size={24} aria-hidden />
+                        <Icon size={18} aria-hidden />
                     </div>
                     <h2
                         id="alert-modal-title"
-                        className={`text-lg font-semibold ${variant.titleClass}`}
+                        className={`text-base font-semibold ${variant.titleClass}`}
                     >
                         {displayTitle}
                     </h2>

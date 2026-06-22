@@ -71,7 +71,7 @@ export default function ModalShell({
         >
             <button
                 type="button"
-                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+                className="absolute inset-0 bg-zinc-950/40 backdrop-blur-[2px]"
                 aria-label="Close dialog"
                 onClick={onClose}
             />
@@ -80,13 +80,13 @@ export default function ModalShell({
                 aria-modal="true"
                 aria-labelledby={ariaLabelledby}
                 aria-describedby={ariaDescribedby}
-                className={`relative w-full ${sizes[size] || sizes.sm} bg-white rounded-2xl shadow-xl border border-slate-200 animate-modal-scale max-h-[min(90vh,100%)] overflow-y-auto ${panelClassName}`}
+                className={`relative w-full ${sizes[size] || sizes.sm} bg-white rounded-lg border border-zinc-200/80 shadow-card-md animate-modal-scale max-h-[min(90vh,100%)] overflow-y-auto ${panelClassName}`}
             >
                 {showClose && onClose && (
                     <button
                         type="button"
                         onClick={onClose}
-                        className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors z-10"
+                        className="absolute top-3 right-3 p-1.5 rounded-md text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors z-10"
                         aria-label="Close"
                     >
                         <X size={18} aria-hidden />

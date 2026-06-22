@@ -10,11 +10,11 @@ export default function InvoiceLimitModal({ open, onClose, usage }) {
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-100 relative" role="dialog" aria-modal="true">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-zinc-100 relative" role="dialog" aria-modal="true">
                 <button
                     type="button"
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+                    className="absolute top-4 right-4 p-1 text-zinc-400 hover:text-zinc-600 rounded-lg"
                     aria-label="Close"
                 >
                     <X size={20} />
@@ -24,10 +24,10 @@ export default function InvoiceLimitModal({ open, onClose, usage }) {
                         <Crown className="h-7 w-7 text-amber-600" />
                     </div>
                 </div>
-                <h2 className="text-xl font-semibold text-slate-900 text-center mb-2">
+                <h2 className="text-xl font-semibold text-zinc-900 text-center mb-2">
                     Monthly invoice limit reached
                 </h2>
-                <p className="text-slate-600 text-center text-sm mb-6">
+                <p className="text-zinc-600 text-center text-sm mb-6">
                     You have used all <strong>{limit}</strong> free invoices for this month
                     ({used}/{limit}). Upgrade to Premium for unlimited invoices, custom logos, and more.
                 </p>

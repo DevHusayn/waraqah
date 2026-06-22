@@ -85,7 +85,7 @@ export default function ProductFormModal({
             ariaLabelledby="product-modal-title"
             panelClassName="sm:max-h-[85vh]"
         >
-            <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+            <div className="px-6 pt-6 pb-4 border-b border-zinc-100">
                 <div className="flex items-start gap-3 pr-8">
                     <div className="p-2.5 rounded-xl bg-brand-subtle shrink-0">
                         {isEdit ? (
@@ -95,10 +95,10 @@ export default function ProductFormModal({
                         )}
                     </div>
                     <div>
-                        <h2 id="product-modal-title" className="text-lg font-semibold text-slate-900">
+                        <h2 id="product-modal-title" className="text-lg font-semibold text-zinc-900">
                             {isEdit ? 'Edit product' : 'Add product'}
                         </h2>
-                        <p className="text-sm text-slate-500 mt-0.5">
+                        <p className="text-sm text-zinc-500 mt-0.5">
                             Saved to your catalog for quick invoice line items
                         </p>
                     </div>
@@ -122,7 +122,7 @@ export default function ProductFormModal({
                 </div>
                 <div>
                     <label htmlFor="product-description" className="label">
-                        Description <span className="text-slate-400 font-normal">(optional)</span>
+                        Description <span className="text-zinc-400 font-normal">(optional)</span>
                     </label>
                     <textarea
                         id="product-description"

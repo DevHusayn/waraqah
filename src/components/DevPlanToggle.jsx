@@ -87,8 +87,8 @@ export default function DevPlanToggle({ formData, setFormData, className = '' })
                     onClick={() => applyPlan(PLANS.FREE)}
                     className={`flex-1 rounded-md py-2 text-sm font-semibold transition-all ${
                         !premium
-                            ? 'bg-slate-800 text-white shadow-sm'
-                            : 'text-slate-600 hover:bg-slate-50'
+                            ? 'bg-zinc-800 text-white shadow-sm'
+                            : 'text-zinc-600 hover:bg-zinc-50'
                     }`}
                 >
                     Free
@@ -100,7 +100,7 @@ export default function DevPlanToggle({ formData, setFormData, className = '' })
                     className={`flex-1 rounded-md py-2 text-sm font-semibold transition-all ${
                         premium
                             ? 'bg-amber-500 text-white shadow-sm'
-                            : 'text-slate-600 hover:bg-slate-50'
+                            : 'text-zinc-600 hover:bg-zinc-50'
                     }`}
                 >
                     Premium

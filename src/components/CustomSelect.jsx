@@ -50,19 +50,19 @@ export default function CustomSelect({
                 aria-invalid={error}
                 className={`input-field relative mt-1 flex w-full items-center justify-between gap-2 text-left ${
                     leadingIcon ? 'pl-9' : ''
-                } ${!selected ? 'text-slate-400' : 'text-slate-900'} ${
+                } ${!selected ? 'text-zinc-400' : 'text-zinc-950'} ${
                     error ? 'input-field--error' : ''
                 }`}
             >
                 {leadingIcon && (
-                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">
                         {leadingIcon}
                     </span>
                 )}
                 <span className="truncate">{selected ? selected.label : placeholder}</span>
                 <ChevronDown
                     size={18}
-                    className={`shrink-0 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}
+                    className={`shrink-0 text-zinc-400 transition-transform ${open ? 'rotate-180' : ''}`}
                 />
             </button>
 
@@ -70,7 +70,7 @@ export default function CustomSelect({
                 <ul
                     role="listbox"
                     aria-labelledby={id}
-                    className="absolute z-30 mt-1.5 max-h-60 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg animate-fade-in scroll-x-touch"
+                    className="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-zinc-200 bg-white shadow-card-md animate-fade-in scroll-x-touch"
                 >
                     {options.map((opt) => {
                         const active = opt.value === value;
@@ -82,10 +82,10 @@ export default function CustomSelect({
                                         onChange(opt.value);
                                         setOpen(false);
                                     }}
-                                    className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${
+                                    className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                                         active
-                                            ? 'bg-brand-light text-brand font-semibold'
-                                            : 'text-slate-700 hover:bg-slate-50'
+                                            ? 'bg-zinc-100 text-zinc-950 font-medium'
+                                            : 'text-zinc-700 hover:bg-zinc-50'
                                     }`}
                                 >
                                     {opt.label}

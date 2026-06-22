@@ -118,7 +118,7 @@ export default function ResetPassword() {
     };
 
     return (
-        <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-100 p-4">
+        <div className="min-h-screen w-full flex flex-col items-center justify-center bg-zinc-100 p-4">
             <AlertModal
                 open={alert.open}
                 message={alert.message}
@@ -132,13 +132,13 @@ export default function ResetPassword() {
 
                 <div className="mb-6 text-center">
                     <h1 className="page-title text-3xl mb-2">Choose a new password</h1>
-                    <p className="text-base text-slate-600">Enter and confirm your new password below.</p>
+                    <p className="text-base text-zinc-600">Enter and confirm your new password below.</p>
                 </div>
 
                 <form
                     onSubmit={handleSubmit}
                     noValidate
-                    className="bg-white rounded-xl border border-slate-200 shadow-lg shadow-slate-200/50 p-6 space-y-5"
+                    className="bg-white rounded-lg border border-zinc-200 p-6 space-y-5"
                 >
                     <div>
                         <RequiredLabel htmlFor="reset-password">New password</RequiredLabel>
@@ -159,14 +159,14 @@ export default function ResetPassword() {
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-brand font-semibold text-sm"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-brand font-semibold text-sm"
                             >
                                 {showPassword ? 'Hide' : 'Show'}
                             </button>
                         </div>
                         {password && (
                             <div className="mt-2">
-                                <div className="h-1 w-full rounded-full bg-slate-100 overflow-hidden">
+                                <div className="h-1 w-full rounded-full bg-zinc-100 overflow-hidden">
                                     <div
                                         className={`h-full rounded-full transition-all ${passwordStrength.barClass}`}
                                         style={{ width: `${passwordStrength.percent}%` }}
@@ -224,7 +224,7 @@ export default function ResetPassword() {
                     </button>
                 </form>
 
-                <p className="mt-8 text-center text-slate-700 text-base">
+                <p className="mt-8 text-center text-zinc-700 text-base">
                     <Link
                         to={AUTH_LOGIN_PATH}
                         className="inline-flex items-center justify-center gap-2 font-medium text-brand hover:underline"
