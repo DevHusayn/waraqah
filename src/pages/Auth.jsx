@@ -39,9 +39,9 @@ const REGISTER_FIELD_ORDER = [
 ];
 
 const FEATURES = [
-    { icon: FileText, text: 'Professional PDF invoices & receipts' },
-    { icon: Zap, text: 'Mark paid and track revenue instantly' },
-    { icon: Shield, text: 'Secure cloud storage for your records' },
+    { id: 'pdf', icon: FileText, text: 'Professional PDF invoices & receipts' },
+    { id: 'track', icon: Zap, text: 'Mark paid and track revenue instantly' },
+    { id: 'storage', icon: Shield, text: 'Secure cloud storage for your records' },
 ];
 
 function getFieldId(key, isLogin) {
@@ -364,7 +364,7 @@ function Auth() {
             {/* Brand panel */}
             <div className="hidden lg:flex lg:h-screen lg:sticky lg:top-0 flex-col justify-between bg-gradient-to-br from-brand via-brand to-brand-hover text-white p-10 xl:p-12">
                 <div>
-                    <WaraqahLogo size="lg" inverted className="[&_*]:text-white" />
+                    <WaraqahLogo size="lg" inverted iconStyle="solid" />
                     <h2 className="mt-10 text-3xl font-semibold leading-tight max-w-sm">
                         Invoice professionally. Get paid faster.
                     </h2>
@@ -373,8 +373,8 @@ function Auth() {
                         place.
                     </p>
                     <ul className="mt-10 space-y-4">
-                        {FEATURES.map(({ icon: Icon, text }) => (
-                            <li key={text} className="flex items-center gap-3 text-white/90">
+                        {FEATURES.map(({ id, icon: Icon, text }) => (
+                            <li key={id} className="flex items-center gap-3 text-white/90">
                                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
                                     <Icon size={18} aria-hidden />
                                 </span>
@@ -386,17 +386,30 @@ function Auth() {
                 <p className="text-sm text-white/60">Trusted by businesses across Nigeria</p>
             </div>
 
-            {/* Form panel — Vercel softness + Stripe clarity */}
+            {/* Form panel */}
             <div className="min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col bg-zinc-50/80">
-                <div className="flex-1 flex flex-col justify-center px-5 py-8 sm:px-8 sm:py-10">
-                    <div className="w-full max-w-[420px] mx-auto">
-                        <div className="lg:hidden flex justify-center mb-6">
-                            <WaraqahLogo size="md" />
-                        </div>
-
+                <div className="lg:hidden sticky top-0 z-30 shrink-0 border-b border-zinc-200/60 bg-zinc-50/95 backdrop-blur-md">
+                    <div className="max-w-[420px] mx-auto px-5 py-3 flex items-center justify-between gap-4">
                         <Link
                             to="/"
-                            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-500 hover:text-zinc-900 mb-5 transition-colors"
+                            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
+                        >
+                            <ArrowLeft size={15} aria-hidden />
+                            Back to home
+                        </Link>
+                        <WaraqahLogo size="sm" />
+                    </div>
+                </div>
+
+                <div
+                    className={`flex-1 flex flex-col px-5 py-6 sm:px-8 sm:py-10 ${
+                        !isLogin ? 'justify-start' : 'justify-center'
+                    } lg:justify-center`}
+                >
+                    <div className="w-full max-w-[420px] mx-auto">
+                        <Link
+                            to="/"
+                            className="hidden lg:inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-500 hover:text-zinc-900 mb-5 transition-colors"
                         >
                             <ArrowLeft size={15} aria-hidden />
                             Back to home

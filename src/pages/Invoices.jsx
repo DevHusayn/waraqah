@@ -18,6 +18,7 @@ import Spinner, { PageLoader } from '../components/Spinner';
 import FilterTabs from '../components/FilterTabs';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
+import InvoiceUsageBanner from '../components/InvoiceUsageBanner';
 import Toolbar, { ToolbarSearch, ToolbarActions } from '../components/Toolbar';
 import StatusBadge from '../components/StatusBadge';
 
@@ -92,9 +93,7 @@ const Invoices = () => {
                 </PageHeader>
 
                 {!premium && usageLabel ? (
-                    <p className="mb-4 text-sm text-zinc-700 bg-zinc-100 border border-zinc-200 rounded-md px-3 py-2">
-                        {usageLabel}
-                    </p>
+                    <InvoiceUsageBanner label={usageLabel} className="mb-4" />
                 ) : null}
 
                 <Toolbar className="mb-4">

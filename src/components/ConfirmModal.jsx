@@ -28,7 +28,9 @@ export default function ConfirmModal({
                 <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
                     <div
                         className={`flex h-9 w-9 items-center justify-center rounded-md mb-3 ${
-                            isDanger ? 'bg-red-50 text-red-600' : 'bg-zinc-100 text-zinc-600'
+                            isDanger
+                                ? 'bg-red-50 text-red-600'
+                                : 'bg-amber-50 text-amber-600'
                         }`}
                     >
                         <AlertTriangle size={18} aria-hidden />

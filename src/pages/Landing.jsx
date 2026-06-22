@@ -281,7 +281,7 @@ export default function Landing() {
                             </div>
                         </SectionReveal>
                         <SectionReveal delay={2}>
-                            <div className="rounded-2xl border-2 border-amber-300/80 bg-gradient-to-br from-amber-50 via-white to-sky-50 p-8 h-full flex flex-col relative overflow-hidden landing-premium-glow">
+                            <div className="premium-card p-8 h-full flex flex-col relative overflow-hidden landing-premium-glow">
                                 <div className="absolute top-4 right-4 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 uppercase tracking-wide">
                                     Popular
                                 </div>

@@ -64,9 +64,7 @@ export default function WaraqahLogo({
 
     const iconBoxClass =
         iconStyle === 'solid'
-            ? inverted
-                ? 'bg-white text-zinc-900'
-                : 'waraqah-logo-mark'
+            ? 'waraqah-logo-mark'
             : inverted
               ? 'bg-white/15 text-white'
               : 'bg-zinc-100 text-zinc-700';

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
@@ -8,7 +8,15 @@ import CreateInvoice from './pages/CreateInvoice';
 import InvoiceDetails from './pages/InvoiceDetails';
 import Clients from './pages/Clients';
 import Products from './pages/Products';
-import Settings from './pages/Settings';
+import SettingsLayout from './pages/settings/SettingsLayout';
+import SettingsIndex from './pages/settings/SettingsIndex';
+import BusinessSettingsIndex from './pages/settings/BusinessSettingsIndex';
+import CompanyProfileSettings from './pages/settings/CompanyProfileSettings';
+import AccountDetailsSettings from './pages/settings/AccountDetailsSettings';
+import BrandingSettings from './pages/settings/BrandingSettings';
+import PlanBillingSettings from './pages/settings/PlanBillingSettings';
+import TermsSettings from './pages/settings/TermsSettings';
+import AboutSettings from './pages/settings/AboutSettings';
 import Auth from './pages/Auth';
 import ResetPassword from './pages/ResetPassword';
 import PrivateRoute from './utils/PrivateRoute';
@@ -60,7 +68,17 @@ function App() {
                                             <Route path="/invoices/:id" element={<PrivateRoute><InvoiceDetails /></PrivateRoute>} />
                                             <Route path="/clients" element={<PrivateRoute><Clients /></PrivateRoute>} />
                                             <Route path="/products" element={<PrivateRoute><Products /></PrivateRoute>} />
-                                            <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+                                            <Route path="/settings" element={<PrivateRoute><SettingsLayout /></PrivateRoute>}>
+                                                <Route index element={<SettingsIndex />} />
+                                                <Route path="business" element={<BusinessSettingsIndex />} />
+                                                <Route path="business/company-profile" element={<CompanyProfileSettings />} />
+                                                <Route path="business/account-details" element={<AccountDetailsSettings />} />
+                                                <Route path="business/branding" element={<BrandingSettings />} />
+                                                <Route path="plan-billing" element={<PlanBillingSettings />} />
+                                                <Route path="terms" element={<TermsSettings />} />
+                                                <Route path="about" element={<AboutSettings />} />
+                                                <Route path="profile" element={<Navigate to="/settings/business/company-profile" replace />} />
+                                            </Route>
                                             <Route path="/statements" element={<PrivateRoute><MonthlyStatement /></PrivateRoute>} />
                                             <Route path="/upgrade" element={<PrivateRoute><Upgrade /></PrivateRoute>} />
                                             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

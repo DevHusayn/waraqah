@@ -15,6 +15,7 @@ import { isPremiumUser } from '../utils/premium';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import EmptyState from '../components/EmptyState';
+import InvoiceUsageBanner from '../components/InvoiceUsageBanner';
 
 const RECENT_COLUMNS = [
     { key: 'number', label: 'Invoice' },
@@ -69,9 +70,7 @@ const Dashboard = () => {
             />
             <PageHeader title="Dashboard" subtitle="Your invoicing overview" />
             {!premium && usageLabel ? (
-                <p className="mb-4 text-sm text-zinc-700 bg-zinc-100 border border-zinc-200 rounded-md px-3 py-2">
-                    {usageLabel}
-                </p>
+                <InvoiceUsageBanner label={usageLabel} className="mb-4" />
             ) : null}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-3 mb-6">

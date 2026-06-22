@@ -240,12 +240,12 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
             </div>
 
             {!premium ? (
-                <div className="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-6 text-center space-y-3">
-                    <Lock className="mx-auto h-7 w-7 text-zinc-400" aria-hidden />
-                    <p className="text-sm text-zinc-600 max-w-sm mx-auto">
+                <div className="premium-card p-6 text-center space-y-3">
+                    <Lock className="mx-auto h-7 w-7 text-amber-600" aria-hidden />
+                    <p className="text-sm text-zinc-700 max-w-sm mx-auto">
                         Upgrade to Premium to upload your logo, company stamp, and authorized signature.
                     </p>
-                    <Link to="/upgrade" className="btn-primary mx-auto gap-2 inline-flex text-sm py-2">
+                    <Link to="/upgrade" className="btn-primary mx-auto gap-2 inline-flex text-sm py-2 shadow-lg shadow-brand/20">
                         <Sparkles size={16} aria-hidden />
                         {premiumUpgradeLabel()}
                     </Link>

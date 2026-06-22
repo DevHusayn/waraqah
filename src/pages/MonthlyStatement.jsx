@@ -58,13 +58,16 @@ export default function MonthlyStatement() {
                     title="Monthly statement"
                     subtitle="A clear picture of how your business billed each month"
                 />
-                <div className="data-table-wrap max-w-lg mx-auto">
+                <div className="premium-card max-w-lg mx-auto p-8">
                     <EmptyState
                         icon={Crown}
                         title="Keep track of your monthly billing"
                         description="Upgrade to Premium to unlock professional monthly statements with automated totals and PDF export."
                         action={
-                            <Link to="/upgrade" className="btn-primary inline-flex">
+                            <Link
+                                to="/upgrade"
+                                className="btn-primary inline-flex shadow-lg shadow-brand/20"
+                            >
                                 Upgrade to Premium
                             </Link>
                         }
@@ -137,11 +140,11 @@ export default function MonthlyStatement() {
                         </p>
                     </div>
                 ))}
-                <div className="card !p-4 min-w-0 sm:col-span-2 lg:col-span-3 xl:col-span-1 bg-brand-light/50 border-brand/20">
-                    <p className="text-xs font-medium text-brand uppercase tracking-wide">
+                <div className="card !p-4 min-w-0 sm:col-span-2 lg:col-span-3 xl:col-span-1 border-2 border-amber-300/80 bg-amber-50">
+                    <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide">
                         Total billed
                     </p>
-                    <p className="mt-1 text-base sm:text-lg font-bold text-brand tabular-nums break-words">
+                    <p className="mt-1 text-base sm:text-lg font-bold text-zinc-900 tabular-nums break-words">
                         {formatCurrency(statement.totals.total)}
                     </p>
                 </div>

@@ -21,6 +21,7 @@ import { useToast } from '../context/ToastContext';
 import { APP_CURRENCY, CURRENCY_INFO, formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
 import InvoiceLimitModal from '../components/InvoiceLimitModal';
+import InvoiceUsageBanner from '../components/InvoiceUsageBanner';
 import FormSection from '../components/FormSection';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { canCreateInvoice, formatInvoiceUsageLabel } from '../utils/invoiceLimits';
@@ -605,12 +606,15 @@ const CreateInvoice = () => {
                     </p>
                 </div>
                 {isDraftFlow && usageLabel ? (
-                    <p className="mt-3 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 inline-block">
-                        {usageLabel}
-                        {invoiceUsage.remaining > 0
-                            ? ` — ${invoiceUsage.remaining} remaining this month`
-                            : ' — upgrade for unlimited invoices'}
-                    </p>
+                    <InvoiceUsageBanner
+                        className="mt-3 inline-block"
+                        label={
+                            usageLabel +
+                            (invoiceUsage.remaining > 0
+                                ? ` — ${invoiceUsage.remaining} remaining this month`
+                                : ' — upgrade for unlimited invoices')
+                        }
+                    />
                 ) : null}
             </div>
 

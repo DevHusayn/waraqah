@@ -351,7 +351,15 @@
 }
 
 .landing-premium-glow {
-    box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.2), 0 20px 50px -12px rgba(2, 132, 199, 0.15);
+    box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.15), 0 12px 32px -8px rgba(251, 191, 36, 0.12);
+}
+
+.premium-card {
+    @apply rounded-xl border-2 border-amber-300/80 bg-amber-50 overflow-hidden shadow-card;
+}
+
+.premium-upgrade-btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md border border-amber-300/80 bg-amber-50 text-amber-900 font-semibold shadow-sm transition-all hover:bg-amber-100 hover:border-amber-400/80;
 }
 
 .landing-reveal {

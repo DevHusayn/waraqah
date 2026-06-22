@@ -65,7 +65,7 @@ export default function UpgradeCallback() {
                 <h1 className="page-title">Payment successful</h1>
                 <p className="text-zinc-600 mt-2 mb-8">{message}</p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Link to="/settings#premium" className="btn-primary">
+                    <Link to="/settings/plan-billing" className="btn-primary">
                         Upload your logo
                     </Link>
                     <Link to="/" className="btn-secondary">

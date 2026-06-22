@@ -69,12 +69,12 @@ export default function Upgrade() {
                 </p>
             </div>
 
-            <div className="rounded-lg border border-zinc-200/80 bg-white overflow-hidden">
-                <div className="px-5 py-4 border-b border-zinc-100">
+            <div className="premium-card">
+                <div className="px-5 py-4 border-b border-amber-200/70">
                     <div className="flex items-center gap-2 mb-2">
-                        <Crown className="h-4 w-4 text-amber-500" />
-                        <span className="text-sm font-medium text-zinc-950">Premium</span>
-                        <span className="ml-auto rounded-md bg-zinc-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-zinc-600">
+                        <Crown className="h-4 w-4 text-amber-600" />
+                        <span className="text-sm font-semibold text-zinc-900">Premium</span>
+                        <span className="ml-auto rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">
                             Monthly
                         </span>
                     </div>
@@ -82,13 +82,13 @@ export default function Upgrade() {
                 </div>
 
                 <ul className="px-5 py-4 space-y-2.5">
-                    <li className="flex items-start gap-2 text-sm font-medium text-zinc-950 pb-2 border-b border-zinc-100">
-                        <Check className="h-4 w-4 shrink-0 text-zinc-600 mt-0.5" strokeWidth={2.5} />
+                    <li className="flex items-start gap-2 text-sm font-semibold text-zinc-900 pb-2 border-b border-amber-200/70">
+                        <Check className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" strokeWidth={2.5} />
                         Everything in Free, plus:
                     </li>
                     {PREMIUM_PLAN_FEATURES.map((text) => (
-                        <li key={text} className="flex items-start gap-2 text-sm text-zinc-600">
-                            <Check className="h-4 w-4 shrink-0 text-zinc-500 mt-0.5" strokeWidth={2.5} />
+                        <li key={text} className="flex items-start gap-2 text-sm text-zinc-700">
+                            <Check className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" strokeWidth={2.5} />
                             {text}
                         </li>
                     ))}

@@ -59,7 +59,13 @@ export default function SidebarAccountFooter({ onNavigate }) {
 
     return (
         <div className="mt-auto pt-4 border-t border-zinc-200/40">
-            <div className="rounded-lg border border-zinc-200/50 bg-white/70 p-2 shadow-soft backdrop-blur-sm">
+            <div
+                className={`rounded-lg p-2 shadow-soft backdrop-blur-sm ${
+                    premium
+                        ? 'border-2 border-amber-300/80 bg-amber-50'
+                        : 'border border-zinc-200/50 bg-white/70'
+                }`}
+            >
                 <Link
                     to="/settings"
                     onClick={onNavigate}
@@ -86,20 +92,23 @@ export default function SidebarAccountFooter({ onNavigate }) {
 
                 {premium ? (
                     <Link
-                        to="/settings#premium"
+                        to="/settings/business/branding"
                         onClick={onNavigate}
-                        className="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-zinc-200/60 bg-zinc-50/80 px-2.5 py-1.5 text-[11px] font-medium text-zinc-600 transition-all hover:bg-white hover:border-zinc-300/80 hover:text-zinc-900"
+                        className="premium-upgrade-btn mt-2 w-full px-2.5 py-1.5 text-[11px]"
                     >
+                        <Crown className="h-3 w-3 text-amber-600 shrink-0" aria-hidden />
                         Manage branding
+                        <ChevronRight className="h-3 w-3 opacity-60" />
                     </Link>
                 ) : (
                     <Link
                         to="/upgrade"
                         onClick={onNavigate}
-                        className="mt-2 flex w-full items-center justify-center gap-1 rounded-md border border-zinc-200/60 bg-zinc-50/80 px-2.5 py-1.5 text-[11px] font-medium text-zinc-700 transition-all hover:bg-white hover:border-zinc-300/80 hover:text-zinc-950"
+                        className="premium-upgrade-btn mt-2 w-full px-2.5 py-1.5 text-[11px]"
                     >
+                        <Crown className="h-3 w-3 text-amber-600 shrink-0" aria-hidden />
                         Upgrade
-                        <ChevronRight className="h-3 w-3 opacity-40" />
+                        <ChevronRight className="h-3 w-3 opacity-60" />
                     </Link>
                 )}
             </div>

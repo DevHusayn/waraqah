@@ -45,6 +45,11 @@ function hasPaymentDetails(businessInfo) {
     );
 }
 
+/** jsPDF Helvetica only supports normal/bold — bold at small sizes reads slightly heavier. */
+function setPdfBodyFont(doc) {
+    doc.setFont(undefined, 'bold');
+}
+
 function drawStatusBadge(doc, status, x, y, primaryColor) {
     const statusColors = {
         paid: [34, 197, 94],
@@ -109,7 +114,7 @@ function drawBillToAndDetails(
     doc.text(String(client.name || 'Client'), 19, y + 13);
 
     doc.setFontSize(8);
-    doc.setFont(undefined, 'normal');
+    setPdfBodyFont(doc);
     doc.setTextColor(...grayColor);
     let billY = y + 18;
     const business = getClientBusiness(client);
@@ -206,7 +211,7 @@ async function drawCompanyHeader(doc, businessInfo, premium, logoUrl, pngCache, 
     doc.text(String(businessInfo.name || 'Your Business'), nameX, nameY);
 
     doc.setFontSize(8);
-    doc.setFont(undefined, 'normal');
+    setPdfBodyFont(doc);
     doc.setTextColor(...grayColor);
     let detailY = nameY + 6;
     const addressLines = doc.splitTextToSize(String(businessInfo.address || ''), 88);
@@ -279,7 +284,7 @@ function drawBottomBoxes(
         doc.text('PAYMENT INFORMATION', 19, y + 7);
 
         doc.setFontSize(7.5);
-        doc.setFont(undefined, 'normal');
+        setPdfBodyFont(doc);
         doc.setTextColor(...grayColor);
         let py = y + 13;
         for (const line of paymentLines) {
@@ -300,7 +305,7 @@ function drawBottomBoxes(
         doc.text('NOTES', notesX + 4, y + 7);
 
         doc.setFontSize(7.5);
-        doc.setFont(undefined, 'normal');
+        setPdfBodyFont(doc);
         doc.setTextColor(...grayColor);
         let ny = y + 13;
         for (const line of notesLines) {
@@ -318,7 +323,7 @@ function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayC
     doc.line(15, footerY - 4, 195, footerY - 4);
 
     doc.setFontSize(8);
-    doc.setFont(undefined, 'normal');
+    setPdfBodyFont(doc);
 
     if (premium) {
         doc.setTextColor(...grayColor);
@@ -332,7 +337,7 @@ function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayC
         doc.setTextColor(...primaryColor);
         doc.setFont(undefined, 'bold');
         doc.text(`Powered by ${APP_NAME}`, 105, footerY + 1, { align: 'center' });
-        doc.setFont(undefined, 'normal');
+        setPdfBodyFont(doc);
         doc.setFontSize(7);
         doc.setTextColor(...grayColor);
         doc.text('Professional invoicing for small businesses', 105, footerY + 5.5, { align: 'center' });
@@ -445,6 +450,7 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         },
         styles: {
             fontSize: 8,
+            fontStyle: 'bold',
             cellPadding: { top: 5, bottom: 5, left: 4, right: 4 },
             lineColor: lightGray,
             lineWidth: 0.3,
@@ -466,7 +472,7 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
 
     doc.setFontSize(8);
     doc.setTextColor(...grayColor);
-    doc.setFont(undefined, 'normal');
+    setPdfBodyFont(doc);
     doc.text('Subtotal', totalsX, currentY);
     doc.setTextColor(...textColor);
     doc.text(`${currencySymbol}${formatMoney(invoice.subtotal)}`, 195, currentY, { align: 'right' });
