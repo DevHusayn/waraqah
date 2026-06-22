@@ -39,9 +39,9 @@ function lightenColor(rgb, percent) {
 function hasPaymentDetails(businessInfo) {
     return Boolean(
         businessInfo?.paymentAccountName?.trim() ||
-            businessInfo?.paymentBankName?.trim() ||
-            businessInfo?.paymentAccountNumber?.trim() ||
-            businessInfo?.paymentInstructions?.trim()
+        businessInfo?.paymentBankName?.trim() ||
+        businessInfo?.paymentAccountNumber?.trim() ||
+        businessInfo?.paymentInstructions?.trim()
     );
 }
 

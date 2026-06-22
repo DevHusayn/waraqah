@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
     FileText,
+    PenLine,
     Users,
     Settings as SettingsIcon,
     Menu,
@@ -38,6 +39,11 @@ function NavLinks({ navigation, isActive, onNavigate, premium }) {
                         {showPremiumBadge ? (
                             <Crown className="h-4 w-4 text-amber-500 shrink-0" aria-label="Premium" />
                         ) : null}
+                        {item.badge > 0 ? (
+                            <span className="inline-flex min-w-[1.25rem] h-5 items-center justify-center rounded-full bg-brand text-white text-xs font-semibold px-1.5">
+                                {item.badge > 99 ? '99+' : item.badge}
+                            </span>
+                        ) : null}
                     </Link>
                 );
             })}
@@ -51,7 +57,7 @@ const Layout = ({ children }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { businessInfo, setBusinessInfo } = useSettings();
     const premium = isPremiumUser(businessInfo);
-    const { resetAll } = useInvoice();
+    const { resetAll, draftInvoices } = useInvoice();
     const isLoggedIn = Boolean(localStorage.getItem('token'));
     const isAdmin = localStorage.getItem('isAdmin') === 'true';
     const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -100,6 +106,7 @@ const Layout = ({ children }) => {
     const navigation = [
         { name: 'Dashboard', href: '/', icon: LayoutDashboard },
         { name: 'Invoices', href: '/invoices', icon: FileText },
+        { name: 'Drafts', href: '/invoices/drafts', icon: PenLine, badge: draftInvoices.length },
         { name: 'Clients', href: '/clients', icon: Users },
         { name: 'Products', href: '/products', icon: Package },
         { name: 'Statements', href: '/statements', icon: FileBarChart, premiumFeature: true },
@@ -109,6 +116,13 @@ const Layout = ({ children }) => {
 
     const isActive = (path) => {
         if (path === '/') return location.pathname === '/';
+        if (path === '/invoices') {
+            if (location.pathname.startsWith('/invoices/drafts')) return false;
+            return location.pathname === '/invoices' || location.pathname.startsWith('/invoices/');
+        }
+        if (path === '/invoices/drafts') {
+            return location.pathname.startsWith('/invoices/drafts');
+        }
         return location.pathname.startsWith(path);
     };
 

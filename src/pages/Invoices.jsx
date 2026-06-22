@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
 import { getDisplayNumber, isReceipt, getPaymentMethodLabel } from '../utils/receiptHelpers';
-import { filterInvoicesBySearch, sortInvoices } from '../utils/invoiceHelpers';
+import { filterInvoicesBySearch, sortInvoices, filterNonDraftInvoices } from '../utils/invoiceHelpers';
 import PageHeader from '../components/PageHeader';
 import InvoiceLimitModal from '../components/InvoiceLimitModal';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
@@ -49,7 +49,8 @@ const Invoices = () => {
     };
 
     const displayedInvoices = useMemo(() => {
-        let list = filter === 'all' ? invoices : invoices.filter((inv) => inv.status === filter);
+        let list = filterNonDraftInvoices(invoices);
+        list = filter === 'all' ? list : list.filter((inv) => inv.status === filter);
         list = filterInvoicesBySearch(list, search, clients);
         return sortInvoices(list, sortBy);
     }, [invoices, clients, filter, search, sortBy]);

@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Invoices from './pages/Invoices';
+import Drafts from './pages/Drafts';
 import CreateInvoice from './pages/CreateInvoice';
 import InvoiceDetails from './pages/InvoiceDetails';
 import Clients from './pages/Clients';
@@ -53,6 +54,7 @@ function App() {
                                     <AppLayout>
                                         <Routes>
                                             <Route path="/invoices" element={<PrivateRoute><Invoices /></PrivateRoute>} />
+                                            <Route path="/invoices/drafts" element={<PrivateRoute><Drafts /></PrivateRoute>} />
                                             <Route path="/invoices/create" element={<PrivateRoute><CreateInvoice /></PrivateRoute>} />
                                             <Route path="/invoices/edit/:id" element={<PrivateRoute><CreateInvoice /></PrivateRoute>} />
                                             <Route path="/invoices/:id" element={<PrivateRoute><InvoiceDetails /></PrivateRoute>} />

@@ -1,5 +1,26 @@
 import { getClientBusiness } from './clientHelpers.js';
 
+export const DRAFT_STATUS = 'draft';
+
+export function isDraft(invoice) {
+    return invoice?.status === DRAFT_STATUS;
+}
+
+export function isDraftOrPendingEditable(invoice) {
+    if (!invoice) return false;
+    return isDraft(invoice) || ['pending', 'overdue'].includes(invoice.status);
+}
+
+export function getDraftLabel(invoice, client) {
+    const clientName = client?.name?.trim();
+    if (clientName) return clientName;
+    return 'Untitled draft';
+}
+
+export function filterNonDraftInvoices(invoices) {
+    return (invoices || []).filter((inv) => !isDraft(inv));
+}
+
 export function startOfDay(date) {
     const d = new Date(date);
     d.setHours(0, 0, 0, 0);
@@ -7,6 +28,7 @@ export function startOfDay(date) {
 }
 
 export function isInvoiceOverdue(invoice) {
+    if (isDraft(invoice)) return false;
     if (!invoice?.dueDate || invoice.status !== 'pending') return false;
     return startOfDay(invoice.dueDate) < startOfDay(new Date());
 }

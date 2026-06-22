@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { apiFetch, getToken } from '../utils/api';
-import { invoicesNeedingOverdueSync } from '../utils/invoiceHelpers';
+import { invoicesNeedingOverdueSync, isDraft } from '../utils/invoiceHelpers';
 
 const InvoiceContext = createContext();
 
@@ -97,13 +97,18 @@ export const InvoiceProvider = ({ children }) => {
         setInvoiceUsage(null);
     };
 
-    const addInvoice = async (invoice) => {
+    const addInvoice = async (invoice, options = {}) => {
         const newInvoice = await apiFetch('/invoices', {
             method: 'POST',
             body: JSON.stringify(invoice),
         });
+        const mapped = mapInvoice(newInvoice);
+        if (options.skipRefresh) {
+            setInvoices((prev) => [mapped, ...prev.filter((inv) => inv.id !== mapped.id)]);
+            return mapped;
+        }
         await fetchUserData();
-        return { ...newInvoice, id: newInvoice._id };
+        return mapped;
     };
 
     const updateInvoice = async (id, updatedInvoice) => {
@@ -111,8 +116,9 @@ export const InvoiceProvider = ({ children }) => {
             method: 'PUT',
             body: JSON.stringify(updatedInvoice),
         });
-        const mapped = { ...updated, id: updated._id };
-        setInvoices(invoices.map((inv) => (inv.id === id ? mapped : inv)));
+        const mapped = { ...updated, id: updated._id || id };
+        setInvoices((prev) => prev.map((inv) => (inv.id === id ? mapped : inv)));
+        return mapped;
     };
 
     const deleteInvoice = async (id) => {
@@ -166,8 +172,17 @@ export const InvoiceProvider = ({ children }) => {
         setProducts(products.filter((product) => product.id !== id));
     };
 
+    const draftInvoices = useMemo(
+        () =>
+            [...invoices]
+                .filter(isDraft)
+                .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)),
+        [invoices]
+    );
+
     const value = {
         invoices,
+        draftInvoices,
         clients,
         products,
         invoiceUsage,

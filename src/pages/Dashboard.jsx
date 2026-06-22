@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { FileText, Users, Wallet, TrendingUp, Clock, CheckCircle, FileBarChart, Crown } from 'lucide-react';
@@ -5,6 +6,7 @@ import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '../utils/currency';
 import { getDisplayNumber } from '../utils/receiptHelpers';
+import { filterNonDraftInvoices } from '../utils/invoiceHelpers';
 import PageHeader from '../components/PageHeader';
 import InvoiceLimitModal from '../components/InvoiceLimitModal';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
@@ -17,22 +19,24 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen, tryNavigateToCreate } = useInvoiceCreateGuard();
 
-    const totalRevenue = invoices
+    const activeInvoices = useMemo(() => filterNonDraftInvoices(invoices), [invoices]);
+
+    const totalRevenue = activeInvoices
         .filter((inv) => inv.status === 'paid')
         .reduce((sum, inv) => sum + inv.total, 0);
 
-    const pendingRevenue = invoices
+    const pendingRevenue = activeInvoices
         .filter((inv) => inv.status === 'pending')
         .reduce((sum, inv) => sum + inv.total, 0);
 
-    const overdueInvoices = invoices.filter((inv) => inv.status === 'overdue');
+    const overdueInvoices = activeInvoices.filter((inv) => inv.status === 'overdue');
 
-    const recentInvoices = [...invoices]
+    const recentInvoices = [...activeInvoices]
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         .slice(0, 5);
 
     const stats = [
-        { name: 'Total Invoices', value: invoices.length, icon: FileText, iconBg: 'bg-brand-light', iconColor: 'text-brand' },
+        { name: 'Total Invoices', value: activeInvoices.length, icon: FileText, iconBg: 'bg-brand-light', iconColor: 'text-brand' },
         { name: 'Total Clients', value: clients.length, icon: Users, iconBg: 'bg-violet-50', iconColor: 'text-violet-600' },
         { name: 'Revenue (Paid)', value: formatCurrency(totalRevenue), icon: Wallet, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600' },
         { name: 'Pending Revenue', value: formatCurrency(pendingRevenue), icon: Clock, iconBg: 'bg-amber-50', iconColor: 'text-amber-600' },

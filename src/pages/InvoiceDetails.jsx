@@ -3,8 +3,6 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
     ArrowLeft,
-    Download,
-    Loader2,
     Pencil,
     Trash2,
     CheckCircle,
@@ -27,11 +25,8 @@ import MarkAsPaidModal from '../components/MarkAsPaidModal';
 import FormSection from '../components/FormSection';
 import StatusBadge from '../components/StatusBadge';
 import { generateInvoicePdfBlob } from '../utils/pdfGenerator';
-import {
-    shareInvoicePdf,
-    downloadPdfBlob,
-    getShareFallbackHint,
-} from '../utils/shareInvoicePdf';
+import { shareInvoicePdf, getShareFallbackHint } from '../utils/shareInvoicePdf';
+import { getCachedPdf, setCachedPdf, clearCachedPdf } from '../utils/pdfCache';
 import { formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
 import {
@@ -54,14 +49,8 @@ function DocumentActions({
     documentMode,
     showDocumentToggle,
     onDocumentModeChange,
-    pdfLoading,
-    pdfReady,
     onShare,
-    onDownload,
 }) {
-    const loadingShare = pdfLoading === `share-${documentMode}`;
-    const loadingDownload = pdfLoading === `download-${documentMode}`;
-    const busy = Boolean(pdfLoading);
     const docLabel = documentMode === 'receipt' ? 'receipt' : 'invoice';
 
     return (
@@ -94,35 +83,14 @@ function DocumentActions({
                 </div>
             )}
 
-            {!pdfReady ? (
-                <button
-                    type="button"
-                    onClick={() => onDownload(documentMode)}
-                    className="btn-primary w-full"
-                    disabled={busy}
-                >
-                    {loadingDownload ? (
-                        <Loader2 size={18} className="animate-spin" aria-hidden />
-                    ) : (
-                        <Download size={18} aria-hidden />
-                    )}
-                    Download {docLabel}
-                </button>
-            ) : (
-                <button
-                    type="button"
-                    onClick={() => onShare(documentMode)}
-                    className="btn-primary w-full"
-                    disabled={busy}
-                >
-                    {loadingShare ? (
-                        <Loader2 size={18} className="animate-spin" aria-hidden />
-                    ) : (
-                        <Share2 size={18} aria-hidden />
-                    )}
-                    Share PDF
-                </button>
-            )}
+            <button
+                type="button"
+                onClick={() => onShare(documentMode)}
+                className="btn-primary w-full"
+            >
+                <Share2 size={18} aria-hidden />
+                Share {docLabel}
+            </button>
         </div>
     );
 }
@@ -135,13 +103,10 @@ function InvoiceActionsPanel({
     canCancel,
     canEdit,
     saving,
-    pdfLoading,
     onMarkPaid,
     onCancel,
     onDelete,
-    onDownload,
     onShare,
-    pdfCache,
     editId,
 }) {
     const [documentMode, setDocumentMode] = useState(paid ? 'receipt' : 'invoice');
@@ -157,59 +122,56 @@ function InvoiceActionsPanel({
             </h3>
 
             <div className="space-y-3">
-            {cancelled && (
-                <p className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
-                    Cancelled — kept for your records
-                </p>
-            )}
+                {cancelled && (
+                    <p className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
+                        Cancelled — kept for your records
+                    </p>
+                )}
 
-            {canMarkPaid && (
-                <button type="button" onClick={onMarkPaid} className="btn-primary w-full" disabled={saving}>
-                    <CheckCircle size={18} aria-hidden />
-                    Mark as paid
-                </button>
-            )}
+                {canMarkPaid && (
+                    <button type="button" onClick={onMarkPaid} className="btn-primary w-full" disabled={saving}>
+                        <CheckCircle size={18} aria-hidden />
+                        Mark as paid
+                    </button>
+                )}
 
-            {!cancelled && (
-                <DocumentActions
-                    documentMode={documentMode}
-                    showDocumentToggle={paid}
-                    onDocumentModeChange={setDocumentMode}
-                    pdfLoading={pdfLoading}
-                    pdfReady={Boolean(pdfCache[documentMode]?.blob)}
-                    onShare={onShare}
-                    onDownload={onDownload}
-                />
-            )}
+                {!cancelled && (
+                    <DocumentActions
+                        documentMode={documentMode}
+                        showDocumentToggle={paid}
+                        onDocumentModeChange={setDocumentMode}
+                        onShare={onShare}
+                    />
+                )}
 
-            {canCancel && (
-                <button
-                    type="button"
-                    onClick={onCancel}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 font-medium hover:bg-slate-50 transition-colors text-sm"
-                    disabled={saving}
-                >
-                    <XCircle size={18} aria-hidden />
-                    Cancel invoice
-                </button>
-            )}
-
-            {canEdit && (
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                    <Link to={`/invoices/edit/${editId}`} className="btn-secondary w-full text-sm py-2">
-                        <Pencil size={16} aria-hidden />
-                        Edit
-                    </Link>
+                {canCancel && (
                     <button
                         type="button"
-                        onClick={onDelete}
-                        className="w-full flex items-center justify-center gap-1.5 text-sm font-medium py-2 px-3 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
+                        onClick={onCancel}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-700 font-medium hover:bg-slate-50 transition-colors text-sm"
+                        disabled={saving}
                     >
-                        <Trash2 size={16} aria-hidden />
-                        Delete
+                        <XCircle size={18} aria-hidden />
+                        Cancel invoice
                     </button>
-                </div>
-            )}
+                )}
+
+                {canEdit && (
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                        <Link to={`/invoices/edit/${editId}`} className="btn-secondary w-full text-sm py-2">
+                            <Pencil size={16} aria-hidden />
+                            Edit
+                        </Link>
+                        <button
+                            type="button"
+                            onClick={onDelete}
+                            className="w-full flex items-center justify-center gap-1.5 text-sm font-medium py-2 px-3 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
+                        >
+                            <Trash2 size={16} aria-hidden />
+                            Delete
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -224,8 +186,6 @@ const InvoiceDetails = () => {
 
     const [markPaidOpen, setMarkPaidOpen] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [pdfLoading, setPdfLoading] = useState(null);
-    const [pdfCache, setPdfCache] = useState({});
     const [alert, setAlert] = useState({ open: false, message: '' });
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [confirmCancel, setConfirmCancel] = useState(false);
@@ -249,39 +209,53 @@ const InvoiceDetails = () => {
     }, [loading, invoice, id, navigate]);
 
     useEffect(() => {
-        setPdfCache({});
-    }, [id]);
+        if (!invoice || !client || cancelled) return undefined;
 
-    const handleDownload = async (mode) => {
-        if (!client) {
-            setAlert({ open: true, message: 'Client data not found for this invoice.' });
-            return;
-        }
-        setPdfLoading(`download-${mode}`);
-        try {
-            const cached = await generateInvoicePdfBlob(invoice, client, businessInfo, { mode });
-            downloadPdfBlob(cached.blob, cached.filename);
-            setPdfCache((prev) => ({ ...prev, [mode]: cached }));
-            showToast(mode === 'receipt' ? 'Receipt downloaded' : 'Invoice downloaded', 'success');
-        } catch (err) {
-            setAlert({ open: true, message: err.message || 'Failed to generate PDF.' });
-        } finally {
-            setPdfLoading(null);
-        }
-    };
+        clearCachedPdf(id);
+
+        const modes = paid ? ['receipt', 'invoice'] : ['invoice'];
+        let cancelledEffect = false;
+
+        (async () => {
+            for (const mode of modes) {
+                if (cancelledEffect) return;
+
+                const existing = getCachedPdf(id, mode);
+                if (existing) continue;
+
+                try {
+                    const generated = await generateInvoicePdfBlob(invoice, client, businessInfo, { mode });
+                    if (cancelledEffect) return;
+                    setCachedPdf(id, mode, generated);
+                } catch (err) {
+                    if (!cancelledEffect) {
+                        setAlert({
+                            open: true,
+                            message: err.message || `Failed to prepare ${mode} PDF.`,
+                        });
+                    }
+                }
+            }
+        })();
+
+        return () => {
+            cancelledEffect = true;
+        };
+    }, [id, invoice, client, businessInfo, paid, cancelled]);
 
     const handleShare = async (mode) => {
         if (!client) {
             setAlert({ open: true, message: 'Client data not found for this invoice.' });
             return;
         }
-        const cached = pdfCache[mode];
-        if (!cached?.blob) {
-            setAlert({ open: true, message: 'Download the PDF first.' });
-            return;
-        }
-        setPdfLoading(`share-${mode}`);
+
         try {
+            let cached = getCachedPdf(id, mode);
+            if (!cached) {
+                cached = await generateInvoicePdfBlob(invoice, client, businessInfo, { mode });
+                setCachedPdf(id, mode, cached);
+            }
+
             const result = await shareInvoicePdf(invoice, client, businessInfo, { mode, cached });
             if (result.method !== 'share') {
                 const hint = getShareFallbackHint();
@@ -290,8 +264,6 @@ const InvoiceDetails = () => {
         } catch (err) {
             if (err?.name === 'AbortError') return;
             setAlert({ open: true, message: err.message || 'Failed to share PDF.' });
-        } finally {
-            setPdfLoading(null);
         }
     };
 
@@ -324,6 +296,7 @@ const InvoiceDetails = () => {
     const handleDelete = async () => {
         try {
             await deleteInvoice(id);
+            clearCachedPdf(id);
             showToast('Invoice deleted', 'success');
             navigate('/invoices');
         } catch (err) {
@@ -351,13 +324,10 @@ const InvoiceDetails = () => {
         canCancel,
         canEdit,
         saving,
-        pdfLoading,
         onMarkPaid: () => setMarkPaidOpen(true),
         onCancel: () => setConfirmCancel(true),
         onDelete: () => setConfirmDelete(true),
-        onDownload: handleDownload,
         onShare: handleShare,
-        pdfCache,
         editId: id,
     };
 

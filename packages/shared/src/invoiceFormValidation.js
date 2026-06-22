@@ -57,6 +57,46 @@ export function buildInvoiceFieldErrors(formData) {
     return errors;
 }
 
+export function buildDraftFieldErrors(formData) {
+    const errors = {};
+
+    const taxRate = formData.taxRate;
+    if (taxRate !== '' && taxRate !== null && taxRate !== undefined) {
+        if (Number(taxRate) < 0 || Number(taxRate) > 100) {
+            errors.taxRate = 'Tax rate must be between 0 and 100.';
+        }
+    }
+
+    const discountValue = formData.discountValue;
+    if (discountValue !== '' && discountValue !== null && discountValue !== undefined) {
+        const discountNum = Number(discountValue);
+        if (Number.isNaN(discountNum) || discountNum < 0) {
+            errors.discountValue = 'Discount cannot be negative.';
+        } else if (formData.discountType === 'percent' && discountNum > 100) {
+            errors.discountValue = 'Discount cannot exceed 100%.';
+        }
+    }
+
+    (formData.items || []).forEach((item, index) => {
+        const qtyKey = `item-${index}-quantity`;
+        const rateKey = `item-${index}-rate`;
+        const qty = Number(item.quantity);
+        if (item.quantity !== '' && item.quantity !== null && item.quantity !== undefined) {
+            if (Number.isNaN(qty) || qty < 1) {
+                errors[qtyKey] = 'Quantity must be at least 1.';
+            }
+        }
+        const rate = Number(item.rate);
+        if (item.rate !== '' && item.rate !== null && item.rate !== undefined) {
+            if (Number.isNaN(rate) || rate < 0) {
+                errors[rateKey] = 'Rate cannot be negative.';
+            }
+        }
+    });
+
+    return errors;
+}
+
 export function getInvoiceFieldFocusOrder(itemCount = 0) {
     const order = [...INVOICE_FIELD_ORDER];
     for (let i = 0; i < itemCount; i += 1) {

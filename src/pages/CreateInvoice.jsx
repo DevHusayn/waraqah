@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom';
 import {
     Plus,
-    Trash2,
     Save,
     ArrowLeft,
     Loader2,
     FileText,
+    PenLine,
     Users,
     List,
     StickyNote,
@@ -24,7 +24,6 @@ import InvoiceLimitModal from '../components/InvoiceLimitModal';
 import FormSection from '../components/FormSection';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { canCreateInvoice, formatInvoiceUsageLabel } from '../utils/invoiceLimits';
-import { apiFetch } from '../utils/api';
 import FieldValidationMessage from '../components/FieldValidationMessage';
 import RequiredLabel from '../components/RequiredLabel';
 import {
@@ -35,12 +34,24 @@ import {
 } from '../utils/formFieldValidation';
 import {
     buildInvoiceFieldErrors,
+    buildDraftFieldErrors,
     getFirstInvoiceFieldId,
     getInvoiceFieldFocusOrder,
 } from '../utils/invoiceFormValidation';
 import { calculateInvoiceTotals } from '../utils/invoiceTotals';
+import { buildInvoicePayload, prepareInvoicePdf } from '../utils/sendInvoiceFlow';
+import { shareInvoicePdf, getShareFallbackHint } from '../utils/shareInvoicePdf';
+import ShareDocumentModal from '../components/ShareDocumentModal';
+import { getDisplayNumber } from '../utils/receiptHelpers';
 import CustomSelect from '../components/CustomSelect';
 import DatePickerField from '../components/DatePickerField';
+
+function hasDraftContent(data) {
+    if (data.clientId) return true;
+    if (String(data.notes || '').trim()) return true;
+    if (Number(data.discountValue) > 0) return true;
+    return (data.items || []).some((item) => String(item.description || '').trim());
+}
 
 const RECURRING_FREQUENCY_OPTIONS = [
     { value: 'weekly', label: 'Weekly' },
@@ -60,12 +71,32 @@ const CreateInvoice = () => {
     const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { clients, products, addInvoice, updateInvoice, invoices } = useInvoice();
-    const { invoiceUsage, limitModalOpen, setLimitModalOpen, atLimit } = useInvoiceCreateGuard();
+    const {
+        clients,
+        products,
+        addInvoice,
+        updateInvoice,
+        invoices,
+        fetchUserData,
+    } = useInvoice();
+    const { invoiceUsage, limitModalOpen, setLimitModalOpen } = useInvoiceCreateGuard();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
     const [saving, setSaving] = useState(false);
+    const [sending, setSending] = useState(false);
+    const [sharePdfReady, setSharePdfReady] = useState(false);
+    const [shareModal, setShareModal] = useState(null);
     const [fieldErrors, setFieldErrors] = useState({});
+
+    const draftIdRef = useRef(null);
+    const saveInFlightRef = useRef(false);
+    const isDirtyRef = useRef(false);
+    const formDataRef = useRef(null);
+    const sharePdfRef = useRef(null);
+
+    const existingInvoice = id ? invoices.find((inv) => inv.id === id) : null;
+    const isDraftEdit = Boolean(existingInvoice && existingInvoice.status === 'draft');
+    const isDraftFlow = !id || isDraftEdit;
 
     const [formData, setFormData] = useState({
         invoiceNumber: '',
@@ -74,7 +105,7 @@ const CreateInvoice = () => {
         dueDate: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
         items: [{ description: '', quantity: 1, rate: 0 }],
         notes: '',
-        status: 'pending',
+        status: 'draft',
         currency: APP_CURRENCY,
         taxRate: businessInfo.taxRate ?? 10,
         discountType: 'fixed',
@@ -83,6 +114,18 @@ const CreateInvoice = () => {
         recurringFrequency: 'monthly',
         recurringEndDate: '',
     });
+
+    formDataRef.current = formData;
+
+    const markDirty = () => {
+        isDirtyRef.current = true;
+    };
+
+    useEffect(() => {
+        if (id) {
+            draftIdRef.current = id;
+        }
+    }, [id]);
 
     useEffect(() => {
         if (!id) {
@@ -93,29 +136,6 @@ const CreateInvoice = () => {
             }));
         }
     }, [id, businessInfo.taxRate]);
-
-    useEffect(() => {
-        if (id) return;
-        let cancelled = false;
-        (async () => {
-            try {
-                const { invoiceNumber } = await apiFetch('/invoices/next-number');
-                if (!cancelled && invoiceNumber) {
-                    setFormData((prev) => ({ ...prev, invoiceNumber }));
-                }
-            } catch {
-                if (!cancelled) {
-                    setFormData((prev) => ({
-                        ...prev,
-                        invoiceNumber: prev.invoiceNumber || 'INV-0001',
-                    }));
-                }
-            }
-        })();
-        return () => {
-            cancelled = true;
-        };
-    }, [id]);
 
     useEffect(() => {
         if (!id) return;
@@ -130,6 +150,7 @@ const CreateInvoice = () => {
             discountType: invoice.discountType || 'fixed',
             discountValue: invoice.discountValue ?? '',
         });
+        isDirtyRef.current = false;
     }, [id, invoices, navigate]);
 
     const getTotals = () =>
@@ -149,19 +170,15 @@ const CreateInvoice = () => {
         setSearchParams(next, { replace: true });
     }, [clients, searchParams, setSearchParams]);
 
-    useEffect(() => {
-        if (!id && atLimit) {
-            setLimitModalOpen(true);
-        }
-    }, [id, atLimit, setLimitModalOpen]);
-
     const handleChange = (e) => {
+        markDirty();
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
         clearFieldError(setFieldErrors, name);
     };
 
     const handleItemChange = (index, field, value) => {
+        markDirty();
         const newItems = [...formData.items];
         newItems[index][field] = value;
         setFormData({ ...formData, items: newItems });
@@ -169,32 +186,131 @@ const CreateInvoice = () => {
     };
 
     const addItem = () => {
+        markDirty();
         setFormData({
             ...formData,
             items: [...formData.items, { description: '', quantity: 1, rate: 0 }],
         });
     };
 
+    const isEmptyItem = (item) => !String(item.description || '').trim();
+
     const addProductItem = (productId) => {
         const product = products.find((p) => p.id === productId);
         if (!product) return;
+        markDirty();
         const description = product.description
             ? `${product.name} — ${product.description}`
             : product.name;
-        setFormData({
-            ...formData,
-            items: [...formData.items, { description, quantity: 1, rate: product.unitPrice || 0 }],
+        const newLine = { description, quantity: 1, rate: product.unitPrice || 0 };
+
+        const emptyIndex = formData.items.findIndex(isEmptyItem);
+
+        setFormData((prev) => {
+            const targetIndex = prev.items.findIndex(isEmptyItem);
+            if (targetIndex === -1) {
+                return { ...prev, items: [...prev.items, newLine] };
+            }
+            const items = [...prev.items];
+            items[targetIndex] = newLine;
+            return { ...prev, items };
         });
+
+        if (emptyIndex !== -1) {
+            setFieldErrors((prev) => {
+                const next = { ...prev };
+                delete next[`item-${emptyIndex}-description`];
+                delete next[`item-${emptyIndex}-quantity`];
+                delete next[`item-${emptyIndex}-rate`];
+                return next;
+            });
+        }
     };
 
     const removeItem = (index) => {
         if (formData.items.length > 1) {
+            markDirty();
             setFormData({ ...formData, items: formData.items.filter((_, i) => i !== index) });
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const persistDraft = useCallback(
+        async ({ silent = true, redirectAfterCreate = true } = {}) => {
+            if (!isDraftFlow) return null;
+
+            const current = formDataRef.current;
+            if (!hasDraftContent(current)) return null;
+
+            const draftErrors = buildDraftFieldErrors(current);
+            const order = getInvoiceFieldFocusOrder(current.items.length);
+            const firstInvalid = firstFieldError(draftErrors, order);
+            if (firstInvalid) {
+                if (!silent) {
+                    setFieldErrors(draftErrors);
+                    focusFieldById(getFirstInvoiceFieldId(firstInvalid));
+                }
+                return null;
+            }
+
+            if (saveInFlightRef.current) return null;
+            saveInFlightRef.current = true;
+            if (!silent) {
+                setSaving(true);
+            }
+
+            try {
+                const payload = buildInvoicePayload(current, 'draft');
+                const draftId = id || draftIdRef.current;
+                let saved;
+
+                if (draftId) {
+                    saved = await updateInvoice(draftId, payload);
+                } else {
+                    saved = await addInvoice(payload);
+                    draftIdRef.current = saved.id;
+                    if (redirectAfterCreate) {
+                        navigate(`/invoices/edit/${saved.id}`, { replace: true });
+                    }
+                }
+
+                isDirtyRef.current = false;
+                if (!silent) {
+                    showToast('Draft saved', 'success');
+                }
+                return saved;
+            } catch (err) {
+                if (!silent) {
+                    showToast(err.message || 'Failed to save draft', 'error');
+                }
+                throw err;
+            } finally {
+                saveInFlightRef.current = false;
+                if (!silent) {
+                    setSaving(false);
+                }
+            }
+        },
+        [isDraftFlow, id, addInvoice, updateInvoice, navigate, showToast]
+    );
+
+    useEffect(() => {
+        return () => {
+            if (!isDraftFlow) return;
+            if (!isDirtyRef.current) return;
+            if (!hasDraftContent(formDataRef.current)) return;
+            persistDraft({ silent: true, redirectAfterCreate: false });
+        };
+    }, [isDraftFlow, persistDraft]);
+
+    const handleSaveDraft = async () => {
+        try {
+            await persistDraft({ silent: false, redirectAfterCreate: true });
+        } catch {
+            /* toast shown in persistDraft */
+        }
+    };
+
+    const handleSendInvoice = async () => {
         const errors = buildInvoiceFieldErrors(formData);
         const order = getInvoiceFieldFocusOrder(formData.items.length);
         const firstInvalid = firstFieldError(errors, order);
@@ -205,16 +321,128 @@ const CreateInvoice = () => {
         }
         setFieldErrors({});
 
-        if (!id && !canCreateInvoice(invoiceUsage)) {
+        if (!canCreateInvoice(invoiceUsage)) {
             setLimitModalOpen(true);
             return;
         }
 
-        const totals = getTotals();
+        setSending(true);
+        try {
+            const payload = buildInvoicePayload(formData, 'pending');
+            const draftId = id || draftIdRef.current;
+            let saved;
 
+            if (draftId) {
+                saved = await updateInvoice(draftId, payload);
+            } else {
+                saved = await addInvoice(payload, { skipRefresh: true });
+            }
+
+            isDirtyRef.current = false;
+            draftIdRef.current = saved.id;
+            const client = clients.find((c) => c.id === saved.clientId);
+
+            setSending(false);
+            sharePdfRef.current = null;
+            setSharePdfReady(false);
+            setShareModal({
+                invoice: saved,
+                client,
+            });
+        } catch (err) {
+            if (err.code === 'INVOICE_LIMIT_REACHED') {
+                setLimitModalOpen(true);
+            } else {
+                showToast(err.message || 'Failed to send invoice', 'error');
+            }
+            setShareModal(null);
+            sharePdfRef.current = null;
+            setSending(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!shareModal?.invoice) return undefined;
+
+        const { invoice, client } = shareModal;
+        let cancelled = false;
+
+        (async () => {
+            try {
+                const generated = await prepareInvoicePdf(
+                    invoice,
+                    client,
+                    businessInfo,
+                    invoice.id
+                );
+                if (cancelled) return;
+                sharePdfRef.current = generated;
+                setSharePdfReady(true);
+            } catch (err) {
+                if (!cancelled) {
+                    showToast(err.message || 'Failed to prepare PDF', 'error');
+                }
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [shareModal?.invoice?.id, businessInfo, showToast]);
+
+    const finishAfterShare = () => {
+        setShareModal(null);
+        sharePdfRef.current = null;
+        setSharePdfReady(false);
+        fetchUserData().catch(() => { });
+        navigate('/invoices');
+    };
+
+    const handleShareFromModal = async () => {
+        if (!shareModal?.invoice || !sharePdfRef.current) return;
+
+        try {
+            const shareResult = await shareInvoicePdf(
+                shareModal.invoice,
+                shareModal.client,
+                businessInfo,
+                { mode: 'invoice', cached: sharePdfRef.current }
+            );
+            if (shareResult?.method !== 'share') {
+                const hint = getShareFallbackHint();
+                if (hint) showToast(hint, 'info');
+            }
+            finishAfterShare();
+        } catch (shareErr) {
+            if (shareErr?.name === 'AbortError') {
+                return;
+            }
+            showToast(shareErr.message || 'Could not share PDF', 'error');
+        }
+    };
+
+    const handleSkipShare = () => {
+        finishAfterShare();
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (isDraftFlow) return;
+
+        const errors = buildInvoiceFieldErrors(formData);
+        const order = getInvoiceFieldFocusOrder(formData.items.length);
+        const firstInvalid = firstFieldError(errors, order);
+        if (firstInvalid) {
+            setFieldErrors(errors);
+            focusFieldById(getFirstInvoiceFieldId(firstInvalid));
+            return;
+        }
+        setFieldErrors({});
+
+        const totals = getTotals();
         const invoiceData = {
             ...formData,
-            status: id ? formData.status : 'pending',
+            status: formData.status,
             currency: APP_CURRENCY,
             discountType: formData.discountType || 'fixed',
             discountValue: Number(formData.discountValue) || 0,
@@ -225,87 +453,154 @@ const CreateInvoice = () => {
             balance: totals.total,
         };
 
-        if (!id) {
-            delete invoiceData.invoiceNumber;
-            delete invoiceData.receiptNumber;
-            delete invoiceData.paymentMethod;
-            delete invoiceData.datePaid;
-        }
-
         setSaving(true);
         try {
-            if (id) {
-                await updateInvoice(id, invoiceData);
-                showToast('Invoice updated successfully', 'success');
-                navigate(`/invoices/${id}`);
-            } else {
-                await addInvoice(invoiceData);
-                showToast('Invoice created successfully', 'success');
-                navigate('/invoices');
-            }
+            await updateInvoice(id, invoiceData);
+            showToast('Invoice updated successfully', 'success');
+            navigate(`/invoices/${id}`);
         } catch (err) {
-            if (err.code === 'INVOICE_LIMIT_REACHED') {
-                setLimitModalOpen(true);
-            } else {
-                showToast(err.message || 'Failed to save invoice', 'error');
-            }
+            showToast(err.message || 'Failed to save invoice', 'error');
         } finally {
             setSaving(false);
         }
     };
 
+    const sendReady = useMemo(() => Object.keys(buildInvoiceFieldErrors(formData)).length === 0, [formData]);
+
     const selectedClient = clients.find((c) => c.id === formData.clientId);
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
-    const backHref = id ? `/invoices/${id}` : '/invoices';
+    const backHref = isDraftEdit ? '/invoices/drafts' : id ? `/invoices/${id}` : '/invoices';
     const totals = getTotals();
     const discountLabel =
         formData.discountType === 'percent' && Number(formData.discountValue) > 0
             ? `Discount (${formData.discountValue}%)`
             : 'Discount';
 
-    const saveButton = (fullWidth = false) => (
-        <button
-            type="submit"
-            form="invoice-form"
-            className={`btn-primary ${fullWidth ? 'w-full' : ''} disabled:opacity-60`}
-            disabled={saving || (!id && atLimit)}
-        >
-            {saving ? (
-                <>
-                    <Loader2 size={18} className="animate-spin" aria-hidden />
-                    Saving…
-                </>
-            ) : (
-                <>
-                    <Save size={18} aria-hidden />
-                    {id ? 'Save changes' : 'Create invoice'}
-                </>
-            )}
-        </button>
-    );
+    const handleLeavePage = async () => {
+        if (isDraftFlow && isDirtyRef.current && hasDraftContent(formDataRef.current)) {
+            try {
+                await persistDraft({ silent: true, redirectAfterCreate: false });
+            } catch {
+                /* best-effort save when leaving */
+            }
+        }
+        navigate(backHref);
+    };
+
+    const invoiceNumberDisplay = isDraftFlow
+        ? formData.invoiceNumber || 'Assigned when sent'
+        : formData.invoiceNumber || (id ? '—' : 'Loading…');
+
+    const pageTitle = isDraftEdit ? 'Complete invoice' : id ? 'Edit invoice' : 'Create invoice';
+
+    const actionButtons = () => {
+        const actionBtn =
+            'w-full text-sm py-2.5 px-4 gap-2 whitespace-nowrap min-h-[44px]';
+
+        if (isDraftFlow) {
+            return (
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full">
+                    <button
+                        type="button"
+                        onClick={handleSaveDraft}
+                        className={`btn-secondary ${actionBtn} disabled:opacity-60`}
+                        disabled={saving || sending}
+                    >
+                        {saving ? (
+                            <>
+                                <Loader2 size={16} className="animate-spin shrink-0" aria-hidden />
+                                Saving…
+                            </>
+                        ) : (
+                            <>
+                                <PenLine size={16} className="shrink-0" aria-hidden />
+                                Save as draft
+                            </>
+                        )}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleSendInvoice}
+                        className={`btn-primary ${actionBtn} disabled:opacity-60`}
+                        disabled={!sendReady || sending || saving}
+                    >
+                        {sending ? (
+                            <>
+                                <Loader2 size={16} className="animate-spin shrink-0" aria-hidden />
+                                Saving…
+                            </>
+                        ) : (
+                            <>
+                                <FileText size={16} className="shrink-0" aria-hidden />
+                                Create invoice
+                            </>
+                        )}
+                    </button>
+                </div>
+            );
+        }
+
+        return (
+            <button
+                type="submit"
+                form="invoice-form"
+                className={`btn-primary ${actionBtn} w-full sm:max-w-md sm:ml-auto disabled:opacity-60`}
+                disabled={saving}
+            >
+                {saving ? (
+                    <>
+                        <Loader2 size={16} className="animate-spin shrink-0" aria-hidden />
+                        Saving…
+                    </>
+                ) : (
+                    <>
+                        <Save size={16} className="shrink-0" aria-hidden />
+                        Save changes
+                    </>
+                )}
+            </button>
+        );
+    };
 
     return (
-        <div className="max-w-6xl mx-auto pb-24 lg:pb-8">
+        <div className="max-w-6xl mx-auto pb-24">
             <InvoiceLimitModal
                 open={limitModalOpen}
                 onClose={() => setLimitModalOpen(false)}
                 usage={invoiceUsage}
             />
 
-            <Link
-                to={backHref}
+            <ShareDocumentModal
+                open={Boolean(shareModal)}
+                docLabel="invoice"
+                docNumber={shareModal ? getDisplayNumber(shareModal.invoice) : ''}
+                clientName={shareModal?.client?.name}
+                shareReady={sharePdfReady}
+                onShare={handleShareFromModal}
+                onSkip={handleSkipShare}
+            />
+
+            <button
+                type="button"
+                onClick={handleLeavePage}
                 className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-brand mb-6 transition-colors"
             >
                 <ArrowLeft size={16} aria-hidden />
-                {id ? 'Back to invoice' : 'Back to invoices'}
-            </Link>
+                {isDraftEdit ? 'Back to drafts' : id ? 'Back to invoice' : 'Back to invoices'}
+            </button>
 
             <div className="mb-8">
-                <h1 className="page-title">{id ? 'Edit invoice' : 'Create invoice'}</h1>
-                <p className="page-subtitle">
-                    {id ? 'Update details before sending to your client' : 'Fill in the details below'}
-                </p>
-                {!id && usageLabel ? (
+                <div>
+                    <h1 className="page-title">{pageTitle}</h1>
+                    <p className="page-subtitle">
+                        {isDraftFlow
+                            ? 'Save as draft to keep your progress, or send when you are ready'
+                            : id
+                                ? 'Update details before sending to your client'
+                                : 'Fill in the details below'}
+                    </p>
+                </div>
+                {isDraftFlow && usageLabel ? (
                     <p className="mt-3 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 inline-block">
                         {usageLabel}
                         {invoiceUsage.remaining > 0
@@ -328,7 +623,7 @@ const CreateInvoice = () => {
                                     <label className="label">Invoice number</label>
                                     <input
                                         type="text"
-                                        value={formData.invoiceNumber || (id ? '—' : 'Loading…')}
+                                        value={invoiceNumberDisplay}
                                         className="input-field bg-slate-50 text-slate-500 cursor-not-allowed"
                                         readOnly
                                         disabled
@@ -358,6 +653,7 @@ const CreateInvoice = () => {
                                         id="invoice-discount-type"
                                         value={formData.discountType || 'fixed'}
                                         onChange={(val) => {
+                                            markDirty();
                                             setFormData((prev) => ({ ...prev, discountType: val }));
                                         }}
                                         options={DISCOUNT_TYPE_OPTIONS}
@@ -392,6 +688,7 @@ const CreateInvoice = () => {
                                         id="invoice-date"
                                         value={formData.date}
                                         onChange={(val) => {
+                                            markDirty();
                                             setFormData((prev) => ({ ...prev, date: val }));
                                             clearFieldError(setFieldErrors, 'date');
                                         }}
@@ -407,6 +704,7 @@ const CreateInvoice = () => {
                                         id="invoice-due-date"
                                         value={formData.dueDate}
                                         onChange={(val) => {
+                                            markDirty();
                                             setFormData((prev) => ({ ...prev, dueDate: val }));
                                             clearFieldError(setFieldErrors, 'dueDate');
                                         }}
@@ -438,14 +736,14 @@ const CreateInvoice = () => {
                                 id="invoice-client"
                                 value={formData.clientId}
                                 onChange={(val) => {
+                                    markDirty();
                                     setFormData((prev) => ({ ...prev, clientId: val }));
                                     clearFieldError(setFieldErrors, 'clientId');
                                 }}
                                 options={clients.map((client) => ({
                                     value: client.id,
-                                    label: `${client.name}${
-                                        getClientBusiness(client) ? ` — ${getClientBusiness(client)}` : ''
-                                    }`,
+                                    label: `${client.name}${getClientBusiness(client) ? ` — ${getClientBusiness(client)}` : ''
+                                        }`,
                                 }))}
                                 placeholder="Choose a client"
                                 error={Boolean(fieldErrors.clientId)}
@@ -613,9 +911,10 @@ const CreateInvoice = () => {
                                     type="checkbox"
                                     id="isRecurring"
                                     checked={formData.isRecurring}
-                                    onChange={(e) =>
-                                        setFormData({ ...formData, isRecurring: e.target.checked })
-                                    }
+                                    onChange={(e) => {
+                                        markDirty();
+                                        setFormData({ ...formData, isRecurring: e.target.checked });
+                                    }}
                                     className="h-5 w-5 rounded border-slate-300 text-brand focus:ring-brand/30"
                                 />
                                 <span className="text-sm font-medium text-slate-700">
@@ -629,12 +928,13 @@ const CreateInvoice = () => {
                                         <CustomSelect
                                             id="invoice-recurring-frequency"
                                             value={formData.recurringFrequency}
-                                            onChange={(val) =>
+                                            onChange={(val) => {
+                                                markDirty();
                                                 setFormData((prev) => ({
                                                     ...prev,
                                                     recurringFrequency: val,
-                                                }))
-                                            }
+                                                }));
+                                            }}
                                             options={RECURRING_FREQUENCY_OPTIONS}
                                             placeholder="Frequency"
                                         />
@@ -644,12 +944,13 @@ const CreateInvoice = () => {
                                         <DatePickerField
                                             id="invoice-recurring-end"
                                             value={formData.recurringEndDate}
-                                            onChange={(val) =>
+                                            onChange={(val) => {
+                                                markDirty();
                                                 setFormData((prev) => ({
                                                     ...prev,
                                                     recurringEndDate: val,
-                                                }))
-                                            }
+                                                }));
+                                            }}
                                             min={formData.date || undefined}
                                             placeholder="No end date"
                                         />
@@ -670,8 +971,8 @@ const CreateInvoice = () => {
                         </FormSection>
                     </div>
 
-                    <div className="xl:col-span-1">
-                        <div className="card xl:sticky xl:top-24 space-y-5">
+                    <div className="xl:col-span-1 space-y-4">
+                        <div className="card space-y-5">
                             <h3 className="text-sm font-semibold text-slate-900">Summary</h3>
 
                             {selectedClient && (
@@ -719,15 +1020,15 @@ const CreateInvoice = () => {
                                     </dd>
                                 </div>
                             </dl>
-
-                            <div className="hidden lg:block pt-1">{saveButton(true)}</div>
                         </div>
                     </div>
                 </div>
             </form>
 
-            <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden border-t border-slate-200 bg-white/95 backdrop-blur-sm shadow-[0_-4px_24px_rgba(15,23,42,0.08)] p-4">
-                {saveButton(true)}
+            <div className="fixed bottom-0 left-0 right-0 md:left-64 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-sm shadow-[0_-4px_16px_rgba(15,23,42,0.06)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+                <div className="max-w-6xl mx-auto w-full">
+                    {actionButtons()}
+                </div>
             </div>
         </div>
     );
