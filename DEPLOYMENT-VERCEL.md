@@ -84,6 +84,42 @@ Set `FRONTEND_URL` to your production app URL for payment redirects.
 
 ---
 
+## 7. Security checklist
+
+### Backend environment (Vercel)
+
+| Variable | Production value |
+|----------|------------------|
+| `NODE_ENV` | `production` (optional; `VERCEL=1` also enables production checks) |
+| `JWT_SECRET` | At least 32 random characters — never reuse dev secrets |
+| `MONGO_URI` | Atlas `mongodb+srv://...` with a **dedicated app user** (read/write on `waraqah` only) |
+| `FRONTEND_URL` | Your live frontend URL — required for CORS and Paystack redirects |
+| `ALLOW_DEV_PLAN` | **`false`** — dev premium toggle must not work in production |
+| `CORS_ALLOW_VERCEL` | `true` if you use Vercel preview URLs |
+
+### MongoDB Atlas lockdown
+
+1. Create a database user with **readWrite** on the `waraqah` database only (not `atlasAdmin`).
+2. Use a strong password (32+ characters) and store it only in Vercel env vars.
+3. **Network access:** Vercel serverless uses dynamic IPs, so Atlas often needs `0.0.0.0/0`. Mitigate with strong DB credentials, app authentication, and API rate limits — not IP allowlisting alone.
+4. Use TLS (`mongodb+srv://`) — Atlas default.
+5. Enable backups on your cluster; enable audit logs if your Atlas tier supports them.
+6. Never commit `MONGO_URI` to git.
+
+### API hardening (built into the backend)
+
+- Security headers (`helmet`), HPP protection, MongoDB operator sanitization
+- IP rate limits stored in MongoDB (works across Vercel instances)
+- Input sanitization on clients, invoices, auth, and business settings
+- Paystack webhook signature verification
+- Generic error messages in production (no internal details leaked)
+
+### Frontend (Vercel)
+
+Security response headers are set in `vercel.json` (`X-Frame-Options`, CSP, etc.). Redeploy the frontend after changing them.
+
+---
+
 ## Checklist
 
 - [ ] `VITE_API_URL` set on **frontend** Vercel project → **redeploy frontend**
@@ -91,3 +127,5 @@ Set `FRONTEND_URL` to your production app URL for payment redirects.
 - [ ] `FRONTEND_URL` matches your Vercel app URL
 - [ ] `https://your-backend.vercel.app/api/health` works on your phone
 - [ ] Login request in Network tab points to the HTTPS backend
+- [ ] `JWT_SECRET` is 32+ characters; `ALLOW_DEV_PLAN=false` on backend
+- [ ] Atlas uses a restricted DB user; `MONGO_URI` is not localhost
