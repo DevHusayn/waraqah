@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { lockBodyScroll } from '../utils/bodyScrollLock';
 
 /**
  * Shared modal backdrop + panel. Locks body scroll while open.
@@ -18,42 +19,19 @@ export default function ModalShell({
 }) {
     useEffect(() => {
         if (!open) return undefined;
+        return lockBodyScroll();
+    }, [open]);
 
-        const scrollY = window.scrollY;
-        const { style } = document.body;
-        const prev = {
-            position: style.position,
-            top: style.top,
-            left: style.left,
-            right: style.right,
-            overflow: style.overflow,
-            width: style.width,
-        };
-
-        style.position = 'fixed';
-        style.top = `-${scrollY}px`;
-        style.left = '0';
-        style.right = '0';
-        style.width = '100%';
-        style.overflow = 'hidden';
+    useEffect(() => {
+        if (!open || !onClose) return undefined;
 
         const onKeyDown = (e) => {
-            if (e.key === 'Escape' && onClose) {
+            if (e.key === 'Escape') {
                 onClose();
             }
         };
         document.addEventListener('keydown', onKeyDown);
-
-        return () => {
-            document.removeEventListener('keydown', onKeyDown);
-            style.position = prev.position;
-            style.top = prev.top;
-            style.left = prev.left;
-            style.right = prev.right;
-            style.width = prev.width;
-            style.overflow = prev.overflow;
-            window.scrollTo(0, scrollY);
-        };
+        return () => document.removeEventListener('keydown', onKeyDown);
     }, [open, onClose]);
 
     if (!open) return null;

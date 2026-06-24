@@ -32,7 +32,8 @@ export default function InvoiceLimitModal({ open, onClose, usage }) {
                     ({used}/{limit}). Upgrade to Premium for unlimited invoices, custom logos, and more.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
-                    <Link to="/upgrade" className="btn-primary flex-1 text-center" onClick={onClose}>
+                    <Link to="/upgrade" className="premium-upgrade-btn mx-auto text-sm py-2 px-4" onClick={onClose}>
+                        <Crown size={16} className="text-amber-600 shrink-0" aria-hidden />
                         Upgrade to Premium
                     </Link>
                     <button type="button" onClick={onClose} className="btn-secondary flex-1">

@@ -2,13 +2,21 @@ import FieldValidationMessage from '../FieldValidationMessage';
 import RequiredLabel from '../RequiredLabel';
 import { inputClass } from '../../utils/formFieldValidation';
 
-export default function ProfileFormFields({ formData, errors, onChange }) {
+export default function ProfileFormFields({
+    formData,
+    errors,
+    onChange,
+    idPrefix = 'settings-',
+    emailInputId,
+}) {
+    const fieldId = (key) => `${idPrefix}${key}`;
+    const businessEmailId = emailInputId || fieldId('email');
     return (
         <div className="space-y-5">
             <div>
-                <RequiredLabel htmlFor="settings-name">Business name</RequiredLabel>
+                <RequiredLabel htmlFor={fieldId('name')}>Business name</RequiredLabel>
                 <input
-                    id="settings-name"
+                    id={fieldId('name')}
                     type="text"
                     name="name"
                     value={formData.name || ''}
@@ -21,9 +29,9 @@ export default function ProfileFormFields({ formData, errors, onChange }) {
             </div>
 
             <div>
-                <RequiredLabel htmlFor="settings-address">Business address</RequiredLabel>
+                <RequiredLabel htmlFor={fieldId('address')}>Business address</RequiredLabel>
                 <textarea
-                    id="settings-address"
+                    id={fieldId('address')}
                     name="address"
                     value={formData.address || ''}
                     onChange={onChange}
@@ -37,9 +45,9 @@ export default function ProfileFormFields({ formData, errors, onChange }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                    <RequiredLabel htmlFor="settings-email">Email</RequiredLabel>
+                    <RequiredLabel htmlFor={businessEmailId}>Email</RequiredLabel>
                     <input
-                        id="settings-email"
+                        id={businessEmailId}
                         type="email"
                         name="email"
                         value={formData.email || ''}
@@ -51,9 +59,9 @@ export default function ProfileFormFields({ formData, errors, onChange }) {
                     <FieldValidationMessage message={errors.email} />
                 </div>
                 <div>
-                    <RequiredLabel htmlFor="settings-phone">Phone</RequiredLabel>
+                    <RequiredLabel htmlFor={fieldId('phone')}>Phone</RequiredLabel>
                     <input
-                        id="settings-phone"
+                        id={fieldId('phone')}
                         type="tel"
                         name="phone"
                         value={formData.phone || ''}
@@ -67,11 +75,11 @@ export default function ProfileFormFields({ formData, errors, onChange }) {
             </div>
 
             <div>
-                <label htmlFor="settings-website" className="label">
+                <label htmlFor={fieldId('website')} className="label">
                     Website <span className="text-zinc-400 font-normal">(optional)</span>
                 </label>
                 <input
-                    id="settings-website"
+                    id={fieldId('website')}
                     type="url"
                     name="website"
                     value={formData.website || ''}

@@ -1,18 +1,20 @@
 import FieldValidationMessage from '../FieldValidationMessage';
 import { inputClass } from '../../utils/formFieldValidation';
 
-export default function AccountFormFields({ formData, errors, onChange }) {
+export default function AccountFormFields({ formData, errors, onChange, idPrefix = 'settings-' }) {
+    const paymentFieldId = (suffix) => `${idPrefix}payment-${suffix}`;
+
     return (
         <div className="space-y-5">
             <p className="text-sm text-zinc-500">
                 Bank details appear on invoice PDFs so clients know where to pay you.
             </p>
             <div>
-                <label htmlFor="settings-payment-account-name" className="label">
+                <label htmlFor={paymentFieldId('account-name')} className="label">
                     Account name
                 </label>
                 <input
-                    id="settings-payment-account-name"
+                    id={paymentFieldId('account-name')}
                     type="text"
                     name="paymentAccountName"
                     value={formData.paymentAccountName || ''}
@@ -25,11 +27,11 @@ export default function AccountFormFields({ formData, errors, onChange }) {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                    <label htmlFor="settings-payment-bank-name" className="label">
+                    <label htmlFor={paymentFieldId('bank-name')} className="label">
                         Bank name
                     </label>
                     <input
-                        id="settings-payment-bank-name"
+                        id={paymentFieldId('bank-name')}
                         type="text"
                         name="paymentBankName"
                         value={formData.paymentBankName || ''}
@@ -41,11 +43,11 @@ export default function AccountFormFields({ formData, errors, onChange }) {
                     <FieldValidationMessage message={errors.paymentBankName} />
                 </div>
                 <div>
-                    <label htmlFor="settings-payment-account-number" className="label">
+                    <label htmlFor={paymentFieldId('account-number')} className="label">
                         Account number
                     </label>
                     <input
-                        id="settings-payment-account-number"
+                        id={paymentFieldId('account-number')}
                         type="text"
                         name="paymentAccountNumber"
                         value={formData.paymentAccountNumber || ''}
@@ -58,11 +60,11 @@ export default function AccountFormFields({ formData, errors, onChange }) {
                 </div>
             </div>
             <div>
-                <label htmlFor="settings-payment-instructions" className="label">
+                <label htmlFor={paymentFieldId('instructions')} className="label">
                     Payment instructions <span className="text-zinc-400 font-normal">(optional)</span>
                 </label>
                 <textarea
-                    id="settings-payment-instructions"
+                    id={paymentFieldId('instructions')}
                     name="paymentInstructions"
                     value={formData.paymentInstructions || ''}
                     onChange={onChange}

@@ -11,6 +11,7 @@ function SidebarAvatar({ businessInfo, premium }) {
     const logo = getCompanyLogoAvatarUrl(businessInfo);
     const showLogo = premium && logo.length > 0;
     const initials = getBusinessInitials(businessInfo.name);
+    const brandColor = businessInfo.brandColor || '#0284c7';
 
     if (showLogo) {
         return (
@@ -24,7 +25,8 @@ function SidebarAvatar({ businessInfo, premium }) {
 
     return (
         <div
-            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-brand text-[10px] font-medium text-white shadow-soft"
+            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-[10px] font-medium text-white shadow-soft"
+            style={{ backgroundColor: brandColor }}
             aria-hidden
         >
             {initials}
@@ -60,10 +62,8 @@ export default function SidebarAccountFooter({ onNavigate }) {
     return (
         <div className="mt-auto pt-4 border-t border-zinc-200/40">
             <div
-                className={`rounded-lg p-2 shadow-soft backdrop-blur-sm ${
-                    premium
-                        ? 'border-2 border-amber-300/80 bg-amber-50'
-                        : 'border border-zinc-200/50 bg-white/70'
+                className={`rounded-lg p-2 shadow-soft backdrop-blur-sm border bg-white/70 ${
+                    premium ? 'border-amber-300/80' : 'border-zinc-200/50'
                 }`}
             >
                 <Link

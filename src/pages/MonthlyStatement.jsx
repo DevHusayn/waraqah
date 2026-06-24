@@ -66,8 +66,9 @@ export default function MonthlyStatement() {
                         action={
                             <Link
                                 to="/upgrade"
-                                className="btn-primary inline-flex shadow-lg shadow-brand/20"
+                                className="premium-upgrade-btn text-sm py-2 px-4"
                             >
+                                <Crown size={16} className="text-amber-600 shrink-0" aria-hidden />
                                 Upgrade to Premium
                             </Link>
                         }

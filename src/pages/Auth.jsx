@@ -3,15 +3,10 @@ import { ArrowLeft, Eye, EyeOff, FileText, Shield, Zap } from 'lucide-react';
 import Spinner from '../components/Spinner';
 import AlertModal from '../components/AlertModal';
 import ForgotPasswordModal from '../components/ForgotPasswordModal';
+import RegisterWizard, { clearRegisterDraft } from '../components/auth/RegisterWizard';
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { APP_CURRENCY } from '../utils/currency';
-import {
-    isStrongPassword,
-    getPasswordStrength,
-    PASSWORD_REQUIREMENTS_MESSAGE,
-} from '../utils/passwordValidation';
 import WaraqahLogo from '../components/WaraqahLogo';
 import RequiredLabel from '../components/RequiredLabel';
 import { API_BASE, getNetworkErrorMessage } from '../utils/apiConfig';
@@ -28,34 +23,12 @@ const BASE_URL = API_BASE;
 const AUTH_URL = `${BASE_URL}/auth`;
 
 const LOGIN_FIELD_ORDER = ['email', 'password'];
-const REGISTER_FIELD_ORDER = [
-    'email',
-    'password',
-    'confirmPassword',
-    'name',
-    'businessEmail',
-    'address',
-    'phone',
-];
 
 const FEATURES = [
     { id: 'pdf', icon: FileText, text: 'Professional PDF invoices & receipts' },
     { id: 'track', icon: Zap, text: 'Mark paid and track revenue instantly' },
     { id: 'storage', icon: Shield, text: 'Secure cloud storage for your records' },
 ];
-
-function getFieldId(key, isLogin) {
-    const ids = {
-        email: isLogin ? 'auth-email' : 'reg-email',
-        password: isLogin ? 'auth-password' : 'reg-password',
-        confirmPassword: 'reg-confirm-password',
-        name: 'reg-name',
-        businessEmail: 'reg-business-email',
-        address: 'reg-address',
-        phone: 'reg-phone',
-    };
-    return ids[key];
-}
 
 function buildLoginFieldErrors(form) {
     return {
@@ -66,40 +39,6 @@ function buildLoginFieldErrors(form) {
         ),
         password: validateRequired(form.password, 'Please enter your password.'),
     };
-}
-
-function buildRegisterFieldErrors(form, confirmPassword) {
-    const errors = {
-        email: validateEmail(
-            form.email,
-            'Please enter your email address.',
-            'Please enter a valid email address.'
-        ),
-        password: validateRequired(form.password, 'Please enter your password.'),
-        confirmPassword: !confirmPassword.trim()
-            ? 'Please confirm your password.'
-            : form.password !== confirmPassword
-              ? 'Passwords do not match.'
-              : '',
-        name: validateRequired(form.name, 'Please enter your business name.'),
-        businessEmail: validateEmail(
-            form.businessEmail,
-            'Please enter your business email.',
-            'Please enter a valid business email.'
-        ),
-        address: validateRequired(form.address, 'Please enter your business address.'),
-        phone: validateRequired(form.phone, 'Please enter your phone number.'),
-    };
-
-    if (form.password && !errors.password && !isStrongPassword(form.password)) {
-        errors.password = PASSWORD_REQUIREMENTS_MESSAGE;
-    }
-
-    return errors;
-}
-
-function focusField(fieldKey, isLogin) {
-    focusFieldById(getFieldId(fieldKey, isLogin));
 }
 
 function PasswordToggle({ visible, onToggle, label }) {
@@ -120,22 +59,9 @@ function Auth() {
     const { fetchUserData, resetAll } = useInvoice();
     const [searchParams] = useSearchParams();
     const [isLogin, setIsLogin] = useState(searchParams.get('mode') !== 'register');
-    const initialForm = {
-        email: '',
-        password: '',
-        name: '',
-        address: '',
-        businessEmail: '',
-        phone: '',
-        website: '',
-        defaultCurrency: APP_CURRENCY,
-        brandColor: '#0284c7',
-    };
-    const [form, setForm] = useState(initialForm);
+    const [form, setForm] = useState({ email: '', password: '' });
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [confirmPassword, setConfirmPassword] = useState('');
     const [resetModal, setResetModal] = useState(false);
     const [resetLoading, setResetLoading] = useState(false);
     const [submitLoading, setSubmitLoading] = useState(false);
@@ -147,17 +73,19 @@ function Auth() {
     const returnTo = searchParams.get('returnTo');
 
     useEffect(() => {
-        setForm(initialForm);
+        if (isLogin) {
+            setForm({ email: '', password: '' });
+        }
     }, [isLogin, location.pathname, location.key]);
 
     useEffect(() => {
-        if (location.pathname === '/auth') {
-            setForm(initialForm);
+        if (location.pathname === '/auth' && isLogin) {
+            setForm({ email: '', password: '' });
         }
-    }, [location.pathname, location.key]);
+    }, [location.pathname, location.key, isLogin]);
 
     useEffect(() => {
-        const resetForm = () => setForm(initialForm);
+        const resetForm = () => setForm({ email: '', password: '' });
         window.addEventListener('app-logout', resetForm);
         return () => window.removeEventListener('app-logout', resetForm);
     }, []);
@@ -170,39 +98,23 @@ function Auth() {
 
     useEffect(() => {
         setError('');
-        setConfirmPassword('');
         setFieldErrors({});
     }, [isLogin]);
-
-    useEffect(() => {
-        if (isLogin) return undefined;
-        const timer = window.setTimeout(() => {
-            const hasConfirm = confirmPassword.length > 0;
-            const hasPassword = form.password.length > 0;
-            if (!hasConfirm && !hasPassword) {
-                setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
-                return;
-            }
-            if (hasConfirm && form.password !== confirmPassword) {
-                setFieldErrors((prev) => ({
-                    ...prev,
-                    confirmPassword: 'Passwords do not match.',
-                }));
-            } else if (hasConfirm) {
-                setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
-            }
-        }, 400);
-        return () => window.clearTimeout(timer);
-    }, [confirmPassword, form.password, isLogin]);
-
-    const passwordStrength = !isLogin ? getPasswordStrength(form.password) : null;
 
     const switchMode = (login) => {
         setError('');
         setFieldErrors({});
         setIsLogin(login);
+        if (login) {
+            clearRegisterDraft();
+        }
         const params = new URLSearchParams(searchParams);
         params.set('mode', login ? 'login' : 'register');
+        if (!login) {
+            params.set('step', '1');
+        } else {
+            params.delete('step');
+        }
         if (returnTo) params.set('returnTo', returnTo);
         navigate({ pathname: '/auth', search: `?${params.toString()}` }, { replace: true });
     };
@@ -225,26 +137,16 @@ function Auth() {
         }
     };
 
-    const handleConfirmPasswordChange = (e) => {
-        setConfirmPassword(e.target.value);
-        if (fieldErrors.confirmPassword) {
-            setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
 
-        const errors = isLogin
-            ? buildLoginFieldErrors(form)
-            : buildRegisterFieldErrors(form, confirmPassword);
-        const order = isLogin ? LOGIN_FIELD_ORDER : REGISTER_FIELD_ORDER;
-        const firstInvalid = firstFieldError(errors, order);
+        const errors = buildLoginFieldErrors(form);
+        const firstInvalid = firstFieldError(errors, LOGIN_FIELD_ORDER);
 
         if (firstInvalid) {
             setFieldErrors(errors);
-            focusField(firstInvalid, isLogin);
+            focusFieldById(firstInvalid === 'email' ? 'auth-email' : 'auth-password');
             return;
         }
 
@@ -252,24 +154,12 @@ function Auth() {
         setSubmitLoading(true);
         try {
             const email = form.email.trim().toLowerCase();
-            let body = { email, password: form.password };
-            if (!isLogin) {
-                body.businessInfo = {
-                    name: form.name,
-                    address: form.address,
-                    email: form.businessEmail.trim().toLowerCase(),
-                    phone: form.phone,
-                    website: form.website,
-                    defaultCurrency: APP_CURRENCY,
-                    brandColor: form.brandColor,
-                };
-            }
             let res;
             try {
-                res = await fetch(`${AUTH_URL}/${isLogin ? 'login' : 'register'}`, {
+                res = await fetch(`${AUTH_URL}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body),
+                    body: JSON.stringify({ email, password: form.password }),
                 });
             } catch {
                 throw new Error(getNetworkErrorMessage());
@@ -361,7 +251,6 @@ function Auth() {
                 loading={resetLoading}
             />
 
-            {/* Brand panel */}
             <div className="hidden lg:flex lg:h-screen lg:sticky lg:top-0 flex-col justify-between bg-gradient-to-br from-brand via-brand to-brand-hover text-white p-10 xl:p-12">
                 <div>
                     <WaraqahLogo size="lg" inverted iconStyle="solid" />
@@ -386,351 +275,177 @@ function Auth() {
                 <p className="text-sm text-white/60">Trusted by businesses across Nigeria</p>
             </div>
 
-            {/* Form panel */}
             <div className="min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col bg-zinc-50/80">
-                <div className="lg:hidden sticky top-0 z-30 shrink-0 border-b border-zinc-200/60 bg-zinc-50/95 backdrop-blur-md">
-                    <div className="max-w-[420px] mx-auto px-5 py-3 flex items-center justify-between gap-4">
-                        <Link
-                            to="/"
-                            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
-                        >
-                            <ArrowLeft size={15} aria-hidden />
-                            Back to home
-                        </Link>
-                        <WaraqahLogo size="sm" />
-                    </div>
-                </div>
-
                 <div
-                    className={`flex-1 flex flex-col px-5 py-6 sm:px-8 sm:py-10 ${
+                    className={`flex-1 flex flex-col px-5 py-8 sm:px-8 sm:py-10 ${
                         !isLogin ? 'justify-start' : 'justify-center'
                     } lg:justify-center`}
                 >
                     <div className="w-full max-w-[420px] mx-auto">
                         <Link
                             to="/"
-                            className="hidden lg:inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-500 hover:text-zinc-900 mb-5 transition-colors"
+                            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-500 hover:text-zinc-900 mb-6 transition-colors"
                         >
                             <ArrowLeft size={15} aria-hidden />
                             Back to home
                         </Link>
 
+                        <div className="mb-6">
+                            <WaraqahLogo size="md" />
+                        </div>
+
                         <div className="rounded-xl border border-zinc-200/60 bg-white shadow-soft p-6 sm:p-8">
-                            <div className="mb-6">
-                                <h1 className="page-title">
-                                    {isLogin ? 'Welcome back' : 'Create your account'}
-                                </h1>
-                                <p className="page-subtitle">
-                                    {isLogin
-                                        ? 'Sign in to manage your invoices'
-                                        : 'Start invoicing in seconds'}
-                                </p>
-                            </div>
-
-                            <div className="flex rounded-md border border-zinc-200/80 bg-zinc-50/50 p-1 mb-6">
-                                <button
-                                    type="button"
-                                    onClick={() => switchMode(true)}
-                                    disabled={submitLoading}
-                                    className={`flex-1 rounded-[5px] py-2 text-[13px] font-medium transition-all duration-200 ${
-                                        isLogin
-                                            ? 'bg-brand-light text-brand shadow-soft'
-                                            : 'text-zinc-500 hover:text-zinc-800'
-                                    }`}
-                                >
-                                    Sign in
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => switchMode(false)}
-                                    disabled={submitLoading}
-                                    className={`flex-1 rounded-[5px] py-2 text-[13px] font-medium transition-all duration-200 ${
-                                        !isLogin
-                                            ? 'bg-brand-light text-brand shadow-soft'
-                                            : 'text-zinc-500 hover:text-zinc-800'
-                                    }`}
-                                >
-                                    Register
-                                </button>
-                            </div>
-
-                            <form
-                                ref={authFormRef}
-                                onSubmit={handleSubmit}
-                                noValidate
-                                className="space-y-4"
-                            >
-                        {isLogin ? (
-                            <>
-                                <div>
-                                    <RequiredLabel htmlFor="auth-email">Email</RequiredLabel>
-                                    <input
-                                        id="auth-email"
-                                        type="email"
-                                        name="email"
-                                        value={form.email}
-                                        onChange={handleChange}
-                                        className={inputClass(Boolean(fieldErrors.email))}
-                                        placeholder="you@example.com"
-                                        autoComplete="email"
-                                        aria-invalid={Boolean(fieldErrors.email)}
-                                    />
-                                    <FieldValidationMessage message={fieldErrors.email} />
-                                </div>
-                                <div className="relative">
-                                    <RequiredLabel htmlFor="auth-password">Password</RequiredLabel>
-                                    <input
-                                        id="auth-password"
-                                        type={showPassword ? 'text' : 'password'}
-                                        name="password"
-                                        value={form.password}
-                                        onChange={handleChange}
-                                        className={inputClass(Boolean(fieldErrors.password), 'pr-11')}
-                                        placeholder="••••••••"
-                                        autoComplete="current-password"
-                                        aria-invalid={Boolean(fieldErrors.password)}
-                                    />
-                                    <PasswordToggle
-                                        visible={showPassword}
-                                        onToggle={() => setShowPassword(!showPassword)}
-                                        label="password"
-                                    />
-                                    <FieldValidationMessage message={fieldErrors.password} />
-                                </div>
-                                <div className="flex justify-end">
-                                    <button
-                                        type="button"
-                                        className="text-[13px] font-medium text-brand hover:underline"
-                                        onClick={() => setResetModal(true)}
-                                    >
-                                        Forgot password?
-                                    </button>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div className="space-y-4">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
-                                        Account
-                                    </p>
-                                    <div>
-                                        <RequiredLabel htmlFor="reg-email">Email</RequiredLabel>
-                                        <input
-                                            id="reg-email"
-                                            type="email"
-                                            name="email"
-                                            value={form.email}
-                                            onChange={handleChange}
-                                            className={inputClass(Boolean(fieldErrors.email))}
-                                            placeholder="you@example.com"
-                                            autoComplete="email"
-                                            aria-invalid={Boolean(fieldErrors.email)}
-                                        />
-                                        <FieldValidationMessage message={fieldErrors.email} />
-                                    </div>
-                                    <div className="relative">
-                                        <RequiredLabel htmlFor="reg-password">Password</RequiredLabel>
-                                        <input
-                                            id="reg-password"
-                                            type={showPassword ? 'text' : 'password'}
-                                            name="password"
-                                            value={form.password}
-                                            onChange={handleChange}
-                                            className={inputClass(Boolean(fieldErrors.password), 'pr-11')}
-                                            placeholder="••••••••"
-                                            autoComplete="new-password"
-                                            aria-invalid={Boolean(fieldErrors.password)}
-                                        />
-                                        <PasswordToggle
-                                            visible={showPassword}
-                                            onToggle={() => setShowPassword(!showPassword)}
-                                            label="password"
-                                        />
-                                        <FieldValidationMessage message={fieldErrors.password} />
-                                        {passwordStrength && form.password && (
-                                            <div className="mt-2">
-                                                <div className="h-1 w-full rounded-full bg-zinc-100 overflow-hidden">
-                                                    <div
-                                                        className={`h-full rounded-full transition-all ${passwordStrength.barClass}`}
-                                                        style={{ width: `${passwordStrength.percent}%` }}
-                                                    />
-                                                </div>
-                                                <p
-                                                    className={`mt-1 text-xs font-medium ${
-                                                        passwordStrength.level === 'strong'
-                                                            ? 'text-emerald-600'
-                                                            : passwordStrength.level === 'fair'
-                                                              ? 'text-amber-600'
-                                                              : 'text-red-600'
-                                                    }`}
-                                                >
-                                                    {passwordStrength.label}
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="relative">
-                                        <RequiredLabel htmlFor="reg-confirm-password">
-                                            Confirm password
-                                        </RequiredLabel>
-                                        <input
-                                            id="reg-confirm-password"
-                                            type={showConfirmPassword ? 'text' : 'password'}
-                                            value={confirmPassword}
-                                            onChange={handleConfirmPasswordChange}
-                                            className={inputClass(
-                                                Boolean(fieldErrors.confirmPassword),
-                                                'pr-11'
-                                            )}
-                                            placeholder="••••••••"
-                                            autoComplete="new-password"
-                                            aria-invalid={Boolean(fieldErrors.confirmPassword)}
-                                        />
-                                        <PasswordToggle
-                                            visible={showConfirmPassword}
-                                            onToggle={() =>
-                                                setShowConfirmPassword(!showConfirmPassword)
-                                            }
-                                            label="confirm password"
-                                        />
-                                        <FieldValidationMessage message={fieldErrors.confirmPassword} />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4 pt-2 border-t border-zinc-100">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
-                                        Business details
-                                    </p>
-                                    <div>
-                                        <RequiredLabel htmlFor="reg-name">Business name</RequiredLabel>
-                                        <input
-                                            id="reg-name"
-                                            type="text"
-                                            name="name"
-                                            value={form.name}
-                                            onChange={handleChange}
-                                            className={inputClass(Boolean(fieldErrors.name))}
-                                            placeholder="Your business name"
-                                            aria-invalid={Boolean(fieldErrors.name)}
-                                        />
-                                        <FieldValidationMessage message={fieldErrors.name} />
-                                    </div>
-                                    <div>
-                                        <RequiredLabel htmlFor="reg-business-email">
-                                            Business email
-                                        </RequiredLabel>
-                                        <input
-                                            id="reg-business-email"
-                                            type="email"
-                                            name="businessEmail"
-                                            value={form.businessEmail}
-                                            onChange={handleChange}
-                                            className={inputClass(Boolean(fieldErrors.businessEmail))}
-                                            placeholder="billing@yourbusiness.com"
-                                            aria-invalid={Boolean(fieldErrors.businessEmail)}
-                                        />
-                                        <FieldValidationMessage message={fieldErrors.businessEmail} />
-                                    </div>
-                                    <div>
-                                        <RequiredLabel htmlFor="reg-address">Address</RequiredLabel>
-                                        <input
-                                            id="reg-address"
-                                            type="text"
-                                            name="address"
-                                            value={form.address}
-                                            onChange={handleChange}
-                                            className={inputClass(Boolean(fieldErrors.address))}
-                                            placeholder="123 Main Street, Lagos"
-                                            aria-invalid={Boolean(fieldErrors.address)}
-                                        />
-                                        <FieldValidationMessage message={fieldErrors.address} />
-                                    </div>
-                                    <div>
-                                        <RequiredLabel htmlFor="reg-phone">Phone</RequiredLabel>
-                                        <input
-                                            id="reg-phone"
-                                            type="tel"
-                                            name="phone"
-                                            value={form.phone}
-                                            onChange={handleChange}
-                                            className={inputClass(Boolean(fieldErrors.phone))}
-                                            placeholder="+234 810 000 0000"
-                                            aria-invalid={Boolean(fieldErrors.phone)}
-                                        />
-                                        <FieldValidationMessage message={fieldErrors.phone} />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="reg-website" className="label">
-                                            Website <span className="text-zinc-400 font-normal">(optional)</span>
-                                        </label>
-                                        <input
-                                            id="reg-website"
-                                            type="url"
-                                            name="website"
-                                            value={form.website}
-                                            onChange={handleChange}
-                                            className="input-field"
-                                            placeholder="https://yourbusiness.com"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="reg-brand-color" className="label">
-                                            Brand color
-                                        </label>
-                                        <div className="flex items-center gap-3">
-                                            <input
-                                                id="reg-brand-color"
-                                                type="color"
-                                                name="brandColor"
-                                                value={form.brandColor}
-                                                onChange={handleChange}
-                                                className="h-11 w-14 rounded-lg border border-zinc-200 cursor-pointer p-1"
-                                            />
-                                            <span className="text-sm font-mono text-zinc-500">
-                                                {form.brandColor}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-
-                        {error && (
-                            <p className="text-[13px] text-red-700 bg-red-50 border border-red-200/80 rounded-md px-3 py-2">
-                                {error}
-                            </p>
-                        )}
-
-                        <button
-                            type="submit"
-                            className="btn-primary w-full !py-2.5"
-                            disabled={submitLoading}
-                            aria-busy={submitLoading}
-                        >
-                            {submitLoading ? (
+                            {isLogin ? (
                                 <>
-                                    <Spinner size="sm" inline />
-                                    {isLogin ? 'Signing in…' : 'Creating account…'}
-                                </>
-                            ) : isLogin ? (
-                                'Sign in'
-                            ) : (
-                                'Create account'
-                            )}
-                        </button>
-                            </form>
+                                    <div className="mb-6">
+                                        <h1 className="page-title">Welcome back</h1>
+                                        <p className="page-subtitle">Sign in to manage your invoices</p>
+                                    </div>
 
-                            <p className="mt-5 pt-5 border-t border-zinc-100 text-center text-[13px] text-zinc-500">
-                                {isLogin ? "Don't have an account?" : 'Already have an account?'}{' '}
-                                <button
-                                    type="button"
-                                    onClick={() => switchMode(!isLogin)}
-                                    disabled={submitLoading}
-                                    className="font-medium text-brand hover:underline disabled:opacity-50"
-                                >
-                                    {isLogin ? 'Register free' : 'Sign in'}
-                                </button>
-                            </p>
+                                    <div className="flex rounded-md border border-zinc-200/80 bg-zinc-50/50 p-1 mb-6">
+                                        <button
+                                            type="button"
+                                            onClick={() => switchMode(true)}
+                                            disabled={submitLoading}
+                                            className="flex-1 rounded-[5px] py-2 text-[13px] font-medium transition-all duration-200 bg-brand-light text-brand shadow-soft"
+                                        >
+                                            Sign in
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => switchMode(false)}
+                                            disabled={submitLoading}
+                                            className="flex-1 rounded-[5px] py-2 text-[13px] font-medium transition-all duration-200 text-zinc-500 hover:text-zinc-800"
+                                        >
+                                            Register
+                                        </button>
+                                    </div>
+
+                                    <form
+                                        ref={authFormRef}
+                                        onSubmit={handleSubmit}
+                                        noValidate
+                                        className="space-y-4"
+                                    >
+                                        <div>
+                                            <RequiredLabel htmlFor="auth-email">Email</RequiredLabel>
+                                            <input
+                                                id="auth-email"
+                                                type="email"
+                                                name="email"
+                                                value={form.email}
+                                                onChange={handleChange}
+                                                className={inputClass(Boolean(fieldErrors.email))}
+                                                placeholder="you@example.com"
+                                                autoComplete="email"
+                                                aria-invalid={Boolean(fieldErrors.email)}
+                                            />
+                                            <FieldValidationMessage message={fieldErrors.email} />
+                                        </div>
+                                        <div className="relative">
+                                            <RequiredLabel htmlFor="auth-password">Password</RequiredLabel>
+                                            <input
+                                                id="auth-password"
+                                                type={showPassword ? 'text' : 'password'}
+                                                name="password"
+                                                value={form.password}
+                                                onChange={handleChange}
+                                                className={inputClass(
+                                                    Boolean(fieldErrors.password),
+                                                    'pr-11'
+                                                )}
+                                                placeholder="••••••••"
+                                                autoComplete="current-password"
+                                                aria-invalid={Boolean(fieldErrors.password)}
+                                            />
+                                            <PasswordToggle
+                                                visible={showPassword}
+                                                onToggle={() => setShowPassword(!showPassword)}
+                                                label="password"
+                                            />
+                                            <FieldValidationMessage message={fieldErrors.password} />
+                                        </div>
+                                        <div className="flex justify-end">
+                                            <button
+                                                type="button"
+                                                className="text-[13px] font-medium text-brand hover:underline"
+                                                onClick={() => setResetModal(true)}
+                                            >
+                                                Forgot password?
+                                            </button>
+                                        </div>
+
+                                        {error && (
+                                            <p className="text-[13px] text-red-700 bg-red-50 border border-red-200/80 rounded-md px-3 py-2">
+                                                {error}
+                                            </p>
+                                        )}
+
+                                        <button
+                                            type="submit"
+                                            className="btn-primary w-full !py-2.5"
+                                            disabled={submitLoading}
+                                            aria-busy={submitLoading}
+                                        >
+                                            {submitLoading ? (
+                                                <>
+                                                    <Spinner size="sm" inline />
+                                                    Signing in…
+                                                </>
+                                            ) : (
+                                                'Sign in'
+                                            )}
+                                        </button>
+                                    </form>
+
+                                    <p className="mt-5 pt-5 border-t border-zinc-100 text-center text-[13px] text-zinc-500">
+                                        Don&apos;t have an account?{' '}
+                                        <button
+                                            type="button"
+                                            onClick={() => switchMode(false)}
+                                            disabled={submitLoading}
+                                            className="font-medium text-brand hover:underline disabled:opacity-50"
+                                        >
+                                            Register free
+                                        </button>
+                                    </p>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="flex rounded-md border border-zinc-200/80 bg-zinc-50/50 p-1 mb-6">
+                                        <button
+                                            type="button"
+                                            onClick={() => switchMode(true)}
+                                            disabled={submitLoading}
+                                            className="flex-1 rounded-[5px] py-2 text-[13px] font-medium transition-all duration-200 text-zinc-500 hover:text-zinc-800"
+                                        >
+                                            Sign in
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => switchMode(false)}
+                                            disabled={submitLoading}
+                                            className="flex-1 rounded-[5px] py-2 text-[13px] font-medium transition-all duration-200 bg-brand-light text-brand shadow-soft"
+                                        >
+                                            Register
+                                        </button>
+                                    </div>
+
+                                    <RegisterWizard returnTo={returnTo} />
+
+                                    <p className="mt-5 pt-5 border-t border-zinc-100 text-center text-[13px] text-zinc-500">
+                                        Already have an account?{' '}
+                                        <button
+                                            type="button"
+                                            onClick={() => switchMode(true)}
+                                            disabled={submitLoading}
+                                            className="font-medium text-brand hover:underline disabled:opacity-50"
+                                        >
+                                            Sign in
+                                        </button>
+                                    </p>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

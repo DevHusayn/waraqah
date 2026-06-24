@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Crown, ImagePlus, Trash2, Lock, Sparkles, Stamp, PenLine } from 'lucide-react';
+import { Crown, ImagePlus, Trash2, Lock, Stamp, PenLine } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import {
@@ -245,8 +245,8 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
                     <p className="text-sm text-zinc-700 max-w-sm mx-auto">
                         Upgrade to Premium to upload your logo, company stamp, and authorized signature.
                     </p>
-                    <Link to="/upgrade" className="btn-primary mx-auto gap-2 inline-flex text-sm py-2 shadow-lg shadow-brand/20">
-                        <Sparkles size={16} aria-hidden />
+                    <Link to="/upgrade" className="premium-upgrade-btn mx-auto text-sm py-2 px-4">
+                        <Crown size={16} className="text-amber-600 shrink-0" aria-hidden />
                         {premiumUpgradeLabel()}
                     </Link>
                 </div>

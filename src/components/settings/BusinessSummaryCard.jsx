@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
+import { Crown } from 'lucide-react';
 import { getCompanyLogoAvatarUrl } from '../../utils/brandAssets';
 import { getBusinessInitials, isPremiumUser } from '../../utils/premium';
 import { PlanBadge } from './SettingsSection';
@@ -11,9 +11,9 @@ export default function BusinessSummaryCard({ businessInfo, className = '' }) {
 
     return (
         <div
-            className={`${
-                premium ? 'card' : 'premium-card'
-            } flex flex-col sm:flex-row sm:items-center gap-4 p-4 sm:p-5 ${className}`.trim()}
+            className={`card flex flex-col sm:flex-row sm:items-center gap-4 p-4 sm:p-5 ${
+                premium ? 'border-amber-300/80' : ''
+            } ${className}`.trim()}
         >
             <div className="flex items-center gap-4 min-w-0 flex-1">
                 {logoUrl ? (
@@ -43,9 +43,9 @@ export default function BusinessSummaryCard({ businessInfo, className = '' }) {
             {!premium ? (
                 <Link
                     to="/upgrade"
-                    className="btn-primary shrink-0 gap-2 text-sm py-2 shadow-lg shadow-brand/20"
+                    className="premium-upgrade-btn shrink-0 text-sm py-2 px-4"
                 >
-                    <Sparkles size={16} aria-hidden />
+                    <Crown size={16} className="text-amber-600 shrink-0" aria-hidden />
                     Upgrade
                 </Link>
             ) : null}

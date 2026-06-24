@@ -60,8 +60,8 @@ export default function Upgrade() {
             </Link>
 
             <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-md bg-zinc-100 text-zinc-600 mb-3">
-                    <Crown className="h-5 w-5" />
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-white border border-amber-300/80 mb-3">
+                    <Crown className="h-5 w-5 text-amber-500" aria-hidden />
                 </div>
                 <h1 className="page-title">Upgrade to Premium</h1>
                 <p className="page-subtitle mt-1">

@@ -19,6 +19,7 @@ import ConfirmModal from './ConfirmModal';
 import WaraqahLogo from './WaraqahLogo';
 import SidebarAccountFooter from './SidebarAccountFooter';
 import { isPremiumUser } from '../utils/premium';
+import { lockBodyScroll } from '../utils/bodyScrollLock';
 
 const NAV_ITEMS = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -75,35 +76,12 @@ const Layout = ({ children }) => {
 
     useEffect(() => {
         if (!sidebarOpen) return undefined;
-
-        const scrollY = window.scrollY;
-        const { style } = document.body;
-        const prev = {
-            position: style.position,
-            top: style.top,
-            left: style.left,
-            right: style.right,
-            overflow: style.overflow,
-            width: style.width,
-        };
-
-        style.position = 'fixed';
-        style.top = `-${scrollY}px`;
-        style.left = '0';
-        style.right = '0';
-        style.width = '100%';
-        style.overflow = 'hidden';
-
-        return () => {
-            style.position = prev.position;
-            style.top = prev.top;
-            style.left = prev.left;
-            style.right = prev.right;
-            style.width = prev.width;
-            style.overflow = prev.overflow;
-            window.scrollTo(0, scrollY);
-        };
+        return lockBodyScroll();
     }, [sidebarOpen]);
+
+    useEffect(() => {
+        setSidebarOpen(false);
+    }, [location.pathname]);
 
     const handleLogout = () => {
         localStorage.removeItem('token');

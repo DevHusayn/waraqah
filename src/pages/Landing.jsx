@@ -62,7 +62,7 @@ const STEPS = [
 const FAQ_ITEMS = [
     {
         q: 'Who is Waraqah for?',
-        a: 'Freelancers and small businesses in Nigeria who want polished PDF invoices, client records, payment tracking, and a simple dashboard — without spreadsheets.',
+        a: 'Freelancers and businesses in Nigeria who want polished PDF invoices, client records, payment tracking, and a simple dashboard — without spreadsheets.',
     },
     {
         q: 'What happens on the Free plan?',
@@ -153,7 +153,7 @@ export default function Landing() {
                                 <span className="landing-text-shimmer">seconds</span>
                             </h1>
                             <p className="mt-6 text-lg text-zinc-600 max-w-xl leading-relaxed">
-                                {APP_NAME} helps freelancers and small businesses send polished invoices,
+                                {APP_NAME} helps freelancers and businesses send polished invoices,
                                 manage clients, and track payments without spreadsheets or design stress.
                             </p>
                             <div className="mt-8 flex flex-col sm:flex-row gap-3">

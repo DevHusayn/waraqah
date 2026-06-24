@@ -8,7 +8,7 @@ import {
     CheckCircle,
     XCircle,
     User,
-    FileText,
+    List,
     StickyNote,
     Mail,
     Phone,
@@ -414,8 +414,8 @@ const InvoiceDetails = () => {
 
                         <div className="card !p-0 overflow-hidden">
                             <div className="px-4 sm:px-6 py-4 border-b border-zinc-100 flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-brand-subtle">
-                                    <FileText className="h-4 w-4 text-brand" aria-hidden />
+                                <div className="p-2 rounded-md bg-zinc-50 border border-zinc-200/50 shrink-0">
+                                    <List className="h-4 w-4 text-zinc-500" strokeWidth={1.75} aria-hidden />
                                 </div>
                                 <div>
                                     <h2 className="text-lg font-semibold text-zinc-900">Items</h2>

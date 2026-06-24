@@ -40,8 +40,8 @@ export function ViewField({ label, value, icon: Icon, children }) {
 export function PlanBadge({ premium }) {
     if (premium) {
         return (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg">
-                <Crown className="h-3 w-3" aria-hidden />
+            <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide bg-zinc-100 text-zinc-600 px-2.5 py-1 rounded-lg">
+                <Crown className="h-3 w-3 text-amber-500 shrink-0" aria-hidden />
                 Premium
             </span>
         );

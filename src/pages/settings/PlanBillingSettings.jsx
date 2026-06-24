@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Sparkles, Crown } from 'lucide-react';
+import { Crown } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import SettingsPageShell from '../../components/settings/SettingsPageShell';
 import { SettingsSection } from '../../components/settings/SettingsSection';
@@ -35,17 +35,17 @@ export default function PlanBillingSettings() {
             >
                 <div className="space-y-4">
                     <div
-                        className={`p-4 sm:p-5 rounded-xl ${
+                        className={`p-4 sm:p-5 rounded-xl border ${
                             premium
-                                ? 'border border-zinc-200 bg-zinc-50/60'
-                                : 'premium-card'
+                                ? 'border-amber-300/80 bg-white'
+                                : 'border-zinc-200 bg-zinc-50/60'
                         }`}
                     >
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div>
                                 <div className="flex items-center gap-2 mb-1">
-                                    {!premium ? (
-                                        <Crown className="h-4 w-4 text-amber-600" aria-hidden />
+                                    {premium ? (
+                                        <Crown className="h-4 w-4 text-amber-500 shrink-0" aria-hidden />
                                     ) : null}
                                     <p className="text-sm font-semibold text-zinc-900">
                                         {premium ? 'Premium plan' : 'Free plan'}
@@ -58,8 +58,8 @@ export default function PlanBillingSettings() {
                                 </p>
                             </div>
                             {!premium ? (
-                                <Link to="/upgrade" className="btn-primary text-sm py-2 shadow-lg shadow-brand/20">
-                                    <Sparkles size={16} aria-hidden />
+                                <Link to="/upgrade" className="premium-upgrade-btn text-sm py-2 px-4">
+                                    <Crown size={16} className="text-amber-600 shrink-0" aria-hidden />
                                     {premiumUpgradeLabel()}
                                 </Link>
                             ) : null}

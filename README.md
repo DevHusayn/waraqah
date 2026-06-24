@@ -1,6 +1,6 @@
 # Waraqah 🧾
 
-A professional, full-featured invoice app built with React, designed to help freelancers and small businesses manage their invoicing needs efficiently.
+A professional, full-featured invoice app built with React, designed to help freelancers and businesses manage their invoicing needs efficiently.
 
 ![Waraqah](https://img.shields.io/badge/React-18.2-blue) ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38bdf8) ![License](https://img.shields.io/badge/License-MIT-green)
 

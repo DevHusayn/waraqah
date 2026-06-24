@@ -340,7 +340,7 @@ function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayC
         setPdfBodyFont(doc);
         doc.setFontSize(7);
         doc.setTextColor(...grayColor);
-        doc.text('Professional invoicing for small businesses', 105, footerY + 5.5, { align: 'center' });
+        doc.text('Professional invoicing for businesses', 105, footerY + 5.5, { align: 'center' });
     }
 }
 
@@ -435,17 +435,30 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         `${currencySymbol}${formatMoney(Number(item.quantity || 0) * Number(item.rate || 0))}`,
     ]);
 
+    const tableColumnWidths = {
+        0: 10,
+        1: 76,
+        2: 16,
+        3: 38,
+        4: 38,
+    };
+    const pdfContentLeft = 15;
+    const pdfContentWidth = 180;
+    const pdfContentRight = pdfContentLeft + pdfContentWidth;
+
     doc.autoTable({
         startY: tableStartY,
         head: [['#', 'DESCRIPTION', 'QTY', 'UNIT PRICE', 'TOTAL']],
         body: tableData,
         theme: 'plain',
         showHead: 'everyPage',
+        tableWidth: pdfContentWidth,
         headStyles: {
             fillColor: lightPrimary,
             textColor: primaryColor,
             fontStyle: 'bold',
             fontSize: 8,
+            halign: 'center',
             cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
         },
         styles: {
@@ -457,14 +470,19 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
             textColor,
         },
         columnStyles: {
-            0: { cellWidth: 10, halign: 'center', textColor: grayColor },
-            1: { cellWidth: 72, halign: 'left' },
-            2: { cellWidth: 16, halign: 'center', textColor: grayColor },
-            3: { cellWidth: 38, halign: 'right', textColor: grayColor },
-            4: { cellWidth: 38, halign: 'right', fontStyle: 'bold' },
+            0: { cellWidth: tableColumnWidths[0], halign: 'center', textColor: grayColor },
+            1: { cellWidth: tableColumnWidths[1], halign: 'left' },
+            2: { cellWidth: tableColumnWidths[2], halign: 'center', textColor: grayColor },
+            3: { cellWidth: tableColumnWidths[3], halign: 'right', textColor: grayColor },
+            4: { cellWidth: tableColumnWidths[4], halign: 'right', fontStyle: 'bold' },
+        },
+        didParseCell: (hookData) => {
+            if (hookData.section === 'head') {
+                hookData.cell.styles.halign = 'center';
+            }
         },
         alternateRowStyles: { fillColor: [252, 252, 253] },
-        margin: { left: 15, right: 15, bottom: FOOTER_ZONE + 4 },
+        margin: { left: pdfContentLeft, right: PAGE_W - pdfContentRight, bottom: FOOTER_ZONE + 4 },
     });
 
     let currentY = ensureSpace(doc.lastAutoTable.finalY + 10, 48);

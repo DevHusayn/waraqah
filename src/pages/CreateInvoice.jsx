@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Link, useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
     Plus,
     Save,
@@ -13,6 +13,7 @@ import {
     X,
     Package,
 } from 'lucide-react';
+import ClientFormModal from '../components/ClientFormModal';
 import Spinner from '../components/Spinner';
 import { format } from 'date-fns';
 import { useInvoice } from '../context/InvoiceContext';
@@ -62,19 +63,14 @@ const RECURRING_FREQUENCY_OPTIONS = [
     { value: 'yearly', label: 'Yearly' },
 ];
 
-const DISCOUNT_TYPE_OPTIONS = [
-    { value: 'fixed', label: 'Fixed amount' },
-    { value: 'percent', label: 'Percentage' },
-];
-
 const CreateInvoice = () => {
     const { id } = useParams();
-    const location = useLocation();
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const {
         clients,
         products,
+        addClient,
         addInvoice,
         updateInvoice,
         invoices,
@@ -88,6 +84,7 @@ const CreateInvoice = () => {
     const [sharePdfReady, setSharePdfReady] = useState(false);
     const [shareModal, setShareModal] = useState(null);
     const [fieldErrors, setFieldErrors] = useState({});
+    const [clientModalOpen, setClientModalOpen] = useState(false);
 
     const draftIdRef = useRef(null);
     const saveInFlightRef = useRef(false);
@@ -108,8 +105,8 @@ const CreateInvoice = () => {
         notes: '',
         status: 'draft',
         currency: APP_CURRENCY,
-        taxRate: businessInfo.taxRate ?? 10,
-        discountType: 'fixed',
+        taxRate: 0,
+        discountType: 'percent',
         discountValue: '',
         isRecurring: false,
         recurringFrequency: 'monthly',
@@ -129,16 +126,6 @@ const CreateInvoice = () => {
     }, [id]);
 
     useEffect(() => {
-        if (!id) {
-            setFormData((prev) => ({
-                ...prev,
-                currency: APP_CURRENCY,
-                taxRate: businessInfo.taxRate ?? prev.taxRate,
-            }));
-        }
-    }, [id, businessInfo.taxRate]);
-
-    useEffect(() => {
         if (!id) return;
         const invoice = invoices.find((inv) => inv.id === id);
         if (!invoice) return;
@@ -148,7 +135,7 @@ const CreateInvoice = () => {
         }
         setFormData({
             ...invoice,
-            discountType: invoice.discountType || 'fixed',
+            discountType: invoice.discountType || 'percent',
             discountValue: invoice.discountValue ?? '',
         });
         isDirtyRef.current = false;
@@ -157,7 +144,7 @@ const CreateInvoice = () => {
     const getTotals = () =>
         calculateInvoiceTotals(formData.items, {
             taxRate: formData.taxRate,
-            discountType: formData.discountType || 'fixed',
+            discountType: 'percent',
             discountValue: formData.discountValue || 0,
         });
 
@@ -270,7 +257,7 @@ const CreateInvoice = () => {
                     saved = await addInvoice(payload);
                     draftIdRef.current = saved.id;
                     if (redirectAfterCreate) {
-                        navigate(`/invoices/edit/${saved.id}`, { replace: true });
+                        navigate('/invoices/drafts');
                     }
                 }
 
@@ -445,7 +432,7 @@ const CreateInvoice = () => {
             ...formData,
             status: formData.status,
             currency: APP_CURRENCY,
-            discountType: formData.discountType || 'fixed',
+            discountType: 'percent',
             discountValue: Number(formData.discountValue) || 0,
             subtotal: totals.subtotal,
             discount: totals.discount,
@@ -473,9 +460,18 @@ const CreateInvoice = () => {
     const backHref = isDraftEdit ? '/invoices/drafts' : id ? `/invoices/${id}` : '/invoices';
     const totals = getTotals();
     const discountLabel =
-        formData.discountType === 'percent' && Number(formData.discountValue) > 0
+        Number(formData.discountValue) > 0
             ? `Discount (${formData.discountValue}%)`
             : 'Discount';
+
+    const handleAddClient = async (clientData) => {
+        const newClient = await addClient(clientData);
+        showToast('Client added successfully', 'success');
+        setClientModalOpen(false);
+        markDirty();
+        setFormData((prev) => ({ ...prev, clientId: newClient.id }));
+        clearFieldError(setFieldErrors, 'clientId');
+    };
 
     const handleLeavePage = async () => {
         if (isDraftFlow && isDirtyRef.current && hasDraftContent(formDataRef.current)) {
@@ -575,6 +571,12 @@ const CreateInvoice = () => {
                 usage={invoiceUsage}
             />
 
+            <ClientFormModal
+                open={clientModalOpen}
+                onClose={() => setClientModalOpen(false)}
+                onSubmit={handleAddClient}
+            />
+
             <ShareDocumentModal
                 open={Boolean(shareModal)}
                 docLabel="invoice"
@@ -654,26 +656,8 @@ const CreateInvoice = () => {
                                     <FieldValidationMessage message={fieldErrors.taxRate} />
                                 </div>
                                 <div>
-                                    <label className="label" htmlFor="invoice-discount-type">
-                                        Discount type
-                                    </label>
-                                    <CustomSelect
-                                        id="invoice-discount-type"
-                                        value={formData.discountType || 'fixed'}
-                                        onChange={(val) => {
-                                            markDirty();
-                                            setFormData((prev) => ({ ...prev, discountType: val }));
-                                        }}
-                                        options={DISCOUNT_TYPE_OPTIONS}
-                                        placeholder="Discount type"
-                                    />
-                                </div>
-                                <div>
                                     <label className="label" htmlFor="invoice-discount-value">
-                                        Discount{' '}
-                                        {formData.discountType === 'percent'
-                                            ? '(%)'
-                                            : `(${CURRENCY_INFO.symbol})`}
+                                        Discount (%)
                                     </label>
                                     <input
                                         id="invoice-discount-value"
@@ -683,8 +667,8 @@ const CreateInvoice = () => {
                                         onChange={handleChange}
                                         className={inputClass(Boolean(fieldErrors.discountValue))}
                                         min="0"
-                                        max={formData.discountType === 'percent' ? '100' : undefined}
-                                        step={formData.discountType === 'percent' ? '0.01' : '0.01'}
+                                        max="100"
+                                        step="0.01"
                                         placeholder="0"
                                         aria-invalid={Boolean(fieldErrors.discountValue)}
                                     />
@@ -731,12 +715,13 @@ const CreateInvoice = () => {
                             title="Client"
                             description="Who this invoice is for"
                             actions={
-                                <Link
-                                    to={`/clients?returnTo=${encodeURIComponent(location.pathname)}&add=1`}
+                                <button
+                                    type="button"
+                                    onClick={() => setClientModalOpen(true)}
                                     className="text-sm font-medium text-brand hover:underline whitespace-nowrap"
                                 >
                                     + Add client
-                                </Link>
+                                </button>
                             }
                         >
                             <RequiredLabel htmlFor="invoice-client">Select client</RequiredLabel>
@@ -760,9 +745,13 @@ const CreateInvoice = () => {
                             {clients.length === 0 && (
                                 <p className="mt-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                                     No clients yet.{' '}
-                                    <Link to="/clients?add=1" className="font-medium underline">
+                                    <button
+                                        type="button"
+                                        onClick={() => setClientModalOpen(true)}
+                                        className="font-medium underline text-brand"
+                                    >
                                         Add one first
-                                    </Link>
+                                    </button>
                                 </p>
                             )}
                         </FormSection>
@@ -974,7 +963,7 @@ const CreateInvoice = () => {
                                 onChange={handleChange}
                                 className={inputClass(false, 'resize-none min-h-[100px]')}
                                 rows={4}
-                                placeholder="Payment terms, bank details, thank-you message…"
+                                placeholder="Thank-you message…"
                             />
                         </FormSection>
                     </div>
