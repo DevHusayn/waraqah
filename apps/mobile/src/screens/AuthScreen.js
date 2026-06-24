@@ -13,16 +13,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
     validateEmail,
     validateRequired,
-    isStrongPassword,
-    getPasswordStrength,
-    PASSWORD_REQUIREMENTS_MESSAGE,
-    APP_CURRENCY,
 } from '@waraqah/shared';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { RegisterWizard } from '../components/auth/RegisterWizard';
 import { WaraqahLogo } from '../components/WaraqahLogo';
 import { Button, FieldError, Input, Label } from '../components/ui';
-import { colors } from '../theme/colors';
+import { colors, fontFamily, fontSize, radii, spacing } from '../theme';
+import { hapticSuccess } from '../utils/haptics';
 
 function AuthTabs({ isLogin, onSwitch, disabled }) {
     return (
@@ -45,23 +43,13 @@ function AuthTabs({ isLogin, onSwitch, disabled }) {
 }
 
 export function AuthScreen() {
-    const { login, register, forgotPassword } = useAuth();
+    const { login, forgotPassword } = useAuth();
     const { showToast } = useToast();
     const [isLogin, setIsLogin] = useState(true);
     const [loading, setLoading] = useState(false);
     const [showForgot, setShowForgot] = useState(false);
     const [forgotEmail, setForgotEmail] = useState('');
-    const [form, setForm] = useState({
-        email: '',
-        password: '',
-        confirmPassword: '',
-        name: '',
-        businessEmail: '',
-        address: '',
-        phone: '',
-        website: '',
-        brandColor: '#0284c7',
-    });
+    const [form, setForm] = useState({ email: '', password: '' });
     const [errors, setErrors] = useState({});
 
     const setField = (name, value) => {
@@ -69,48 +57,22 @@ export function AuthScreen() {
         if (errors[name]) setErrors((e) => ({ ...e, [name]: '' }));
     };
 
-    const validate = () => {
-        const next = {};
-        next.email = validateEmail(form.email, 'Enter your email.', 'Enter a valid email.');
-        next.password = validateRequired(form.password, 'Enter your password.');
-        if (!isLogin) {
-            if (!form.confirmPassword.trim()) next.confirmPassword = 'Confirm your password.';
-            else if (form.password !== form.confirmPassword) next.confirmPassword = 'Passwords do not match.';
-            if (form.password && !isStrongPassword(form.password)) {
-                next.password = PASSWORD_REQUIREMENTS_MESSAGE;
-            }
-            next.name = validateRequired(form.name, 'Enter your business name.');
-            next.businessEmail = validateEmail(
-                form.businessEmail,
-                'Enter your business email.',
-                'Enter a valid business email.'
-            );
-            next.address = validateRequired(form.address, 'Enter your address.');
-            next.phone = validateRequired(form.phone, 'Enter your phone number.');
-        }
+    const validateLogin = () => {
+        const next = {
+            email: validateEmail(form.email, 'Enter your email.', 'Enter a valid email.'),
+            password: validateRequired(form.password, 'Enter your password.'),
+        };
         setErrors(next);
         return !Object.values(next).some(Boolean);
     };
 
     const handleSubmit = async () => {
-        if (!validate()) return;
+        if (!validateLogin()) return;
         setLoading(true);
         try {
-            if (isLogin) {
-                await login(form.email, form.password);
-                showToast('Welcome back!', 'success');
-            } else {
-                await register(form.email, form.password, {
-                    name: form.name,
-                    address: form.address,
-                    email: form.businessEmail,
-                    phone: form.phone,
-                    website: form.website,
-                    defaultCurrency: APP_CURRENCY,
-                    brandColor: form.brandColor,
-                });
-                showToast('Account created!', 'success');
-            }
+            await login(form.email, form.password);
+            hapticSuccess();
+            showToast('Welcome back!', 'success');
         } catch (err) {
             showToast(err.message, 'error');
         } finally {
@@ -136,98 +98,47 @@ export function AuthScreen() {
         }
     };
 
-    const strength = !isLogin ? getPasswordStrength(form.password) : null;
-
     return (
         <SafeAreaView style={styles.safe} edges={['top']}>
             <View style={styles.header}>
                 <WaraqahLogo size="lg" />
                 <AuthTabs isLogin={isLogin} onSwitch={setIsLogin} disabled={loading} />
             </View>
-            <KeyboardAvoidingView
-                style={styles.flex}
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            >
-                <ScrollView
-                    style={styles.flex}
-                    contentContainerStyle={styles.formScroll}
-                    keyboardShouldPersistTaps="handled"
-                >
-                    <Text style={styles.heading}>{isLogin ? 'Welcome back' : 'Create your account'}</Text>
-                    <Text style={styles.subheading}>
-                        {isLogin ? 'Sign in to manage your invoices' : 'Start invoicing in under a minute'}
-                    </Text>
-
-                    <View style={styles.formCard}>
-                        <Label required>Email</Label>
-                        <Input
-                            value={form.email}
-                            onChangeText={(v) => setField('email', v)}
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                            error={errors.email}
-                        />
-                        <FieldError message={errors.email} />
-
-                        <Label required>Password</Label>
-                        <Input
-                            value={form.password}
-                            onChangeText={(v) => setField('password', v)}
-                            secureTextEntry
-                            error={errors.password}
-                        />
-                        <FieldError message={errors.password} />
-                        {strength?.label ? (
-                            <Text style={{ fontSize: 12, color: colors.slate500, marginTop: 4 }}>{strength.label}</Text>
-                        ) : null}
-
-                        {isLogin ? (
-                            <Pressable onPress={() => setShowForgot(true)} style={styles.forgot}>
-                                <Text style={styles.forgotText}>Forgot password?</Text>
-                            </Pressable>
-                        ) : (
-                            <>
-                                <Label required>Confirm password</Label>
+            <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+                <ScrollView style={styles.flex} contentContainerStyle={styles.formScroll} keyboardShouldPersistTaps="handled">
+                    {isLogin ? (
+                        <>
+                            <Text style={styles.heading}>Welcome back</Text>
+                            <Text style={styles.subheading}>Sign in to manage your invoices</Text>
+                            <View style={styles.formCard}>
+                                <Label required>Email</Label>
                                 <Input
-                                    value={form.confirmPassword}
-                                    onChangeText={(v) => setField('confirmPassword', v)}
-                                    secureTextEntry
-                                    error={errors.confirmPassword}
-                                />
-                                <FieldError message={errors.confirmPassword} />
-
-                                <Text style={styles.sectionLabel}>BUSINESS DETAILS</Text>
-                                <Label required>Business name</Label>
-                                <Input value={form.name} onChangeText={(v) => setField('name', v)} error={errors.name} />
-                                <FieldError message={errors.name} />
-
-                                <Label required>Business email</Label>
-                                <Input
-                                    value={form.businessEmail}
-                                    onChangeText={(v) => setField('businessEmail', v)}
-                                    keyboardType="email-address"
+                                    value={form.email}
+                                    onChangeText={(v) => setField('email', v)}
                                     autoCapitalize="none"
-                                    error={errors.businessEmail}
+                                    keyboardType="email-address"
+                                    error={errors.email}
                                 />
-                                <FieldError message={errors.businessEmail} />
-
-                                <Label required>Address</Label>
-                                <Input value={form.address} onChangeText={(v) => setField('address', v)} error={errors.address} />
-                                <FieldError message={errors.address} />
-
-                                <Label required>Phone</Label>
-                                <Input value={form.phone} onChangeText={(v) => setField('phone', v)} keyboardType="phone-pad" error={errors.phone} />
-                                <FieldError message={errors.phone} />
-                            </>
-                        )}
-
-                        <Button
-                            title={isLogin ? 'Sign in' : 'Create account'}
-                            onPress={handleSubmit}
-                            loading={loading}
-                            style={{ marginTop: 16 }}
-                        />
-                    </View>
+                                <FieldError message={errors.email} />
+                                <Label required>Password</Label>
+                                <Input
+                                    value={form.password}
+                                    onChangeText={(v) => setField('password', v)}
+                                    secureTextEntry
+                                    error={errors.password}
+                                />
+                                <FieldError message={errors.password} />
+                                <Pressable onPress={() => setShowForgot(true)} style={styles.forgot}>
+                                    <Text style={styles.forgotText}>Forgot password?</Text>
+                                </Pressable>
+                                <Button title="Sign in" onPress={handleSubmit} loading={loading} style={{ marginTop: spacing.lg }} />
+                            </View>
+                        </>
+                    ) : (
+                        <View style={styles.formCard}>
+                            <RegisterWizard />
+                        </View>
+                    )}
                 </ScrollView>
             </KeyboardAvoidingView>
 
@@ -237,8 +148,8 @@ export function AuthScreen() {
                         <Text style={styles.heading}>Reset password</Text>
                         <Label required>Email</Label>
                         <Input value={forgotEmail} onChangeText={setForgotEmail} keyboardType="email-address" autoCapitalize="none" />
-                        <Button title="Send reset link" onPress={handleForgot} loading={loading} style={{ marginTop: 12 }} />
-                        <Button title="Cancel" variant="secondary" onPress={() => setShowForgot(false)} style={{ marginTop: 8 }} />
+                        <Button title="Send reset link" onPress={handleForgot} loading={loading} style={{ marginTop: spacing.md }} />
+                        <Button title="Cancel" variant="secondary" onPress={() => setShowForgot(false)} style={{ marginTop: spacing.sm }} />
                     </View>
                 </View>
             </Modal>
@@ -247,60 +158,47 @@ export function AuthScreen() {
 }
 
 const styles = StyleSheet.create({
-    safe: { flex: 1, backgroundColor: colors.slate50 },
+    safe: { flex: 1, backgroundColor: colors.surfaceMuted },
     flex: { flex: 1 },
     header: {
-        paddingHorizontal: 16,
-        paddingTop: 8,
-        paddingBottom: 12,
-        backgroundColor: colors.slate50,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.sm,
+        paddingBottom: spacing.md,
+        backgroundColor: colors.surfaceMuted,
         borderBottomWidth: 1,
-        borderBottomColor: colors.slate200,
+        borderBottomColor: colors.border,
     },
     tabs: {
         flexDirection: 'row',
-        backgroundColor: colors.white,
-        borderRadius: 12,
+        backgroundColor: colors.surface,
+        borderRadius: radii.md,
         padding: 4,
-        marginTop: 16,
+        marginTop: spacing.lg,
         borderWidth: 1,
-        borderColor: colors.slate200,
+        borderColor: colors.border,
     },
-    tab: { flex: 1, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
+    tab: { flex: 1, paddingVertical: 10, borderRadius: radii.sm, alignItems: 'center' },
     tabActive: { backgroundColor: colors.brand },
-    tabText: { fontWeight: '600', color: colors.slate600 },
+    tabText: { fontFamily: fontFamily.semibold, color: colors.slate600 },
     tabTextActive: { color: colors.white },
-    formScroll: { padding: 16, paddingBottom: 32 },
-    heading: { fontSize: 24, fontWeight: '700', color: colors.slate900 },
-    subheading: { fontSize: 15, color: colors.slate500, marginTop: 4, marginBottom: 16 },
+    formScroll: { padding: spacing.lg, paddingBottom: spacing.xxl },
+    heading: { fontFamily: fontFamily.bold, fontSize: fontSize.xl, color: colors.foreground },
+    subheading: { fontFamily: fontFamily.regitional, fontSize: fontSize.sm, color: colors.muted, marginTop: 4, marginBottom: spacing.lg },
     formCard: {
-        backgroundColor: colors.white,
-        borderRadius: 16,
-        padding: 16,
+        backgroundColor: colors.surface,
+        borderRadius: radii.lg,
+        padding: spacing.lg,
         borderWidth: 1,
-        borderColor: colors.slate200,
-        gap: 4,
+        borderColor: colors.border,
     },
-    forgot: { alignSelf: 'flex-end', marginTop: 8 },
-    forgotText: { color: colors.brand, fontWeight: '600' },
-    sectionLabel: {
-        marginTop: 12,
-        marginBottom: 4,
-        fontSize: 11,
-        fontWeight: '700',
-        color: colors.slate400,
-        letterSpacing: 0.5,
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.4)',
-        justifyContent: 'flex-end',
-    },
+    forgot: { alignSelf: 'flex-end', marginTop: spacing.sm },
+    forgotText: { fontFamily: fontFamily.semibold, color: colors.brand },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
     modalBox: {
-        backgroundColor: colors.white,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        padding: 20,
-        paddingBottom: 32,
+        backgroundColor: colors.surface,
+        borderTopLeftRadius: radii.xl,
+        borderTopRightRadius: radii.xl,
+        padding: spacing.lg,
+        paddingBottom: spacing.xxl,
     },
 });

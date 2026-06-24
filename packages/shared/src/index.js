@@ -13,3 +13,5 @@ export * from './receiptHelpers.js';
 export * from './monthlyStatement.js';
 export * from './pricing.js';
 export * from './planFeatures.js';
+export * from './settingsValidation.js';
+export * from './registerValidation.js';

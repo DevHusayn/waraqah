@@ -11,9 +11,8 @@ import {
 import { apiFetch } from '../api/client';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
-import { Button, Card, Title, Subtitle } from '../components/ui';
-import { Spinner } from '../components/Spinner';
-import { colors } from '../theme/colors';
+import { Button, Card, PageHeader, PageLoader } from '../components/ui';
+import { colors, spacing } from '../theme';
 
 const CALLBACK_SCHEME = 'waraqah://upgrade/callback';
 
@@ -76,12 +75,11 @@ export function UpgradeScreen() {
         }
     };
 
-    if (loading) return <Spinner />;
+    if (loading) return <PageLoader />;
 
     return (
         <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-            <Title>Upgrade to Premium</Title>
-            <Subtitle>{premiumPriceLabel(monthlyAmount)}/month</Subtitle>
+            <PageHeader title="Upgrade to Premium" subtitle={`${premiumPriceLabel(monthlyAmount)}/month`} />
 
             {premium ? (
                 <Card style={styles.block}>
@@ -103,8 +101,8 @@ export function UpgradeScreen() {
 }
 
 const styles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.slate50 },
-    content: { padding: 16, paddingBottom: 40 },
+    screen: { flex: 1, backgroundColor: colors.surfaceMuted },
+    content: { padding: spacing.lg, paddingBottom: spacing.xxl },
     block: { marginBottom: 12 },
     section: { fontWeight: '700', marginBottom: 8 },
     feature: { color: colors.slate600, marginBottom: 4 },

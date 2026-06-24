@@ -10,8 +10,8 @@ import {
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
-import { Button, Card, Input, Label, Title, Subtitle } from '../components/ui';
-import { colors } from '../theme/colors';
+import { Button, Card, Input, Label, PageHeader } from '../components/ui';
+import { colors, spacing } from '../theme';
 
 export function MonthlyStatementScreen({ navigation }) {
     const { invoices, clients } = useInvoice();
@@ -47,8 +47,7 @@ export function MonthlyStatementScreen({ navigation }) {
 
     return (
         <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-            <Title>Monthly statement</Title>
-            <Subtitle>Billing summary by client for the selected month</Subtitle>
+            <PageHeader title="Monthly statement" subtitle="Billing summary by client for the selected month" />
 
             <Card style={styles.block}>
                 <Label>Month (YYYY-MM)</Label>
@@ -92,8 +91,8 @@ function Row({ label, value, bold }) {
 }
 
 const styles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.slate50 },
-    content: { padding: 16, paddingBottom: 40 },
+    screen: { flex: 1, backgroundColor: colors.surfaceMuted },
+    content: { padding: spacing.lg, paddingBottom: spacing.xxl },
     block: { marginBottom: 12 },
     period: { marginTop: 8, fontWeight: '600', color: colors.brand },
     hint: { color: colors.amber600, marginBottom: 12 },

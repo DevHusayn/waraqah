@@ -1,46 +1,61 @@
-import { useMemo, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { format } from 'date-fns';
+import { PenLine } from 'lucide-react-native';
 import {
     formatCurrency,
     formatInvoiceUsageLabel,
-    isPremiumUser,
+    filterNonDraftInvoices,
     getDisplayNumber,
+    isPremiumUser,
     filterInvoicesBySearch,
     sortInvoices,
-    canCreateInvoice,
 } from '@waraqah/shared';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
-import { Spinner } from '../components/Spinner';
-import { Button, Card, EmptyState, StatusBadge, Subtitle, Title } from '../components/ui';
-import { colors } from '../theme/colors';
+import { InvoiceLimitModal } from '../components/InvoiceLimitModal';
+import {
+    ChipGroup,
+    EmptyState,
+    FAB,
+    ListRow,
+    PageHeader,
+    PageLoader,
+    SearchBar,
+    StatusBadge,
+    UsageBanner,
+} from '../components/ui';
+import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
+import { colors, fontFamily, fontSize, spacing } from '../theme';
 
-const FILTERS = ['all', 'pending', 'paid', 'overdue', 'cancelled'];
+const FILTERS = [
+    { value: 'all', label: 'All' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'paid', label: 'Paid' },
+    { value: 'overdue', label: 'Overdue' },
+    { value: 'cancelled', label: 'Cancelled' },
+];
 
 export function InvoicesListScreen({ navigation }) {
-    const { invoices, clients, loading, fetchUserData, invoiceUsage } = useInvoice();
+    const { invoices, clients, draftInvoices, loading, fetchUserData } = useInvoice();
     const { businessInfo } = useSettings();
     const [filter, setFilter] = useState('all');
     const [search, setSearch] = useState('');
     const [refreshing, setRefreshing] = useState(false);
+    const limitModalRef = useRef(null);
+    const { invoiceUsage, tryCreate, goUpgrade } = useInvoiceCreateGuard(limitModalRef, navigation);
+
+    const activeInvoices = useMemo(() => filterNonDraftInvoices(invoices), [invoices]);
 
     const displayed = useMemo(() => {
-        let list = filter === 'all' ? invoices : invoices.filter((i) => i.status === filter);
+        let list = filter === 'all' ? activeInvoices : activeInvoices.filter((i) => i.status === filter);
         list = filterInvoicesBySearch(list, search, clients);
         return sortInvoices(list, 'newest');
-    }, [invoices, clients, filter, search]);
+    }, [activeInvoices, clients, filter, search]);
 
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
     const premium = isPremiumUser(businessInfo);
-
-    const tryCreate = () => {
-        if (!canCreateInvoice(invoiceUsage)) {
-            navigation.getParent()?.navigate('More', { screen: 'Upgrade' });
-            return;
-        }
-        navigation.navigate('CreateInvoice');
-    };
+    const draftCount = draftInvoices?.length || 0;
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -50,91 +65,82 @@ export function InvoicesListScreen({ navigation }) {
 
     const getClientName = (clientId) => clients.find((c) => c.id === clientId)?.name || 'Unknown';
 
-    if (loading && !refreshing) return <Spinner />;
+    if (loading && !refreshing) return <PageLoader />;
 
     return (
         <View style={styles.screen}>
-            <View style={styles.header}>
-                <Title>Invoices</Title>
-                <Subtitle>Manage and track invoices</Subtitle>
-                {!premium && usageLabel ? <Text style={styles.usage}>{usageLabel}</Text> : null}
-                <TextInput
-                    placeholder="Search invoices…"
-                    value={search}
-                    onChangeText={setSearch}
-                    style={styles.search}
-                    placeholderTextColor={colors.slate400}
-                />
-                <View style={styles.filters}>
-                    {FILTERS.map((f) => (
-                        <Pressable
-                            key={f}
-                            onPress={() => setFilter(f)}
-                            style={[styles.chip, filter === f && styles.chipActive]}
-                        >
-                            <Text style={[styles.chipText, filter === f && styles.chipTextActive]}>{f}</Text>
-                        </Pressable>
-                    ))}
-                </View>
-                <Button title="Create invoice" onPress={tryCreate} style={{ marginTop: 8 }} />
-            </View>
             <FlatList
                 data={displayed}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.list}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />}
+                ListHeaderComponent={
+                    <>
+                        <PageHeader title="Invoices" subtitle="Manage and track invoices" />
+                        {!premium && usageLabel ? <UsageBanner label={usageLabel} /> : null}
+                        {draftCount > 0 ? (
+                            <Pressable style={styles.draftsLink} onPress={() => navigation.navigate('Drafts')}>
+                                <PenLine size={16} color={colors.brand} />
+                                <Text style={styles.draftsText}>{draftCount} draft{draftCount === 1 ? '' : 's'} saved</Text>
+                            </Pressable>
+                        ) : null}
+                        <SearchBar value={search} onChangeText={setSearch} placeholder="Search invoices…" style={{ marginTop: spacing.sm }} />
+                        <ChipGroup options={FILTERS} value={filter} onChange={setFilter} />
+                    </>
+                }
                 ListEmptyComponent={
                     <EmptyState
                         title="No invoices"
                         message="Create your first invoice to get started"
-                        action={<Button title="Create invoice" onPress={tryCreate} style={{ marginTop: 12 }} />}
+                        action={
+                            <Pressable onPress={() => tryCreate()}>
+                                <Text style={styles.cta}>Create invoice</Text>
+                            </Pressable>
+                        }
                     />
                 }
                 renderItem={({ item }) => (
-                    <Pressable onPress={() => navigation.navigate('InvoiceDetail', { id: item.id })}>
-                        <Card style={styles.item}>
-                            <View style={styles.row}>
-                                <Text style={styles.num}>{getDisplayNumber(item)}</Text>
-                                <StatusBadge status={item.status} />
-                            </View>
-                            <Text style={styles.meta}>{getClientName(item.clientId)}</Text>
-                            <Text style={styles.meta}>
-                                {format(new Date(item.date), 'MMM d, yyyy')} · {formatCurrency(item.total)}
-                            </Text>
-                        </Card>
-                    </Pressable>
+                    <ListRow
+                        title={getDisplayNumber(item)}
+                        subtitle={`${getClientName(item.clientId)} · ${format(new Date(item.date), 'MMM d, yyyy')}`}
+                        onPress={() => navigation.navigate('InvoiceDetail', { id: item.id })}
+                        badge={<StatusBadge status={item.status} />}
+                        right={<Text style={styles.amount}>{formatCurrency(item.total)}</Text>}
+                        showChevron={false}
+                    />
                 )}
             />
+            <FAB onPress={() => tryCreate()} label="Create" />
+            <InvoiceLimitModal ref={limitModalRef} usage={invoiceUsage} onUpgrade={goUpgrade} />
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.slate50 },
-    header: { padding: 16, paddingBottom: 8 },
-    usage: { marginTop: 8, fontSize: 13, color: '#92400e' },
-    search: {
-        marginTop: 12,
-        borderWidth: 1,
-        borderColor: colors.slate200,
+    screen: { flex: 1, backgroundColor: colors.surfaceMuted },
+    list: { padding: spacing.lg, paddingBottom: 100, flexGrow: 1 },
+    draftsLink: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        marginTop: spacing.sm,
+        padding: spacing.md,
+        backgroundColor: colors.brandSubtle,
         borderRadius: 12,
-        padding: 12,
-        backgroundColor: colors.white,
-        fontSize: 16,
     },
-    filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 10 },
-    chip: {
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 20,
-        backgroundColor: colors.slate100,
+    draftsText: {
+        fontFamily: fontFamily.semibold,
+        fontSize: fontSize.sm,
+        color: colors.brand,
     },
-    chipActive: { backgroundColor: colors.brand },
-    chipText: { fontSize: 12, fontWeight: '600', color: colors.slate600, textTransform: 'capitalize' },
-    chipTextActive: { color: colors.white },
-    list: { padding: 16, paddingTop: 0, paddingBottom: 32 },
-    item: { marginBottom: 10 },
-    row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-    num: { fontWeight: '700', fontSize: 16, color: colors.slate900 },
-    meta: { color: colors.slate500, marginTop: 4, fontSize: 13 },
+    amount: {
+        fontFamily: fontFamily.semibold,
+        fontSize: fontSize.sm,
+        color: colors.foreground,
+    },
+    cta: {
+        fontFamily: fontFamily.semibold,
+        color: colors.brand,
+        marginTop: spacing.md,
+    },
 });

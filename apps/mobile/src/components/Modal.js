@@ -2,7 +2,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { Button } from './ui';
 
-export function ConfirmModal({ visible, title, message, confirmLabel = 'Confirm', onConfirm, onCancel, danger }) {
+export function ConfirmModal({ visible, title, message, confirmLabel = 'Confirm', onConfirm, onCancel, danger, loading }) {
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
             <View style={styles.overlay}>
@@ -10,12 +10,13 @@ export function ConfirmModal({ visible, title, message, confirmLabel = 'Confirm'
                     <Text style={styles.title}>{title}</Text>
                     <Text style={styles.message}>{message}</Text>
                     <View style={styles.actions}>
-                        <Button title="Cancel" variant="secondary" onPress={onCancel} style={styles.btn} />
+                        <Button title="Cancel" variant="secondary" onPress={onCancel} style={styles.btn} disabled={loading} />
                         <Button
                             title={confirmLabel}
                             variant={danger ? 'danger' : 'primary'}
                             onPress={onConfirm}
                             style={styles.btn}
+                            loading={loading}
                         />
                     </View>
                 </View>

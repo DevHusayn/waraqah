@@ -1,5 +1,5 @@
 /**
- * Hermes TextDecoder rejects "ascii" — some deps (e.g. @react-pdf/renderer) request it.
+ * Hermes TextDecoder rejects "ascii" — some deps request legacy encodings.
  * Remap legacy encodings to utf-8 for single-byte ASCII-safe data.
  */
 if (typeof globalThis.TextDecoder !== 'undefined') {

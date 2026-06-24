@@ -3,6 +3,11 @@ export const colors = {
     brandDark: '#0369a1',
     brandLight: '#e0f2fe',
     brandSubtle: '#f0f9ff',
+    surface: '#ffffff',
+    surfaceMuted: '#f8fafc',
+    border: '#e2e8f0',
+    muted: '#64748b',
+    foreground: '#0f172a',
     slate50: '#f8fafc',
     slate100: '#f1f5f9',
     slate200: '#e2e8f0',
@@ -15,6 +20,17 @@ export const colors = {
     red50: '#fef2f2',
     red600: '#dc2626',
     red700: '#b91c1c',
+    emerald50: '#ecfdf5',
     emerald600: '#059669',
+    amber50: '#fffbeb',
     amber600: '#d97706',
+    violet50: '#f5f3ff',
+    violet600: '#7c3aed',
+};
+
+export const statIconThemes = {
+    brand: { bg: colors.brandLight, color: colors.brand },
+    violet: { bg: colors.violet50, color: colors.violet600 },
+    emerald: { bg: colors.emerald50, color: colors.emerald600 },
+    amber: { bg: colors.amber50, color: colors.amber600 },
 };
