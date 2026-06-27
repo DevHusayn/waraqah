@@ -18,7 +18,8 @@ import {
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
-import Spinner, { PageLoader } from '../components/Spinner';
+import Spinner from '../components/Spinner';
+import { DetailPageSkeleton } from '../components/Skeleton';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import MarkAsPaidModal from '../components/MarkAsPaidModal';
@@ -306,9 +307,7 @@ const InvoiceDetails = () => {
     };
 
     if (loading || !invoice) {
-        return (
-            <PageLoader />
-        );
+        return <DetailPageSkeleton />;
     }
 
     const displayNumber = getDisplayNumber(invoice) || '—';

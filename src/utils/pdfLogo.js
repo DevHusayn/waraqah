@@ -106,6 +106,49 @@ export async function drawCompanyStamp(doc, stampDataUrl, y, cache, options = {}
     addPngWithOpacity(doc, png, x, y, w, h, opacity, rotation);
 }
 
+const PAID_STAMP_GREEN = [34, 197, 94];
+
+/** Rubber-stamp PAID watermark — centered on receipt PDFs (all users) */
+export function drawPaidStamp(doc, options = {}) {
+    const {
+        x = PAGE_W / 2,
+        y = 145,
+        rotation = -20,
+        opacity = 0.16,
+    } = options;
+
+    const label = 'PAID';
+    const stampW = 56;
+    const stampH = 22;
+    const rad = (rotation * Math.PI) / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+    const tx = x - cos * x + sin * y;
+    const ty = y - sin * x - cos * y;
+
+    doc.saveGraphicsState();
+    if (typeof doc.setGState === 'function' && doc.GState && opacity < 1) {
+        doc.setGState(new doc.GState({ opacity }));
+    }
+
+    doc.internal.write(
+        `${cos.toFixed(5)} ${sin.toFixed(5)} ${(-sin).toFixed(5)} ${cos.toFixed(5)} ${tx.toFixed(2)} ${ty.toFixed(2)} cm`
+    );
+
+    doc.setDrawColor(...PAID_STAMP_GREEN);
+    doc.setLineWidth(0.75);
+    doc.roundedRect(-stampW / 2, -stampH / 2, stampW, stampH, 3, 3, 'S');
+    doc.setLineWidth(0.35);
+    doc.roundedRect(-stampW / 2 + 2.2, -stampH / 2 + 2, stampW - 4.4, stampH - 4, 2, 2, 'S');
+
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(22);
+    doc.setTextColor(...PAID_STAMP_GREEN);
+    doc.text(label, 0, 2.8, { align: 'center' });
+
+    doc.restoreGraphicsState();
+}
+
 /** @deprecated jsPDF always receives flattened PNG after resolvePdfPng */
 export function getImageFormat() {
     return 'PNG';

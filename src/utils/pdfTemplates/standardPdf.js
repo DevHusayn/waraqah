@@ -9,6 +9,7 @@ import {
     drawAuthorizedSignature,
     drawCompanyStamp,
     drawHeaderLogo,
+    drawPaidStamp,
     PAGE_H,
     PAGE_W,
 } from '../pdfLogo';
@@ -511,7 +512,7 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     }
 
     doc.setTextColor(...grayColor);
-    doc.text(`Tax (${invoice.taxRate || 10}%)`, totalsX, currentY + totalsOffset);
+    doc.text(`Tax (${invoice.taxRate ?? 0}%)`, totalsX, currentY + totalsOffset);
     doc.setTextColor(...textColor);
     doc.text(`${currencySymbol}${formatMoney(invoice.tax)}`, 195, currentY + totalsOffset, {
         align: 'right',
@@ -547,6 +548,15 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     const footerLineY = PAGE_H - footerReserve;
     const signatureY = footerLineY - signatureReserve - 2;
     const stampY = footerLineY - stampReserve;
+
+    if (isReceiptDoc) {
+        const pageCount = doc.getNumberOfPages();
+        for (let page = 1; page <= pageCount; page += 1) {
+            doc.setPage(page);
+            drawPaidStamp(doc);
+        }
+        doc.setPage(pageCount);
+    }
 
     try {
         if (signatureUrl) {

@@ -81,7 +81,7 @@ function App() {
                                             </Route>
                                             <Route path="/statements" element={<PrivateRoute><MonthlyStatement /></PrivateRoute>} />
                                             <Route path="/upgrade" element={<PrivateRoute><Upgrade /></PrivateRoute>} />
-                                            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+                                            <Route path="/admin" element={<PrivateRoute><AdminRoute><AdminDashboard /></AdminRoute></PrivateRoute>} />
                                         </Routes>
                                     </AppLayout>
                                 }

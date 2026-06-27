@@ -29,6 +29,22 @@ export function wrapHtml(body, title = 'Document') {
     line-height: 1.45;
     margin: 0;
     padding: 32px;
+    position: relative;
+  }
+  .paid-stamp {
+    position: absolute;
+    left: 50%;
+    top: 42%;
+    transform: translate(-50%, -50%) rotate(-20deg);
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    color: rgba(34, 197, 94, 0.18);
+    border: 3px double rgba(34, 197, 94, 0.22);
+    border-radius: 10px;
+    padding: 10px 28px;
+    pointer-events: none;
+    z-index: 10;
   }
   .brand-bar { height: 4px; margin: -32px -32px 20px; }
   .header { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 20px; }

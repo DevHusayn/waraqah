@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Navigate } from 'react-router-dom';
 import {
     Search,
     Shield,
@@ -18,7 +20,8 @@ import { FREE_MONTHLY_INVOICE_LIMIT } from '../utils/invoiceLimits';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import PageHeader from '../components/PageHeader';
-import Spinner, { PageLoader } from '../components/Spinner';
+import Spinner from '../components/Spinner';
+import { AdminPageSkeleton } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 
 function StatusBadge({ status }) {
@@ -109,6 +112,8 @@ function AdminActionsMenu({
     onDelete,
 }) {
     const [open, setOpen] = useState(false);
+    const [menuStyle, setMenuStyle] = useState(null);
+    const buttonRef = useRef(null);
     const menuRef = useRef(null);
     const isSelf = user._id === currentUserId;
     const isPremium = user.businessInfo?.plan === 'premium';
@@ -118,12 +123,54 @@ function AdminActionsMenu({
     const loadingKey = actionLoading?.startsWith(user._id) ? actionLoading : '';
     const busy = Boolean(loadingKey);
 
+    const updateMenuPosition = () => {
+        const button = buttonRef.current;
+        if (!button) return;
+
+        const rect = button.getBoundingClientRect();
+        const menuWidth = 224;
+        const gap = 8;
+        const menuHeight = menuRef.current?.offsetHeight ?? 320;
+        const spaceBelow = window.innerHeight - rect.bottom - gap;
+        const spaceAbove = rect.top - gap;
+        const openUp = spaceBelow < menuHeight && spaceAbove >= spaceBelow;
+
+        setMenuStyle({
+            position: 'fixed',
+            top: openUp ? rect.top - gap : rect.bottom + gap,
+            left: Math.max(8, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8)),
+            transform: openUp ? 'translateY(-100%)' : undefined,
+            width: menuWidth,
+            zIndex: 50,
+        });
+    };
+
+    useLayoutEffect(() => {
+        if (!open) {
+            setMenuStyle(null);
+            return undefined;
+        }
+
+        updateMenuPosition();
+        const raf = requestAnimationFrame(updateMenuPosition);
+
+        window.addEventListener('resize', updateMenuPosition);
+        window.addEventListener('scroll', updateMenuPosition, true);
+
+        return () => {
+            cancelAnimationFrame(raf);
+            window.removeEventListener('resize', updateMenuPosition);
+            window.removeEventListener('scroll', updateMenuPosition, true);
+        };
+    }, [open]);
+
     useEffect(() => {
         if (!open) return undefined;
         const onPointerDown = (e) => {
-            if (menuRef.current && !menuRef.current.contains(e.target)) {
-                setOpen(false);
+            if (buttonRef.current?.contains(e.target) || menuRef.current?.contains(e.target)) {
+                return;
             }
+            setOpen(false);
         };
         document.addEventListener('mousedown', onPointerDown);
         return () => document.removeEventListener('mousedown', onPointerDown);
@@ -134,9 +181,80 @@ function AdminActionsMenu({
         fn();
     };
 
+    const menu =
+        open && menuStyle
+            ? createPortal(
+                  <div
+                      ref={menuRef}
+                      style={menuStyle}
+                      className="rounded-xl border border-zinc-200 bg-white shadow-lg p-1.5"
+                      role="menu"
+                  >
+                      <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+                          Plan & billing
+                      </p>
+                      <AdminActionItem
+                          icon={Crown}
+                          label={isPremium ? 'Revoke Premium' : 'Grant Premium'}
+                          tone="premium"
+                          disabled={busy}
+                          onClick={() =>
+                              closeAnd(() =>
+                                  onPlan(user._id, user.businessInfo?.plan || 'free')
+                              )
+                          }
+                      />
+                      {!isPremium && (
+                          <AdminActionItem
+                              icon={RotateCcw}
+                              label={`Reset free quota (${FREE_MONTHLY_INVOICE_LIMIT})`}
+                              tone="success"
+                              disabled={busy}
+                              onClick={() => closeAnd(() => onResetQuota(user._id))}
+                          />
+                      )}
+
+                      <div className="my-1 border-t border-zinc-100" />
+                      <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+                          Account
+                      </p>
+                      <AdminActionItem
+                          icon={user.status === 'active' ? Ban : CheckCircle}
+                          label={user.status === 'active' ? 'Suspend user' : 'Activate user'}
+                          disabled={busy || isSelf}
+                          onClick={() => closeAnd(() => onStatus(user._id))}
+                      />
+                      <AdminActionItem
+                          icon={user.isAdmin ? ShieldOff : Shield}
+                          label={user.isAdmin ? 'Remove admin' : 'Make admin'}
+                          disabled={busy || isSelf}
+                          onClick={() => closeAnd(() => onAdmin(user._id))}
+                      />
+                      <AdminActionItem
+                          icon={Unlock}
+                          label="Unlock login"
+                          tone="success"
+                          disabled={busy || isSelf || !isLocked}
+                          onClick={() => closeAnd(() => onUnlock(user._id))}
+                      />
+
+                      <div className="my-1 border-t border-zinc-100" />
+                      <AdminActionItem
+                          icon={Trash2}
+                          label="Delete user"
+                          tone="danger"
+                          disabled={busy || isSelf}
+                          onClick={() => closeAnd(() => onDelete(user._id))}
+                      />
+                  </div>,
+                  document.body
+              )
+            : null;
+
     return (
-        <div className="relative" ref={menuRef}>
+        <>
             <button
+                ref={buttonRef}
                 type="button"
                 onClick={() => setOpen((v) => !v)}
                 disabled={busy}
@@ -151,71 +269,8 @@ function AdminActionsMenu({
                 )}
                 Actions
             </button>
-
-            {open && (
-                <div
-                    className="absolute right-0 z-30 mt-2 w-56 rounded-xl border border-zinc-200 bg-white shadow-lg p-1.5"
-                    role="menu"
-                >
-                    <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
-                        Plan & billing
-                    </p>
-                    <AdminActionItem
-                        icon={Crown}
-                        label={isPremium ? 'Revoke Premium' : 'Grant Premium'}
-                        tone="premium"
-                        disabled={busy}
-                        onClick={() =>
-                            closeAnd(() =>
-                                onPlan(user._id, user.businessInfo?.plan || 'free')
-                            )
-                        }
-                    />
-                    {!isPremium && (
-                        <AdminActionItem
-                            icon={RotateCcw}
-                            label={`Reset free quota (${FREE_MONTHLY_INVOICE_LIMIT})`}
-                            tone="success"
-                            disabled={busy}
-                            onClick={() => closeAnd(() => onResetQuota(user._id))}
-                        />
-                    )}
-
-                    <div className="my-1 border-t border-zinc-100" />
-                    <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
-                        Account
-                    </p>
-                    <AdminActionItem
-                        icon={user.status === 'active' ? Ban : CheckCircle}
-                        label={user.status === 'active' ? 'Suspend user' : 'Activate user'}
-                        disabled={busy || isSelf}
-                        onClick={() => closeAnd(() => onStatus(user._id))}
-                    />
-                    <AdminActionItem
-                        icon={user.isAdmin ? ShieldOff : Shield}
-                        label={user.isAdmin ? 'Remove admin' : 'Make admin'}
-                        disabled={busy || isSelf}
-                        onClick={() => closeAnd(() => onAdmin(user._id))}
-                    />
-                    <AdminActionItem
-                        icon={Unlock}
-                        label="Unlock login"
-                        tone="success"
-                        disabled={busy || isSelf || !isLocked}
-                        onClick={() => closeAnd(() => onUnlock(user._id))}
-                    />
-
-                    <div className="my-1 border-t border-zinc-100" />
-                    <AdminActionItem
-                        icon={Trash2}
-                        label="Delete user"
-                        tone="danger"
-                        disabled={busy || isSelf}
-                        onClick={() => closeAnd(() => onDelete(user._id))}
-                    />
-                </div>
-            )}
-        </div>
+            {menu}
+        </>
     );
 }
 
@@ -223,6 +278,7 @@ export default function AdminDashboard() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [forbidden, setForbidden] = useState(false);
     const [search, setSearch] = useState('');
     const [actionLoading, setActionLoading] = useState('');
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
@@ -240,17 +296,32 @@ export default function AdminDashboard() {
     }
 
     useEffect(() => {
+        let cancelled = false;
+
         async function fetchUsers() {
             try {
                 const data = await apiFetch('/auth/admin/users');
+                if (cancelled) return;
                 setUsers(Array.isArray(data) ? data : []);
             } catch (e) {
+                if (cancelled) return;
+                if (e.status === 403) {
+                    localStorage.removeItem('isAdmin');
+                    setForbidden(true);
+                    return;
+                }
                 setError(e.message || 'Could not load users.');
             } finally {
-                setLoading(false);
+                if (!cancelled) {
+                    setLoading(false);
+                }
             }
         }
+
         fetchUsers();
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     const filteredUsers = users.filter((user) => {
@@ -389,9 +460,11 @@ export default function AdminDashboard() {
     };
 
     if (loading) {
-        return (
-            <PageLoader />
-        );
+        return <AdminPageSkeleton />;
+    }
+
+    if (forbidden) {
+        return <Navigate to="/" replace />;
     }
 
     if (error) {

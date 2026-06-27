@@ -1,13 +1,9 @@
 import SettingsListGroup from '../../components/settings/SettingsListGroup';
 import SettingsListItem from '../../components/settings/SettingsListItem';
 import SettingsPageShell from '../../components/settings/SettingsPageShell';
-import BusinessSummaryCard from '../../components/settings/BusinessSummaryCard';
-import { useSettings } from '../../context/SettingsContext';
 import { BUSINESS_SETTINGS_INDEX } from '../../constants/settingsNav';
 
 export default function BusinessSettingsIndex() {
-    const { businessInfo } = useSettings();
-
     return (
         <SettingsPageShell
             title="Business Settings"
@@ -19,8 +15,6 @@ export default function BusinessSettingsIndex() {
                 { label: 'Business Settings', to: '/settings/business' },
             ]}
         >
-            <BusinessSummaryCard businessInfo={businessInfo} className="mb-6" />
-
             <SettingsListGroup label="Business">
                 {BUSINESS_SETTINGS_INDEX.map((item) => (
                     <SettingsListItem

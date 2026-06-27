@@ -27,6 +27,7 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
         .join('');
 
     const body = `
+    ${isReceipt ? '<div class="paid-stamp" aria-hidden="true">PAID</div>' : ''}
     <div class="brand-bar" style="background:${escapeHtml(brand)}"></div>
     <div class="header">
       <div>
@@ -72,7 +73,7 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
     </table>
     <div class="totals">
       <div class="total-row"><span>Subtotal</span><span>${escapeHtml(formatMoney(invoice.subtotal, symbol))}</span></div>
-      <div class="total-row"><span>Tax (${escapeHtml(invoice.taxRate || 10)}%)</span><span>${escapeHtml(formatMoney(invoice.tax, symbol))}</span></div>
+      <div class="total-row"><span>Tax (${escapeHtml(invoice.taxRate ?? 0)}%)</span><span>${escapeHtml(formatMoney(invoice.tax, symbol))}</span></div>
       <div class="total-row total-bold"><span>Total</span><span>${escapeHtml(formatMoney(invoice.total, symbol))}</span></div>
       <div class="total-row total-bold" style="color:${escapeHtml(brand)}">
         <span>${isReceipt ? 'TOTAL PAID' : 'TOTAL DUE'}</span>

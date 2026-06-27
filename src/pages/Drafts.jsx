@@ -7,7 +7,8 @@ import { getDraftLabel } from '../utils/invoiceHelpers';
 import { formatCurrency } from '../utils/currency';
 import PageHeader from '../components/PageHeader';
 import ConfirmModal from '../components/ConfirmModal';
-import Spinner, { PageLoader } from '../components/Spinner';
+import Spinner from '../components/Spinner';
+import { ListPageSkeleton } from '../components/Skeleton';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 
@@ -40,7 +41,7 @@ const Drafts = () => {
     };
 
     if (loading) {
-        return <PageLoader />;
+        return <ListPageSkeleton rows={5} columns={4} withToolbar={false} />;
     }
 
     return (

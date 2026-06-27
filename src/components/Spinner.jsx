@@ -74,10 +74,4 @@ export function SpinnerOverlay({ label = 'Loading…' }) {
     );
 }
 
-export function PageLoader({ className = '' }) {
-    return (
-        <div className={`py-24 flex items-center justify-center ${className}`.trim()}>
-            <Spinner size="lg" centered />
-        </div>
-    );
-}
+export { PageLoader } from './Skeleton';

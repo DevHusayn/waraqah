@@ -4,7 +4,8 @@ import { Crown, Download, Printer, FileBarChart } from 'lucide-react';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import PageHeader from '../components/PageHeader';
-import Spinner, { PageLoader } from '../components/Spinner';
+import Spinner from '../components/Spinner';
+import { StatementPageSkeleton } from '../components/Skeleton';
 import { formatCurrency } from '../utils/currency';
 import { isPremiumUser } from '../utils/premium';
 import {
@@ -46,9 +47,7 @@ export default function MonthlyStatement() {
     };
 
     if (loading || settingsLoading) {
-        return (
-            <PageLoader />
-        );
+        return <StatementPageSkeleton />;
     }
 
     if (!premium) {

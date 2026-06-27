@@ -767,37 +767,6 @@ const CreateInvoice = () => {
                                 </button>
                             }
                         >
-                            {products.length > 0 ? (
-                                <div className="mb-4 flex flex-col sm:flex-row sm:items-end gap-3 p-4 rounded-xl border border-brand/20 bg-brand-subtle/30">
-                                    <div className="flex-1 min-w-0">
-                                        <label htmlFor="invoice-product-pick" className="label">
-                                            Add from product
-                                        </label>
-                                        <CustomSelect
-                                            id="invoice-product-pick"
-                                            value=""
-                                            onChange={(productId) => {
-                                                if (productId) addProductItem(productId);
-                                            }}
-                                            options={products.map((product) => ({
-                                                value: product.id,
-                                                label: `${product.name} — ${formatCurrency(product.unitPrice || 0)}`,
-                                            }))}
-                                            placeholder="Select a saved product…"
-                                            leadingIcon={<Package size={18} aria-hidden />}
-                                            aria-label="Add line item from saved product"
-                                        />
-                                    </div>
-                                </div>
-                            ) : (
-                                <p className="mb-4 text-sm text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3">
-                                    Save products in{' '}
-                                    <Link to="/products" className="text-brand font-medium hover:underline">
-                                        Products
-                                    </Link>{' '}
-                                    to add line items in one click.
-                                </p>
-                            )}
                             <div className="space-y-4">
                                 {formData.items.map((item, index) => (
                                     <div
@@ -896,6 +865,37 @@ const CreateInvoice = () => {
                                     </div>
                                 ))}
                             </div>
+                            {products.length > 0 ? (
+                                <div className="mt-4 flex flex-col sm:flex-row sm:items-end gap-3 p-4 rounded-xl border border-brand/20 bg-brand-subtle/30">
+                                    <div className="flex-1 min-w-0">
+                                        <label htmlFor="invoice-product-pick" className="label">
+                                            Add from product
+                                        </label>
+                                        <CustomSelect
+                                            id="invoice-product-pick"
+                                            value=""
+                                            onChange={(productId) => {
+                                                if (productId) addProductItem(productId);
+                                            }}
+                                            options={products.map((product) => ({
+                                                value: product.id,
+                                                label: `${product.name} — ${formatCurrency(product.unitPrice || 0)}`,
+                                            }))}
+                                            placeholder="Select a saved product…"
+                                            leadingIcon={<Package size={18} aria-hidden />}
+                                            aria-label="Add line item from saved product"
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="mt-4 text-sm text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3">
+                                    Save products in{' '}
+                                    <Link to="/products" className="text-brand font-medium hover:underline">
+                                        Products
+                                    </Link>{' '}
+                                    to add line items in one click.
+                                </p>
+                            )}
                         </FormSection>
 
                         <FormSection
@@ -1026,7 +1026,7 @@ const CreateInvoice = () => {
                 </div>
             </form>
 
-            <div className="fixed bottom-0 left-0 right-0 md:left-64 z-40 xl:hidden border-t border-zinc-200 bg-white/95 backdrop-blur-sm shadow-[0_-4px_16px_rgba(15,23,42,0.06)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="fixed bottom-0 left-0 right-0 md:left-[15.5rem] z-30 xl:hidden border-t border-zinc-200 bg-white/95 backdrop-blur-sm shadow-[0_-4px_16px_rgba(15,23,42,0.06)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
                 <div className="max-w-6xl mx-auto w-full">
                     {actionButtons()}
                 </div>

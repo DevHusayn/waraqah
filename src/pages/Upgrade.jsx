@@ -9,7 +9,8 @@ import { formatCurrency } from '../utils/currency';
 import { PREMIUM_PLAN_FEATURES } from '../constants/planFeatures';
 import { PREMIUM_PRICE_NGN } from '../constants/pricing';
 import PremiumPrice from '../components/PremiumPrice';
-import Spinner, { PageLoader } from '../components/Spinner';
+import Spinner from '../components/Spinner';
+import { UpgradePageSkeleton } from '../components/Skeleton';
 import DevPlanToggle from '../components/DevPlanToggle';
 
 export default function Upgrade() {
@@ -44,9 +45,7 @@ export default function Upgrade() {
     };
 
     if (loading) {
-        return (
-            <PageLoader />
-        );
+        return <UpgradePageSkeleton />;
     }
 
     return (

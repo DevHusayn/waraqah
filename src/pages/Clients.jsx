@@ -7,7 +7,8 @@ import ClientFormModal, { EMPTY_CLIENT } from '../components/ClientFormModal';
 import PageHeader from '../components/PageHeader';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
-import Spinner, { PageLoader } from '../components/Spinner';
+import Spinner from '../components/Spinner';
+import { TableSkeleton } from '../components/Skeleton';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 import Toolbar, { ToolbarSearch } from '../components/Toolbar';
@@ -172,7 +173,7 @@ const Clients = () => {
             </PageHeader>
 
             {loading ? (
-                <PageLoader />
+                <TableSkeleton rows={6} columns={5} />
             ) : clients.length === 0 ? (
                 <div className="data-table-wrap">
                     <EmptyState

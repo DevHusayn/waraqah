@@ -147,7 +147,7 @@ const Layout = ({ children }) => {
             </aside>
 
             {sidebarOpen && (
-                <div className="fixed inset-0 z-40 flex md:hidden overflow-hidden overscroll-none">
+                <div className="fixed inset-0 z-50 flex md:hidden overflow-hidden overscroll-none">
                     <div
                         className="fixed inset-0 bg-zinc-950/30 backdrop-blur-[3px] touch-none"
                         onClick={() => setSidebarOpen(false)}
