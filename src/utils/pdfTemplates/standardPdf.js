@@ -9,7 +9,6 @@ import {
     drawAuthorizedSignature,
     drawCompanyStamp,
     drawHeaderLogo,
-    drawPaidStamp,
     PAGE_H,
     PAGE_W,
 } from '../pdfLogo';
@@ -548,17 +547,6 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     const footerLineY = PAGE_H - footerReserve;
     const signatureY = footerLineY - signatureReserve - 2;
     const stampY = footerLineY - stampReserve;
-
-    if (isReceiptDoc) {
-        const tableMidY = (tableStartY + doc.lastAutoTable.finalY) / 2;
-        const paidStampY = Math.min(Math.max(tableMidY, 100), CONTENT_BOTTOM - 45);
-        const pageCount = doc.getNumberOfPages();
-        for (let page = 1; page <= pageCount; page += 1) {
-            doc.setPage(page);
-            await drawPaidStamp(doc, { y: paidStampY });
-        }
-        doc.setPage(pageCount);
-    }
 
     try {
         if (signatureUrl) {

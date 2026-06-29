@@ -27,7 +27,6 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
         .join('');
 
     const body = `
-    ${isReceipt ? '<div class="paid-stamp" aria-hidden="true">PAID</div>' : ''}
     <div class="brand-bar" style="background:${escapeHtml(brand)}"></div>
     <div class="header">
       <div>
