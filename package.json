@@ -16,6 +16,7 @@
         "mobile:ios": "npm run ios -w mobile"
     },
     "dependencies": {
+        "@sentry/react": "^10.62.0",
         "@waraqah/shared": "*",
         "date-fns": "^3.0.0",
         "jspdf": "^2.5.1",

@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { apiFetch, getToken } from '../utils/api';
+import { apiFetch } from '../utils/api';
+import { useAuth } from './AuthContext';
 import { invoicesNeedingOverdueSync, isDraft } from '../utils/invoiceHelpers';
 
 const InvoiceContext = createContext();
@@ -18,6 +19,7 @@ export const InvoiceProvider = ({ children }) => {
     const [products, setProducts] = useState([]);
     const [invoiceUsage, setInvoiceUsage] = useState(null);
     const [loading, setLoading] = useState(true);
+    const { isAuthenticated } = useAuth();
 
     const mapInvoice = (i) => ({ ...i, id: i._id || i.id });
     const mapClient = (c) => ({ ...c, id: c._id || c.id });
@@ -40,7 +42,7 @@ export const InvoiceProvider = ({ children }) => {
     };
 
     const fetchUserData = useCallback(async () => {
-        if (!getToken()) {
+        if (!isAuthenticated) {
             setInvoices([]);
             setClients([]);
             setProducts([]);
@@ -70,7 +72,7 @@ export const InvoiceProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [isAuthenticated]);
 
     useEffect(() => {
         fetchUserData();

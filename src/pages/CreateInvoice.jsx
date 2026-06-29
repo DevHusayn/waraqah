@@ -9,7 +9,6 @@ import {
     Users,
     List,
     StickyNote,
-    Repeat,
     X,
     Package,
 } from 'lucide-react';
@@ -54,14 +53,6 @@ function hasDraftContent(data) {
     if (Number(data.discountValue) > 0) return true;
     return (data.items || []).some((item) => String(item.description || '').trim());
 }
-
-const RECURRING_FREQUENCY_OPTIONS = [
-    { value: 'weekly', label: 'Weekly' },
-    { value: 'biweekly', label: 'Bi-Weekly' },
-    { value: 'monthly', label: 'Monthly' },
-    { value: 'quarterly', label: 'Quarterly' },
-    { value: 'yearly', label: 'Yearly' },
-];
 
 const CreateInvoice = () => {
     const { id } = useParams();
@@ -108,9 +99,6 @@ const CreateInvoice = () => {
         taxRate: 0,
         discountType: 'percent',
         discountValue: '',
-        isRecurring: false,
-        recurringFrequency: 'monthly',
-        recurringEndDate: '',
     });
 
     formDataRef.current = formData;
@@ -895,64 +883,6 @@ const CreateInvoice = () => {
                                     </Link>{' '}
                                     to add line items in one click.
                                 </p>
-                            )}
-                        </FormSection>
-
-                        <FormSection
-                            icon={Repeat}
-                            title="Recurring"
-                            description="Optional automatic billing schedule"
-                        >
-                            <label className="flex items-center gap-3 cursor-pointer select-none">
-                                <input
-                                    type="checkbox"
-                                    id="isRecurring"
-                                    checked={formData.isRecurring}
-                                    onChange={(e) => {
-                                        markDirty();
-                                        setFormData({ ...formData, isRecurring: e.target.checked });
-                                    }}
-                                    className="h-5 w-5 rounded border-zinc-300 text-brand focus:ring-brand/30"
-                                />
-                                <span className="text-sm font-medium text-zinc-700">
-                                    Make this a recurring invoice
-                                </span>
-                            </label>
-                            {formData.isRecurring && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-zinc-100">
-                                    <div>
-                                        <label className="label">Frequency</label>
-                                        <CustomSelect
-                                            id="invoice-recurring-frequency"
-                                            value={formData.recurringFrequency}
-                                            onChange={(val) => {
-                                                markDirty();
-                                                setFormData((prev) => ({
-                                                    ...prev,
-                                                    recurringFrequency: val,
-                                                }));
-                                            }}
-                                            options={RECURRING_FREQUENCY_OPTIONS}
-                                            placeholder="Frequency"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="label">End date (optional)</label>
-                                        <DatePickerField
-                                            id="invoice-recurring-end"
-                                            value={formData.recurringEndDate}
-                                            onChange={(val) => {
-                                                markDirty();
-                                                setFormData((prev) => ({
-                                                    ...prev,
-                                                    recurringEndDate: val,
-                                                }));
-                                            }}
-                                            min={formData.date || undefined}
-                                            placeholder="No end date"
-                                        />
-                                    </div>
-                                </div>
                             )}
                         </FormSection>
 

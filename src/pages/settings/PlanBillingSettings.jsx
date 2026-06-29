@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import SettingsPageShell from '../../components/settings/SettingsPageShell';
 import { SettingsSection } from '../../components/settings/SettingsSection';
 import SubscriptionBilling from '../../components/SubscriptionBilling';
+import BillingHistory from '../../components/BillingHistory';
 import DevPlanToggle from '../../components/DevPlanToggle';
 import { useSettings } from '../../context/SettingsContext';
 import { isPremiumUser } from '../../utils/premium';
@@ -68,6 +69,12 @@ export default function PlanBillingSettings() {
                     <DevPlanToggle formData={formData} setFormData={setFormData} />
                     <SubscriptionBilling />
                 </div>
+            </SettingsSection>
+            <SettingsSection
+                title="Billing history"
+                description="Past subscription payments"
+            >
+                <BillingHistory />
             </SettingsSection>
         </SettingsPageShell>
     );

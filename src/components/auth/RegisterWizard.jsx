@@ -8,8 +8,10 @@ import ProfileFormFields from '../settings/ProfileFormFields';
 import AccountFormFields from '../settings/AccountFormFields';
 import { useSettings } from '../../context/SettingsContext';
 import { useInvoice } from '../../context/InvoiceContext';
+import { useAuth } from '../../context/AuthContext';
 import { APP_CURRENCY } from '../../utils/currency';
-import { API_BASE, getNetworkErrorMessage } from '../../utils/apiConfig';
+import { getNetworkErrorMessage } from '../../utils/apiConfig';
+import { authFetch, apiFetch } from '../../utils/api';
 import {
     inputClass,
     focusFieldById,
@@ -24,8 +26,6 @@ import {
 } from '../../utils/registerValidation';
 import { BRAND_PRESETS } from '../../utils/settingsValidation';
 
-const BASE_URL = API_BASE;
-const AUTH_URL = `${BASE_URL}/auth`;
 const DRAFT_KEY = 'registerDraft';
 
 export const REGISTER_INITIAL_FORM = {
@@ -118,6 +118,7 @@ export default function RegisterWizard({ returnTo }) {
     const [searchParams] = useSearchParams();
     const { setBusinessInfo } = useSettings();
     const { fetchUserData, resetAll } = useInvoice();
+    const { setSession } = useAuth();
 
     const step = clampRegisterStep(searchParams.get('step') || 1);
     const currentStepMeta = REGISTER_STEPS[step - 1];
@@ -261,40 +262,18 @@ export default function RegisterWizard({ returnTo }) {
                 },
             };
 
-            let res;
-            try {
-                res = await fetch(`${AUTH_URL}/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body),
-                });
-            } catch {
-                throw new Error(getNetworkErrorMessage());
-            }
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Error');
-
-            localStorage.setItem('token', data.token);
-            if (data.user && typeof data.user.isAdmin !== 'undefined') {
-                localStorage.setItem('isAdmin', data.user.isAdmin);
-            } else {
-                localStorage.removeItem('isAdmin');
-            }
+            const data = await authFetch('/auth/register', {
+                method: 'POST',
+                body: JSON.stringify(body),
+            });
 
             clearRegisterDraft();
+            setSession(data.user);
             await fetchUserData();
 
             try {
-                const businessRes = await fetch(`${BASE_URL}/business-info`, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${data.token}`,
-                    },
-                });
-                if (businessRes.ok) {
-                    setBusinessInfo(await businessRes.json());
-                }
+                const info = await apiFetch('/business-info');
+                setBusinessInfo(info);
             } catch (businessErr) {
                 console.error('Failed to fetch business info:', businessErr);
             }

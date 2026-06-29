@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { apiFetch, getToken } from '../utils/api';
+import { apiFetch } from '../utils/api';
+import { useAuth } from './AuthContext';
 import { buildBusinessInfoPayload } from '../utils/businessPayload';
 
 const SettingsContext = createContext();
@@ -37,9 +38,10 @@ export const useSettings = () => {
 export const SettingsProvider = ({ children }) => {
     const [businessInfo, setBusinessInfo] = useState(EMPTY_BUSINESS);
     const [loading, setLoading] = useState(true);
+    const { isAuthenticated } = useAuth();
 
     const fetchBusinessInfo = useCallback(async () => {
-        if (!getToken()) {
+        if (!isAuthenticated) {
             setBusinessInfo(EMPTY_BUSINESS);
             setLoading(false);
             return;
@@ -53,7 +55,7 @@ export const SettingsProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [isAuthenticated]);
 
     useEffect(() => {
         fetchBusinessInfo();

@@ -28,6 +28,7 @@ import MonthlyStatement from './pages/MonthlyStatement';
 import { InvoiceProvider } from './context/InvoiceContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { ToastProvider } from './context/ToastContext';
+import { AuthProvider } from './context/AuthContext';
 import BrandTheme from './components/BrandTheme';
 
 function AppLayout({ children }) {
@@ -37,10 +38,11 @@ function AppLayout({ children }) {
 function App() {
     return (
         <ToastProvider>
-            <SettingsProvider>
-                <BrandTheme />
-                <InvoiceProvider>
-                    <Router>
+            <AuthProvider>
+                <SettingsProvider>
+                    <BrandTheme />
+                    <InvoiceProvider>
+                        <Router>
                         <Routes>
                             <Route path="/" element={<Home />} />
                             <Route path="/auth" element={<Auth />} />
@@ -87,9 +89,10 @@ function App() {
                                 }
                             />
                         </Routes>
-                    </Router>
-                </InvoiceProvider>
-            </SettingsProvider>
+                        </Router>
+                    </InvoiceProvider>
+                </SettingsProvider>
+            </AuthProvider>
         </ToastProvider>
     );
 }

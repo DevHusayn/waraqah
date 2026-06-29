@@ -1,11 +1,15 @@
 import { Navigate } from 'react-router-dom';
-import { getToken } from './api';
+import { useAuth } from '../context/AuthContext';
+import { PageLoader } from '../components/Skeleton';
 
 export default function AdminRoute({ children }) {
-    const token = getToken();
-    const isAdmin = localStorage.getItem('isAdmin') === 'true';
+    const { isAuthenticated, isAdmin, loading } = useAuth();
 
-    if (!token) {
+    if (loading) {
+        return <PageLoader />;
+    }
+
+    if (!isAuthenticated) {
         return <Navigate to="/auth" replace />;
     }
 

@@ -17,6 +17,12 @@ Vite bakes env vars in at **build time**. If this is missing, the app calls `htt
 
 Use your **real backend URL** + `/api` at the end. Must be **HTTPS**.
 
+Optional — error monitoring:
+
+| Name | Value |
+|------|--------|
+| `VITE_SENTRY_DSN` | Your Sentry project DSN (from [sentry.io](https://sentry.io)) |
+
 3. **Redeploy** the frontend (Deployments → … → Redeploy). Changing env vars does not update old builds until you redeploy.
 
 ---
@@ -123,6 +129,7 @@ Security response headers are set in `vercel.json` (`X-Frame-Options`, CSP, etc.
 ## Checklist
 
 - [ ] `VITE_API_URL` set on **frontend** Vercel project → **redeploy frontend**
+- [ ] `VITE_SENTRY_DSN` set (optional) for production error monitoring
 - [ ] `MONGO_URI` is Atlas, not localhost
 - [ ] `FRONTEND_URL` matches your Vercel app URL
 - [ ] `https://your-backend.vercel.app/api/health` works on your phone

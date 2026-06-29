@@ -1,137 +1,133 @@
-# Waraqah 🧾
+# Waraqah
 
-A professional, full-featured invoice app built with React, designed to help freelancers and businesses manage their invoicing needs efficiently.
+Professional invoicing for freelancers and businesses in Nigeria — create invoices, manage clients and products, export PDFs, and track payments. Includes free and premium tiers with Paystack subscriptions.
 
-![Waraqah](https://img.shields.io/badge/React-18.2-blue) ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38bdf8) ![License](https://img.shields.io/badge/License-MIT-green)
-
-## ✨ Features
-
-- **📄 Invoice Management**: Create, edit, and delete professional invoices
-- **👥 Client Database**: Manage your clients with detailed contact information
-- **📊 Dashboard**: Real-time overview of revenue, pending payments, and overdue invoices
-- **💾 PDF Export**: Generate professional PDF invoices with one click
-- **📱 Fully Responsive**: Beautiful UI that works on desktop, tablet, and mobile
-- **🎨 Professional Design**: Clean, modern interface with a polished color scheme
-- **💼 Status Tracking**: Track invoice status (Pending, Paid, Overdue, Cancelled)
-- **🔢 Automatic Calculations**: Auto-calculate subtotals, taxes, and totals
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js (v14 or higher)
-- npm or yarn
-
-### Installation
-
-1. Clone the repository or navigate to the project folder
-```bash
-cd waraqah
-```
-
-2. Install dependencies
-```bash
-npm install
-```
-
-3. Start the development server
-```bash
-npm run dev
-```
-
-4. Open your browser and visit `http://localhost:5173`
-
-## 🛠️ Built With
-
-- **React 18** - UI Framework
-- **React Router** - Navigation
-- **Tailwind CSS** - Styling
-- **Vite** - Build Tool
-- **jsPDF** - PDF Generation
-- **date-fns** - Date Formatting
-- **Lucide React** - Icons
-
-## 📱 Pages & Features
-
-### Dashboard
-- Overview of total invoices and clients
-- Revenue tracking (paid and pending)
-- Recent invoices list
-- Overdue invoice alerts
-- Quick action buttons
-
-### Invoices
-- List all invoices with filtering by status
-- Create new invoices with detailed items
-- Edit existing invoices
-- Delete invoices
-- Download invoices as PDF
-- Status-based color coding
-
-### Clients
-- Add and manage client information
-- Client cards with contact details
-- Edit and delete clients
-- Beautiful grid layout
-
-### Invoice Creation
-- Multi-item invoice builder
-- Dynamic item addition/removal
-- Automatic calculation of totals
-- Client selection
-- Date pickers for issue and due dates
-- Status selection
-- Notes section
-- Real-time summary sidebar
-
-## 💡 Usage Tips
-
-1. **Start by adding clients** - Go to the Clients page and add your first client
-2. **Create an invoice** - Navigate to Invoices → Create Invoice
-3. **Fill in details** - Select a client, add items, set dates
-4. **Save and export** - Save the invoice and download as PDF
-5. **Track payments** - Update invoice status as payments come in
-
-## 🎨 Customization
-
-The app uses Tailwind CSS for styling. You can customize the color scheme by editing [tailwind.config.js](tailwind.config.js):
-
-```js
-theme: {
-  extend: {
-    colors: {
-      primary: {
-        // Your custom color palette
-      },
-    },
-  },
-}
-```
-
-## 📦 Build for Production
-
-```bash
-npm run build
-```
-
-The production-ready files will be in the `dist` folder.
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome!
-
-## 📝 License
-
-This project is open source and available under the MIT License.
-
-## 👨‍💻 Developer
-
-Built with ❤️ as part of a professional portfolio
+**Stack:** React 18 + Vite (web), Express + MongoDB (API), Expo (mobile app in `apps/mobile`).
 
 ---
 
-## Live site
+## Features
 
-Production URL: your Vercel domain (e.g. `https://waraqah.vercel.app` or `https://www.waraqah.com`).
+- **Auth** — Register, login, forgot/reset password (JWT)
+- **Invoices** — Create, edit, drafts, statuses (pending / paid / overdue / cancelled), receipts
+- **Clients & products** — CRUD with validation
+- **Dashboard** — Revenue, pending amounts, recent invoices, overdue alerts
+- **PDF export** — Branded invoices and receipts (premium: logo, stamp, signature)
+- **Settings** — Company profile, bank details, branding, plan & billing history
+- **Premium** — Paystack subscription (launch price **₦2,000/month**; list price ₦5,000)
+- **Admin** — User management (suspend, plan override)
 
-See [REBRANDING.md](./REBRANDING.md) for renaming Vercel/GitHub from InvoicePro to Waraqah.
+---
+
+## Prerequisites
+
+- Node.js 18+
+- MongoDB (local or [MongoDB Atlas](https://www.mongodb.com/atlas))
+- [Paystack](https://paystack.com) account (for premium billing)
+- SMTP (e.g. Gmail app password) for password-reset emails
+
+---
+
+## Local development
+
+### 1. Backend (`InvoicePro-backend`)
+
+```bash
+cd InvoicePro-backend
+cp .env.example .env
+# Edit MONGO_URI, JWT_SECRET, PAYSTACK_*, SMTP_*, FRONTEND_URL
+npm install
+npm run dev
+```
+
+API runs at `http://localhost:5000`. Health check: `GET /api/health`.
+
+### 2. Frontend (this repo)
+
+```bash
+cd InvoicePro
+cp .env.example .env
+# VITE_API_URL=http://localhost:5000/api
+npm install
+npm run dev
+```
+
+App runs at `http://localhost:5173`.
+
+### 3. Mobile (optional)
+
+```bash
+cd InvoicePro/apps/mobile
+cp .env.example .env
+npm install
+npm run start
+```
+
+See [apps/mobile/README.md](./apps/mobile/README.md) and [Expo docs](https://docs.expo.dev/).
+
+---
+
+## Environment variables
+
+### Frontend (`.env` / Vercel)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `VITE_API_URL` | Yes (prod) | Backend URL + `/api`, e.g. `https://your-api.vercel.app/api` |
+| `VITE_SENTRY_DSN` | No | Sentry DSN for production error monitoring |
+
+### Backend
+
+See `InvoicePro-backend/.env.example`. Key vars: `MONGO_URI`, `JWT_SECRET`, `FRONTEND_URL`, `PAYSTACK_*`, `SMTP_*`, `ALLOW_DEV_PLAN=false` in production.
+
+---
+
+## Production deployment
+
+See **[DEPLOYMENT-VERCEL.md](./DEPLOYMENT-VERCEL.md)** for Vercel frontend + backend setup (env vars, CORS, health checks).
+
+Paystack setup: **[PAYSTACK-SETUP.md](./PAYSTACK-SETUP.md)** (₦2,000/month launch pricing).
+
+---
+
+## Build
+
+```bash
+npm run build    # web → dist/
+npm run preview  # preview production build locally
+```
+
+---
+
+## Project structure
+
+```
+InvoicePro/
+├── src/                 # Web app (Vite + React)
+├── packages/shared/     # Shared validation, pricing, invoice logic
+├── apps/mobile/         # Expo React Native app
+├── DEPLOYMENT-VERCEL.md
+├── PAYSTACK-SETUP.md
+└── REBRANDING.md
+```
+
+PDF generation lives in `src/utils/pdfTemplates/standardPdf.js` with logo/stamp helpers in `src/utils/pdfLogo.js`.
+
+---
+
+## Monitoring & errors
+
+- **Error boundary** — Unexpected React errors show a recovery screen instead of a blank page.
+- **Sentry** (optional) — Set `VITE_SENTRY_DSN` in production to capture client errors. Create a project at [sentry.io](https://sentry.io), add the DSN to Vercel, and redeploy.
+
+## Authentication
+
+The web app uses **httpOnly cookies** for session tokens (not `localStorage`). Login/register set secure cookies on the API domain; the frontend sends `credentials: 'include'` and a CSRF header on mutating requests. The mobile app continues to use Bearer tokens from the login response.
+
+**Note:** Frontend and API must be configured with matching CORS (`FRONTEND_URL`, `credentials: true`). On Vercel, cookies use `SameSite=None; Secure` when the API and app are on different domains.
+
+---
+
+## License
+
+MIT

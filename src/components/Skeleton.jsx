@@ -91,9 +91,9 @@ export function ListPageSkeleton({ rows = 6, columns = 4, withToolbar = true, wi
     );
 }
 
-export function StatsCardsSkeleton({ count = 3 }) {
+export function StatsCardsSkeleton({ count = 3, className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6' }) {
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <div className={className}>
             {Array.from({ length: count }).map((_, i) => (
                 <div key={i} className="stat-card">
                     <Skeleton className="h-12 w-12 rounded-xl shrink-0" />
@@ -228,6 +228,39 @@ export function UpgradePageSkeleton() {
                     </div>
                     <div className="px-5 pb-5">
                         <Skeleton className="h-11 w-full rounded-lg" />
+                    </div>
+                </div>
+            </div>
+        </LoadingStatus>
+    );
+}
+
+export function DashboardSkeleton() {
+    return (
+        <LoadingStatus label="Loading dashboard">
+            <StatsCardsSkeleton
+                count={4}
+                className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-3 mb-6"
+            />
+            <div className="card mb-6 space-y-3">
+                <Skeleton className="h-4 w-24" />
+                <div className="flex flex-wrap gap-2">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <Skeleton key={i} className="h-9 w-32 rounded-lg" />
+                    ))}
+                </div>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                    <Skeleton className="h-4 w-28 mb-3" />
+                    <TableSkeleton rows={5} columns={4} />
+                </div>
+                <div>
+                    <Skeleton className="h-4 w-16 mb-3" />
+                    <div className="card flex flex-col items-center gap-3 py-8">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <Skeleton className="h-4 w-28" />
+                        <Skeleton className="h-3 w-40" />
                     </div>
                 </div>
             </div>

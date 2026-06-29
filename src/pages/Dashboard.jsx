@@ -16,6 +16,7 @@ import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable'
 import StatusBadge from '../components/StatusBadge';
 import EmptyState from '../components/EmptyState';
 import InvoiceUsageBanner from '../components/InvoiceUsageBanner';
+import { DashboardSkeleton } from '../components/Skeleton';
 
 const RECENT_COLUMNS = [
     { key: 'number', label: 'Invoice' },
@@ -25,7 +26,7 @@ const RECENT_COLUMNS = [
 ];
 
 const Dashboard = () => {
-    const { invoices, clients } = useInvoice();
+    const { invoices, clients, loading } = useInvoice();
     const { businessInfo } = useSettings();
     const navigate = useNavigate();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen, tryNavigateToCreate } = useInvoiceCreateGuard();
@@ -69,6 +70,10 @@ const Dashboard = () => {
                 usage={invoiceUsage}
             />
             <PageHeader title="Dashboard" subtitle="Your invoicing overview" />
+            {loading ? (
+                <DashboardSkeleton />
+            ) : (
+            <>
             {!premium && usageLabel ? (
                 <InvoiceUsageBanner label={usageLabel} className="mb-4" />
             ) : null}
@@ -211,6 +216,8 @@ const Dashboard = () => {
                     )}
                 </div>
             </div>
+            </>
+            )}
         </div>
     );
 };

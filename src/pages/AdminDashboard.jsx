@@ -15,7 +15,8 @@ import {
     Users,
     FileText,
 } from 'lucide-react';
-import { apiFetch, getToken } from '../utils/api';
+import { apiFetch } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import { FREE_MONTHLY_INVOICE_LIMIT } from '../utils/invoiceLimits';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
@@ -284,16 +285,8 @@ export default function AdminDashboard() {
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [confirm, setConfirm] = useState({ open: false, userId: null });
 
-    let currentUserId = '';
-    try {
-        const token = getToken();
-        if (token) {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            currentUserId = payload.userId;
-        }
-    } catch {
-        /* ignore */
-    }
+    const { user } = useAuth();
+    const currentUserId = user?.id ? String(user.id) : '';
 
     useEffect(() => {
         let cancelled = false;
@@ -306,7 +299,6 @@ export default function AdminDashboard() {
             } catch (e) {
                 if (cancelled) return;
                 if (e.status === 403) {
-                    localStorage.removeItem('isAdmin');
                     setForbidden(true);
                     return;
                 }

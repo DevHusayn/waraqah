@@ -15,6 +15,7 @@ import {
 import { useState, useEffect } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
+import { useAuth } from '../context/AuthContext';
 import ConfirmModal from './ConfirmModal';
 import WaraqahLogo from './WaraqahLogo';
 import SidebarAccountFooter from './SidebarAccountFooter';
@@ -70,8 +71,7 @@ const Layout = ({ children }) => {
     const { businessInfo, setBusinessInfo } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const { resetAll, draftInvoices } = useInvoice();
-    const isLoggedIn = Boolean(localStorage.getItem('token'));
-    const isAdmin = localStorage.getItem('isAdmin') === 'true';
+    const { isAuthenticated, isAdmin, logout } = useAuth();
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     useEffect(() => {
@@ -83,12 +83,10 @@ const Layout = ({ children }) => {
         setSidebarOpen(false);
     }, [location.pathname]);
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('isAdmin');
+    const handleLogout = async () => {
         setBusinessInfo({ name: '', address: '', email: '', phone: '', website: '', defaultCurrency: 'NGN', taxRate: 10, brandColor: '#0ea5e9', plan: 'free', businessLogo: '', companyLogoUrl: '', companyLogoAvatarUrl: '', companyStampUrl: '', authorizedSignatureUrl: '', paymentAccountName: '', paymentBankName: '', paymentAccountNumber: '', paymentInstructions: '', invoiceTemplateId: 'classic' });
         resetAll();
-        window.dispatchEvent(new Event('app-logout'));
+        await logout();
         navigate('/auth');
     };
 
@@ -123,7 +121,7 @@ const Layout = ({ children }) => {
                     premium={premium}
                     badges={{ drafts: draftInvoices.length }}
                 />
-                {isLoggedIn && (
+                {isAuthenticated && (
                     <button
                         type="button"
                         onClick={() => setShowLogoutModal(true)}

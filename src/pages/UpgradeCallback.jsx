@@ -2,12 +2,14 @@ import { useEffect, useState, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import Spinner from '../components/Spinner';
-import { apiFetch, getToken } from '../utils/api';
+import { apiFetch } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 
 export default function UpgradeCallback() {
     const [searchParams] = useSearchParams();
-    const { setBusinessInfo, refreshBusinessInfo } = useSettings();
+    const { refreshBusinessInfo, setBusinessInfo } = useSettings();
+    const { isAuthenticated, loading: authLoading } = useAuth();
     const [status, setStatus] = useState('loading');
     const [message, setMessage] = useState('');
     const verified = useRef(false);
@@ -22,7 +24,9 @@ export default function UpgradeCallback() {
             return;
         }
 
-        if (!getToken()) {
+        if (authLoading) return;
+
+        if (!isAuthenticated) {
             setStatus('error');
             setMessage('Please sign in to complete verification. Your payment reference was saved in the URL.');
             return;
@@ -46,7 +50,7 @@ export default function UpgradeCallback() {
                 setStatus('error');
                 setMessage(err.message || 'Payment verification failed.');
             });
-    }, [searchParams, setBusinessInfo, refreshBusinessInfo]);
+    }, [searchParams, setBusinessInfo, refreshBusinessInfo, authLoading, isAuthenticated]);
 
     if (status === 'loading') {
         return (
@@ -85,7 +89,7 @@ export default function UpgradeCallback() {
                 <Link to="/upgrade" className="btn-primary">
                     Try again
                 </Link>
-                {!getToken() ? (
+                {!isAuthenticated ? (
                     <Link
                         to={`/auth?returnTo=${encodeURIComponent(
                             `/upgrade/callback?reference=${searchParams.get('reference') || searchParams.get('trxref') || ''}`

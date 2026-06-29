@@ -6,10 +6,12 @@ import ForgotPasswordModal from '../components/ForgotPasswordModal';
 import RegisterWizard, { clearRegisterDraft } from '../components/auth/RegisterWizard';
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
+import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import WaraqahLogo from '../components/WaraqahLogo';
 import RequiredLabel from '../components/RequiredLabel';
-import { API_BASE, getNetworkErrorMessage } from '../utils/apiConfig';
+import { getNetworkErrorMessage } from '../utils/apiConfig';
+import { authFetch, apiFetch } from '../utils/api';
 import {
     validateRequired,
     validateEmail,
@@ -18,9 +20,6 @@ import {
     focusFieldById,
 } from '../utils/formFieldValidation';
 import FieldValidationMessage from '../components/FieldValidationMessage';
-
-const BASE_URL = API_BASE;
-const AUTH_URL = `${BASE_URL}/auth`;
 
 const LOGIN_FIELD_ORDER = ['email', 'password'];
 
@@ -57,6 +56,7 @@ function PasswordToggle({ visible, onToggle, label }) {
 function Auth() {
     const { setBusinessInfo } = useSettings();
     const { fetchUserData, resetAll } = useInvoice();
+    const { isAuthenticated, setSession } = useAuth();
     const [searchParams] = useSearchParams();
     const [isLogin, setIsLogin] = useState(searchParams.get('mode') !== 'register');
     const [form, setForm] = useState({ email: '', password: '' });
@@ -120,14 +120,14 @@ function Auth() {
     };
 
     useEffect(() => {
-        if (localStorage.getItem('token')) {
+        if (isAuthenticated) {
             const safeReturn =
                 returnTo && returnTo.startsWith('/') && !returnTo.startsWith('/auth')
                     ? returnTo
                     : '/';
             navigate(safeReturn, { replace: true });
         }
-    }, [navigate, returnTo]);
+    }, [navigate, returnTo, isAuthenticated]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -154,35 +154,15 @@ function Auth() {
         setSubmitLoading(true);
         try {
             const email = form.email.trim().toLowerCase();
-            let res;
-            try {
-                res = await fetch(`${AUTH_URL}/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password: form.password }),
-                });
-            } catch {
-                throw new Error(getNetworkErrorMessage());
-            }
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Error');
-            localStorage.setItem('token', data.token);
-            if (data.user && typeof data.user.isAdmin !== 'undefined') {
-                localStorage.setItem('isAdmin', data.user.isAdmin);
-            } else {
-                localStorage.removeItem('isAdmin');
-            }
+            const data = await authFetch('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ email, password: form.password }),
+            });
+            setSession(data.user);
             await fetchUserData();
             try {
-                const businessRes = await fetch(`${BASE_URL}/business-info`, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${data.token}`,
-                    },
-                });
-                if (businessRes.ok) {
-                    setBusinessInfo(await businessRes.json());
-                }
+                const info = await apiFetch('/business-info');
+                setBusinessInfo(info);
             } catch (businessErr) {
                 console.error('Failed to fetch business info:', businessErr);
             }
@@ -203,20 +183,10 @@ function Auth() {
     const handleForgotPassword = async (email) => {
         setResetLoading(true);
         try {
-            let res;
-            try {
-                res = await fetch(`${AUTH_URL}/forgot-password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email }),
-                });
-            } catch {
-                throw new Error(getNetworkErrorMessage());
-            }
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.message || 'Could not send reset email. Please try again.');
-            }
+            const data = await authFetch('/auth/forgot-password', {
+                method: 'POST',
+                body: JSON.stringify({ email }),
+            });
             setResetModal(false);
             setAlert({
                 open: true,
