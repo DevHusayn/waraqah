@@ -39,8 +39,8 @@ export function wrapHtml(body, title = 'Document') {
     font-size: 36px;
     font-weight: 800;
     letter-spacing: 0.14em;
-    color: rgba(34, 197, 94, 0.16);
-    border: 3px double rgba(34, 197, 94, 0.22);
+    color: rgba(22, 163, 74, 0.42);
+    border: 3px double rgba(34, 197, 94, 0.45);
     border-radius: 10px;
     padding: 10px 28px;
     pointer-events: none;
