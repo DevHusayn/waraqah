@@ -550,10 +550,12 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     const stampY = footerLineY - stampReserve;
 
     if (isReceiptDoc) {
+        const tableMidY = (tableStartY + doc.lastAutoTable.finalY) / 2;
+        const stampY = Math.min(Math.max(tableMidY, 100), CONTENT_BOTTOM - 45);
         const pageCount = doc.getNumberOfPages();
         for (let page = 1; page <= pageCount; page += 1) {
             doc.setPage(page);
-            drawPaidStamp(doc);
+            drawPaidStamp(doc, { y: stampY });
         }
         doc.setPage(pageCount);
     }

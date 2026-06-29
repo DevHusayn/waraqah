@@ -108,43 +108,68 @@ export async function drawCompanyStamp(doc, stampDataUrl, y, cache, options = {}
 
 const PAID_STAMP_GREEN = [34, 197, 94];
 
-/** Rubber-stamp PAID watermark — centered on receipt PDFs (all users) */
+function rotatePoint(cx, cy, px, py, rad) {
+    const c = Math.cos(rad);
+    const s = Math.sin(rad);
+    return {
+        x: cx + c * px - s * py,
+        y: cy + s * px + c * py,
+    };
+}
+
+function drawRotatedRectOutline(doc, cx, cy, width, height, rad) {
+    const hw = width / 2;
+    const hh = height / 2;
+    const corners = [
+        rotatePoint(cx, cy, -hw, -hh, rad),
+        rotatePoint(cx, cy, hw, -hh, rad),
+        rotatePoint(cx, cy, hw, hh, rad),
+        rotatePoint(cx, cy, -hw, hh, rad),
+    ];
+
+    doc.lines(
+        [
+            [corners[1].x - corners[0].x, corners[1].y - corners[0].y],
+            [corners[2].x - corners[1].x, corners[2].y - corners[1].y],
+            [corners[3].x - corners[2].x, corners[3].y - corners[2].y],
+            [corners[0].x - corners[3].x, corners[0].y - corners[3].y],
+        ],
+        corners[0].x,
+        corners[0].y,
+        [1, 1],
+        'S',
+        true
+    );
+}
+
+/** Rubber-stamp PAID watermark — centered over line items on receipt PDFs */
 export function drawPaidStamp(doc, options = {}) {
     const {
         x = PAGE_W / 2,
-        y = 145,
-        rotation = -20,
-        opacity = 0.16,
+        y = 165,
+        rotation = -18,
+        opacity = 0.13,
     } = options;
 
-    const label = 'PAID';
-    const stampW = 56;
-    const stampH = 22;
+    const stampW = 54;
+    const stampH = 20;
     const rad = (rotation * Math.PI) / 180;
-    const cos = Math.cos(rad);
-    const sin = Math.sin(rad);
-    const tx = x - cos * x + sin * y;
-    const ty = y - sin * x - cos * y;
 
     doc.saveGraphicsState();
     if (typeof doc.setGState === 'function' && doc.GState && opacity < 1) {
         doc.setGState(new doc.GState({ opacity }));
     }
 
-    doc.internal.write(
-        `${cos.toFixed(5)} ${sin.toFixed(5)} ${(-sin).toFixed(5)} ${cos.toFixed(5)} ${tx.toFixed(2)} ${ty.toFixed(2)} cm`
-    );
-
     doc.setDrawColor(...PAID_STAMP_GREEN);
     doc.setLineWidth(0.75);
-    doc.roundedRect(-stampW / 2, -stampH / 2, stampW, stampH, 3, 3, 'S');
+    drawRotatedRectOutline(doc, x, y, stampW, stampH, rad);
     doc.setLineWidth(0.35);
-    doc.roundedRect(-stampW / 2 + 2.2, -stampH / 2 + 2, stampW - 4.4, stampH - 4, 2, 2, 'S');
+    drawRotatedRectOutline(doc, x, y, stampW - 4, stampH - 3.5, rad);
 
     doc.setFont(undefined, 'bold');
-    doc.setFontSize(22);
+    doc.setFontSize(21);
     doc.setTextColor(...PAID_STAMP_GREEN);
-    doc.text(label, 0, 2.8, { align: 'center' });
+    doc.text('PAID', x, y + 1.5, { align: 'center', angle: rotation });
 
     doc.restoreGraphicsState();
 }
