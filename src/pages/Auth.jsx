@@ -12,6 +12,7 @@ import WaraqahLogo from '../components/WaraqahLogo';
 import RequiredLabel from '../components/RequiredLabel';
 import { getNetworkErrorMessage } from '../utils/apiConfig';
 import { authFetch, apiFetch, setCsrfToken } from '../utils/api';
+import SocialAuthButtons from '../components/auth/SocialAuthButtons';
 import {
     validateRequired,
     validateEmail,
@@ -135,6 +136,26 @@ function Auth() {
         if (fieldErrors[name]) {
             setFieldErrors((prev) => ({ ...prev, [name]: '' }));
         }
+    };
+
+    const handleSocialSuccess = async (data) => {
+        setSession(data.user);
+        if (data.csrfToken) {
+            setCsrfToken(data.csrfToken);
+        }
+        await fetchUserData();
+        try {
+            const info = await apiFetch('/business-info');
+            setBusinessInfo(info);
+        } catch (businessErr) {
+            console.error('Failed to fetch business info:', businessErr);
+        }
+        window.dispatchEvent(new Event('app-login'));
+        const safeReturn =
+            returnTo && returnTo.startsWith('/') && !returnTo.startsWith('/auth')
+                ? returnTo
+                : '/';
+        navigate(safeReturn, { replace: true });
     };
 
     const handleSubmit = async (e) => {
@@ -375,6 +396,12 @@ function Auth() {
                                                 'Sign in'
                                             )}
                                         </button>
+
+                                        <SocialAuthButtons
+                                            disabled={submitLoading}
+                                            onSuccess={handleSocialSuccess}
+                                            onError={(message) => setError(message)}
+                                        />
                                     </form>
 
                                     <p className="mt-5 pt-5 border-t border-zinc-100 text-center text-[13px] text-zinc-500">

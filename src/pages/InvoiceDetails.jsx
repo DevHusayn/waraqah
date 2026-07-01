@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
     ArrowLeft,
@@ -17,7 +17,8 @@ import {
     Send,
     Bell,
     Copy,
-    Receipt,
+    Download,
+    Printer,
 } from 'lucide-react';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
@@ -29,8 +30,9 @@ import ConfirmModal from '../components/ConfirmModal';
 import MarkAsPaidModal from '../components/MarkAsPaidModal';
 import FormSection from '../components/FormSection';
 import StatusBadge from '../components/StatusBadge';
+import ActionMenu from '../components/ActionMenu';
 import { generateInvoicePdfBlob } from '../utils/pdfGenerator';
-import { shareInvoicePdf, getShareFallbackHint } from '../utils/shareInvoicePdf';
+import { shareInvoicePdf, getShareFallbackHint, downloadPdfBlob } from '../utils/shareInvoicePdf';
 import { getCachedPdf, setCachedPdf, clearCachedPdf } from '../utils/pdfCache';
 import { formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
@@ -41,6 +43,11 @@ import {
     isReceipt,
 } from '../utils/receiptHelpers';
 import { getPublicInvoiceUrl } from '../utils/publicApi';
+import { apiFetch } from '../utils/api';
+
+function mapInvoiceRecord(invoice) {
+    return { ...invoice, id: invoice._id || invoice.id };
+}
 
 function SummaryRow({ label, value }) {
     return (
@@ -51,52 +58,32 @@ function SummaryRow({ label, value }) {
     );
 }
 
-function DocumentActions({
-    documentMode,
-    showDocumentToggle,
-    onDocumentModeChange,
-    onShare,
-}) {
-    const docLabel = documentMode === 'receipt' ? 'receipt' : 'invoice';
-
+function DocumentTypeToggle({ documentMode, onDocumentModeChange }) {
     return (
-        <div className="space-y-3">
-            {showDocumentToggle && (
-                <div
-                    className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-zinc-100"
-                    role="tablist"
-                    aria-label="Document type"
+        <div
+            className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-zinc-100"
+            role="tablist"
+            aria-label="Document type"
+        >
+            {[
+                { value: 'receipt', label: 'Receipt' },
+                { value: 'invoice', label: 'Invoice' },
+            ].map(({ value, label }) => (
+                <button
+                    key={value}
+                    type="button"
+                    role="tab"
+                    aria-selected={documentMode === value}
+                    onClick={() => onDocumentModeChange(value)}
+                    className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                        documentMode === value
+                            ? 'bg-white text-zinc-900 shadow-sm'
+                            : 'text-zinc-600 hover:text-zinc-900'
+                    }`}
                 >
-                    {[
-                        { value: 'receipt', label: 'Receipt' },
-                        { value: 'invoice', label: 'Invoice' },
-                    ].map(({ value, label }) => (
-                        <button
-                            key={value}
-                            type="button"
-                            role="tab"
-                            aria-selected={documentMode === value}
-                            onClick={() => onDocumentModeChange(value)}
-                            className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                                documentMode === value
-                                    ? 'bg-white text-zinc-900 shadow-sm'
-                                    : 'text-zinc-600 hover:text-zinc-900'
-                            }`}
-                        >
-                            {label}
-                        </button>
-                    ))}
-                </div>
-            )}
-
-            <button
-                type="button"
-                onClick={() => onShare(documentMode)}
-                className="btn-primary w-full"
-            >
-                <Share2 size={18} aria-hidden />
-                Share {docLabel}
-            </button>
+                    {label}
+                </button>
+            ))}
         </div>
     );
 }
@@ -121,13 +108,150 @@ function InvoiceActionsPanel({
     onSendReminder,
     onResendReceipt,
     onCopyPublicLink,
-    editId,
+    onDownloadPdf,
+    onPrintPdf,
+    onEdit,
+    initialView,
 }) {
-    const [documentMode, setDocumentMode] = useState(paid ? 'receipt' : 'invoice');
+    const resolveDocumentMode = (paidState) => {
+        if (!paidState) return 'invoice';
+        if (initialView === 'invoice') return 'invoice';
+        if (initialView === 'receipt') return 'receipt';
+        return 'receipt';
+    };
+
+    const [documentMode, setDocumentMode] = useState(() => resolveDocumentMode(paid));
+    const isReceiptView = documentMode === 'receipt';
+    const actionsDisabled = saving || emailing;
 
     useEffect(() => {
-        setDocumentMode(paid ? 'receipt' : 'invoice');
-    }, [paid]);
+        setDocumentMode(resolveDocumentMode(paid));
+    }, [paid, initialView]);
+
+    const menuItems = cancelled
+        ? []
+        : isReceiptView
+          ? [
+                {
+                    id: 'email-receipt',
+                    label: emailing ? 'Sending…' : 'Email Receipt',
+                    icon: Send,
+                    onClick: onResendReceipt,
+                    hidden: !canResendReceipt,
+                    disabled: actionsDisabled,
+                },
+                {
+                    id: 'download-receipt',
+                    label: 'Download PDF',
+                    icon: Download,
+                    onClick: () => onDownloadPdf('receipt'),
+                    disabled: saving,
+                },
+                {
+                    id: 'print-receipt',
+                    label: 'Print Receipt',
+                    icon: Printer,
+                    onClick: () => onPrintPdf('receipt'),
+                    disabled: saving,
+                },
+                {
+                    id: 'copy-link',
+                    label: 'Copy Link',
+                    icon: Copy,
+                    onClick: onCopyPublicLink,
+                    hidden: !invoice?.publicToken,
+                    disabled: saving,
+                },
+                {
+                    id: 'delete-receipt',
+                    label: 'Delete Receipt',
+                    icon: Trash2,
+                    onClick: onDelete,
+                    destructive: true,
+                    disabled: saving,
+                },
+            ]
+          : [
+                {
+                    id: 'share-invoice',
+                    label: 'Share Invoice',
+                    icon: Share2,
+                    onClick: () => onShare('invoice'),
+                    hidden: !canMarkPaid,
+                    disabled: saving,
+                },
+                {
+                    id: 'email-invoice',
+                    label: emailing ? 'Sending…' : 'Email Invoice',
+                    icon: Send,
+                    onClick: onEmailClient,
+                    hidden: !canEmailClient,
+                    disabled: actionsDisabled,
+                },
+                {
+                    id: 'payment-reminder',
+                    label: 'Send Payment Reminder',
+                    icon: Bell,
+                    onClick: onSendReminder,
+                    hidden: !canSendReminder,
+                    disabled: actionsDisabled,
+                },
+                {
+                    id: 'copy-public-link',
+                    label: 'Copy Link',
+                    icon: Copy,
+                    onClick: onCopyPublicLink,
+                    hidden: !invoice?.publicToken,
+                    disabled: saving,
+                },
+                {
+                    id: 'edit-invoice',
+                    label: 'Edit Invoice',
+                    icon: Pencil,
+                    onClick: onEdit,
+                    hidden: !canEdit,
+                    disabled: saving,
+                },
+                {
+                    id: 'cancel-invoice',
+                    label: 'Cancel Invoice',
+                    icon: XCircle,
+                    onClick: onCancel,
+                    hidden: !canCancel,
+                    disabled: saving,
+                },
+                {
+                    id: 'delete-invoice',
+                    label: 'Delete Invoice',
+                    icon: Trash2,
+                    onClick: onDelete,
+                    hidden: !canEdit,
+                    destructive: true,
+                    disabled: saving,
+                },
+            ];
+
+    const primaryAction = cancelled
+        ? null
+        : isReceiptView
+          ? {
+                label: 'Share Receipt',
+                icon: Share2,
+                onClick: () => onShare('receipt'),
+            }
+          : canMarkPaid
+            ? {
+                  label: 'Mark as Paid',
+                  icon: CheckCircle,
+                  onClick: onMarkPaid,
+              }
+            : {
+                  label: 'Share Invoice',
+                  icon: Share2,
+                  onClick: () => onShare('invoice'),
+              };
+
+    const PrimaryIcon = primaryAction?.icon;
 
     return (
         <div className="card">
@@ -142,98 +266,31 @@ function InvoiceActionsPanel({
                     </p>
                 )}
 
-                {!cancelled && (
-                    <DocumentActions
+                {!cancelled && paid ? (
+                    <DocumentTypeToggle
                         documentMode={documentMode}
-                        showDocumentToggle={paid}
                         onDocumentModeChange={setDocumentMode}
-                        onShare={onShare}
                     />
-                )}
+                ) : null}
 
-                {!cancelled && canEmailClient && (
-                    <button
-                        type="button"
-                        onClick={onEmailClient}
-                        className="btn-secondary w-full"
-                        disabled={saving || emailing}
-                    >
-                        <Send size={18} aria-hidden />
-                        {emailing ? 'Sending…' : 'Email to client'}
-                    </button>
-                )}
-
-                {!cancelled && canSendReminder && (
-                    <button
-                        type="button"
-                        onClick={onSendReminder}
-                        className="btn-secondary w-full"
-                        disabled={saving || emailing}
-                    >
-                        <Bell size={18} aria-hidden />
-                        Send payment reminder
-                    </button>
-                )}
-
-                {paid && canResendReceipt && (
-                    <button
-                        type="button"
-                        onClick={onResendReceipt}
-                        className="btn-secondary w-full"
-                        disabled={saving || emailing}
-                    >
-                        <Receipt size={18} aria-hidden />
-                        Email receipt to client
-                    </button>
-                )}
-
-                {invoice?.publicToken && !cancelled && (
-                    <button
-                        type="button"
-                        onClick={onCopyPublicLink}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-300 bg-white text-zinc-700 font-medium hover:bg-zinc-50 transition-colors text-sm"
-                        disabled={saving}
-                    >
-                        <Copy size={16} aria-hidden />
-                        Copy public link
-                    </button>
-                )}
-
-                {canMarkPaid && (
-                    <button type="button" onClick={onMarkPaid} className="btn-primary w-full" disabled={saving}>
-                        <CheckCircle size={18} aria-hidden />
-                        Mark as paid
-                    </button>
-                )}
-
-                {canCancel && (
-                    <button
-                        type="button"
-                        onClick={onCancel}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-300 bg-white text-zinc-700 font-medium hover:bg-zinc-50 transition-colors text-sm"
-                        disabled={saving}
-                    >
-                        <XCircle size={18} aria-hidden />
-                        Cancel invoice
-                    </button>
-                )}
-
-                {canEdit && (
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                        <Link to={`/invoices/edit/${editId}`} className="btn-secondary w-full text-sm py-2">
-                            <Pencil size={16} aria-hidden />
-                            Edit
-                        </Link>
+                {primaryAction ? (
+                    <div className="flex items-stretch gap-2">
                         <button
                             type="button"
-                            onClick={onDelete}
-                            className="w-full flex items-center justify-center gap-1.5 text-sm font-medium py-2 px-3 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
+                            onClick={primaryAction.onClick}
+                            className="btn-primary flex-1 min-w-0 min-h-[40px]"
+                            disabled={saving}
                         >
-                            <Trash2 size={16} aria-hidden />
-                            Delete
+                            {PrimaryIcon ? <PrimaryIcon size={18} aria-hidden /> : null}
+                            {primaryAction.label}
                         </button>
+                        <ActionMenu
+                            items={menuItems}
+                            disabled={saving}
+                            ariaLabel={isReceiptView ? 'Receipt actions' : 'Invoice actions'}
+                        />
                     </div>
-                )}
+                ) : null}
             </div>
         </div>
     );
@@ -241,6 +298,8 @@ function InvoiceActionsPanel({
 
 const InvoiceDetails = () => {
     const { id } = useParams();
+    const [searchParams] = useSearchParams();
+    const initialView = searchParams.get('view');
     const navigate = useNavigate();
     const { invoices, clients, updateInvoice, deleteInvoice, loading, sendInvoiceEmailToClient, sendPaymentReminderToClient, sendReceiptEmailToClient } = useInvoice();
     const { businessInfo } = useSettings();
@@ -252,10 +311,16 @@ const InvoiceDetails = () => {
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [confirmCancel, setConfirmCancel] = useState(false);
     const [emailing, setEmailing] = useState(false);
+    const [fetchedInvoice, setFetchedInvoice] = useState(null);
+    const [resolving, setResolving] = useState(false);
 
-    const invoice = useMemo(() => invoices.find((inv) => inv.id === id), [invoices, id]);
+    const invoiceFromList = useMemo(
+        () => invoices.find((inv) => String(inv.id) === String(id) || String(inv._id) === String(id)),
+        [invoices, id]
+    );
+    const invoice = invoiceFromList || fetchedInvoice;
     const client = useMemo(
-        () => clients.find((c) => c.id === invoice?.clientId),
+        () => clients.find((c) => c.id === invoice?.clientId || c._id === invoice?.clientId),
         [clients, invoice?.clientId]
     );
 
@@ -270,10 +335,40 @@ const InvoiceDetails = () => {
     const canResendReceipt = paid && clientHasEmail;
 
     useEffect(() => {
-        if (!loading && !invoice && id) {
+        if (loading || !id || invoiceFromList) {
+            return undefined;
+        }
+
+        let cancelled = false;
+        setResolving(true);
+
+        apiFetch(`/invoices/${id}`)
+            .then((data) => {
+                if (!cancelled) {
+                    setFetchedInvoice(mapInvoiceRecord(data));
+                }
+            })
+            .catch(() => {
+                if (!cancelled) {
+                    navigate('/invoices', { replace: true });
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setResolving(false);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [loading, id, invoiceFromList, navigate]);
+
+    useEffect(() => {
+        if (!loading && !resolving && !invoice && id) {
             navigate('/invoices', { replace: true });
         }
-    }, [loading, invoice, id, navigate]);
+    }, [loading, resolving, invoice, id, navigate]);
 
     useEffect(() => {
         if (!invoice || !client || cancelled) return undefined;
@@ -331,6 +426,51 @@ const InvoiceDetails = () => {
         } catch (err) {
             if (err?.name === 'AbortError') return;
             setAlert({ open: true, message: err.message || 'Failed to share PDF.' });
+        }
+    };
+
+    const getPdfForMode = async (mode) => {
+        if (!client) {
+            throw new Error('Client data not found for this invoice.');
+        }
+
+        let cached = getCachedPdf(id, mode);
+        if (!cached) {
+            cached = await generateInvoicePdfBlob(invoice, client, businessInfo, { mode });
+            setCachedPdf(id, mode, cached);
+        }
+
+        return cached;
+    };
+
+    const handleDownloadPdf = async (mode) => {
+        try {
+            const cached = await getPdfForMode(mode);
+            downloadPdfBlob(cached.blob, cached.filename);
+            showToast('PDF downloaded', 'success');
+        } catch (err) {
+            setAlert({ open: true, message: err.message || 'Failed to download PDF.' });
+        }
+    };
+
+    const handlePrintPdf = async (mode) => {
+        try {
+            const cached = await getPdfForMode(mode);
+            const url = URL.createObjectURL(cached.blob);
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = url;
+            document.body.appendChild(iframe);
+            iframe.onload = () => {
+                iframe.contentWindow?.focus();
+                iframe.contentWindow?.print();
+                window.setTimeout(() => {
+                    document.body.removeChild(iframe);
+                    URL.revokeObjectURL(url);
+                }, 1000);
+            };
+        } catch (err) {
+            setAlert({ open: true, message: err.message || 'Failed to print PDF.' });
         }
     };
 
@@ -422,7 +562,7 @@ const InvoiceDetails = () => {
         }
     };
 
-    if (loading || !invoice) {
+    if (loading || resolving || !invoice) {
         return <DetailPageSkeleton />;
     }
 
@@ -449,7 +589,10 @@ const InvoiceDetails = () => {
         onSendReminder: handleSendReminder,
         onResendReceipt: handleResendReceipt,
         onCopyPublicLink: handleCopyPublicLink,
-        editId: id,
+        onDownloadPdf: handleDownloadPdf,
+        onPrintPdf: handlePrintPdf,
+        onEdit: () => navigate(`/invoices/edit/${id}`),
+        initialView,
     };
 
     return (

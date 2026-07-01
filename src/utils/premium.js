@@ -1,12 +1,13 @@
-export {
+import {
     PLANS,
     isPremiumUser,
     getBusinessInitials,
     getPlanLabel,
     LOGO_MAX_BYTES,
 } from '@waraqah/shared';
-
 import { convertDataUrlToPng, convertDataUrlToJpeg } from './imageToPng';
+
+export { PLANS, isPremiumUser, getBusinessInitials, getPlanLabel, LOGO_MAX_BYTES };
 
 export const PNG_ACCEPT = 'image/png';
 export const BRAND_IMAGE_ACCEPT = 'image/png,image/jpeg';

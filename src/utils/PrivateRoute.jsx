@@ -4,7 +4,7 @@ import { PageLoader } from '../components/Skeleton';
 
 export default function PrivateRoute({ children }) {
     const location = useLocation();
-    const { isAuthenticated, loading } = useAuth();
+    const { isAuthenticated, loading, user } = useAuth();
 
     if (loading) {
         return <PageLoader />;
@@ -13,6 +13,11 @@ export default function PrivateRoute({ children }) {
     if (!isAuthenticated) {
         const returnTo = `${location.pathname}${location.search}`;
         return <Navigate to={`/auth?returnTo=${encodeURIComponent(returnTo)}`} replace />;
+    }
+
+    if (user?.emailVerified === false) {
+        const email = encodeURIComponent(user.email || '');
+        return <Navigate to={`/auth/check-email?email=${email}`} replace />;
     }
 
     return children;

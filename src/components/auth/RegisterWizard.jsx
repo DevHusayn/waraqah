@@ -6,12 +6,10 @@ import RequiredLabel from '../RequiredLabel';
 import FieldValidationMessage from '../FieldValidationMessage';
 import ProfileFormFields from '../settings/ProfileFormFields';
 import AccountFormFields from '../settings/AccountFormFields';
-import { useSettings } from '../../context/SettingsContext';
 import { useInvoice } from '../../context/InvoiceContext';
-import { useAuth } from '../../context/AuthContext';
 import { APP_CURRENCY } from '../../utils/currency';
 import { getNetworkErrorMessage } from '../../utils/apiConfig';
-import { authFetch, apiFetch, setCsrfToken } from '../../utils/api';
+import { authFetch } from '../../utils/api';
 import {
     inputClass,
     focusFieldById,
@@ -116,9 +114,7 @@ function StepIndicator({ currentStep }) {
 export default function RegisterWizard({ returnTo }) {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const { setBusinessInfo } = useSettings();
-    const { fetchUserData, resetAll } = useInvoice();
-    const { setSession } = useAuth();
+    const { resetAll } = useInvoice();
 
     const step = clampRegisterStep(searchParams.get('step') || 1);
     const currentStepMeta = REGISTER_STEPS[step - 1];
@@ -268,25 +264,11 @@ export default function RegisterWizard({ returnTo }) {
             });
 
             clearRegisterDraft();
-            setSession(data.user);
-            if (data.csrfToken) {
-                setCsrfToken(data.csrfToken);
-            }
-            await fetchUserData();
-
-            try {
-                const info = await apiFetch('/business-info');
-                setBusinessInfo(info);
-            } catch (businessErr) {
-                console.error('Failed to fetch business info:', businessErr);
-            }
-
-            window.dispatchEvent(new Event('app-login'));
-            const safeReturn =
-                returnTo && returnTo.startsWith('/') && !returnTo.startsWith('/auth')
-                    ? returnTo
-                    : '/';
-            navigate(safeReturn, { replace: true });
+            resetAll();
+            navigate(
+                `/auth/check-email?email=${encodeURIComponent(form.email.trim().toLowerCase())}&message=${encodeURIComponent(data.message || '')}`,
+                { replace: true },
+            );
         } catch (err) {
             setError(err.message === 'Failed to fetch' ? getNetworkErrorMessage() : err.message);
             resetAll();

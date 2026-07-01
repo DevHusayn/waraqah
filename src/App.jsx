@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
@@ -19,6 +20,7 @@ import TermsSettings from './pages/settings/TermsSettings';
 import AboutSettings from './pages/settings/AboutSettings';
 import NotificationSettings from './pages/settings/NotificationSettings';
 import Auth from './pages/Auth';
+import CheckEmailPage from './pages/CheckEmail';
 import ResetPassword from './pages/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail';
 import PublicInvoice from './pages/PublicInvoice';
@@ -38,6 +40,14 @@ function AppLayout({ children }) {
     return <Layout>{children}</Layout>;
 }
 
+function AppProviders({ children }) {
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+    if (googleClientId) {
+        return <GoogleOAuthProvider clientId={googleClientId}>{children}</GoogleOAuthProvider>;
+    }
+    return children;
+}
+
 function App() {
     return (
         <ToastProvider>
@@ -45,10 +55,12 @@ function App() {
                 <SettingsProvider>
                     <BrandTheme />
                     <InvoiceProvider>
+                        <AppProviders>
                         <Router>
                         <Routes>
                             <Route path="/" element={<Home />} />
                             <Route path="/auth" element={<Auth />} />
+                            <Route path="/auth/check-email" element={<CheckEmailPage />} />
                             <Route path="/reset-password/:token" element={<ResetPassword />} />
                             <Route path="/verify-email/:token" element={<VerifyEmail />} />
                             <Route path="/i/:token" element={<PublicInvoice />} />
@@ -96,6 +108,7 @@ function App() {
                             />
                         </Routes>
                         </Router>
+                        </AppProviders>
                     </InvoiceProvider>
                 </SettingsProvider>
             </AuthProvider>

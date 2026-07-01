@@ -122,6 +122,25 @@
         animation: modal-scale 0.22s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
+    @keyframes sheet-up {
+        from {
+            opacity: 0;
+            transform: translateY(100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-sheet-up {
+        animation: sheet-up 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .safe-area-pb {
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    }
+
     .card {
         @apply bg-white rounded-lg border border-zinc-200/60 p-5 shadow-soft;
     }

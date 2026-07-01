@@ -19,7 +19,6 @@ import { useAuth } from '../context/AuthContext';
 import ConfirmModal from './ConfirmModal';
 import WaraqahLogo from './WaraqahLogo';
 import SidebarAccountFooter from './SidebarAccountFooter';
-import EmailVerificationBanner from './EmailVerificationBanner';
 import { isPremiumUser } from '../utils/premium';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
 
@@ -185,7 +184,6 @@ const Layout = ({ children }) => {
 
                 <main className="flex-1 min-w-0 overflow-x-hidden">
                     <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full min-w-0">
-                        <EmailVerificationBanner />
                         {children}
                     </div>
                 </main>
