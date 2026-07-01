@@ -39,7 +39,7 @@ export const useSettings = () => {
 
 export const SettingsProvider = ({ children }) => {
     const [businessInfo, setBusinessInfo] = useState(EMPTY_BUSINESS);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const { isAuthenticated } = useAuth();
 
     const fetchBusinessInfo = useCallback(async () => {

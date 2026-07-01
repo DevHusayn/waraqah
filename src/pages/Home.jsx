@@ -1,6 +1,4 @@
-import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { PageLoader } from '../components/Skeleton';
 import Landing from './Landing';
 import Layout from '../components/Layout';
 import Dashboard from './Dashboard';
@@ -10,11 +8,7 @@ import PrivateRoute from '../utils/PrivateRoute';
 export default function Home() {
     const { isAuthenticated, loading } = useAuth();
 
-    if (loading) {
-        return <PageLoader />;
-    }
-
-    if (isAuthenticated) {
+    if (!loading && isAuthenticated) {
         return (
             <PrivateRoute>
                 <Layout>

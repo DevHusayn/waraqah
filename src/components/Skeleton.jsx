@@ -268,7 +268,25 @@ export function DashboardSkeleton() {
     );
 }
 
-/** Default full-page skeleton for generic list views. */
+/** Neutral content skeleton for auth/session checks inside the app shell. */
+export function AppContentSkeleton() {
+    return (
+        <LoadingStatus label="Loading">
+            <PageHeaderSkeleton withAction={false} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="card space-y-3">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-8 w-16" />
+                        <Skeleton className="h-3 w-full max-w-[12rem]" />
+                    </div>
+                ))}
+            </div>
+        </LoadingStatus>
+    );
+}
+
+/** Full-page skeleton for list views already wrapped in Layout. */
 export function PageLoader({ className = '' }) {
     return (
         <div className={className}>

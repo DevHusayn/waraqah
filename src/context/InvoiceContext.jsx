@@ -18,7 +18,7 @@ export const InvoiceProvider = ({ children }) => {
     const [clients, setClients] = useState([]);
     const [products, setProducts] = useState([]);
     const [invoiceUsage, setInvoiceUsage] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const { isAuthenticated } = useAuth();
 
     const mapInvoice = (i) => ({ ...i, id: i._id || i.id });

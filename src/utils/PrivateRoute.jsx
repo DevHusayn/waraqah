@@ -1,13 +1,18 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { PageLoader } from '../components/Skeleton';
+import Layout from '../components/Layout';
+import { AppContentSkeleton } from '../components/Skeleton';
 
 export default function PrivateRoute({ children }) {
     const location = useLocation();
     const { isAuthenticated, loading, user } = useAuth();
 
     if (loading) {
-        return <PageLoader />;
+        return (
+            <Layout>
+                <AppContentSkeleton />
+            </Layout>
+        );
     }
 
     if (!isAuthenticated) {
