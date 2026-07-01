@@ -1,6 +1,6 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { getPdfFileName, getFreePdfFooterCta, isPremiumUser } from '@waraqah/shared';
+import { getPdfFileName, isPremiumUser } from '@waraqah/shared';
 import { APP_DOMAIN, APP_WEBSITE_URL } from '../constants/brand';
 import { buildInvoiceHtml } from './invoiceHtml';
 import { buildStatementHtml } from './statementHtml';
@@ -13,7 +13,7 @@ async function shareHtmlAsPdf(html, filename, { includeFooterLink = false } = {}
     });
 
     const pdfUri = includeFooterLink
-        ? await addFooterLinkToPdfFile(uri, APP_WEBSITE_URL, getFreePdfFooterCta(APP_DOMAIN))
+        ? await addFooterLinkToPdfFile(uri, APP_WEBSITE_URL, APP_DOMAIN)
         : uri;
 
     if (await Sharing.isAvailableAsync()) {

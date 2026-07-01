@@ -1,31 +1,33 @@
 import { PDFDocument, PDFName, PDFString, PDFArray } from 'pdf-lib';
 import { APP_DOMAIN, APP_WEBSITE_URL } from '../constants/brand';
-import { getFreePdfFooterCta } from '@waraqah/shared';
+import { FREE_PDF_FOOTER_CTA_PREFIX } from '@waraqah/shared';
+import { domainBoundsToLinkRect } from './pdfLink';
 
-/** jsPDF footer CTA line sits ~12mm above the physical page bottom. */
-const FOOTER_OFFSET_MM = 12;
-
-function footerLinkRect(pageWidth, pageHeight, label) {
-    const labelWidth = Math.max(120, label.length * 4.8);
-    const linkWidth = labelWidth + 24;
-    const linkHeight = 18;
-    const x = (pageWidth - linkWidth) / 2;
+function footerDomainLinkRect(pageWidth, pageHeight, prefix, domain) {
+    const prefixWidthPt = prefix.length * 4.8;
+    const domainWidthPt = Math.max(72, domain.length * 5.2);
+    const domainX = (pageWidth - prefixWidthPt - domainWidthPt) / 2 + prefixWidthPt;
     const mmToPt = pageHeight / 297;
-    const lowerY = FOOTER_OFFSET_MM * mmToPt - 4;
-    return [x, lowerY, x + linkWidth, lowerY + linkHeight];
+    const lowerY = 12 * mmToPt - 4;
+    return [domainX, lowerY, domainX + domainWidthPt, lowerY + 18];
 }
 
-async function injectFooterLink(bytes, url, label) {
+async function injectFooterLink(bytes, url, options = {}) {
     const pdfDoc = await PDFDocument.load(bytes);
     const pages = pdfDoc.getPages();
     const page = pages[pages.length - 1];
     const { width, height } = page.getSize();
 
+    const domain = options.domain ?? APP_DOMAIN;
+    const rect = options.linkBounds
+        ? domainBoundsToLinkRect(options.linkBounds, width, height)
+        : footerDomainLinkRect(width, height, FREE_PDF_FOOTER_CTA_PREFIX, domain);
+
     const linkRef = pdfDoc.context.register(
         pdfDoc.context.obj({
             Type: 'Annot',
             Subtype: 'Link',
-            Rect: footerLinkRect(width, height, label),
+            Rect: rect,
             Border: [0, 0, 0],
             A: {
                 Type: 'Action',
@@ -47,14 +49,13 @@ async function injectFooterLink(bytes, url, label) {
 }
 
 /**
- * Add a clickable footer link for free-plan PDFs.
+ * Add a clickable footer domain link for free-plan PDFs.
  * @param {Blob} blob
- * @param {{ url?: string, label?: string }} [options]
+ * @param {{ url?: string, domain?: string, linkBounds?: { domainX: number, domainWidth: number, y: number } }} [options]
  */
 export async function addFooterLinkToPdfBlob(blob, options = {}) {
     const url = options.url ?? APP_WEBSITE_URL;
-    const label = options.label ?? getFreePdfFooterCta(APP_DOMAIN);
     const bytes = new Uint8Array(await blob.arrayBuffer());
-    const updated = await injectFooterLink(bytes, url, label);
+    const updated = await injectFooterLink(bytes, url, options);
     return new Blob([updated], { type: 'application/pdf' });
 }

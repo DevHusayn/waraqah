@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { APP_DOMAIN, APP_NAME, APP_WEBSITE_URL } from '../../constants/brand';
-import { getFreePdfFooterCta } from '@waraqah/shared';
+import { FREE_PDF_FOOTER_CTA_PREFIX } from '@waraqah/shared';
 import { getCurrencySymbol } from '../currency';
 import { getClientBusiness } from '../clientHelpers';
 import { isPremiumUser } from '../premium';
@@ -25,7 +25,7 @@ import {
     getPdfFileName,
     resolvePdfMode,
 } from '../receiptHelpers';
-import { drawCenteredPdfLink } from '../pdfLink';
+import { drawCenteredPdfFooterCta } from '../pdfLink';
 import { addFooterLinkToPdfBlob } from '../pdfFooterLink';
 
 function hexToRgb(hex) {
@@ -336,17 +336,25 @@ function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayC
             footerY + 2,
             { align: 'center' }
         );
-    } else {
-        doc.setTextColor(...primaryColor);
-        doc.setFont(undefined, 'bold');
-        doc.text(`Powered by ${APP_NAME}`, 105, footerY + 1, { align: 'center' });
-        setPdfBodyFont(doc);
-        doc.setFontSize(7);
-        doc.setTextColor(...grayColor);
-        doc.text('Professional invoicing for businesses', 105, footerY + 5.5, { align: 'center' });
-        doc.setTextColor(...primaryColor);
-        drawCenteredPdfLink(doc, getFreePdfFooterCta(APP_DOMAIN), footerY + 10, APP_WEBSITE_URL, primaryColor);
+        return null;
     }
+
+    doc.setTextColor(...primaryColor);
+    doc.setFont(undefined, 'bold');
+    doc.text(`Powered by ${APP_NAME}`, 105, footerY + 1, { align: 'center' });
+    setPdfBodyFont(doc);
+    doc.setFontSize(7);
+    doc.setTextColor(...grayColor);
+    doc.text('Professional invoicing for businesses', 105, footerY + 5.5, { align: 'center' });
+
+    return drawCenteredPdfFooterCta(
+        doc,
+        FREE_PDF_FOOTER_CTA_PREFIX,
+        APP_DOMAIN,
+        footerY + 10,
+        primaryColor,
+        grayColor
+    );
 }
 
 export async function generateStandardPdf(invoice, client, businessInfo, options = {}) {
@@ -575,14 +583,14 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     }
 
     doc.setPage(doc.getNumberOfPages());
-    drawPageFooter(doc, businessInfo, premium, footerLineY, primaryColor, grayColor);
+    const footerLinkBounds = drawPageFooter(doc, businessInfo, premium, footerLineY, primaryColor, grayColor);
 
     const filename = getPdfFileName(invoice, mode);
     let blob = doc.output('blob');
-    if (!premium) {
+    if (!premium && footerLinkBounds) {
         blob = await addFooterLinkToPdfBlob(blob, {
             url: APP_WEBSITE_URL,
-            label: getFreePdfFooterCta(APP_DOMAIN),
+            linkBounds: footerLinkBounds,
         });
     }
     if (options.output === 'blob') {

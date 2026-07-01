@@ -64,7 +64,7 @@ export function wrapHtml(body, title = 'Document') {
   }
   .footer a {
     color: #16A34A;
-    text-decoration: none;
+    text-decoration: underline;
     font-weight: 600;
   }
   .section-title { font-weight: 700; font-size: 12px; margin: 16px 0 8px; }
