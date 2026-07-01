@@ -9,13 +9,13 @@ const icons = {
 const styles = {
     success: 'bg-green-50 border-green-200 text-green-800',
     error: 'bg-red-50 border-red-200 text-red-800',
-    info: 'bg-blue-50 border-blue-200 text-blue-800',
+    info: 'bg-green-50 border-green-200 text-green-800',
 };
 
 const iconStyles = {
-    success: 'text-green-500',
+    success: 'text-green-600',
     error: 'text-red-500',
-    info: 'text-blue-500',
+    info: 'text-green-600',
 };
 
 export default function ToastContainer({ toasts, onDismiss }) {
@@ -31,7 +31,7 @@ export default function ToastContainer({ toasts, onDismiss }) {
                 return (
                     <div
                         key={toast.id}
-                        className={`pointer-events-auto flex items-start gap-3 rounded-xl border shadow-lg px-4 py-3 animate-toast-in ${styles[toast.type] || styles.info}`}
+                        className={`pointer-events-auto flex items-start gap-3 rounded-xl border shadow-card px-4 py-3 animate-toast-in ${styles[toast.type] || styles.info}`}
                         role="status"
                     >
                         <Icon className={`h-5 w-5 flex-shrink-0 mt-0.5 ${iconStyles[toast.type] || iconStyles.info}`} />

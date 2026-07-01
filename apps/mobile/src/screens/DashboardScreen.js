@@ -65,7 +65,7 @@ export function DashboardScreen({ navigation }) {
                 <View style={styles.statsGrid}>
                     <StatCard label="Total invoices" value={String(activeInvoices.length)} icon={FileText} theme="brand" />
                     <StatCard label="Total clients" value={String(clients.length)} icon={Users} theme="violet" />
-                    <StatCard label="Revenue (paid)" value={formatCurrency(totalRevenue)} icon={Wallet} theme="emerald" />
+                    <StatCard label="Revenue (paid)" value={formatCurrency(totalRevenue)} icon={Wallet} theme="revenue" />
                     <StatCard label="Pending" value={formatCurrency(pendingRevenue)} icon={Clock} theme="amber" />
                 </View>
 

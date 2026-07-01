@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { APP_NAME } from '../../constants/brand';
+import { APP_DOMAIN, APP_NAME, APP_WEBSITE_URL } from '../../constants/brand';
 import { getCurrencySymbol } from '../currency';
 import { getClientBusiness } from '../clientHelpers';
 import { isPremiumUser } from '../premium';
@@ -317,6 +317,13 @@ function drawBottomBoxes(
     return y + boxH + 6;
 }
 
+function drawCenteredLink(doc, text, y, url) {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const textWidth = doc.getTextWidth(text);
+    const x = (pageWidth - textWidth) / 2;
+    doc.textWithLink(text, x, y, { url });
+}
+
 function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayColor) {
     doc.setDrawColor(229, 231, 235);
     doc.setLineWidth(0.5);
@@ -333,6 +340,9 @@ function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayC
             footerY + 2,
             { align: 'center' }
         );
+        doc.setFontSize(7);
+        doc.setTextColor(...primaryColor);
+        drawCenteredLink(doc, APP_DOMAIN, footerY + 7, APP_WEBSITE_URL);
     } else {
         doc.setTextColor(...primaryColor);
         doc.setFont(undefined, 'bold');
@@ -341,6 +351,8 @@ function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayC
         doc.setFontSize(7);
         doc.setTextColor(...grayColor);
         doc.text('Professional invoicing for businesses', 105, footerY + 5.5, { align: 'center' });
+        doc.setTextColor(...primaryColor);
+        drawCenteredLink(doc, APP_DOMAIN, footerY + 10, APP_WEBSITE_URL);
     }
 }
 
@@ -359,7 +371,7 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     const signatureUrl = premium ? getAuthorizedSignatureUrl(businessInfo) : '';
     const pngCache = new Map();
 
-    const primaryColor = hexToRgb(businessInfo.brandColor || '#0ea5e9');
+    const primaryColor = hexToRgb(businessInfo.brandColor || '#16A34A');
     const lightPrimary = lightenColor(primaryColor, 0.88);
     const textColor = [31, 41, 55];
     const grayColor = [107, 114, 128];
@@ -374,7 +386,7 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         });
 
     const docNumber = getDocumentNumber(invoice, mode) || (isReceiptDoc ? 'RCP' : 'INV');
-    const footerReserve = 18;
+    const footerReserve = 22;
     const signatureReserve = signatureUrl ? 16 : 0;
     const stampReserve = isReceiptDoc && stampUrl ? 26 : 0;
     const assetZone = Math.max(signatureReserve, stampReserve);

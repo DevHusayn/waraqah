@@ -35,7 +35,7 @@ export const REGISTER_INITIAL_FORM = {
     phone: '',
     website: '',
     defaultCurrency: APP_CURRENCY,
-    brandColor: '#0284c7',
+    brandColor: '#16A34A',
     paymentAccountName: '',
     paymentBankName: '',
     paymentAccountNumber: '',
@@ -349,7 +349,7 @@ export default function RegisterWizard({ returnTo }) {
                                     <p
                                         className={`mt-1 text-xs font-medium ${
                                             passwordStrength.level === 'strong'
-                                                ? 'text-emerald-600'
+                                                ? 'text-green-600'
                                                 : passwordStrength.level === 'fair'
                                                   ? 'text-amber-600'
                                                   : 'text-red-600'
@@ -422,7 +422,7 @@ export default function RegisterWizard({ returnTo }) {
                         <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-zinc-200 bg-zinc-50/60">
                             <div
                                 className="w-full sm:w-20 h-14 rounded-xl border-2 border-white shadow-md shrink-0"
-                                style={{ backgroundColor: form.brandColor || '#0284c7' }}
+                                style={{ backgroundColor: form.brandColor || '#16A34A' }}
                                 aria-hidden
                             />
                             <div className="flex-1 space-y-3 min-w-0">
@@ -430,7 +430,7 @@ export default function RegisterWizard({ returnTo }) {
                                     <input
                                         type="color"
                                         name="brandColor"
-                                        value={form.brandColor || '#0284c7'}
+                                        value={form.brandColor || '#16A34A'}
                                         onChange={handleFieldChange}
                                         className="h-11 w-14 rounded-lg border border-zinc-200 cursor-pointer bg-white p-1"
                                         aria-label="Pick brand color"
@@ -439,13 +439,13 @@ export default function RegisterWizard({ returnTo }) {
                                         id="reg-brand-color"
                                         type="text"
                                         name="brandColor"
-                                        value={form.brandColor || '#0284c7'}
+                                        value={form.brandColor || '#16A34A'}
                                         onChange={handleFieldChange}
                                         className={inputClass(
                                             Boolean(fieldErrors.brandColor),
                                             'font-mono text-sm'
                                         )}
-                                        placeholder="#0284c7"
+                                        placeholder="#16A34A"
                                         aria-invalid={Boolean(fieldErrors.brandColor)}
                                     />
                                 </div>
@@ -457,7 +457,7 @@ export default function RegisterWizard({ returnTo }) {
                             <div className="flex flex-wrap gap-2">
                                 {BRAND_PRESETS.map((preset) => {
                                     const selected =
-                                        (form.brandColor || '#0284c7').toLowerCase() ===
+                                        (form.brandColor || '#16A34A').toLowerCase() ===
                                         preset.color;
                                     return (
                                         <button

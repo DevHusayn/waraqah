@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { apiFetch } from '../utils/api';
 import { useAuth } from './AuthContext';
 import { buildBusinessInfoPayload } from '../utils/businessPayload';
+import { DEFAULT_BRAND_COLOR } from '@waraqah/shared';
 
 const SettingsContext = createContext();
 
@@ -13,7 +14,7 @@ const EMPTY_BUSINESS = {
     website: '',
     defaultCurrency: 'NGN',
     taxRate: 10,
-    brandColor: '#0ea5e9',
+    brandColor: DEFAULT_BRAND_COLOR,
     plan: 'free',
     businessLogo: '',
     companyLogoUrl: '',

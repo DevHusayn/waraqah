@@ -21,7 +21,7 @@ export function buildBusinessInfoPayload(formData, businessInfo = {}) {
         phone: formData.phone ?? businessInfo.phone ?? '',
         website: formData.website ?? businessInfo.website ?? '',
         taxRate: formData.taxRate ?? businessInfo.taxRate ?? 10,
-        brandColor: formData.brandColor ?? businessInfo.brandColor ?? '#0ea5e9',
+        brandColor: formData.brandColor ?? businessInfo.brandColor ?? '#16A34A',
         defaultCurrency: 'NGN',
         businessLogo: logo,
         companyLogoUrl: logo,

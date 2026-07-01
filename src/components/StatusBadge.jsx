@@ -1,7 +1,7 @@
 const STYLES = {
     draft: 'bg-zinc-50 text-zinc-600 border-zinc-200/80',
     pending: 'bg-amber-50/80 text-amber-800 border-amber-200/60',
-    paid: 'bg-emerald-50/80 text-emerald-800 border-emerald-200/60',
+    paid: 'bg-green-50/80 text-green-800 border-green-200/60',
     overdue: 'bg-red-50/80 text-red-800 border-red-200/60',
     cancelled: 'bg-zinc-50 text-zinc-500 border-zinc-200/80',
 };
@@ -9,7 +9,7 @@ const STYLES = {
 const DOT_COLORS = {
     draft: 'bg-zinc-400',
     pending: 'bg-amber-500',
-    paid: 'bg-emerald-500',
+    paid: 'bg-green-600',
     overdue: 'bg-red-500',
     cancelled: 'bg-zinc-400',
 };

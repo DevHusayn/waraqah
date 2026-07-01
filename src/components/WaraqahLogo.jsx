@@ -33,14 +33,13 @@ export function WaraqahWordmark({ size = 'md', inverted = false, showAccent = tr
             className={`inline-flex flex-col items-start leading-none ${className}`}
             aria-label="Waraqah"
         >
-            <span className={`font-logo font-bold tracking-tight ${s.text} ${base}`}>
+            <span className={`font-sans font-bold tracking-tight ${s.text} ${base}`}>
                 Waraqah
             </span>
             {showAccent && (
                 <span
-                    className={`mt-1 rounded-full ${s.accent} ${
-                        inverted ? 'bg-white/50' : 'bg-brand'
-                    }`}
+                    className={`mt-1 rounded-full ${s.accent} ${inverted ? 'bg-white/50' : 'bg-brand'
+                        }`}
                     aria-hidden
                 />
             )}
@@ -66,8 +65,8 @@ export default function WaraqahLogo({
         iconStyle === 'solid'
             ? 'waraqah-logo-mark'
             : inverted
-              ? 'bg-white/15 text-white'
-              : 'bg-zinc-100 text-zinc-700';
+                ? 'bg-white/15 text-white'
+                : 'bg-zinc-100 text-zinc-700';
 
     return (
         <span className={`inline-flex items-center min-w-0 ${s.wrap} ${className}`}>
@@ -83,9 +82,8 @@ export default function WaraqahLogo({
                 <WaraqahWordmark size={size} inverted={inverted} showAccent={showAccent} />
                 {subtitle?.trim() ? (
                     <span
-                        className={`block w-full text-xs truncate mt-1 leading-tight ${
-                            inverted ? 'text-zinc-300' : 'text-zinc-500'
-                        }`}
+                        className={`block w-full text-xs truncate mt-1 leading-tight ${inverted ? 'text-zinc-300' : 'text-zinc-500'
+                            }`}
                         title={subtitle}
                     >
                         {subtitle}

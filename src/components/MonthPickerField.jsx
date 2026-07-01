@@ -105,7 +105,7 @@ export default function MonthPickerField({
                 <div
                     role="dialog"
                     aria-label="Choose month"
-                    className="absolute z-30 mt-1.5 w-full min-w-[288px] max-w-xs rounded-xl border border-zinc-200 bg-white p-4 shadow-lg animate-fade-in"
+                    className="absolute z-30 mt-1.5 w-full min-w-[288px] max-w-xs rounded-xl border border-zinc-200 bg-white p-4 shadow-card animate-fade-in"
                 >
                     <div className="mb-3 flex items-center justify-between">
                         <button

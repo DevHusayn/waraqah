@@ -8,7 +8,6 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
-                logo: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', 'sans-serif'],
             },
             colors: {
                 brand: {
@@ -16,6 +15,7 @@ export default {
                     hover: 'var(--brand-hover)',
                     light: 'var(--brand-light)',
                     subtle: 'var(--brand-subtle)',
+                    secondary: 'var(--brand-secondary)',
                 },
                 surface: {
                     DEFAULT: 'var(--surface)',
@@ -23,23 +23,23 @@ export default {
                     elevated: 'var(--surface-elevated)',
                 },
                 primary: {
-                    50: '#f0f9ff',
-                    100: '#e0f2fe',
-                    200: '#bae6fd',
-                    300: '#7dd3fc',
-                    400: '#38bdf8',
-                    500: '#0ea5e9',
-                    600: '#0284c7',
-                    700: '#0369a1',
-                    800: '#075985',
-                    900: '#0c4a6e',
+                    50: '#F0FDF4',
+                    100: '#DCFCE7',
+                    200: '#BBF7D0',
+                    300: '#86EFAC',
+                    400: '#4ADE80',
+                    500: '#22C55E',
+                    600: '#16A34A',
+                    700: '#15803D',
+                    800: '#166534',
+                    900: '#14532D',
                 },
             },
             boxShadow: {
                 soft: '0 1px 2px 0 rgb(0 0 0 / 0.03), 0 1px 3px 0 rgb(0 0 0 / 0.04)',
                 card: '0 1px 2px 0 rgb(0 0 0 / 0.04), 0 2px 4px -1px rgb(0 0 0 / 0.03)',
-                'card-md': '0 4px 12px -2px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04)',
-                lift: '0 8px 24px -4px rgb(0 0 0 / 0.08), 0 2px 6px -2px rgb(0 0 0 / 0.04)',
+                'card-md': '0 2px 8px -2px rgb(0 0 0 / 0.05), 0 1px 3px -1px rgb(0 0 0 / 0.03)',
+                lift: '0 4px 16px -4px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.03)',
             },
             borderRadius: {
                 DEFAULT: '0.5rem',

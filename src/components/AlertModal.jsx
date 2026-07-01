@@ -11,7 +11,7 @@ const VARIANTS = {
     },
     success: {
         icon: CheckCircle2,
-        iconWrap: 'bg-emerald-50 text-emerald-600',
+        iconWrap: 'bg-green-50 text-green-600',
         titleClass: 'text-zinc-950',
         messageClass: 'text-zinc-500',
         buttonClass: 'btn-primary',

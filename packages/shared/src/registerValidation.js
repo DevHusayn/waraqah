@@ -33,7 +33,7 @@ export const REGISTER_INITIAL_FORM = {
     phone: '',
     website: '',
     defaultCurrency: 'NGN',
-    brandColor: '#0284c7',
+    brandColor: '#16A34A',
     paymentAccountName: '',
     paymentBankName: '',
     paymentAccountNumber: '',

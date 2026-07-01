@@ -7,7 +7,7 @@ import { PlanBadge } from './SettingsSection';
 export default function BusinessSummaryCard({ businessInfo, className = '' }) {
     const premium = isPremiumUser(businessInfo);
     const logoUrl = getCompanyLogoAvatarUrl(businessInfo);
-    const brandColor = businessInfo.brandColor || '#0284c7';
+    const brandColor = businessInfo.brandColor || '#16A34A';
 
     return (
         <div

@@ -176,7 +176,7 @@ export default function ResetPassword() {
                                 <p
                                     className={`mt-1 text-xs ${
                                         passwordStrength.level === 'strong'
-                                            ? 'text-emerald-600'
+                                            ? 'text-green-600'
                                             : passwordStrength.level === 'fair'
                                               ? 'text-amber-600'
                                               : 'text-red-600'
@@ -205,7 +205,7 @@ export default function ResetPassword() {
                         />
                         <FieldValidationMessage message={fieldErrors.confirm} />
                         {!fieldErrors.confirm && confirm.length > 0 && password === confirm && (
-                            <p className="mt-1.5 text-xs font-medium text-emerald-600">Passwords match.</p>
+                            <p className="mt-1.5 text-xs font-medium text-green-600">Passwords match.</p>
                         )}
                     </div>
                     <button

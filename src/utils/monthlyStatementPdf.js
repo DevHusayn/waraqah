@@ -3,6 +3,7 @@ import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { getCurrencySymbol } from './currency';
 import { drawPdfGeometricBackground } from './pdfBackground';
+import { APP_DOMAIN, APP_WEBSITE_URL } from '../constants/brand';
 
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -39,7 +40,7 @@ function applyColumnAlignment(data, alignments) {
 export async function generateMonthlyStatementPdf(statement, businessInfo, options = {}) {
     const { print = false } = options;
     const doc = new jsPDF();
-    const primaryColor = hexToRgb(businessInfo?.brandColor || '#0284c7');
+    const primaryColor = hexToRgb(businessInfo?.brandColor || '#16A34A');
     const textColor = [31, 41, 55];
     const grayColor = [107, 114, 128];
     const currencySymbol = getCurrencySymbol(false);
@@ -188,6 +189,11 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
         290,
         { align: 'center' }
     );
+
+    doc.setFontSize(7);
+    doc.setTextColor(...primaryColor);
+    const domainWidth = doc.getTextWidth(APP_DOMAIN);
+    doc.textWithLink(APP_DOMAIN, 105 - domainWidth / 2, 293, { url: APP_WEBSITE_URL });
 
     doc.setFillColor(...primaryColor);
     doc.rect(0, 294, 210, 3, 'F');

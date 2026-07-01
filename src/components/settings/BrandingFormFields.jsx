@@ -22,7 +22,7 @@ export default function BrandingFormFields({
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-zinc-200 bg-zinc-50/60">
                     <div
                         className="w-full sm:w-24 h-16 sm:h-24 rounded-xl border-2 border-white shadow-md shrink-0"
-                        style={{ backgroundColor: formData.brandColor || '#0284c7' }}
+                        style={{ backgroundColor: formData.brandColor || '#16A34A' }}
                         aria-hidden
                     />
                     <div className="flex-1 space-y-3 min-w-0">
@@ -30,7 +30,7 @@ export default function BrandingFormFields({
                             <input
                                 type="color"
                                 name="brandColor"
-                                value={formData.brandColor || '#0284c7'}
+                                value={formData.brandColor || '#16A34A'}
                                 onChange={onChange}
                                 className="h-11 w-14 rounded-lg border border-zinc-200 cursor-pointer bg-white p-1"
                                 aria-label="Pick brand color"
@@ -39,10 +39,10 @@ export default function BrandingFormFields({
                                 id="settings-brand-color"
                                 type="text"
                                 name="brandColor"
-                                value={formData.brandColor || '#0284c7'}
+                                value={formData.brandColor || '#16A34A'}
                                 onChange={onChange}
                                 className={inputClass(Boolean(errors.brandColor), 'font-mono text-sm')}
-                                placeholder="#0284c7"
+                                placeholder="#16A34A"
                                 aria-invalid={Boolean(errors.brandColor)}
                             />
                         </div>
@@ -54,7 +54,7 @@ export default function BrandingFormFields({
                     <div className="flex flex-wrap gap-2">
                         {BRAND_PRESETS.map((preset) => {
                             const selected =
-                                (formData.brandColor || '#0284c7').toLowerCase() === preset.color;
+                                (formData.brandColor || '#16A34A').toLowerCase() === preset.color;
                             return (
                                 <button
                                     key={preset.color}

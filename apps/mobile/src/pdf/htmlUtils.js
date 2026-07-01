@@ -39,7 +39,7 @@ export function wrapHtml(body, title = 'Document') {
     display: inline-block;
     margin-top: 8px;
     padding: 6px 10px;
-    background: #e0f2fe;
+    background: #DCFCE7;
     border-radius: 4px;
     font-weight: 700;
     float: right;
@@ -61,6 +61,11 @@ export function wrapHtml(body, title = 'Document') {
     text-align: center;
     color: #6b7280;
     font-size: 10px;
+  }
+  .footer a {
+    color: #16A34A;
+    text-decoration: none;
+    font-weight: 600;
   }
   .section-title { font-weight: 700; font-size: 12px; margin: 16px 0 8px; }
 </style>

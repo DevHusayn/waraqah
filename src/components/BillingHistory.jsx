@@ -15,7 +15,7 @@ const COLUMNS = [
 ];
 
 const STATUS_STYLES = {
-    success: 'bg-emerald-50/80 text-emerald-800 border-emerald-200/60',
+    success: 'bg-green-50/80 text-green-800 border-green-200/60',
     pending: 'bg-amber-50/80 text-amber-800 border-amber-200/60',
     failed: 'bg-red-50/80 text-red-800 border-red-200/60',
 };

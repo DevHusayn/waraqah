@@ -60,7 +60,7 @@ export default function CheckEmailPage() {
                         </div>
                         <h1 className="text-xl font-semibold text-zinc-900">Check your email</h1>
                         {message ? (
-                            <p className="mt-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
+                            <p className="mt-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-2">
                                 {message}
                             </p>
                         ) : null}

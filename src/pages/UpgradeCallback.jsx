@@ -65,7 +65,7 @@ export default function UpgradeCallback() {
     if (status === 'success') {
         return (
             <div className="max-w-md mx-auto text-center py-16">
-                <CheckCircle2 className="h-14 w-14 text-emerald-500 mx-auto mb-4" />
+                <CheckCircle2 className="h-14 w-14 text-green-500 mx-auto mb-4" />
                 <h1 className="page-title">Payment successful</h1>
                 <p className="text-zinc-600 mt-2 mb-8">{message}</p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">

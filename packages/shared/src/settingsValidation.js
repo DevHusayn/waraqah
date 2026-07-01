@@ -73,11 +73,9 @@ export function buildSettingsFieldErrors(formData) {
 }
 
 export const BRAND_PRESETS = [
-    { color: '#0284c7', name: 'Sky' },
-    { color: '#0ea5e9', name: 'Blue' },
-    { color: '#6366f1', name: 'Indigo' },
+    { color: '#16A34A', name: 'Emerald' },
+    { color: '#86EFAC', name: 'Mint' },
     { color: '#8b5cf6', name: 'Purple' },
-    { color: '#10b981', name: 'Green' },
     { color: '#f59e0b', name: 'Amber' },
     { color: '#ef4444', name: 'Red' },
     { color: '#64748b', name: 'Slate' },

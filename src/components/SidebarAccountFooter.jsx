@@ -11,7 +11,7 @@ function SidebarAvatar({ businessInfo, premium }) {
     const logo = getCompanyLogoAvatarUrl(businessInfo);
     const showLogo = premium && logo.length > 0;
     const initials = getBusinessInitials(businessInfo.name);
-    const brandColor = businessInfo.brandColor || '#0284c7';
+    const brandColor = businessInfo.brandColor || '#16A34A';
 
     if (showLogo) {
         return (

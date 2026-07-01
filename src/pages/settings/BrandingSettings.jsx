@@ -33,7 +33,7 @@ export default function BrandingSettings() {
         successMessage: 'Branding saved',
     });
 
-    const brandColor = businessInfo.brandColor || '#0284c7';
+    const brandColor = businessInfo.brandColor || '#16A34A';
 
     return (
         <SettingsPageShell

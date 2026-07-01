@@ -6,11 +6,12 @@ import {
     resolvePdfMode,
 } from '@waraqah/shared';
 import { escapeHtml, formatMoney, wrapHtml } from './htmlUtils';
+import { APP_DOMAIN, APP_WEBSITE_URL } from '../constants/brand';
 
 export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
     const resolvedMode = resolvePdfMode(invoice, mode);
     const isReceipt = resolvedMode === 'receipt';
-    const brand = businessInfo?.brandColor || '#0284c7';
+    const brand = businessInfo?.brandColor || '#16A34A';
     const symbol = getCurrencySymbol(false);
     const docNumber = getDocumentNumber(invoice, resolvedMode);
 
@@ -87,6 +88,7 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
     <div class="footer">
       <p>${isReceipt ? 'Payment received. Thank you!' : 'Thank you for your business!'}</p>
       <p style="font-size:8px;margin-top:4px">${escapeHtml(businessInfo?.name)} • ${escapeHtml(businessInfo?.email)} • ${escapeHtml(businessInfo?.phone)}</p>
+      <p style="margin-top:6px"><a href="${escapeHtml(APP_WEBSITE_URL)}">${escapeHtml(APP_DOMAIN)}</a></p>
     </div>`;
 
     return wrapHtml(body, isReceipt ? `Receipt ${docNumber}` : `Invoice ${docNumber}`);

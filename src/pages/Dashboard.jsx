@@ -50,7 +50,7 @@ const Dashboard = () => {
     const stats = [
         { name: 'Total Invoices', value: activeInvoices.length, icon: FileText, iconBg: 'bg-brand-light', iconColor: 'text-brand' },
         { name: 'Total Clients', value: clients.length, icon: Users, iconBg: 'bg-violet-50', iconColor: 'text-violet-600' },
-        { name: 'Revenue (Paid)', value: formatCurrency(totalRevenue), icon: Wallet, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600' },
+        { name: 'Revenue (Paid)', value: formatCurrency(totalRevenue), icon: Wallet, iconBg: 'bg-green-50', iconColor: 'text-green-600' },
         { name: 'Pending Revenue', value: formatCurrency(pendingRevenue), icon: Clock, iconBg: 'bg-amber-50', iconColor: 'text-amber-600' },
     ];
 

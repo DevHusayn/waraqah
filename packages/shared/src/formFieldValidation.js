@@ -21,7 +21,7 @@ export function validateOptionalEmail(value, invalidMessage) {
 export function validateHexColor(value, message) {
     if (!value?.trim?.()) return message;
     if (!HEX_COLOR_PATTERN.test(value.trim())) {
-        return 'Please enter a valid color code (e.g. #0ea5e9).';
+        return 'Please enter a valid color code (e.g. #16A34A).';
     }
     return '';
 }

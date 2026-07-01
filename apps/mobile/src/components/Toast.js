@@ -13,7 +13,7 @@ export function Toast({ message, type = 'info', onHide }) {
     const border =
         type === 'success' ? '#a7f3d0' : type === 'error' ? '#fecaca' : colors.brandLight;
     const text =
-        type === 'success' ? colors.emerald600 : type === 'error' ? colors.red700 : colors.brand;
+        type === 'success' ? colors.green600 : type === 'error' ? colors.red700 : colors.brand;
 
     return (
         <Animated.View style={[styles.wrap, { backgroundColor: bg, borderColor: border }]}>

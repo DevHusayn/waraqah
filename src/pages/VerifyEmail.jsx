@@ -46,7 +46,7 @@ export default function VerifyEmail() {
                 ) : (
                     <>
                         {status === 'success' ? (
-                            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-600">
                                 <CheckCircle2 size={24} aria-hidden />
                             </div>
                         ) : null}

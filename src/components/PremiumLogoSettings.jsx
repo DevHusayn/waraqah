@@ -70,8 +70,8 @@ function AssetUploadCard({
                         </div>
                     )}
                     {!isEditing && (
-                        <p className="text-xs text-emerald-700 font-medium flex items-center gap-1">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+                        <p className="text-xs text-green-700 font-medium flex items-center gap-1">
+                            <span className="h-1.5 w-1.5 rounded-full bg-green-500" aria-hidden />
                             Uploaded
                         </p>
                     )}

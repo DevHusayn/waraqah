@@ -106,5 +106,5 @@ const styles = StyleSheet.create({
     block: { marginBottom: 12 },
     section: { fontWeight: '700', marginBottom: 8 },
     feature: { color: colors.slate600, marginBottom: 4 },
-    active: { color: colors.emerald600, fontWeight: '700', fontSize: 16 },
+    active: { color: colors.green600, fontWeight: '700', fontSize: 16 },
 });

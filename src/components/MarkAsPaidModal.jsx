@@ -43,8 +43,8 @@ export default function MarkAsPaidModal({ open, onConfirm, onCancel, saving = fa
         >
             <div className="px-6 pt-6 pb-4 border-b border-zinc-100">
                 <div className="flex items-start gap-3 pr-8">
-                    <div className="p-2.5 rounded-xl bg-emerald-100 shrink-0">
-                        <CheckCircle className="h-5 w-5 text-emerald-600" aria-hidden />
+                    <div className="p-2.5 rounded-xl bg-green-100 shrink-0">
+                        <CheckCircle className="h-5 w-5 text-green-600" aria-hidden />
                     </div>
                     <div>
                         <h2 id="mark-paid-title" className="text-lg font-semibold text-zinc-900">

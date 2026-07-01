@@ -14,7 +14,7 @@ const EMPTY_BUSINESS = {
     website: '',
     defaultCurrency: 'NGN',
     taxRate: 10,
-    brandColor: '#0284c7',
+    brandColor: '#16A34A',
     plan: 'free',
     businessLogo: '',
     companyLogoUrl: '',

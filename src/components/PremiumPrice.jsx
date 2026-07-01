@@ -24,7 +24,7 @@ export default function PremiumPrice({
     return (
         <div className={className}>
             {showLaunchBadge && (
-                <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-800 mb-2">
+                <span className="inline-flex rounded-full bg-green-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-800 mb-2">
                     {PREMIUM_LAUNCH_LABEL}
                 </span>
             )}

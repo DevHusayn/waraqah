@@ -31,7 +31,7 @@ function StatusBadge({ status }) {
         <span
             className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold capitalize ${
                 active
-                    ? 'bg-emerald-100 text-emerald-800'
+                    ? 'bg-green-100 text-green-800'
                     : 'bg-red-100 text-red-800'
             }`}
         >
@@ -67,7 +67,7 @@ function UsageBadge({ usage }) {
             className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold tabular-nums ${
                 atLimit
                     ? 'bg-red-100 text-red-800'
-                    : 'bg-sky-100 text-sky-800'
+                    : 'bg-green-100 text-green-800'
             }`}
         >
             {usage.used}/{usage.limit} this month
@@ -85,7 +85,7 @@ function AdminActionItem({
     const tones = {
         default: 'text-zinc-700 hover:bg-zinc-50',
         premium: 'text-amber-800 hover:bg-amber-50',
-        success: 'text-emerald-800 hover:bg-emerald-50',
+        success: 'text-green-800 hover:bg-green-50',
         danger: 'text-red-700 hover:bg-red-50',
     };
     return (
@@ -188,7 +188,7 @@ function AdminActionsMenu({
                   <div
                       ref={menuRef}
                       style={menuStyle}
-                      className="rounded-xl border border-zinc-200 bg-white shadow-lg p-1.5"
+                      className="rounded-xl border border-zinc-200 bg-white shadow-card p-1.5"
                       role="menu"
                   >
                       <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">

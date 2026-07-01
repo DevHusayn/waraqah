@@ -4,9 +4,9 @@ import { baseStyles } from './styles';
 
 export function StatusBadge({ status }) {
     const map = {
-        pending: { bg: '#fef3c7', text: '#92400e' },
-        paid: { bg: '#d1fae5', text: '#065f46' },
-        overdue: { bg: '#fee2e2', text: '#991b1b' },
+        pending: { bg: '#FEF3C7', text: '#92400E' },
+        paid: { bg: colors.brandLight, text: colors.brandDark },
+        overdue: { bg: '#FEE2E2', text: '#991B1B' },
         cancelled: { bg: colors.slate100, text: colors.slate600 },
         draft: { bg: colors.slate100, text: colors.slate600 },
     };

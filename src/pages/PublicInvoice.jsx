@@ -54,7 +54,7 @@ export default function PublicInvoice() {
 
     const isPaid = invoice?.status === 'paid';
     const showReceipt = isPaid && (preferReceipt || !invoice?.dueDate);
-    const brandColor = business?.brandColor || '#0ea5e9';
+    const brandColor = business?.brandColor || '#16A34A';
     const docTitle = showReceipt
         ? invoice?.receiptNumber || 'Receipt'
         : invoice?.invoiceNumber || 'Invoice';
@@ -93,7 +93,7 @@ export default function PublicInvoice() {
     return (
         <div className="min-h-screen bg-slate-50 py-8 px-4">
             <div className="max-w-3xl mx-auto">
-                <div className="card !p-0 overflow-hidden shadow-lg border border-zinc-200">
+                <div className="card !p-0 overflow-hidden shadow-card border border-zinc-200">
                     <div
                         className="px-6 sm:px-8 py-6 border-b border-zinc-200"
                         style={{ borderTop: `4px solid ${brandColor}` }}
@@ -243,7 +243,7 @@ export default function PublicInvoice() {
                         ) : null}
 
                         {!isPaid && (business?.paymentAccountNumber || business?.paymentInstructions) ? (
-                            <div className="mt-8 rounded-xl border border-sky-100 bg-sky-50/70 px-4 py-4">
+                            <div className="mt-8 rounded-xl border border-green-100 bg-green-50/70 px-4 py-4">
                                 <p className="text-sm font-semibold text-zinc-900 mb-2">Payment details</p>
                                 {business.paymentAccountName ? (
                                     <p className="text-sm text-zinc-700">Account name: {business.paymentAccountName}</p>

@@ -110,7 +110,7 @@ function FaqItem({ item, open, onToggle }) {
 
 function CtaButton({ className = '', children = 'Get started' }) {
     return (
-        <Link to={AUTH_REGISTER_PATH} className={`btn-primary shadow-lg shadow-brand/25 hover:shadow-xl hover:shadow-brand/30 ${className}`}>
+        <Link to={AUTH_REGISTER_PATH} className={`btn-primary shadow-soft shadow-brand/20 hover:shadow-card hover:shadow-brand/25 ${className}`}>
             {children}
             <ArrowRight className="h-4 w-4" />
         </Link>
@@ -157,7 +157,7 @@ export default function Landing() {
                                 manage clients, and track payments without spreadsheets or design stress.
                             </p>
                             <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                                <CtaButton className="py-3.5 px-8 text-base shadow-lg shadow-brand/25 hover:shadow-xl hover:shadow-brand/30" />
+                                <CtaButton className="py-3.5 px-8 text-base shadow-soft shadow-brand/20 hover:shadow-card hover:shadow-brand/25" />
                                 <a href="#pricing" className="btn-secondary py-3.5 px-8 text-base border-zinc-200/80 bg-white/70">
                                     Compare plans
                                 </a>
@@ -270,7 +270,7 @@ export default function Landing() {
                                 <ul className="mt-8 space-y-3 flex-1">
                                     {FREE_PLAN_FEATURES.map((f) => (
                                         <li key={f} className="flex items-start gap-3 text-zinc-600 text-sm">
-                                            <Check className="h-5 w-5 text-emerald-500 flex-shrink-0" />
+                                            <Check className="h-5 w-5 text-green-600 flex-shrink-0" />
                                             {f}
                                         </li>
                                     ))}
@@ -320,7 +320,7 @@ export default function Landing() {
                             { icon: Crown, label: 'Premium branding' },
                         ].map(({ icon: Icon, label }) => (
                             <div key={label} className="flex flex-col items-center gap-3">
-                                <Icon className="h-8 w-8 text-sky-400" />
+                                <Icon className="h-8 w-8 text-green-400" />
                                 <span className="text-sm font-medium text-zinc-300">{label}</span>
                             </div>
                         ))}
@@ -356,13 +356,13 @@ export default function Landing() {
                         <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
                             Ready to invoice like a pro?
                         </h2>
-                        <p className="mt-4 text-lg text-sky-100">
+                        <p className="mt-4 text-lg text-green-100">
                             Join {APP_NAME} today and send your next invoice in seconds.
                         </p>
                         <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
                             <Link
                                 to={AUTH_REGISTER_PATH}
-                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white text-brand font-semibold py-3.5 px-8 shadow-xl hover:bg-sky-50 transition-colors"
+                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white text-brand font-semibold py-3.5 px-8 shadow-card-md hover:bg-green-50 transition-colors"
                             >
                                 Get started
                                 <ArrowRight className="h-4 w-4" />

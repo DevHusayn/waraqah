@@ -1,7 +1,9 @@
 /**
  * Mini preview approximating the standard PDF layout.
  */
-const BRAND = '#0284c7';
+import { DEFAULT_BRAND_COLOR } from '@waraqah/shared';
+
+const BRAND = DEFAULT_BRAND_COLOR;
 
 function formatAmount(value) {
     return Number(value).toLocaleString('en-US', {
