@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { apiFetch, authFetch } from '../utils/api';
-import { clearLegacyAuthStorage } from '../utils/csrf';
+import { clearLegacyAuthStorage, setCsrfToken, clearCsrfToken } from '../utils/csrf';
 
 const AuthContext = createContext(null);
 
@@ -19,9 +19,15 @@ export function AuthProvider({ children }) {
     const refreshSession = useCallback(async () => {
         try {
             const data = await apiFetch('/auth/me');
+            if (data.csrfToken) {
+                setCsrfToken(data.csrfToken);
+            } else if (!data.user) {
+                clearCsrfToken();
+            }
             setUser(data.user || null);
             return data.user || null;
         } catch {
+            clearCsrfToken();
             setUser(null);
             return null;
         }
@@ -37,6 +43,7 @@ export function AuthProvider({ children }) {
             refreshSession();
         };
         const onLogout = () => {
+            clearCsrfToken();
             setUser(null);
         };
         window.addEventListener('app-login', onLogin);
@@ -58,6 +65,7 @@ export function AuthProvider({ children }) {
             /* cookie cleared server-side when possible */
         }
         setUser(null);
+        clearCsrfToken();
         window.dispatchEvent(new Event('app-logout'));
     }, []);
 

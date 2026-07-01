@@ -11,7 +11,7 @@ import { useInvoice } from '../../context/InvoiceContext';
 import { useAuth } from '../../context/AuthContext';
 import { APP_CURRENCY } from '../../utils/currency';
 import { getNetworkErrorMessage } from '../../utils/apiConfig';
-import { authFetch, apiFetch } from '../../utils/api';
+import { authFetch, apiFetch, setCsrfToken } from '../../utils/api';
 import {
     inputClass,
     focusFieldById,
@@ -269,6 +269,9 @@ export default function RegisterWizard({ returnTo }) {
 
             clearRegisterDraft();
             setSession(data.user);
+            if (data.csrfToken) {
+                setCsrfToken(data.csrfToken);
+            }
             await fetchUserData();
 
             try {

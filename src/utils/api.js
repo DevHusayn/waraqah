@@ -1,6 +1,6 @@
 // Utility for API requests with cookie-based auth + CSRF
 import { API_BASE, getNetworkErrorMessage } from './apiConfig';
-import { getCsrfToken, clearLegacyAuthStorage } from './csrf';
+import { getCsrfToken, clearLegacyAuthStorage, setCsrfToken, clearCsrfToken } from './csrf';
 
 clearLegacyAuthStorage();
 
@@ -11,6 +11,23 @@ export function getToken() {
     return null;
 }
 
+export { getCsrfToken, setCsrfToken, clearCsrfToken, clearLegacyAuthStorage } from './csrf';
+
+/** Fetch CSRF token from session when the cookie is not readable (cross-origin). */
+async function bootstrapCsrfToken() {
+    try {
+        const res = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
+        const data = await res.json().catch(() => ({}));
+        if (data.csrfToken) {
+            setCsrfToken(data.csrfToken);
+            return data.csrfToken;
+        }
+    } catch {
+        /* session may be expired */
+    }
+    return '';
+}
+
 export async function apiFetch(path, options = {}) {
     const method = (options.method || 'GET').toUpperCase();
     const headers = {
@@ -19,7 +36,10 @@ export async function apiFetch(path, options = {}) {
     };
 
     if (UNSAFE_METHODS.has(method)) {
-        const csrf = getCsrfToken();
+        let csrf = getCsrfToken();
+        if (!csrf) {
+            csrf = await bootstrapCsrfToken();
+        }
         if (csrf) {
             headers['X-CSRF-Token'] = csrf;
         }
@@ -52,7 +72,6 @@ export async function apiFetch(path, options = {}) {
     return res.json();
 }
 
-/** Auth endpoints that set cookies — use credentials but skip CSRF on first login/register. */
 export async function authFetch(path, options = {}) {
     let res;
     try {

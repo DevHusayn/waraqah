@@ -11,7 +11,7 @@ import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-do
 import WaraqahLogo from '../components/WaraqahLogo';
 import RequiredLabel from '../components/RequiredLabel';
 import { getNetworkErrorMessage } from '../utils/apiConfig';
-import { authFetch, apiFetch } from '../utils/api';
+import { authFetch, apiFetch, setCsrfToken } from '../utils/api';
 import {
     validateRequired,
     validateEmail,
@@ -159,6 +159,9 @@ function Auth() {
                 body: JSON.stringify({ email, password: form.password }),
             });
             setSession(data.user);
+            if (data.csrfToken) {
+                setCsrfToken(data.csrfToken);
+            }
             await fetchUserData();
             try {
                 const info = await apiFetch('/business-info');
