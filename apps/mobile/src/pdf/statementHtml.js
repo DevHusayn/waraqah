@@ -1,7 +1,6 @@
 import { format } from 'date-fns';
 import { getCurrencySymbol } from '@waraqah/shared';
 import { escapeHtml, formatMoney, wrapHtml } from './htmlUtils';
-import { APP_DOMAIN, APP_WEBSITE_URL } from '../constants/brand';
 
 export function buildStatementHtml(statement, businessInfo) {
     const symbol = getCurrencySymbol(false);
@@ -59,7 +58,6 @@ export function buildStatementHtml(statement, businessInfo) {
 
     <div class="footer">
       Amounts grouped by invoice status for ${escapeHtml(statement.periodLabel)}.
-      <p style="margin-top:6px"><a href="${escapeHtml(APP_WEBSITE_URL)}">${escapeHtml(APP_DOMAIN)}</a></p>
     </div>`;
 
     return wrapHtml(body, `Statement ${statement.periodLabel}`);

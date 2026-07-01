@@ -3,7 +3,6 @@ import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { getCurrencySymbol } from './currency';
 import { drawPdfGeometricBackground } from './pdfBackground';
-import { APP_DOMAIN, APP_WEBSITE_URL } from '../constants/brand';
 
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -190,22 +189,27 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
         { align: 'center' }
     );
 
-    doc.setFontSize(7);
-    doc.setTextColor(...primaryColor);
-    const domainWidth = doc.getTextWidth(APP_DOMAIN);
-    doc.textWithLink(APP_DOMAIN, 105 - domainWidth / 2, 293, { url: APP_WEBSITE_URL });
-
     doc.setFillColor(...primaryColor);
     doc.rect(0, 294, 210, 3, 'F');
 
     const slug = statement.periodLabel.replace(/\s+/g, '-').toLowerCase();
     const fileName = `monthly-statement-${slug}.pdf`;
+    const blob = doc.output('blob');
 
     if (print) {
-        doc.autoPrint();
-        window.open(doc.output('bloburl'), '_blank');
+        const url = URL.createObjectURL(blob);
+        const printWindow = window.open(url, '_blank');
+        printWindow?.addEventListener('load', () => {
+            printWindow.print();
+            window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        });
     } else {
-        doc.save(fileName);
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = fileName;
+        anchor.click();
+        URL.revokeObjectURL(url);
     }
 }
 

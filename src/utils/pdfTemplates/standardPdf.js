@@ -2,6 +2,7 @@ import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { APP_DOMAIN, APP_NAME, APP_WEBSITE_URL } from '../../constants/brand';
+import { getFreePdfFooterCta } from '@waraqah/shared';
 import { getCurrencySymbol } from '../currency';
 import { getClientBusiness } from '../clientHelpers';
 import { isPremiumUser } from '../premium';
@@ -24,6 +25,8 @@ import {
     getPdfFileName,
     resolvePdfMode,
 } from '../receiptHelpers';
+import { drawCenteredPdfLink } from '../pdfLink';
+import { addFooterLinkToPdfBlob } from '../pdfFooterLink';
 
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -317,13 +320,6 @@ function drawBottomBoxes(
     return y + boxH + 6;
 }
 
-function drawCenteredLink(doc, text, y, url) {
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const textWidth = doc.getTextWidth(text);
-    const x = (pageWidth - textWidth) / 2;
-    doc.textWithLink(text, x, y, { url });
-}
-
 function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayColor) {
     doc.setDrawColor(229, 231, 235);
     doc.setLineWidth(0.5);
@@ -340,9 +336,6 @@ function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayC
             footerY + 2,
             { align: 'center' }
         );
-        doc.setFontSize(7);
-        doc.setTextColor(...primaryColor);
-        drawCenteredLink(doc, APP_DOMAIN, footerY + 7, APP_WEBSITE_URL);
     } else {
         doc.setTextColor(...primaryColor);
         doc.setFont(undefined, 'bold');
@@ -352,7 +345,7 @@ function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayC
         doc.setTextColor(...grayColor);
         doc.text('Professional invoicing for businesses', 105, footerY + 5.5, { align: 'center' });
         doc.setTextColor(...primaryColor);
-        drawCenteredLink(doc, APP_DOMAIN, footerY + 10, APP_WEBSITE_URL);
+        drawCenteredPdfLink(doc, getFreePdfFooterCta(APP_DOMAIN), footerY + 10, APP_WEBSITE_URL, primaryColor);
     }
 }
 
@@ -585,8 +578,21 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     drawPageFooter(doc, businessInfo, premium, footerLineY, primaryColor, grayColor);
 
     const filename = getPdfFileName(invoice, mode);
-    if (options.output === 'blob') {
-        return { blob: doc.output('blob'), filename };
+    let blob = doc.output('blob');
+    if (!premium) {
+        blob = await addFooterLinkToPdfBlob(blob, {
+            url: APP_WEBSITE_URL,
+            label: getFreePdfFooterCta(APP_DOMAIN),
+        });
     }
-    doc.save(filename);
+    if (options.output === 'blob') {
+        return { blob, filename };
+    }
+
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    URL.revokeObjectURL(url);
 }

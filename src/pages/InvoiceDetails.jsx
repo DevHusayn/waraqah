@@ -335,7 +335,17 @@ const InvoiceDetails = () => {
     const canResendReceipt = paid && clientHasEmail;
 
     useEffect(() => {
-        if (loading || !id || invoiceFromList) {
+        if (!id) {
+            return undefined;
+        }
+
+        if (invoiceFromList) {
+            setFetchedInvoice(null);
+            setResolving(false);
+            return undefined;
+        }
+
+        if (loading) {
             return undefined;
         }
 
@@ -363,12 +373,6 @@ const InvoiceDetails = () => {
             cancelled = true;
         };
     }, [loading, id, invoiceFromList, navigate]);
-
-    useEffect(() => {
-        if (!loading && !resolving && !invoice && id) {
-            navigate('/invoices', { replace: true });
-        }
-    }, [loading, resolving, invoice, id, navigate]);
 
     useEffect(() => {
         if (!invoice || !client || cancelled) return undefined;
