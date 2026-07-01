@@ -1,4 +1,4 @@
-import { Share2 } from 'lucide-react';
+import { Share2, Mail } from 'lucide-react';
 import ModalShell from './ModalShell';
 
 const modalBtn =
@@ -9,10 +9,16 @@ export default function ShareDocumentModal({
     docLabel = 'invoice',
     docNumber,
     clientName,
+    clientEmail,
     shareReady = true,
+    emailReady = true,
+    emailSending = false,
     onShare,
+    onEmailClient,
     onSkip,
 }) {
+    const canEmail = Boolean(clientEmail?.trim());
+
     return (
         <ModalShell
             open={open}
@@ -37,26 +43,44 @@ export default function ShareDocumentModal({
                         )}
                         {clientName ? ` for ${clientName}` : ''} has been saved.
                     </p>
+                    {!canEmail ? (
+                        <p className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                            Add a client email to send this invoice by email.
+                        </p>
+                    ) : null}
                 </div>
 
-                <div className="mt-5 grid grid-cols-2 gap-2 sm:gap-3 w-full">
-                    <button
-                        type="button"
-                        className={`btn-primary ${modalBtn} disabled:opacity-60`}
-                        onClick={onShare}
-                        disabled={!shareReady}
-                        autoFocus
-                    >
-                        <Share2 size={16} className="shrink-0" aria-hidden />
-                        Share {docLabel}
-                    </button>
-                    <button
-                        type="button"
-                        className={`btn-secondary ${modalBtn}`}
-                        onClick={onSkip}
-                    >
-                        Skip for now
-                    </button>
+                <div className="mt-5 space-y-2">
+                    {canEmail ? (
+                        <button
+                            type="button"
+                            className={`btn-primary ${modalBtn} disabled:opacity-60`}
+                            onClick={onEmailClient}
+                            disabled={!emailReady || emailSending}
+                        >
+                            <Mail size={16} className="shrink-0" aria-hidden />
+                            {emailSending ? 'Sending email…' : `Email ${docLabel} to client`}
+                        </button>
+                    ) : null}
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full">
+                        <button
+                            type="button"
+                            className={`${canEmail ? 'btn-secondary' : 'btn-primary'} ${modalBtn} disabled:opacity-60`}
+                            onClick={onShare}
+                            disabled={!shareReady}
+                            autoFocus={!canEmail}
+                        >
+                            <Share2 size={16} className="shrink-0" aria-hidden />
+                            Share PDF
+                        </button>
+                        <button
+                            type="button"
+                            className={`btn-secondary ${modalBtn}`}
+                            onClick={onSkip}
+                        >
+                            Done
+                        </button>
+                    </div>
                 </div>
             </div>
         </ModalShell>

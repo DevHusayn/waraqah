@@ -140,7 +140,7 @@ export default function ClientFormModal({
                     <div>
                         <label htmlFor="client-email" className="label">
                             Email{' '}
-                            <span className="text-zinc-400 font-normal">(optional)</span>
+                            <span className="text-zinc-400 font-normal">(needed to email invoices)</span>
                         </label>
                         <input
                             id="client-email"

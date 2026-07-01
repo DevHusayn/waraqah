@@ -19,6 +19,8 @@ import TermsSettings from './pages/settings/TermsSettings';
 import AboutSettings from './pages/settings/AboutSettings';
 import Auth from './pages/Auth';
 import ResetPassword from './pages/ResetPassword';
+import VerifyEmail from './pages/VerifyEmail';
+import PublicInvoice from './pages/PublicInvoice';
 import PrivateRoute from './utils/PrivateRoute';
 import AdminRoute from './utils/AdminRoute';
 import AdminDashboard from './pages/AdminDashboard';
@@ -47,6 +49,8 @@ function App() {
                             <Route path="/" element={<Home />} />
                             <Route path="/auth" element={<Auth />} />
                             <Route path="/reset-password/:token" element={<ResetPassword />} />
+                            <Route path="/verify-email/:token" element={<VerifyEmail />} />
+                            <Route path="/i/:token" element={<PublicInvoice />} />
 
                             {/* Public so Paystack redirect always loads the app (verify needs login) */}
                             <Route

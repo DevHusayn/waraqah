@@ -66,12 +66,14 @@ const CreateInvoice = () => {
         updateInvoice,
         invoices,
         fetchUserData,
+        sendInvoiceEmailToClient,
     } = useInvoice();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen } = useInvoiceCreateGuard();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
     const [saving, setSaving] = useState(false);
     const [sending, setSending] = useState(false);
+    const [emailSending, setEmailSending] = useState(false);
     const [sharePdfReady, setSharePdfReady] = useState(false);
     const [shareModal, setShareModal] = useState(null);
     const [fieldErrors, setFieldErrors] = useState({});
@@ -397,6 +399,21 @@ const CreateInvoice = () => {
         }
     };
 
+    const handleEmailFromModal = async () => {
+        if (!shareModal?.invoice?.id) return;
+
+        setEmailSending(true);
+        try {
+            const result = await sendInvoiceEmailToClient(shareModal.invoice.id);
+            showToast(`Invoice emailed to ${result.sentTo}`, 'success');
+            finishAfterShare();
+        } catch (err) {
+            showToast(err.message || 'Failed to email invoice', 'error');
+        } finally {
+            setEmailSending(false);
+        }
+    };
+
     const handleSkipShare = () => {
         finishAfterShare();
     };
@@ -570,8 +587,11 @@ const CreateInvoice = () => {
                 docLabel="invoice"
                 docNumber={shareModal ? getDisplayNumber(shareModal.invoice) : ''}
                 clientName={shareModal?.client?.name}
+                clientEmail={shareModal?.client?.email}
                 shareReady={sharePdfReady}
+                emailSending={emailSending}
                 onShare={handleShareFromModal}
+                onEmailClient={handleEmailFromModal}
                 onSkip={handleSkipShare}
             />
 

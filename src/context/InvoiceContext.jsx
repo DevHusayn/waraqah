@@ -128,6 +128,15 @@ export const InvoiceProvider = ({ children }) => {
         setInvoices(invoices.filter((inv) => inv.id !== id));
     };
 
+    const sendInvoiceEmailToClient = async (id) =>
+        apiFetch(`/invoices/${id}/send-email`, { method: 'POST' });
+
+    const sendPaymentReminderToClient = async (id) =>
+        apiFetch(`/invoices/${id}/send-reminder`, { method: 'POST' });
+
+    const sendReceiptEmailToClient = async (id) =>
+        apiFetch(`/invoices/${id}/send-receipt`, { method: 'POST' });
+
     const addClient = async (client) => {
         const newClient = await apiFetch('/clients', {
             method: 'POST',
@@ -191,6 +200,9 @@ export const InvoiceProvider = ({ children }) => {
         addInvoice,
         updateInvoice,
         deleteInvoice,
+        sendInvoiceEmailToClient,
+        sendPaymentReminderToClient,
+        sendReceiptEmailToClient,
         addClient,
         updateClient,
         deleteClient,

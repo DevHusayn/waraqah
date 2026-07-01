@@ -14,6 +14,10 @@ import {
     Phone,
     Building2,
     Share2,
+    Send,
+    Bell,
+    Copy,
+    Receipt,
 } from 'lucide-react';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
@@ -36,6 +40,7 @@ import {
     getReceiptNumber,
     isReceipt,
 } from '../utils/receiptHelpers';
+import { getPublicInvoiceUrl } from '../utils/publicApi';
 
 function SummaryRow({ label, value }) {
     return (
@@ -103,11 +108,19 @@ function InvoiceActionsPanel({
     canMarkPaid,
     canCancel,
     canEdit,
+    canEmailClient,
+    canSendReminder,
+    canResendReceipt,
     saving,
+    emailing,
     onMarkPaid,
     onCancel,
     onDelete,
     onShare,
+    onEmailClient,
+    onSendReminder,
+    onResendReceipt,
+    onCopyPublicLink,
     editId,
 }) {
     const [documentMode, setDocumentMode] = useState(paid ? 'receipt' : 'invoice');
@@ -136,6 +149,54 @@ function InvoiceActionsPanel({
                         onDocumentModeChange={setDocumentMode}
                         onShare={onShare}
                     />
+                )}
+
+                {!cancelled && canEmailClient && (
+                    <button
+                        type="button"
+                        onClick={onEmailClient}
+                        className="btn-secondary w-full"
+                        disabled={saving || emailing}
+                    >
+                        <Send size={18} aria-hidden />
+                        {emailing ? 'Sending…' : 'Email to client'}
+                    </button>
+                )}
+
+                {!cancelled && canSendReminder && (
+                    <button
+                        type="button"
+                        onClick={onSendReminder}
+                        className="btn-secondary w-full"
+                        disabled={saving || emailing}
+                    >
+                        <Bell size={18} aria-hidden />
+                        Send payment reminder
+                    </button>
+                )}
+
+                {paid && canResendReceipt && (
+                    <button
+                        type="button"
+                        onClick={onResendReceipt}
+                        className="btn-secondary w-full"
+                        disabled={saving || emailing}
+                    >
+                        <Receipt size={18} aria-hidden />
+                        Email receipt to client
+                    </button>
+                )}
+
+                {invoice?.publicToken && !cancelled && (
+                    <button
+                        type="button"
+                        onClick={onCopyPublicLink}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-300 bg-white text-zinc-700 font-medium hover:bg-zinc-50 transition-colors text-sm"
+                        disabled={saving}
+                    >
+                        <Copy size={16} aria-hidden />
+                        Copy public link
+                    </button>
                 )}
 
                 {canMarkPaid && (
@@ -181,7 +242,7 @@ function InvoiceActionsPanel({
 const InvoiceDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { invoices, clients, updateInvoice, deleteInvoice, loading } = useInvoice();
+    const { invoices, clients, updateInvoice, deleteInvoice, loading, sendInvoiceEmailToClient, sendPaymentReminderToClient, sendReceiptEmailToClient } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
 
@@ -190,6 +251,7 @@ const InvoiceDetails = () => {
     const [alert, setAlert] = useState({ open: false, message: '' });
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [confirmCancel, setConfirmCancel] = useState(false);
+    const [emailing, setEmailing] = useState(false);
 
     const invoice = useMemo(() => invoices.find((inv) => inv.id === id), [invoices, id]);
     const client = useMemo(
@@ -202,6 +264,10 @@ const InvoiceDetails = () => {
     const canMarkPaid = invoice && ['pending', 'overdue'].includes(invoice.status);
     const canCancel = invoice && ['pending', 'overdue'].includes(invoice.status);
     const canEdit = invoice && !paid && !cancelled;
+    const clientHasEmail = Boolean(client?.email?.trim());
+    const canEmailClient = invoice && !cancelled && invoice.status !== 'draft' && clientHasEmail;
+    const canSendReminder = invoice && ['pending', 'overdue'].includes(invoice.status) && clientHasEmail;
+    const canResendReceipt = paid && clientHasEmail;
 
     useEffect(() => {
         if (!loading && !invoice && id) {
@@ -306,6 +372,56 @@ const InvoiceDetails = () => {
         setConfirmDelete(false);
     };
 
+    const handleCopyPublicLink = async () => {
+        const url = getPublicInvoiceUrl(invoice?.publicToken);
+        if (!url) {
+            setAlert({ open: true, message: 'Public link is not available for this invoice yet.' });
+            return;
+        }
+        try {
+            await navigator.clipboard.writeText(url);
+            showToast('Public invoice link copied', 'success');
+        } catch {
+            setAlert({ open: true, message: url });
+        }
+    };
+
+    const handleEmailClient = async () => {
+        setEmailing(true);
+        try {
+            const result = await sendInvoiceEmailToClient(id);
+            showToast(`Invoice emailed to ${result.sentTo}`, 'success');
+        } catch (err) {
+            setAlert({ open: true, message: err.message || 'Failed to send invoice email.' });
+        } finally {
+            setEmailing(false);
+        }
+    };
+
+    const handleSendReminder = async () => {
+        setEmailing(true);
+        try {
+            const result = await sendPaymentReminderToClient(id);
+            showToast(`Payment reminder sent to ${result.sentTo}`, 'success');
+        } catch (err) {
+            setAlert({ open: true, message: err.message || 'Failed to send payment reminder.' });
+        } finally {
+            setEmailing(false);
+        }
+    };
+
+    const handleResendReceipt = async () => {
+        setEmailing(true);
+        try {
+            const result = await sendReceiptEmailToClient(id);
+            showToast(`Receipt emailed to ${result.sentTo}`, 'success');
+        } catch (err) {
+            setAlert({ open: true, message: err.message || 'Failed to send receipt email.' });
+        } finally {
+            setEmailing(false);
+        }
+    };
+
     if (loading || !invoice) {
         return <DetailPageSkeleton />;
     }
@@ -320,11 +436,19 @@ const InvoiceDetails = () => {
         canMarkPaid,
         canCancel,
         canEdit,
+        canEmailClient,
+        canSendReminder,
+        canResendReceipt,
         saving,
+        emailing,
         onMarkPaid: () => setMarkPaidOpen(true),
         onCancel: () => setConfirmCancel(true),
         onDelete: () => setConfirmDelete(true),
         onShare: handleShare,
+        onEmailClient: handleEmailClient,
+        onSendReminder: handleSendReminder,
+        onResendReceipt: handleResendReceipt,
+        onCopyPublicLink: handleCopyPublicLink,
         editId: id,
     };
 
