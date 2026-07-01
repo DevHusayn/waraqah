@@ -25,6 +25,7 @@ const EMPTY_BUSINESS = {
     paymentAccountNumber: '',
     paymentInstructions: '',
     invoiceTemplateId: 'classic',
+    autoEmailInvoices: false,
 };
 
 export const useSettings = () => {

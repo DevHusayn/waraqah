@@ -17,6 +17,7 @@ import BrandingSettings from './pages/settings/BrandingSettings';
 import PlanBillingSettings from './pages/settings/PlanBillingSettings';
 import TermsSettings from './pages/settings/TermsSettings';
 import AboutSettings from './pages/settings/AboutSettings';
+import NotificationSettings from './pages/settings/NotificationSettings';
 import Auth from './pages/Auth';
 import ResetPassword from './pages/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail';
@@ -81,6 +82,7 @@ function App() {
                                                 <Route path="business/account-details" element={<AccountDetailsSettings />} />
                                                 <Route path="business/branding" element={<BrandingSettings />} />
                                                 <Route path="plan-billing" element={<PlanBillingSettings />} />
+                                                <Route path="notifications" element={<NotificationSettings />} />
                                                 <Route path="terms" element={<TermsSettings />} />
                                                 <Route path="about" element={<AboutSettings />} />
                                                 <Route path="profile" element={<Navigate to="/settings/business/company-profile" replace />} />

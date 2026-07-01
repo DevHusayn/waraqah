@@ -71,6 +71,7 @@ export async function authFetch(path, options = {}) {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
         const err = new Error(data.message || 'Something went wrong. Please try again.');
+        if (data.code) err.code = data.code;
         err.status = res.status;
         throw err;
     }

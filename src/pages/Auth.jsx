@@ -173,7 +173,13 @@ function Auth() {
                     : '/';
             navigate(safeReturn, { replace: true });
         } catch (err) {
-            setError(err.message === 'Failed to fetch' ? getNetworkErrorMessage() : err.message);
+            if (err.code === 'EMAIL_NOT_VERIFIED') {
+                setError(
+                    'Please verify your email before signing in. Check your inbox for the verification link, or register again to receive a new one.',
+                );
+            } else {
+                setError(err.message === 'Failed to fetch' ? getNetworkErrorMessage() : err.message);
+            }
             resetAll();
         } finally {
             setSubmitLoading(false);

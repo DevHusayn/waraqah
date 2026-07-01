@@ -34,6 +34,7 @@ export function buildBusinessInfoPayload(formData, businessInfo = {}) {
         paymentBankName: formData.paymentBankName ?? businessInfo.paymentBankName ?? '',
         paymentAccountNumber: formData.paymentAccountNumber ?? businessInfo.paymentAccountNumber ?? '',
         paymentInstructions: formData.paymentInstructions ?? businessInfo.paymentInstructions ?? '',
+        autoEmailInvoices: formData.autoEmailInvoices ?? businessInfo.autoEmailInvoices ?? false,
     };
 }
 
