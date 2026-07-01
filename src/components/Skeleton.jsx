@@ -268,6 +268,52 @@ export function DashboardSkeleton() {
     );
 }
 
+/** Full-page app chrome skeleton — no context hooks; safe before providers settle. */
+export function AppShellSkeleton() {
+    return (
+        <LoadingStatus label="Loading">
+            <div className="min-h-screen bg-surface-muted">
+                <aside className="hidden md:fixed md:inset-y-0 md:flex md:w-[15.5rem] md:flex-col border-r border-zinc-200/50 bg-zinc-50/40">
+                    <div className="flex flex-1 flex-col px-2.5 py-4">
+                        <div className="px-2 mb-5 flex items-center gap-2">
+                            <Skeleton className="h-7 w-7 rounded-md shrink-0" />
+                            <Skeleton className="h-4 w-24" />
+                        </div>
+                        <div className="flex flex-col gap-1 px-2">
+                            {Array.from({ length: 6 }).map((_, i) => (
+                                <Skeleton key={i} className="h-9 w-full rounded-md" />
+                            ))}
+                        </div>
+                        <div className="mt-auto pt-4 border-t border-zinc-200/40">
+                            <div className="rounded-lg border border-zinc-200/50 bg-white/60 p-2.5">
+                                <div className="flex items-center gap-2.5">
+                                    <Skeleton className="h-7 w-7 rounded-md shrink-0" />
+                                    <div className="flex-1 space-y-1.5">
+                                        <Skeleton className="h-3 w-24" />
+                                        <Skeleton className="h-2.5 w-14" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <div className="md:pl-[15.5rem] flex flex-col flex-1 min-h-screen min-w-0">
+                    <header className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200/50 bg-white/80 px-4 py-2.5 md:hidden">
+                        <Skeleton className="h-7 w-28" />
+                        <Skeleton className="h-9 w-9 rounded-md" />
+                    </header>
+                    <main className="flex-1 min-w-0">
+                        <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full">
+                            <AppContentSkeleton />
+                        </div>
+                    </main>
+                </div>
+            </div>
+        </LoadingStatus>
+    );
+}
+
 /** Neutral content skeleton for auth/session checks inside the app shell. */
 export function AppContentSkeleton() {
     return (

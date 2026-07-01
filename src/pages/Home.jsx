@@ -3,6 +3,8 @@ import Landing from './Landing';
 import Layout from '../components/Layout';
 import Dashboard from './Dashboard';
 import PrivateRoute from '../utils/PrivateRoute';
+import { AppShellSkeleton } from '../components/Skeleton';
+import { hasLikelyAuthSession } from '../utils/authHint';
 
 /** Guests see marketing landing; signed-in users go straight to the dashboard. */
 export default function Home() {
@@ -16,6 +18,10 @@ export default function Home() {
                 </Layout>
             </PrivateRoute>
         );
+    }
+
+    if (loading && hasLikelyAuthSession()) {
+        return <AppShellSkeleton />;
     }
 
     return <Landing />;

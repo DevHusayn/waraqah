@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { apiFetch, authFetch } from '../utils/api';
 import { clearLegacyAuthStorage, setCsrfToken, clearCsrfToken } from '../utils/csrf';
+import { setAuthSessionHint, clearAuthSessionHint } from '../utils/authHint';
 
 const AuthContext = createContext(null);
 
@@ -25,9 +26,15 @@ export function AuthProvider({ children }) {
                 clearCsrfToken();
             }
             setUser(data.user || null);
+            if (data.user) {
+                setAuthSessionHint();
+            } else {
+                clearAuthSessionHint();
+            }
             return data.user || null;
         } catch {
             clearCsrfToken();
+            clearAuthSessionHint();
             setUser(null);
             return null;
         }
@@ -44,6 +51,7 @@ export function AuthProvider({ children }) {
         };
         const onLogout = () => {
             clearCsrfToken();
+            clearAuthSessionHint();
             setUser(null);
         };
         window.addEventListener('app-login', onLogin);
@@ -56,6 +64,11 @@ export function AuthProvider({ children }) {
 
     const setSession = useCallback((nextUser) => {
         setUser(nextUser || null);
+        if (nextUser) {
+            setAuthSessionHint();
+        } else {
+            clearAuthSessionHint();
+        }
     }, []);
 
     const logout = useCallback(async () => {
@@ -66,6 +79,7 @@ export function AuthProvider({ children }) {
         }
         setUser(null);
         clearCsrfToken();
+        clearAuthSessionHint();
         window.dispatchEvent(new Event('app-logout'));
     }, []);
 

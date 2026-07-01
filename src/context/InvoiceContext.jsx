@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { apiFetch } from '../utils/api';
 import { useAuth } from './AuthContext';
+import { shouldPrefetchUserData } from '../utils/authHint';
 import { invoicesNeedingOverdueSync, isDraft } from '../utils/invoiceHelpers';
 
 const InvoiceContext = createContext();
@@ -19,13 +20,14 @@ export const InvoiceProvider = ({ children }) => {
     const [products, setProducts] = useState([]);
     const [invoiceUsage, setInvoiceUsage] = useState(null);
     const [loading, setLoading] = useState(false);
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, loading: authLoading } = useAuth();
+    const shouldFetch = shouldPrefetchUserData(isAuthenticated, authLoading);
 
     const mapInvoice = (i) => ({ ...i, id: i._id || i.id });
     const mapClient = (c) => ({ ...c, id: c._id || c.id });
     const mapProduct = (p) => ({ ...p, id: p._id || p.id });
 
-    const syncOverdueStatuses = async (invoiceList) => {
+    const syncOverdueStatuses = useCallback(async (invoiceList) => {
         const toUpdate = invoicesNeedingOverdueSync(invoiceList);
         if (toUpdate.length === 0) return invoiceList;
 
@@ -39,14 +41,16 @@ export const InvoiceProvider = ({ children }) => {
         );
         const refreshed = await apiFetch('/invoices');
         return refreshed.map(mapInvoice);
-    };
+    }, []);
 
     const fetchUserData = useCallback(async () => {
-        if (!isAuthenticated) {
-            setInvoices([]);
-            setClients([]);
-            setProducts([]);
-            setInvoiceUsage(null);
+        if (!shouldFetch) {
+            if (!authLoading && !isAuthenticated) {
+                setInvoices([]);
+                setClients([]);
+                setProducts([]);
+                setInvoiceUsage(null);
+            }
             setLoading(false);
             return;
         }
@@ -58,21 +62,28 @@ export const InvoiceProvider = ({ children }) => {
                 apiFetch('/products').catch(() => []),
                 apiFetch('/invoices/usage').catch(() => null),
             ]);
+            const mappedInvoices = inv.map(mapInvoice);
             setInvoiceUsage(usage);
-            let mappedInvoices = inv.map(mapInvoice);
-            mappedInvoices = await syncOverdueStatuses(mappedInvoices);
             setInvoices(mappedInvoices);
             setClients(cli.map(mapClient));
             setProducts(pro.map(mapProduct));
+            setLoading(false);
+
+            syncOverdueStatuses(mappedInvoices)
+                .then((synced) => {
+                    if (synced !== mappedInvoices) {
+                        setInvoices(synced);
+                    }
+                })
+                .catch(() => {});
         } catch {
             setInvoices([]);
             setClients([]);
             setProducts([]);
             setInvoiceUsage(null);
-        } finally {
             setLoading(false);
         }
-    }, [isAuthenticated]);
+    }, [shouldFetch, authLoading, isAuthenticated, syncOverdueStatuses]);
 
     useEffect(() => {
         fetchUserData();

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '../utils/api';
 import { useAuth } from './AuthContext';
+import { shouldPrefetchUserData } from '../utils/authHint';
 import { buildBusinessInfoPayload } from '../utils/businessPayload';
 import { DEFAULT_BRAND_COLOR } from '@waraqah/shared';
 
@@ -40,11 +41,14 @@ export const useSettings = () => {
 export const SettingsProvider = ({ children }) => {
     const [businessInfo, setBusinessInfo] = useState(EMPTY_BUSINESS);
     const [loading, setLoading] = useState(false);
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, loading: authLoading } = useAuth();
+    const shouldFetch = shouldPrefetchUserData(isAuthenticated, authLoading);
 
     const fetchBusinessInfo = useCallback(async () => {
-        if (!isAuthenticated) {
-            setBusinessInfo(EMPTY_BUSINESS);
+        if (!shouldFetch) {
+            if (!authLoading && !isAuthenticated) {
+                setBusinessInfo(EMPTY_BUSINESS);
+            }
             setLoading(false);
             return;
         }
@@ -53,11 +57,13 @@ export const SettingsProvider = ({ children }) => {
             const info = await apiFetch('/business-info');
             setBusinessInfo(info);
         } catch {
-            setBusinessInfo(EMPTY_BUSINESS);
+            if (!authLoading && !isAuthenticated) {
+                setBusinessInfo(EMPTY_BUSINESS);
+            }
         } finally {
             setLoading(false);
         }
-    }, [isAuthenticated]);
+    }, [shouldFetch, authLoading, isAuthenticated]);
 
     useEffect(() => {
         fetchBusinessInfo();

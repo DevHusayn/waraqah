@@ -1,17 +1,12 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Layout from '../components/Layout';
 import { AppContentSkeleton } from '../components/Skeleton';
 
 export default function AdminRoute({ children }) {
     const { isAuthenticated, isAdmin, loading } = useAuth();
 
     if (loading) {
-        return (
-            <Layout>
-                <AppContentSkeleton />
-            </Layout>
-        );
+        return <AppContentSkeleton />;
     }
 
     if (!isAuthenticated) {
