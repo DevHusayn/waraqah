@@ -1,4 +1,5 @@
 import { getCsrfToken } from './csrf';
+import { getAccessToken } from './authToken';
 
 const HINT_KEY = 'waraqah_auth_hint';
 
@@ -20,6 +21,7 @@ export function clearAuthSessionHint() {
 
 /** Best-effort signal that the user was recently signed in on this tab. */
 export function hasLikelyAuthSession() {
+    if (getAccessToken()) return true;
     if (getCsrfToken()) return true;
     try {
         return sessionStorage.getItem(HINT_KEY) === '1';

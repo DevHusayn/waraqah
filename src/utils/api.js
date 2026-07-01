@@ -1,22 +1,45 @@
-// Utility for API requests with cookie-based auth + CSRF
+// Utility for API requests — cookie auth when same-origin, Bearer token when cross-origin
 import { API_BASE, getNetworkErrorMessage } from './apiConfig';
 import { getCsrfToken, clearLegacyAuthStorage, setCsrfToken, clearCsrfToken } from './csrf';
+import { getAccessToken, setAccessToken, clearAccessToken } from './authToken';
 
 clearLegacyAuthStorage();
 
 const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-/** @deprecated Session is cookie-based; use AuthContext.isAuthenticated instead. */
 export function getToken() {
-    return null;
+    return getAccessToken() || null;
 }
 
 export { getCsrfToken, setCsrfToken, clearCsrfToken, clearLegacyAuthStorage } from './csrf';
+export { setAccessToken, clearAccessToken } from './authToken';
+
+/** Persist token + CSRF from login / OAuth responses (cookies may not survive cross-origin). */
+export function applyLoginResponse(data) {
+    if (data?.token) {
+        setAccessToken(data.token);
+    }
+    if (data?.csrfToken) {
+        setCsrfToken(data.csrfToken);
+    }
+}
+
+function buildAuthHeaders(extra = {}) {
+    const headers = { ...extra };
+    const token = getAccessToken();
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
+    return headers;
+}
 
 /** Fetch CSRF token from session when the cookie is not readable (cross-origin). */
 async function bootstrapCsrfToken() {
     try {
-        const res = await fetch(`${API_BASE}/auth/me`, { credentials: 'include' });
+        const res = await fetch(`${API_BASE}/auth/me`, {
+            credentials: 'include',
+            headers: buildAuthHeaders(),
+        });
         const data = await res.json().catch(() => ({}));
         if (data.csrfToken) {
             setCsrfToken(data.csrfToken);
@@ -30,10 +53,10 @@ async function bootstrapCsrfToken() {
 
 export async function apiFetch(path, options = {}) {
     const method = (options.method || 'GET').toUpperCase();
-    const headers = {
+    const headers = buildAuthHeaders({
         'Content-Type': 'application/json',
         ...options.headers,
-    };
+    });
 
     if (UNSAFE_METHODS.has(method)) {
         let csrf = getCsrfToken();
@@ -60,6 +83,7 @@ export async function apiFetch(path, options = {}) {
         const data = await res.json().catch(() => ({}));
         if (res.status === 401 && !path.startsWith('/auth/me')) {
             clearLegacyAuthStorage();
+            clearAccessToken();
             window.dispatchEvent(new Event('app-logout'));
         }
         const err = new Error(data.message || 'Something went wrong. Please try again.');
@@ -78,10 +102,10 @@ export async function authFetch(path, options = {}) {
         res = await fetch(`${API_BASE}${path}`, {
             ...options,
             credentials: 'include',
-            headers: {
+            headers: buildAuthHeaders({
                 'Content-Type': 'application/json',
                 ...options.headers,
-            },
+            }),
         });
     } catch {
         throw new Error(getNetworkErrorMessage());

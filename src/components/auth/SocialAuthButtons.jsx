@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
-import { authFetch, setCsrfToken } from '../../utils/api';
+import { authFetch, applyLoginResponse } from '../../utils/api';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 const APPLE_CLIENT_ID = import.meta.env.VITE_APPLE_CLIENT_ID || '';
@@ -57,9 +57,7 @@ export default function SocialAuthButtons({ onSuccess, onError, disabled = false
             method: 'POST',
             body: JSON.stringify(body),
         });
-        if (data.csrfToken) {
-            setCsrfToken(data.csrfToken);
-        }
+        applyLoginResponse(data);
         onSuccess(data);
     };
 

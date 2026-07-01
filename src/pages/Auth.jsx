@@ -11,7 +11,7 @@ import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-do
 import WaraqahLogo from '../components/WaraqahLogo';
 import RequiredLabel from '../components/RequiredLabel';
 import { getNetworkErrorMessage } from '../utils/apiConfig';
-import { authFetch, apiFetch, setCsrfToken } from '../utils/api';
+import { authFetch, apiFetch, applyLoginResponse } from '../utils/api';
 import SocialAuthButtons from '../components/auth/SocialAuthButtons';
 import {
     validateRequired,
@@ -139,10 +139,8 @@ function Auth() {
     };
 
     const handleSocialSuccess = async (data) => {
+        applyLoginResponse(data);
         setSession(data.user);
-        if (data.csrfToken) {
-            setCsrfToken(data.csrfToken);
-        }
         await fetchUserData();
         try {
             const info = await apiFetch('/business-info');
@@ -179,10 +177,8 @@ function Auth() {
                 method: 'POST',
                 body: JSON.stringify({ email, password: form.password }),
             });
+            applyLoginResponse(data);
             setSession(data.user);
-            if (data.csrfToken) {
-                setCsrfToken(data.csrfToken);
-            }
             await fetchUserData();
             try {
                 const info = await apiFetch('/business-info');
