@@ -1,13 +1,26 @@
-import { validateRequired } from './formFieldValidation.js';
+import { validateOptionalEmail, validateRequired } from './formFieldValidation.js';
 
-export const INVOICE_FIELD_ORDER = ['clientId', 'date', 'dueDate', 'taxRate', 'discountValue'];
+export const INVOICE_FIELD_ORDER = ['clientName', 'clientEmail', 'date', 'dueDate', 'taxRate', 'discountValue'];
 
 export function buildInvoiceFieldErrors(formData) {
     const errors = {};
 
-    if (!formData.clientId) {
-        errors.clientId = 'Please select a client.';
+    const hasClientId = Boolean(formData.clientId);
+    const clientName = String(formData.clientName || '').trim();
+    if (!hasClientId && !clientName) {
+        const message = 'Please enter the client name.';
+        errors.clientName = message;
+        errors.clientId = message;
+    } else if (clientName) {
+        const nameErr = validateRequired(clientName, 'Please enter the client name.');
+        if (nameErr) errors.clientName = nameErr;
     }
+
+    const emailErr = validateOptionalEmail(
+        formData.clientEmail,
+        'Please enter a valid email address.'
+    );
+    if (emailErr) errors.clientEmail = emailErr;
     if (!formData.date) {
         errors.date = 'Please select an issue date.';
     }
@@ -60,6 +73,12 @@ export function buildInvoiceFieldErrors(formData) {
 export function buildDraftFieldErrors(formData) {
     const errors = {};
 
+    const emailErr = validateOptionalEmail(
+        formData.clientEmail,
+        'Please enter a valid email address.'
+    );
+    if (emailErr) errors.clientEmail = emailErr;
+
     const taxRate = formData.taxRate;
     if (taxRate !== '' && taxRate !== null && taxRate !== undefined) {
         if (Number(taxRate) < 0 || Number(taxRate) > 100) {
@@ -106,7 +125,8 @@ export function getInvoiceFieldFocusOrder(itemCount = 0) {
 }
 
 export function getFirstInvoiceFieldId(fieldKey) {
-    if (fieldKey === 'clientId') return 'invoice-client';
+    if (fieldKey === 'clientName' || fieldKey === 'clientId') return 'invoice-client-name';
+    if (fieldKey === 'clientEmail') return 'invoice-client-email';
     if (fieldKey === 'date') return 'invoice-date';
     if (fieldKey === 'dueDate') return 'invoice-due-date';
     if (fieldKey === 'taxRate') return 'invoice-tax-rate';

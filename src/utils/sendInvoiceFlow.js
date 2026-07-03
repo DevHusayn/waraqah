@@ -32,6 +32,9 @@ export function buildInvoicePayload(formData, status) {
         payload.clientId = null;
     }
 
+    delete payload.clientName;
+    delete payload.clientEmail;
+
     delete payload.isRecurring;
     delete payload.recurringFrequency;
     delete payload.recurringEndDate;

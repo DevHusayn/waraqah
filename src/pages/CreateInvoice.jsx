@@ -12,7 +12,6 @@ import {
     X,
     Package,
 } from 'lucide-react';
-import ClientFormModal from '../components/ClientFormModal';
 import Spinner from '../components/Spinner';
 import { format } from 'date-fns';
 import { useInvoice } from '../context/InvoiceContext';
@@ -41,6 +40,7 @@ import {
 } from '../utils/invoiceFormValidation';
 import { calculateInvoiceTotals } from '../utils/invoiceTotals';
 import { buildInvoicePayload, prepareInvoicePdf } from '../utils/sendInvoiceFlow';
+import { ensureInvoiceClient } from '../utils/ensureInvoiceClient';
 import { shareInvoicePdf, getShareFallbackHint } from '../utils/shareInvoicePdf';
 import ShareDocumentModal from '../components/ShareDocumentModal';
 import { getDisplayNumber } from '../utils/receiptHelpers';
@@ -48,6 +48,7 @@ import CustomSelect from '../components/CustomSelect';
 import DatePickerField from '../components/DatePickerField';
 
 function hasDraftContent(data) {
+    if (String(data.clientName || '').trim()) return true;
     if (data.clientId) return true;
     if (String(data.notes || '').trim()) return true;
     if (Number(data.discountValue) > 0) return true;
@@ -62,6 +63,7 @@ const CreateInvoice = () => {
         clients,
         products,
         addClient,
+        updateClient,
         addInvoice,
         updateInvoice,
         invoices,
@@ -77,7 +79,6 @@ const CreateInvoice = () => {
     const [sharePdfReady, setSharePdfReady] = useState(false);
     const [shareModal, setShareModal] = useState(null);
     const [fieldErrors, setFieldErrors] = useState({});
-    const [clientModalOpen, setClientModalOpen] = useState(false);
 
     const draftIdRef = useRef(null);
     const saveInFlightRef = useRef(false);
@@ -92,6 +93,8 @@ const CreateInvoice = () => {
     const [formData, setFormData] = useState({
         invoiceNumber: '',
         clientId: '',
+        clientName: '',
+        clientEmail: '',
         date: format(new Date(), 'yyyy-MM-dd'),
         dueDate: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
         items: [{ description: '', quantity: 1, rate: 0 }],
@@ -123,13 +126,18 @@ const CreateInvoice = () => {
             navigate(`/invoices/${id}`, { replace: true });
             return;
         }
+        const client = invoice.clientId
+            ? clients.find((c) => c.id === invoice.clientId)
+            : null;
         setFormData({
             ...invoice,
+            clientName: client?.name || '',
+            clientEmail: client?.email || '',
             discountType: invoice.discountType || 'percent',
             discountValue: invoice.discountValue ?? '',
         });
         isDirtyRef.current = false;
-    }, [id, invoices, navigate]);
+    }, [id, invoices, clients, navigate]);
 
     const getTotals = () =>
         calculateInvoiceTotals(formData.items, {
@@ -141,12 +149,63 @@ const CreateInvoice = () => {
     useEffect(() => {
         const clientId = searchParams.get('clientId');
         if (!clientId || clients.length === 0) return;
-        if (!clients.some((c) => c.id === clientId)) return;
-        setFormData((prev) => ({ ...prev, clientId }));
+        const client = clients.find((c) => c.id === clientId);
+        if (!client) return;
+        setFormData((prev) => ({
+            ...prev,
+            clientId,
+            clientName: client.name || '',
+            clientEmail: client.email || '',
+        }));
         const next = new URLSearchParams(searchParams);
         next.delete('clientId');
         setSearchParams(next, { replace: true });
     }, [clients, searchParams, setSearchParams]);
+
+    const resolveClientId = useCallback(
+        async (data) =>
+            ensureInvoiceClient(data, clients, { addClient, updateClient }),
+        [clients, addClient, updateClient]
+    );
+
+    const handleClientNameChange = (e) => {
+        markDirty();
+        const { value } = e.target;
+        setFormData((prev) => {
+            const next = { ...prev, clientName: value };
+            if (prev.clientId) {
+                const linked = clients.find((c) => c.id === prev.clientId);
+                if (linked && linked.name !== value) {
+                    next.clientId = '';
+                }
+            }
+            return next;
+        });
+        clearFieldError(setFieldErrors, 'clientName');
+        clearFieldError(setFieldErrors, 'clientId');
+    };
+
+    const handleClientEmailChange = (e) => {
+        markDirty();
+        setFormData((prev) => ({ ...prev, clientEmail: e.target.value }));
+        clearFieldError(setFieldErrors, 'clientEmail');
+    };
+
+    const handleSelectSavedClient = (clientId) => {
+        if (!clientId) return;
+        const client = clients.find((c) => c.id === clientId);
+        if (!client) return;
+        markDirty();
+        setFormData((prev) => ({
+            ...prev,
+            clientId,
+            clientName: client.name || '',
+            clientEmail: client.email || '',
+        }));
+        clearFieldError(setFieldErrors, 'clientName');
+        clearFieldError(setFieldErrors, 'clientId');
+        clearFieldError(setFieldErrors, 'clientEmail');
+    };
 
     const handleChange = (e) => {
         markDirty();
@@ -237,7 +296,10 @@ const CreateInvoice = () => {
             }
 
             try {
-                const payload = buildInvoicePayload(current, 'draft');
+                const clientId = String(current.clientName || '').trim()
+                    ? await resolveClientId(current)
+                    : current.clientId || null;
+                const payload = buildInvoicePayload({ ...current, clientId }, 'draft');
                 const draftId = id || draftIdRef.current;
                 let saved;
 
@@ -268,7 +330,7 @@ const CreateInvoice = () => {
                 }
             }
         },
-        [isDraftFlow, id, addInvoice, updateInvoice, navigate, showToast]
+        [isDraftFlow, id, addInvoice, updateInvoice, navigate, showToast, resolveClientId]
     );
 
     useEffect(() => {
@@ -306,7 +368,8 @@ const CreateInvoice = () => {
 
         setSending(true);
         try {
-            const payload = buildInvoicePayload(formData, 'pending');
+            const clientId = await resolveClientId(formData);
+            const payload = buildInvoicePayload({ ...formData, clientId }, 'pending');
             const draftId = id || draftIdRef.current;
             let saved;
 
@@ -318,7 +381,13 @@ const CreateInvoice = () => {
 
             isDirtyRef.current = false;
             draftIdRef.current = saved.id;
-            const client = clients.find((c) => c.id === saved.clientId);
+            const savedClient = clients.find((c) => c.id === saved.clientId);
+            const client = {
+                id: saved.clientId,
+                name: formData.clientName.trim(),
+                email: formData.clientEmail.trim(),
+                ...(savedClient || {}),
+            };
             const clientAlreadyEmailed = Boolean(saved.clientInvoiceEmailedAt);
 
             setSending(false);
@@ -438,22 +507,25 @@ const CreateInvoice = () => {
         }
         setFieldErrors({});
 
-        const totals = getTotals();
-        const invoiceData = {
-            ...formData,
-            status: formData.status,
-            currency: APP_CURRENCY,
-            discountType: 'percent',
-            discountValue: Number(formData.discountValue) || 0,
-            subtotal: totals.subtotal,
-            discount: totals.discount,
-            tax: totals.tax,
-            total: totals.total,
-            balance: totals.total,
-        };
-
         setSaving(true);
         try {
+            const clientId = await resolveClientId(formData);
+            const invoiceData = {
+                ...formData,
+                clientId,
+                status: formData.status,
+                currency: APP_CURRENCY,
+                discountType: 'percent',
+                discountValue: Number(formData.discountValue) || 0,
+                subtotal: totals.subtotal,
+                discount: totals.discount,
+                tax: totals.tax,
+                total: totals.total,
+                balance: totals.total,
+            };
+            delete invoiceData.clientName;
+            delete invoiceData.clientEmail;
+
             await updateInvoice(id, invoiceData);
             showToast('Invoice updated successfully', 'success');
             navigate(`/invoices/${id}`);
@@ -474,15 +546,6 @@ const CreateInvoice = () => {
         Number(formData.discountValue) > 0
             ? `Discount (${formData.discountValue}%)`
             : 'Discount';
-
-    const handleAddClient = async (clientData) => {
-        const newClient = await addClient(clientData);
-        showToast('Client added successfully', 'success');
-        setClientModalOpen(false);
-        markDirty();
-        setFormData((prev) => ({ ...prev, clientId: newClient.id }));
-        clearFieldError(setFieldErrors, 'clientId');
-    };
 
     const handleLeavePage = async () => {
         if (isDraftFlow && isDirtyRef.current && hasDraftContent(formDataRef.current)) {
@@ -580,12 +643,6 @@ const CreateInvoice = () => {
                 open={limitModalOpen}
                 onClose={() => setLimitModalOpen(false)}
                 usage={invoiceUsage}
-            />
-
-            <ClientFormModal
-                open={clientModalOpen}
-                onClose={() => setClientModalOpen(false)}
-                onSubmit={handleAddClient}
             />
 
             <ShareDocumentModal
@@ -729,46 +786,65 @@ const CreateInvoice = () => {
                             icon={Users}
                             title="Client"
                             description="Who this invoice is for"
-                            actions={
-                                <button
-                                    type="button"
-                                    onClick={() => setClientModalOpen(true)}
-                                    className="text-sm font-medium text-brand hover:underline whitespace-nowrap"
-                                >
-                                    + Add client
-                                </button>
-                            }
                         >
-                            <RequiredLabel htmlFor="invoice-client">Select client</RequiredLabel>
-                            <CustomSelect
-                                id="invoice-client"
-                                value={formData.clientId}
-                                onChange={(val) => {
-                                    markDirty();
-                                    setFormData((prev) => ({ ...prev, clientId: val }));
-                                    clearFieldError(setFieldErrors, 'clientId');
-                                }}
-                                options={clients.map((client) => ({
-                                    value: client.id,
-                                    label: `${client.name}${getClientBusiness(client) ? ` — ${getClientBusiness(client)}` : ''
-                                        }`,
-                                }))}
-                                placeholder="Choose a client"
-                                error={Boolean(fieldErrors.clientId)}
-                            />
-                            <FieldValidationMessage message={fieldErrors.clientId} />
-                            {clients.length === 0 && (
-                                <p className="mt-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                                    No clients yet.{' '}
-                                    <button
-                                        type="button"
-                                        onClick={() => setClientModalOpen(true)}
-                                        className="font-medium underline text-brand"
-                                    >
-                                        Add one first
-                                    </button>
-                                </p>
-                            )}
+                            <div className="space-y-4">
+                                <div>
+                                    <RequiredLabel htmlFor="invoice-client-name">Client name</RequiredLabel>
+                                    <input
+                                        id="invoice-client-name"
+                                        type="text"
+                                        name="clientName"
+                                        value={formData.clientName}
+                                        onChange={handleClientNameChange}
+                                        className={inputClass(
+                                            Boolean(fieldErrors.clientName || fieldErrors.clientId)
+                                        )}
+                                        placeholder="John Doe"
+                                        aria-invalid={Boolean(fieldErrors.clientName || fieldErrors.clientId)}
+                                    />
+                                    <FieldValidationMessage
+                                        message={fieldErrors.clientName || fieldErrors.clientId}
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="invoice-client-email" className="label">
+                                        Email{' '}
+                                        <span className="text-zinc-400 font-normal">(optional)</span>
+                                    </label>
+                                    <input
+                                        id="invoice-client-email"
+                                        type="email"
+                                        name="clientEmail"
+                                        value={formData.clientEmail}
+                                        onChange={handleClientEmailChange}
+                                        className={inputClass(Boolean(fieldErrors.clientEmail))}
+                                        placeholder="client@example.com"
+                                        aria-invalid={Boolean(fieldErrors.clientEmail)}
+                                    />
+                                    <FieldValidationMessage message={fieldErrors.clientEmail} />
+                                    <p className="mt-1.5 text-xs text-zinc-500">
+                                        Add an email to send this invoice directly to your client.
+                                    </p>
+                                </div>
+                                {clients.length > 0 && (
+                                    <div>
+                                        <label htmlFor="invoice-saved-client" className="label">
+                                            Fill from saved client{' '}
+                                            <span className="text-zinc-400 font-normal">(optional)</span>
+                                        </label>
+                                        <CustomSelect
+                                            id="invoice-saved-client"
+                                            value={formData.clientId}
+                                            onChange={handleSelectSavedClient}
+                                            options={clients.map((client) => ({
+                                                value: client.id,
+                                                label: `${client.name}${getClientBusiness(client) ? ` — ${getClientBusiness(client)}` : ''}`,
+                                            }))}
+                                            placeholder="Choose a saved client"
+                                        />
+                                    </div>
+                                )}
+                            </div>
                         </FormSection>
 
                         <FormSection
@@ -929,19 +1005,19 @@ const CreateInvoice = () => {
                         <div className="card space-y-5">
                             <h3 className="text-sm font-semibold text-zinc-900">Summary</h3>
 
-                            {selectedClient && (
+                            {formData.clientName.trim() && (
                                 <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-100">
                                     <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-1.5">
                                         Bill to
                                     </p>
-                                    <p className="font-semibold text-zinc-900">{selectedClient.name}</p>
-                                    {getClientBusiness(selectedClient) && (
+                                    <p className="font-semibold text-zinc-900">{formData.clientName}</p>
+                                    {selectedClient && getClientBusiness(selectedClient) && (
                                         <p className="text-sm text-zinc-600 mt-0.5">
                                             {getClientBusiness(selectedClient)}
                                         </p>
                                     )}
-                                    {selectedClient.email && (
-                                        <p className="text-sm text-zinc-500 mt-0.5">{selectedClient.email}</p>
+                                    {formData.clientEmail.trim() && (
+                                        <p className="text-sm text-zinc-500 mt-0.5">{formData.clientEmail}</p>
                                     )}
                                 </div>
                             )}
