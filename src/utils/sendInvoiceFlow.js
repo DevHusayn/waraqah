@@ -32,6 +32,13 @@ export function buildInvoicePayload(formData, status) {
         payload.clientId = null;
     }
 
+    if (!formData.hasDueDate) {
+        payload.dueDate = null;
+    } else if (!payload.dueDate) {
+        payload.dueDate = null;
+    }
+
+    delete payload.hasDueDate;
     delete payload.clientName;
     delete payload.clientEmail;
 

@@ -97,6 +97,7 @@ const CreateInvoice = () => {
         clientName: '',
         clientEmail: '',
         date: format(new Date(), 'yyyy-MM-dd'),
+        hasDueDate: true,
         dueDate: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
         items: [{ description: '', quantity: 1, rate: 0 }],
         notes: '',
@@ -138,6 +139,7 @@ const CreateInvoice = () => {
             ...invoice,
             clientName: client?.name || '',
             clientEmail: client?.email || '',
+            hasDueDate: Boolean(invoice.dueDate),
             discountType: invoice.discountType || 'percent',
             discountValue: invoice.discountValue ?? '',
         });
@@ -284,7 +286,7 @@ const CreateInvoice = () => {
             if (!hasDraftContent(current)) return null;
 
             const draftErrors = buildDraftFieldErrors(current);
-            const order = getInvoiceFieldFocusOrder(current.items.length);
+            const order = getInvoiceFieldFocusOrder(current.items.length, current);
             const firstInvalid = firstFieldError(draftErrors, order);
             if (firstInvalid) {
                 if (!silent) {
@@ -357,7 +359,7 @@ const CreateInvoice = () => {
 
     const handleSendInvoice = async () => {
         const errors = buildInvoiceFieldErrors(formData);
-        const order = getInvoiceFieldFocusOrder(formData.items.length);
+        const order = getInvoiceFieldFocusOrder(formData.items.length, formData);
         const firstInvalid = firstFieldError(errors, order);
         if (firstInvalid) {
             setFieldErrors(errors);
@@ -503,7 +505,7 @@ const CreateInvoice = () => {
         if (isDraftFlow) return;
 
         const errors = buildInvoiceFieldErrors(formData);
-        const order = getInvoiceFieldFocusOrder(formData.items.length);
+        const order = getInvoiceFieldFocusOrder(formData.items.length, formData);
         const firstInvalid = firstFieldError(errors, order);
         if (firstInvalid) {
             setFieldErrors(errors);
@@ -518,6 +520,7 @@ const CreateInvoice = () => {
             const invoiceData = {
                 ...formData,
                 clientId,
+                dueDate: formData.hasDueDate ? formData.dueDate : null,
                 status: formData.status,
                 currency: APP_CURRENCY,
                 discountType: 'percent',
@@ -530,6 +533,7 @@ const CreateInvoice = () => {
             };
             delete invoiceData.clientName;
             delete invoiceData.clientEmail;
+            delete invoiceData.hasDueDate;
 
             await updateInvoice(id, invoiceData);
             showToast('Invoice updated successfully', 'success');
@@ -542,6 +546,12 @@ const CreateInvoice = () => {
     };
 
     const sendReady = useMemo(() => Object.keys(buildInvoiceFieldErrors(formData)).length === 0, [formData]);
+
+    const handleDueDateToggle = () => {
+        markDirty();
+        setFormData((prev) => ({ ...prev, hasDueDate: !prev.hasDueDate }));
+        clearFieldError(setFieldErrors, 'dueDate');
+    };
 
     const selectedClient = clients.find((c) => c.id === formData.clientId);
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
@@ -768,21 +778,50 @@ const CreateInvoice = () => {
                                     <FieldValidationMessage message={fieldErrors.date} />
                                 </div>
                                 <div>
-                                    <RequiredLabel htmlFor="invoice-due-date">Due date</RequiredLabel>
-                                    <DatePickerField
-                                        id="invoice-due-date"
-                                        value={formData.dueDate}
-                                        onChange={(val) => {
-                                            markDirty();
-                                            setFormData((prev) => ({ ...prev, dueDate: val }));
-                                            clearFieldError(setFieldErrors, 'dueDate');
-                                        }}
-                                        min={formData.date || undefined}
-                                        error={Boolean(fieldErrors.dueDate)}
-                                        allowClear={false}
-                                        placeholder="Due date"
-                                    />
-                                    <FieldValidationMessage message={fieldErrors.dueDate} />
+                                    <div className="flex items-center justify-between gap-3 mb-2">
+                                        <label className="label mb-0" htmlFor="invoice-due-date-toggle">
+                                            Due date
+                                        </label>
+                                        <button
+                                            id="invoice-due-date-toggle"
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={formData.hasDueDate}
+                                            aria-controls="invoice-due-date"
+                                            onClick={handleDueDateToggle}
+                                            className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${
+                                                formData.hasDueDate ? 'bg-brand' : 'bg-zinc-200'
+                                            }`}
+                                        >
+                                            <span
+                                                className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition ${
+                                                    formData.hasDueDate ? 'translate-x-5' : 'translate-x-0'
+                                                }`}
+                                            />
+                                        </button>
+                                    </div>
+                                    {formData.hasDueDate ? (
+                                        <>
+                                            <DatePickerField
+                                                id="invoice-due-date"
+                                                value={formData.dueDate}
+                                                onChange={(val) => {
+                                                    markDirty();
+                                                    setFormData((prev) => ({ ...prev, dueDate: val }));
+                                                    clearFieldError(setFieldErrors, 'dueDate');
+                                                }}
+                                                min={formData.date || undefined}
+                                                error={Boolean(fieldErrors.dueDate)}
+                                                allowClear={false}
+                                                placeholder="Due date"
+                                            />
+                                            <FieldValidationMessage message={fieldErrors.dueDate} />
+                                        </>
+                                    ) : (
+                                        <p className="text-xs text-zinc-500">
+                                            No payment deadline will appear on this invoice.
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </FormSection>

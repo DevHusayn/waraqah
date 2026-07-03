@@ -774,16 +774,12 @@ const InvoiceDetails = () => {
                                             value={getPaymentMethodLabel(invoice.paymentMethod)}
                                         />
                                     </>
-                                ) : (
+                                ) : invoice.dueDate ? (
                                     <SummaryRow
                                         label="Due date"
-                                        value={
-                                            invoice.dueDate
-                                                ? format(new Date(invoice.dueDate), 'MMM dd, yyyy')
-                                                : '—'
-                                        }
+                                        value={format(new Date(invoice.dueDate), 'MMM dd, yyyy')}
                                     />
-                                )}
+                                ) : null}
                                 <SummaryRow
                                     label="Subtotal"
                                     value={formatCurrency(invoice.subtotal)}

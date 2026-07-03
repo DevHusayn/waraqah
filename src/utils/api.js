@@ -6,6 +6,28 @@ import { getAccessToken, setAccessToken, clearAccessToken } from './authToken';
 clearLegacyAuthStorage();
 
 const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const DEFAULT_TIMEOUT_MS = 20000;
+
+function createFetchSignal(options = {}) {
+    if (options.signal) return { signal: options.signal, cancelTimeout: () => {} };
+
+    if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+        return {
+            signal: AbortSignal.timeout(options.timeoutMs ?? DEFAULT_TIMEOUT_MS),
+            cancelTimeout: () => {},
+        };
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(
+        () => controller.abort(new DOMException('Request timed out', 'TimeoutError')),
+        options.timeoutMs ?? DEFAULT_TIMEOUT_MS
+    );
+    return {
+        signal: controller.signal,
+        cancelTimeout: () => clearTimeout(timeoutId),
+    };
+}
 
 export function getToken() {
     return getAccessToken() || null;
@@ -68,15 +90,24 @@ export async function apiFetch(path, options = {}) {
         }
     }
 
+    const { timeoutMs, signal: _signal, ...fetchOptions } = options;
+    const { signal, cancelTimeout } = createFetchSignal({ signal: _signal, timeoutMs });
+
     let res;
     try {
         res = await fetch(`${API_BASE}${path}`, {
-            ...options,
+            ...fetchOptions,
             credentials: 'include',
             headers,
+            signal,
         });
-    } catch {
+    } catch (err) {
+        if (err?.name === 'TimeoutError' || err?.name === 'AbortError') {
+            throw new Error('The request took too long. Please check your connection and try again.');
+        }
         throw new Error(getNetworkErrorMessage());
+    } finally {
+        cancelTimeout();
     }
 
     if (!res.ok) {
@@ -97,18 +128,27 @@ export async function apiFetch(path, options = {}) {
 }
 
 export async function authFetch(path, options = {}) {
+    const { timeoutMs, signal: _signal, ...fetchOptions } = options;
+    const { signal, cancelTimeout } = createFetchSignal({ signal: _signal, timeoutMs });
+
     let res;
     try {
         res = await fetch(`${API_BASE}${path}`, {
-            ...options,
+            ...fetchOptions,
             credentials: 'include',
             headers: buildAuthHeaders({
                 'Content-Type': 'application/json',
-                ...options.headers,
+                ...fetchOptions.headers,
             }),
+            signal,
         });
-    } catch {
+    } catch (err) {
+        if (err?.name === 'TimeoutError' || err?.name === 'AbortError') {
+            throw new Error('The request took too long. Please check your connection and try again.');
+        }
         throw new Error(getNetworkErrorMessage());
+    } finally {
+        cancelTimeout();
     }
 
     const data = await res.json().catch(() => ({}));

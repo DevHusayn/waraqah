@@ -63,8 +63,10 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
             isReceipt
                 ? `<div class="info-label" style="color:${escapeHtml(brand)};margin-top:8px">PAYMENT METHOD</div>
            <p>${escapeHtml(getPaymentMethodLabel(invoice.paymentMethod))}</p>`
-                : `<div class="info-label" style="color:${escapeHtml(brand)};margin-top:8px">DUE DATE</div>
-           <p>${invoice?.dueDate ? escapeHtml(format(new Date(invoice.dueDate), 'MMM dd, yyyy')) : 'N/A'}</p>`
+                : invoice?.dueDate
+                  ? `<div class="info-label" style="color:${escapeHtml(brand)};margin-top:8px">DUE DATE</div>
+           <p>${escapeHtml(format(new Date(invoice.dueDate), 'MMM dd, yyyy'))}</p>`
+                  : ''
         }
       </div>
     </div>

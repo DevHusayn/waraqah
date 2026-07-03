@@ -2,6 +2,15 @@ import { validateOptionalEmail, validateRequired } from './formFieldValidation.j
 
 export const INVOICE_FIELD_ORDER = ['clientName', 'clientEmail', 'date', 'dueDate', 'taxRate', 'discountValue'];
 
+function invoiceFieldOrder(formData) {
+    const order = ['clientName', 'clientEmail', 'date'];
+    if (!formData || formData.hasDueDate !== false) {
+        order.push('dueDate');
+    }
+    order.push('taxRate', 'discountValue');
+    return order;
+}
+
 export function buildInvoiceFieldErrors(formData) {
     const errors = {};
 
@@ -24,7 +33,7 @@ export function buildInvoiceFieldErrors(formData) {
     if (!formData.date) {
         errors.date = 'Please select an issue date.';
     }
-    if (!formData.dueDate) {
+    if (formData.hasDueDate !== false && !formData.dueDate) {
         errors.dueDate = 'Please select a due date.';
     }
     const taxRate = formData.taxRate;
@@ -116,8 +125,8 @@ export function buildDraftFieldErrors(formData) {
     return errors;
 }
 
-export function getInvoiceFieldFocusOrder(itemCount = 0) {
-    const order = [...INVOICE_FIELD_ORDER];
+export function getInvoiceFieldFocusOrder(itemCount = 0, formData = null) {
+    const order = invoiceFieldOrder(formData);
     for (let i = 0; i < itemCount; i += 1) {
         order.push(`item-${i}-description`, `item-${i}-quantity`, `item-${i}-rate`);
     }

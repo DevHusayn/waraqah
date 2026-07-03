@@ -99,7 +99,8 @@ function drawBillToAndDetails(
     grayColor,
     lightPrimary
 ) {
-    const detailsHeight = isReceiptDoc ? 46 : 38;
+    const hasDueDate = Boolean(invoice.dueDate);
+    const detailsHeight = isReceiptDoc ? 46 : hasDueDate ? 38 : 28;
     const boxH = Math.max(36, detailsHeight);
 
     doc.setFillColor(...lightPrimary);
@@ -172,8 +173,8 @@ function drawBillToAndDetails(
         doc.setFont(undefined, 'bold');
         doc.setTextColor(...textColor);
         doc.text(getPaymentMethodLabel(invoice.paymentMethod), 190, y + 38, { align: 'right' });
-    } else {
-        const dueDate = invoice.dueDate ? format(new Date(invoice.dueDate), 'MMM dd, yyyy') : 'N/A';
+    } else if (hasDueDate) {
+        const dueDate = format(new Date(invoice.dueDate), 'MMM dd, yyyy');
         doc.setFontSize(7);
         doc.setFont(undefined, 'bold');
         doc.setTextColor(...grayColor);

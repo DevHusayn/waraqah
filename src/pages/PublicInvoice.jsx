@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Building2, Mail, Phone, Globe, MapPin } from 'lucide-react';
+import { Building2, Download, Mail, Phone, Globe, MapPin, Printer } from 'lucide-react';
 import { publicFetch } from '../utils/publicApi';
 import { formatCurrency } from '../utils/currency';
-import { getPaymentMethodLabel } from '../utils/receiptHelpers';
+import { getDownloadLabel, getPaymentMethodLabel } from '../utils/receiptHelpers';
+import { downloadPublicInvoicePdf, printPublicInvoicePdf } from '../utils/publicInvoicePdf';
 import WaraqahLogo from '../components/WaraqahLogo';
 import Spinner from '../components/Spinner';
 
@@ -26,6 +27,8 @@ export default function PublicInvoice() {
     const [data, setData] = useState(null);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
+    const [pdfBusy, setPdfBusy] = useState(false);
+    const [pdfError, setPdfError] = useState('');
 
     useEffect(() => {
         let cancelled = false;
@@ -68,6 +71,35 @@ export default function PublicInvoice() {
         [invoice?.items]
     );
 
+    const pdfMode = showReceipt ? 'receipt' : 'invoice';
+    const downloadLabel = invoice ? getDownloadLabel(invoice, pdfMode) : 'Download PDF';
+
+    const handleDownloadPdf = useCallback(async () => {
+        if (!invoice || !client || !business || pdfBusy) return;
+        setPdfBusy(true);
+        setPdfError('');
+        try {
+            await downloadPublicInvoicePdf(invoice, client, business, showReceipt);
+        } catch (err) {
+            setPdfError(err.message || 'Failed to download PDF.');
+        } finally {
+            setPdfBusy(false);
+        }
+    }, [invoice, client, business, showReceipt, pdfBusy]);
+
+    const handlePrintPdf = useCallback(async () => {
+        if (!invoice || !client || !business || pdfBusy) return;
+        setPdfBusy(true);
+        setPdfError('');
+        try {
+            await printPublicInvoicePdf(invoice, client, business, showReceipt);
+        } catch (err) {
+            setPdfError(err.message || 'Failed to print PDF.');
+        } finally {
+            setPdfBusy(false);
+        }
+    }, [invoice, client, business, showReceipt, pdfBusy]);
+
     if (loading) {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -93,6 +125,36 @@ export default function PublicInvoice() {
     return (
         <div className="min-h-screen bg-slate-50 py-8 px-4">
             <div className="max-w-3xl mx-auto">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm text-zinc-600">
+                        {showReceipt ? 'Receipt' : 'Invoice'} from {business?.name || 'Business'}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            className="btn-secondary inline-flex items-center gap-2"
+                            onClick={handleDownloadPdf}
+                            disabled={pdfBusy}
+                        >
+                            {pdfBusy ? <Spinner size="sm" inline /> : <Download size={16} aria-hidden />}
+                            {downloadLabel}
+                        </button>
+                        <button
+                            type="button"
+                            className="btn-secondary inline-flex items-center gap-2"
+                            onClick={handlePrintPdf}
+                            disabled={pdfBusy}
+                        >
+                            <Printer size={16} aria-hidden />
+                            Print
+                        </button>
+                    </div>
+                </div>
+                {pdfError ? (
+                    <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {pdfError}
+                    </p>
+                ) : null}
                 <div className="card !p-0 overflow-hidden shadow-card border border-zinc-200">
                     <div
                         className="px-6 sm:px-8 py-6 border-b border-zinc-200"
@@ -163,16 +225,14 @@ export default function PublicInvoice() {
                                         </p>
                                     </div>
                                 </>
-                            ) : (
+                            ) : invoice.dueDate ? (
                                 <div>
                                     <p className="text-xs text-zinc-500">Due date</p>
                                     <p className="text-sm font-medium text-zinc-900">
-                                        {invoice.dueDate
-                                            ? format(new Date(invoice.dueDate), 'MMM dd, yyyy')
-                                            : '—'}
+                                        {format(new Date(invoice.dueDate), 'MMM dd, yyyy')}
                                     </p>
                                 </div>
-                            )}
+                            ) : null}
                         </div>
                     </div>
 
