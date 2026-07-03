@@ -37,3 +37,38 @@ test('validateRegisterStep does not require terms on earlier steps', () => {
 
     assert.notEqual(step1.firstInvalid, 'acceptedTerms');
 });
+
+test('validateRegisterStep requires only business name on step 2', () => {
+    const minimal = validateRegisterStep(
+        2,
+        {
+            ...validForm,
+            businessEmail: '',
+            address: '',
+            phone: '',
+        },
+        'Password1'
+    );
+
+    assert.equal(minimal.firstInvalid, null);
+});
+
+test('validateRegisterStep rejects missing business name on step 2', () => {
+    const missingName = validateRegisterStep(
+        2,
+        { ...validForm, name: '' },
+        'Password1'
+    );
+
+    assert.equal(missingName.firstInvalid, 'name');
+});
+
+test('validateRegisterStep validates optional business email format on step 2', () => {
+    const invalidEmail = validateRegisterStep(
+        2,
+        { ...validForm, businessEmail: 'not-an-email' },
+        'Password1'
+    );
+
+    assert.equal(invalidEmail.firstInvalid, 'businessEmail');
+});

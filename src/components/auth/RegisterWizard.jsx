@@ -411,6 +411,7 @@ export default function RegisterWizard({ returnTo }) {
                             idPrefix="reg-"
                             emailInputId="reg-business-email"
                             autoCompleteSection="section-business"
+                            requiredFields={['name']}
                         />
                     </form>
                 )}

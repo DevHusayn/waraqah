@@ -1,11 +1,11 @@
 import {
     validateRequired,
     validateEmail,
+    validateOptionalEmail,
     firstFieldError,
 } from './formFieldValidation.js';
 import { isStrongPassword, PASSWORD_REQUIREMENTS_MESSAGE } from './passwordValidation.js';
 import {
-    buildProfileFieldErrors,
     buildAccountFieldErrors,
     buildBrandingFieldErrors,
 } from './settingsValidation.js';
@@ -19,7 +19,7 @@ export const REGISTER_STEPS = [
 
 export const REGISTER_STEP_FIELD_ORDER = {
     1: ['email', 'password', 'confirmPassword'],
-    2: ['name', 'businessEmail', 'address', 'phone'],
+    2: ['name', 'businessEmail'],
     3: ['paymentAccountName', 'paymentBankName', 'paymentAccountNumber'],
     4: ['brandColor', 'acceptedTerms'],
 };
@@ -84,18 +84,12 @@ function buildCredentialsStepErrors(form, confirmPassword) {
 }
 
 function buildBusinessStepErrors(form) {
-    const profileErrors = buildProfileFieldErrors({
-        name: form.name,
-        address: form.address,
-        email: form.businessEmail,
-        phone: form.phone,
-    });
-
     return {
-        name: profileErrors.name,
-        businessEmail: profileErrors.email,
-        address: profileErrors.address,
-        phone: profileErrors.phone,
+        name: validateRequired(form.name, 'Please enter your business name.'),
+        businessEmail: validateOptionalEmail(
+            form.businessEmail,
+            'Please enter a valid business email.'
+        ),
     };
 }
 

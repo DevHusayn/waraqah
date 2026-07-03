@@ -107,13 +107,13 @@ export function RegisterWizard({ onComplete }) {
                     <Label required>Business name</Label>
                     <Input value={form.name} onChangeText={(v) => setField('name', v)} error={errors.name} />
                     <FieldError message={errors.name} />
-                    <Label required>Business email</Label>
+                    <Label>Business email (optional)</Label>
                     <Input value={form.businessEmail} onChangeText={(v) => setField('businessEmail', v)} autoCapitalize="none" keyboardType="email-address" error={errors.businessEmail} />
                     <FieldError message={errors.businessEmail} />
-                    <Label required>Address</Label>
+                    <Label>Address (optional)</Label>
                     <Input value={form.address} onChangeText={(v) => setField('address', v)} error={errors.address} multiline style={{ minHeight: 72, textAlignVertical: 'top' }} />
                     <FieldError message={errors.address} />
-                    <Label required>Phone</Label>
+                    <Label>Phone (optional)</Label>
                     <Input value={form.phone} onChangeText={(v) => setField('phone', v)} keyboardType="phone-pad" error={errors.phone} />
                     <FieldError message={errors.phone} />
                     <Label>Website</Label>

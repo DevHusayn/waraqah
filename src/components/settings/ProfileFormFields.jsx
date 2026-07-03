@@ -2,6 +2,20 @@ import FieldValidationMessage from '../FieldValidationMessage';
 import RequiredLabel from '../RequiredLabel';
 import { inputClass } from '../../utils/formFieldValidation';
 
+const DEFAULT_REQUIRED_FIELDS = ['name', 'address', 'email', 'phone'];
+
+function ProfileFieldLabel({ htmlFor, required, children }) {
+    if (required) {
+        return <RequiredLabel htmlFor={htmlFor}>{children}</RequiredLabel>;
+    }
+    return (
+        <label htmlFor={htmlFor} className="label">
+            {children}{' '}
+            <span className="text-zinc-400 font-normal">(optional)</span>
+        </label>
+    );
+}
+
 export default function ProfileFormFields({
     formData,
     errors,
@@ -9,11 +23,13 @@ export default function ProfileFormFields({
     idPrefix = 'settings-',
     emailInputId,
     autoCompleteSection,
+    requiredFields = DEFAULT_REQUIRED_FIELDS,
 }) {
     const fieldId = (key) => `${idPrefix}${key}`;
     const businessEmailId = emailInputId || fieldId('email');
     const autoComplete = (token) =>
         autoCompleteSection ? `${autoCompleteSection} ${token}` : token;
+    const isRequired = (key) => requiredFields.includes(key);
 
     const syncAddressAutofill = (value) => {
         if (!value) return;
@@ -23,7 +39,9 @@ export default function ProfileFormFields({
     return (
         <div className="space-y-5">
             <div>
-                <RequiredLabel htmlFor={fieldId('name')}>Business name</RequiredLabel>
+                <ProfileFieldLabel htmlFor={fieldId('name')} required={isRequired('name')}>
+                    Business name
+                </ProfileFieldLabel>
                 <input
                     id={fieldId('name')}
                     type="text"
@@ -39,7 +57,9 @@ export default function ProfileFormFields({
             </div>
 
             <div>
-                <RequiredLabel htmlFor={fieldId('address')}>Business address</RequiredLabel>
+                <ProfileFieldLabel htmlFor={fieldId('address')} required={isRequired('address')}>
+                    Business address
+                </ProfileFieldLabel>
                 {/* Hidden input catches browser address autofill (Chrome targets inputs, not textareas). */}
                 <input
                     type="text"
@@ -65,7 +85,9 @@ export default function ProfileFormFields({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                    <RequiredLabel htmlFor={businessEmailId}>Email</RequiredLabel>
+                    <ProfileFieldLabel htmlFor={businessEmailId} required={isRequired('email')}>
+                        Business email
+                    </ProfileFieldLabel>
                     <input
                         id={businessEmailId}
                         type="email"
@@ -80,7 +102,9 @@ export default function ProfileFormFields({
                     <FieldValidationMessage message={errors.email} />
                 </div>
                 <div>
-                    <RequiredLabel htmlFor={fieldId('phone')}>Phone</RequiredLabel>
+                    <ProfileFieldLabel htmlFor={fieldId('phone')} required={isRequired('phone')}>
+                        Phone
+                    </ProfileFieldLabel>
                     <input
                         id={fieldId('phone')}
                         type="tel"
