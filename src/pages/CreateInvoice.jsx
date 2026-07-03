@@ -834,8 +834,7 @@ const CreateInvoice = () => {
                                 {clients.length > 0 && (
                                     <div>
                                         <label htmlFor="invoice-saved-client" className="label">
-                                            Fill from saved client{' '}
-                                            <span className="text-zinc-400 font-normal">(optional)</span>
+                                            Fill from saved client
                                         </label>
                                         <CustomSelect
                                             id="invoice-saved-client"
