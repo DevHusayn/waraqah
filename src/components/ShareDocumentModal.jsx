@@ -13,6 +13,7 @@ export default function ShareDocumentModal({
     shareReady = true,
     emailReady = true,
     emailSending = false,
+    clientAlreadyEmailed = false,
     onShare,
     onEmailClient,
     onSkip,
@@ -47,11 +48,15 @@ export default function ShareDocumentModal({
                         <p className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                             Add a client email to send this invoice by email.
                         </p>
+                    ) : clientAlreadyEmailed ? (
+                        <p className="mt-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                            Invoice already emailed to {clientEmail}.
+                        </p>
                     ) : null}
                 </div>
 
                 <div className="mt-5 space-y-2">
-                    {canEmail ? (
+                    {canEmail && !clientAlreadyEmailed ? (
                         <button
                             type="button"
                             className={`btn-primary ${modalBtn} disabled:opacity-60`}

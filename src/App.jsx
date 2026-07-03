@@ -17,7 +17,10 @@ import AccountDetailsSettings from './pages/settings/AccountDetailsSettings';
 import BrandingSettings from './pages/settings/BrandingSettings';
 import PlanBillingSettings from './pages/settings/PlanBillingSettings';
 import TermsSettings from './pages/settings/TermsSettings';
+import PrivacySettings from './pages/settings/PrivacySettings';
 import AboutSettings from './pages/settings/AboutSettings';
+import TermsPage from './pages/legal/TermsPage';
+import PrivacyPage from './pages/legal/PrivacyPage';
 import NotificationSettings from './pages/settings/NotificationSettings';
 import Auth from './pages/Auth';
 import CheckEmailPage from './pages/CheckEmail';
@@ -64,6 +67,8 @@ function App() {
                             <Route path="/reset-password/:token" element={<ResetPassword />} />
                             <Route path="/verify-email/:token" element={<VerifyEmail />} />
                             <Route path="/i/:token" element={<PublicInvoice />} />
+                            <Route path="/terms" element={<TermsPage />} />
+                            <Route path="/privacy" element={<PrivacyPage />} />
 
                             {/* Public so Paystack redirect always loads the app (verify needs login) */}
                             <Route
@@ -96,6 +101,7 @@ function App() {
                                                 <Route path="plan-billing" element={<PlanBillingSettings />} />
                                                 <Route path="notifications" element={<NotificationSettings />} />
                                                 <Route path="terms" element={<TermsSettings />} />
+                                                <Route path="privacy" element={<PrivacySettings />} />
                                                 <Route path="about" element={<AboutSettings />} />
                                                 <Route path="profile" element={<Navigate to="/settings/business/company-profile" replace />} />
                                             </Route>

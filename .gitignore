@@ -40,6 +40,9 @@ build/
 .DS_Store
 .vscode/
 
+# local PDF experiments (never commit)
+test-*.pdf
+
 # MD
 .BACKEND-INTEGRATION.md
 

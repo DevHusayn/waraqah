@@ -21,7 +21,7 @@ export const REGISTER_STEP_FIELD_ORDER = {
     1: ['email', 'password', 'confirmPassword'],
     2: ['name', 'businessEmail', 'address', 'phone'],
     3: ['paymentAccountName', 'paymentBankName', 'paymentAccountNumber'],
-    4: ['brandColor'],
+    4: ['brandColor', 'acceptedTerms'],
 };
 
 export const REGISTER_INITIAL_FORM = {
@@ -54,6 +54,7 @@ const REGISTER_FIELD_IDS = {
     paymentAccountNumber: 'reg-payment-account-number',
     paymentInstructions: 'reg-payment-instructions',
     brandColor: 'reg-brand-color',
+    acceptedTerms: 'reg-legal-consent',
 };
 
 export function getRegisterFieldId(key) {
@@ -98,7 +99,7 @@ function buildBusinessStepErrors(form) {
     };
 }
 
-export function buildRegisterStepErrors(step, form, confirmPassword) {
+export function buildRegisterStepErrors(step, form, confirmPassword, options = {}) {
     switch (step) {
         case 1:
             return buildCredentialsStepErrors(form, confirmPassword);
@@ -107,14 +108,19 @@ export function buildRegisterStepErrors(step, form, confirmPassword) {
         case 3:
             return buildAccountFieldErrors(form);
         case 4:
-            return buildBrandingFieldErrors(form);
+            return {
+                ...buildBrandingFieldErrors(form),
+                acceptedTerms: options.acceptedTerms
+                    ? ''
+                    : 'You must agree to the Terms and Privacy Policy to create an account.',
+            };
         default:
             return {};
     }
 }
 
-export function validateRegisterStep(step, form, confirmPassword) {
-    const errors = buildRegisterStepErrors(step, form, confirmPassword);
+export function validateRegisterStep(step, form, confirmPassword, options = {}) {
+    const errors = buildRegisterStepErrors(step, form, confirmPassword, options);
     const order = REGISTER_STEP_FIELD_ORDER[step] || [];
     const firstInvalid = firstFieldError(errors, order);
     return { errors, firstInvalid };

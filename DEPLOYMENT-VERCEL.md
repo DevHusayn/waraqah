@@ -128,6 +128,10 @@ Security response headers are set in `vercel.json` (`X-Frame-Options`, CSP, etc.
 
 ## Checklist
 
+See **[PRE-LAUNCH-CHECKLIST.md](./PRE-LAUNCH-CHECKLIST.md)** for the full pre-launch runbook (env vars, Paystack, Resend, smoke test).
+
+Quick version:
+
 - [ ] `VITE_API_URL` set on **frontend** Vercel project → **redeploy frontend**
 - [ ] `VITE_SENTRY_DSN` set (optional) for production error monitoring
 - [ ] `MONGO_URI` is Atlas, not localhost

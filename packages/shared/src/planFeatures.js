@@ -6,6 +6,7 @@ export const FREE_PLAN_FEATURES = [
     'Product catalog for quick line items',
     'Bank details on invoices',
     'Professional PDF invoices',
+    'Email invoices, reminders, and receipts to clients',
     'Mark paid with PDF receipts',
     'Dashboard and status tracking',
 ];

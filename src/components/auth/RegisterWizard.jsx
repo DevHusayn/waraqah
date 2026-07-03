@@ -23,6 +23,7 @@ import {
     validateRegisterStep,
 } from '../../utils/registerValidation';
 import { BRAND_PRESETS } from '../../utils/settingsValidation';
+import LegalConsentCheckbox from '../legal/LegalConsentCheckbox';
 
 const DRAFT_KEY = 'registerDraft';
 
@@ -134,6 +135,7 @@ export default function RegisterWizard({ returnTo }) {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [submitLoading, setSubmitLoading] = useState(false);
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
 
     const passwordStrength = getPasswordStrength(form.password);
 
@@ -145,6 +147,7 @@ export default function RegisterWizard({ returnTo }) {
         const onLogout = () => {
             setForm(REGISTER_INITIAL_FORM);
             setConfirmPassword('');
+            setAcceptedTerms(false);
             clearRegisterDraft();
         };
         window.addEventListener('app-logout', onLogout);
@@ -203,7 +206,9 @@ export default function RegisterWizard({ returnTo }) {
 
     const handleContinue = () => {
         setError('');
-        const { errors, firstInvalid } = validateRegisterStep(step, form, confirmPassword);
+        const { errors, firstInvalid } = validateRegisterStep(step, form, confirmPassword, {
+            acceptedTerms,
+        });
         if (firstInvalid) {
             setFieldErrors(errors);
             focusFieldById(getRegisterFieldId(firstInvalid));
@@ -223,7 +228,9 @@ export default function RegisterWizard({ returnTo }) {
         setError('');
 
         for (let s = 1; s <= REGISTER_STEPS.length; s += 1) {
-            const { errors, firstInvalid } = validateRegisterStep(s, form, confirmPassword);
+            const { errors, firstInvalid } = validateRegisterStep(s, form, confirmPassword, {
+                acceptedTerms,
+            });
             if (firstInvalid) {
                 setFieldErrors(errors);
                 if (s !== step) {
@@ -483,6 +490,17 @@ export default function RegisterWizard({ returnTo }) {
                                 })}
                             </div>
                         </div>
+                        <LegalConsentCheckbox
+                            id="reg-legal-consent"
+                            checked={acceptedTerms}
+                            onChange={(value) => {
+                                setAcceptedTerms(value);
+                                if (fieldErrors.acceptedTerms) {
+                                    setFieldErrors((prev) => ({ ...prev, acceptedTerms: '' }));
+                                }
+                            }}
+                            error={fieldErrors.acceptedTerms}
+                        />
                     </div>
                 )}
 

@@ -8,7 +8,7 @@ import {
     resolvePdfMode,
 } from '@waraqah/shared';
 import { escapeHtml, formatMoney, wrapHtml } from './htmlUtils';
-import { APP_DOMAIN, APP_NAME, APP_WEBSITE_URL } from '../constants/brand';
+import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../constants/brand';
 
 export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
     const resolvedMode = resolvePdfMode(invoice, mode);
@@ -32,7 +32,7 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
 
     const freeFooter = `
       <p class="muted" style="margin-top:8px">Powered by ${escapeHtml(APP_NAME)}</p>
-      <p class="muted" style="font-size:9px">Professional invoicing for businesses</p>
+      <p class="muted" style="font-size:9px">${escapeHtml(APP_TAGLINE)}</p>
       <p style="margin-top:6px">${escapeHtml(FREE_PDF_FOOTER_CTA_PREFIX)}<a href="${escapeHtml(APP_WEBSITE_URL)}">${escapeHtml(APP_DOMAIN)}</a></p>`;
 
     const body = `

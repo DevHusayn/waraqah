@@ -1,4 +1,4 @@
-import { Building2, Bell, Crown, FileText, Info, Landmark, Palette } from 'lucide-react';
+import { Building2, Bell, Crown, FileText, Info, Landmark, Palette, Shield } from 'lucide-react';
 
 export const SETTINGS_INDEX = [
     {
@@ -24,6 +24,12 @@ export const SETTINGS_INDEX = [
         to: '/settings/terms',
         icon: FileText,
         description: 'Terms of use for the Waraqah platform',
+    },
+    {
+        title: 'Privacy Policy',
+        to: '/settings/privacy',
+        icon: Shield,
+        description: 'How we collect, use, and protect your data',
     },
     {
         title: 'About',

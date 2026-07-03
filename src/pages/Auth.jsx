@@ -436,6 +436,18 @@ function Auth() {
                                     <RegisterWizard returnTo={returnTo} />
 
                                     <p className="mt-5 pt-5 border-t border-zinc-100 text-center text-[13px] text-zinc-500">
+                                        By registering, you agree to our{' '}
+                                        <Link to="/terms" className="font-medium text-brand hover:underline">
+                                            Terms
+                                        </Link>{' '}
+                                        and{' '}
+                                        <Link to="/privacy" className="font-medium text-brand hover:underline">
+                                            Privacy Policy
+                                        </Link>
+                                        .
+                                    </p>
+
+                                    <p className="mt-4 text-center text-[13px] text-zinc-500">
                                         Already have an account?{' '}
                                         <button
                                             type="button"

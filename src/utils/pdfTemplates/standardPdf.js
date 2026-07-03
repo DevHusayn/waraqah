@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { APP_DOMAIN, APP_NAME, APP_WEBSITE_URL } from '../../constants/brand';
+import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../../constants/brand';
 import { FREE_PDF_FOOTER_CTA_PREFIX } from '@waraqah/shared';
 import { getCurrencySymbol } from '../currency';
 import { getClientBusiness } from '../clientHelpers';
@@ -345,7 +345,7 @@ function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayC
     setPdfBodyFont(doc);
     doc.setFontSize(7);
     doc.setTextColor(...grayColor);
-    doc.text('Professional invoicing for businesses', 105, footerY + 5.5, { align: 'center' });
+    doc.text(APP_TAGLINE, 105, footerY + 5.5, { align: 'center' });
 
     return drawCenteredPdfFooterCta(
         doc,

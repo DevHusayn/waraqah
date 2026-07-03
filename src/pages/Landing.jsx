@@ -9,15 +9,20 @@ import {
     Check,
     ChevronDown,
     ArrowRight,
-    Sparkles,
     TrendingUp,
     Smartphone,
+    Mail,
+    Bell,
+    Receipt,
+    Send,
 } from 'lucide-react';
 import LandingNav from '../components/LandingNav';
 import LandingInvoicePreview from '../components/LandingInvoicePreview';
+import LandingEmailPreview from '../components/LandingEmailPreview';
 import WaraqahLogo from '../components/WaraqahLogo';
 import { APP_NAME, APP_TAGLINE } from '../constants/brand';
 import { AUTH_LOGIN_PATH, AUTH_REGISTER_PATH } from '../constants/authRoutes';
+import { TERMS_PATH, PRIVACY_PATH } from '../constants/legalRoutes';
 import { FREE_MONTHLY_INVOICE_LIMIT } from '../utils/invoiceLimits';
 import { FREE_PLAN_FEATURES, PREMIUM_PLAN_FEATURES } from '../constants/planFeatures';
 import { PREMIUM_PRICE_NGN, formatPremiumPrice } from '../constants/pricing';
@@ -39,7 +44,7 @@ const WHY_ITEMS = [
     {
         icon: TrendingUp,
         title: 'Look professional, get paid faster',
-        text: 'Clear totals, due dates, and branded PDFs help you look established. Mark invoices paid to issue receipts instantly.',
+        text: 'Clear totals, due dates, branded PDFs, and client emails help you look established and stay top of mind until payment lands.',
     },
     {
         icon: Smartphone,
@@ -56,7 +61,30 @@ const WHY_ITEMS = [
 const STEPS = [
     { step: '01', title: 'Add your business', text: 'Set your profile, bank account details, and brand color. Premium adds your logo, stamp, and signature on PDFs.' },
     { step: '02', title: 'Save clients & products', text: 'Store contacts and catalog items once, then pick them on every new invoice.' },
-    { step: '03', title: 'Send and track', text: 'Download a polished PDF invoice with your bank details, share it, and mark it paid when you receive payment.' },
+    { step: '03', title: 'Send and track', text: 'Email the invoice to your client, share a PDF, or enable automatic delivery. Mark it paid to send a receipt.' },
+];
+
+const EMAIL_FEATURES = [
+    {
+        icon: Mail,
+        title: 'Invoice delivery',
+        text: 'Send polished invoice emails with amount due, due date, and a secure link clients can open without logging in.',
+    },
+    {
+        icon: Bell,
+        title: 'Payment reminders',
+        text: 'Follow up on pending or overdue invoices with reminder emails — sent manually or on a schedule you control.',
+    },
+    {
+        icon: Receipt,
+        title: 'Receipts on payment',
+        text: 'When you mark an invoice paid, your client receives a receipt email with payment details for their records.',
+    },
+    {
+        icon: Send,
+        title: 'Send on your terms',
+        text: 'Email from the share dialog after creating an invoice, or turn on automatic delivery in Settings when you are ready.',
+    },
 ];
 
 const FAQ_ITEMS = [
@@ -75,6 +103,10 @@ const FAQ_ITEMS = [
     {
         q: 'How does Premium billing work?',
         a: `Premium is ₦${formatPremiumPrice(PREMIUM_PRICE)}/month (launch price) through Paystack. You can cancel auto-renewal and keep access until the period ends.`,
+    },
+    {
+        q: 'Can Waraqah email my clients?',
+        a: 'Yes. Email finalized invoices from the share dialog or invoice page, send payment reminders for outstanding balances, and deliver receipt emails when you mark an invoice paid. You can also enable automatic invoice emails in Settings so clients are notified as soon as an invoice is ready.',
     },
     {
         q: 'Can I use Waraqah on my phone?',
@@ -144,8 +176,7 @@ export default function Landing() {
                         className={`grid lg:grid-cols-2 gap-12 lg:gap-16 items-center ${revealClass(heroVisible)}`}
                     >
                         <div>
-                            <p className="inline-flex items-center gap-2 rounded-full bg-white/80 border border-brand/20 px-4 py-1.5 text-sm font-medium text-brand shadow-sm landing-float-badge">
-                                <Sparkles className="h-4 w-4" />
+                            <p className="inline-flex items-center rounded-full bg-white/80 border border-brand/20 px-4 py-1.5 text-sm font-medium text-brand shadow-sm landing-float-badge">
                                 {APP_TAGLINE}
                             </p>
                             <h1 className="mt-6 text-3xl sm:text-4xl lg:text-[3.25rem] font-bold tracking-tight text-zinc-950 leading-[1.1]">
@@ -154,7 +185,7 @@ export default function Landing() {
                             </h1>
                             <p className="mt-6 text-lg text-zinc-600 max-w-xl leading-relaxed">
                                 {APP_NAME} helps freelancers and businesses send polished invoices,
-                                manage clients, and track payments without spreadsheets or design stress.
+                                email clients with reminders and receipts, and track payments without spreadsheets or design stress.
                             </p>
                             <div className="mt-8 flex flex-col sm:flex-row gap-3">
                                 <CtaButton className="py-3.5 px-8 text-base shadow-soft shadow-brand/20 hover:shadow-card hover:shadow-brand/25" />
@@ -215,6 +246,50 @@ export default function Landing() {
                     <SectionReveal className="mt-12 text-center">
                         <CtaButton className="inline-flex" />
                     </SectionReveal>
+                </div>
+            </section>
+
+            {/* Client emails */}
+            <section id="emails" className="py-20 sm:py-24 landing-section-muted scroll-mt-20">
+                <div className="mx-auto max-w-6xl px-4 sm:px-6">
+                    <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+                        <SectionReveal>
+                            <p className="inline-flex items-center gap-2 rounded-full bg-white border border-zinc-200/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                                <Mail className="h-3.5 w-3.5 text-brand" aria-hidden />
+                                Client emails
+                            </p>
+                            <h2 className="mt-4 text-3xl sm:text-4xl font-bold text-zinc-900 tracking-tight">
+                                Deliver invoices without leaving {APP_NAME}
+                            </h2>
+                            <p className="mt-4 text-zinc-600 text-lg leading-relaxed">
+                                Skip copying PDFs into your personal inbox. {APP_NAME} sends professional,
+                                branded emails to your clients — and keeps you notified when each message goes out.
+                            </p>
+                            <ul className="mt-8 space-y-5">
+                                {EMAIL_FEATURES.map((item) => {
+                                    const Icon = item.icon;
+                                    return (
+                                        <li key={item.title} className="flex gap-4">
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white border border-zinc-200/80 text-brand">
+                                                <Icon className="h-5 w-5" aria-hidden />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-sm font-semibold text-zinc-950">{item.title}</h3>
+                                                <p className="mt-1 text-sm text-zinc-500 leading-relaxed">{item.text}</p>
+                                            </div>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </SectionReveal>
+
+                        <SectionReveal delay={2}>
+                            <LandingEmailPreview />
+                            <p className="mt-4 text-center text-xs text-zinc-500">
+                                Included on Free and Premium · No extra email setup required
+                            </p>
+                        </SectionReveal>
+                    </div>
                 </div>
             </section>
 
@@ -315,8 +390,8 @@ export default function Landing() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
                         {[
                             { icon: FileText, label: 'Invoices & receipts' },
+                            { icon: Mail, label: 'Client emails' },
                             { icon: Users, label: 'Clients & products' },
-                            { icon: TrendingUp, label: 'Payment tracking' },
                             { icon: Crown, label: 'Premium branding' },
                         ].map(({ icon: Icon, label }) => (
                             <div key={label} className="flex flex-col items-center gap-3">
@@ -381,7 +456,17 @@ export default function Landing() {
             <footer className="py-10 border-t border-zinc-200 bg-white">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-zinc-500">
                     <WaraqahLogo size="sm" iconStyle="solid" />
-                    <p>© {new Date().getFullYear()} {APP_NAME}. Professional invoicing, simplified.</p>
+                    <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
+                        <nav className="flex items-center gap-4" aria-label="Legal">
+                            <Link to={TERMS_PATH} className="hover:text-zinc-800 transition-colors">
+                                Terms
+                            </Link>
+                            <Link to={PRIVACY_PATH} className="hover:text-zinc-800 transition-colors">
+                                Privacy
+                            </Link>
+                        </nav>
+                        <p>© {new Date().getFullYear()} {APP_NAME}. {APP_TAGLINE}</p>
+                    </div>
                 </div>
             </footer>
         </div>

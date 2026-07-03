@@ -319,6 +319,7 @@ const CreateInvoice = () => {
             isDirtyRef.current = false;
             draftIdRef.current = saved.id;
             const client = clients.find((c) => c.id === saved.clientId);
+            const clientAlreadyEmailed = Boolean(saved.clientInvoiceEmailedAt);
 
             setSending(false);
             sharePdfRef.current = null;
@@ -326,7 +327,12 @@ const CreateInvoice = () => {
             setShareModal({
                 invoice: saved,
                 client,
+                clientAlreadyEmailed,
             });
+
+            if (clientAlreadyEmailed && client?.email) {
+                showToast(`Invoice emailed to ${client.email}`, 'success');
+            }
         } catch (err) {
             if (err.code === 'INVOICE_LIMIT_REACHED') {
                 setLimitModalOpen(true);
@@ -400,7 +406,7 @@ const CreateInvoice = () => {
     };
 
     const handleEmailFromModal = async () => {
-        if (!shareModal?.invoice?.id) return;
+        if (!shareModal?.invoice?.id || shareModal.clientAlreadyEmailed) return;
 
         setEmailSending(true);
         try {
@@ -590,6 +596,7 @@ const CreateInvoice = () => {
                 clientEmail={shareModal?.client?.email}
                 shareReady={sharePdfReady}
                 emailSending={emailSending}
+                clientAlreadyEmailed={Boolean(shareModal?.clientAlreadyEmailed)}
                 onShare={handleShareFromModal}
                 onEmailClient={handleEmailFromModal}
                 onSkip={handleSkipShare}
