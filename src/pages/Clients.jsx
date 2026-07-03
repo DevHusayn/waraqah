@@ -8,7 +8,6 @@ import PageHeader from '../components/PageHeader';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
 import Spinner from '../components/Spinner';
-import { TableSkeleton } from '../components/Skeleton';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 import Toolbar, { ToolbarSearch } from '../components/Toolbar';
@@ -172,8 +171,8 @@ const Clients = () => {
                 </button>
             </PageHeader>
 
-            {loading ? (
-                <TableSkeleton rows={6} columns={5} />
+            {loading && clients.length === 0 ? (
+                <p className="py-16 text-center text-sm text-zinc-500">Loading clients…</p>
             ) : clients.length === 0 ? (
                 <div className="data-table-wrap">
                     <EmptyState

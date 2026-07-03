@@ -10,7 +10,6 @@ import { PREMIUM_PLAN_FEATURES } from '../constants/planFeatures';
 import { PREMIUM_PRICE_NGN } from '../constants/pricing';
 import PremiumPrice from '../components/PremiumPrice';
 import Spinner from '../components/Spinner';
-import { UpgradePageSkeleton } from '../components/Skeleton';
 import DevPlanToggle from '../components/DevPlanToggle';
 
 export default function Upgrade() {
@@ -43,10 +42,6 @@ export default function Upgrade() {
             setPaying(false);
         }
     };
-
-    if (loading) {
-        return <UpgradePageSkeleton />;
-    }
 
     return (
         <div className="max-w-lg mx-auto">

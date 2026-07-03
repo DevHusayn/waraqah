@@ -1,10 +1,18 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { apiFetch, authFetch } from '../utils/api';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { apiFetch } from '../utils/api';
 import { clearLegacyAuthStorage, setCsrfToken, clearCsrfToken } from '../utils/csrf';
 import { clearAccessToken } from '../utils/authToken';
-import { setAuthSessionHint, clearAuthSessionHint } from '../utils/authHint';
+import {
+    setAuthSessionHint,
+    clearAuthSessionHint,
+    hasLikelyAuthSession,
+    cacheUserProfile,
+    getCachedUserProfile,
+    clearUserProfileCache,
+} from '../utils/authHint';
 
 const AuthContext = createContext(null);
+const AUTH_PROBE_TIMEOUT_MS = 8000;
 
 export function useAuth() {
     const context = useContext(AuthContext);
@@ -15,36 +23,55 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const likelySessionRef = useRef(hasLikelyAuthSession());
+    const [user, setUser] = useState(() =>
+        likelySessionRef.current ? getCachedUserProfile() : null
+    );
+    const [resolving, setResolving] = useState(true);
+
+    const clearSession = useCallback(() => {
+        clearCsrfToken();
+        clearAccessToken();
+        clearAuthSessionHint();
+        clearUserProfileCache();
+        setUser(null);
+        likelySessionRef.current = false;
+    }, []);
+
+    const applySessionUser = useCallback((nextUser) => {
+        setUser(nextUser || null);
+        if (nextUser) {
+            cacheUserProfile(nextUser);
+            setAuthSessionHint();
+            likelySessionRef.current = true;
+        } else {
+            clearUserProfileCache();
+            clearAuthSessionHint();
+            likelySessionRef.current = false;
+        }
+    }, []);
 
     const refreshSession = useCallback(async () => {
         try {
-            const data = await apiFetch('/auth/me');
+            const data = await apiFetch('/auth/me', { timeoutMs: AUTH_PROBE_TIMEOUT_MS });
             if (data.csrfToken) {
                 setCsrfToken(data.csrfToken);
             } else if (!data.user) {
                 clearCsrfToken();
             }
-            setUser(data.user || null);
-            if (data.user) {
-                setAuthSessionHint();
-            } else {
-                clearAuthSessionHint();
-            }
+            applySessionUser(data.user || null);
             return data.user || null;
-        } catch {
-            clearCsrfToken();
-            clearAccessToken();
-            clearAuthSessionHint();
-            setUser(null);
+        } catch (err) {
+            if (err.status === 401 || !likelySessionRef.current) {
+                clearSession();
+            }
             return null;
         }
-    }, []);
+    }, [applySessionUser, clearSession]);
 
     useEffect(() => {
         clearLegacyAuthStorage();
-        refreshSession().finally(() => setLoading(false));
+        refreshSession().finally(() => setResolving(false));
     }, [refreshSession]);
 
     useEffect(() => {
@@ -52,10 +79,7 @@ export function AuthProvider({ children }) {
             refreshSession();
         };
         const onLogout = () => {
-            clearCsrfToken();
-            clearAccessToken();
-            clearAuthSessionHint();
-            setUser(null);
+            clearSession();
         };
         window.addEventListener('app-login', onLogin);
         window.addEventListener('app-logout', onLogout);
@@ -63,16 +87,14 @@ export function AuthProvider({ children }) {
             window.removeEventListener('app-login', onLogin);
             window.removeEventListener('app-logout', onLogout);
         };
-    }, [refreshSession]);
+    }, [refreshSession, clearSession]);
 
-    const setSession = useCallback((nextUser) => {
-        setUser(nextUser || null);
-        if (nextUser) {
-            setAuthSessionHint();
-        } else {
-            clearAuthSessionHint();
-        }
-    }, []);
+    const setSession = useCallback(
+        (nextUser) => {
+            applySessionUser(nextUser);
+        },
+        [applySessionUser]
+    );
 
     const logout = useCallback(async () => {
         try {
@@ -80,24 +102,28 @@ export function AuthProvider({ children }) {
         } catch {
             /* cookie cleared server-side when possible */
         }
-        setUser(null);
-        clearCsrfToken();
-        clearAccessToken();
-        clearAuthSessionHint();
+        clearSession();
         window.dispatchEvent(new Event('app-logout'));
-    }, []);
+    }, [clearSession]);
+
+    const isAuthenticated = resolving
+        ? Boolean(user) || likelySessionRef.current
+        : Boolean(user);
+
+    const loading = resolving && !likelySessionRef.current && !user;
 
     const value = useMemo(
         () => ({
             user,
             loading,
-            isAuthenticated: Boolean(user),
+            resolving,
+            isAuthenticated,
             isAdmin: Boolean(user?.isAdmin),
             setSession,
             refreshSession,
             logout,
         }),
-        [user, loading, setSession, refreshSession, logout]
+        [user, loading, resolving, isAuthenticated, setSession, refreshSession, logout]
     );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

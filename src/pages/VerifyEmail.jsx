@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { authFetch } from '../utils/api';
 import { AUTH_LOGIN_PATH } from '../constants/authRoutes';
 import WaraqahLogo from '../components/WaraqahLogo';
@@ -17,11 +17,9 @@ export default function VerifyEmail() {
 
         (async () => {
             try {
-                const data = await authFetch(`/auth/verify-email/${token}`, { method: 'POST' });
+                await authFetch(`/auth/verify-email/${token}`, { method: 'POST' });
                 if (cancelled) return;
-                setStatus('success');
-                setMessage(data.message || 'Your email has been verified.');
-                window.setTimeout(() => navigate('/', { replace: true }), 2500);
+                navigate('/', { replace: true });
             } catch (err) {
                 if (cancelled) return;
                 setStatus('error');
@@ -45,23 +43,12 @@ export default function VerifyEmail() {
                     <Spinner label="Verifying your email…" />
                 ) : (
                     <>
-                        {status === 'success' ? (
-                            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-600">
-                                <CheckCircle2 size={24} aria-hidden />
-                            </div>
-                        ) : null}
-
-                        <h1 className="text-xl font-semibold text-zinc-900">
-                            {status === 'success' ? 'Email verified' : 'Verification failed'}
-                        </h1>
+                        <h1 className="text-xl font-semibold text-zinc-900">Verification failed</h1>
                         <p className="mt-2 text-sm text-zinc-600">{message}</p>
 
-                        <Link
-                            to={status === 'success' ? '/' : AUTH_LOGIN_PATH}
-                            className="btn-primary inline-flex mt-6"
-                        >
+                        <Link to={AUTH_LOGIN_PATH} className="btn-primary inline-flex mt-6">
                             <ArrowLeft size={16} aria-hidden />
-                            {status === 'success' ? 'Continue to dashboard' : 'Back to sign in'}
+                            Back to sign in
                         </Link>
                     </>
                 )}

@@ -26,6 +26,12 @@ export default function AccountDetailsSettings() {
     } = useBusinessSettingsForm({
         validate: buildAccountFieldErrors,
         fieldOrder: ACCOUNT_FIELD_ORDER,
+        payloadKeys: [
+            'paymentAccountName',
+            'paymentBankName',
+            'paymentAccountNumber',
+            'paymentInstructions',
+        ],
         successMessage: 'Account details saved',
     });
 

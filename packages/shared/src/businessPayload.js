@@ -1,41 +1,81 @@
-import { getCompanyLogoUrl } from './brandAssets.js';
 import { PLANS } from './premium.js';
 
-export function buildBusinessInfoPayload(formData, businessInfo = {}) {
-    const plan = formData.plan ?? businessInfo.plan ?? PLANS.FREE;
-    const premium = plan === PLANS.PREMIUM;
-    const logo = premium
-        ? (formData.companyLogoUrl ??
-          formData.businessLogo ??
-          getCompanyLogoUrl(businessInfo) ??
-          '')
-        : '';
-    const logoAvatar = premium
-        ? (formData.companyLogoAvatarUrl ?? businessInfo.companyLogoAvatarUrl ?? '')
-        : '';
+const SCALAR_FIELDS = [
+    'name',
+    'address',
+    'email',
+    'phone',
+    'website',
+    'taxRate',
+    'brandColor',
+    'defaultCurrency',
+    'invoiceTemplateId',
+    'paymentAccountName',
+    'paymentBankName',
+    'paymentAccountNumber',
+    'paymentInstructions',
+    'autoEmailInvoices',
+    'plan',
+];
 
-    return {
-        name: formData.name ?? businessInfo.name ?? '',
-        address: formData.address ?? businessInfo.address ?? '',
-        email: formData.email ?? businessInfo.email ?? '',
-        phone: formData.phone ?? businessInfo.phone ?? '',
-        website: formData.website ?? businessInfo.website ?? '',
-        taxRate: formData.taxRate ?? businessInfo.taxRate ?? 10,
-        brandColor: formData.brandColor ?? businessInfo.brandColor ?? '#16A34A',
-        defaultCurrency: 'NGN',
-        businessLogo: logo,
-        companyLogoUrl: logo,
-        companyLogoAvatarUrl: logoAvatar,
-        companyStampUrl: premium ? (formData.companyStampUrl ?? businessInfo.companyStampUrl ?? '') : '',
-        authorizedSignatureUrl: premium
-            ? (formData.authorizedSignatureUrl ?? businessInfo.authorizedSignatureUrl ?? '')
-            : '',
-        paymentAccountName: formData.paymentAccountName ?? businessInfo.paymentAccountName ?? '',
-        paymentBankName: formData.paymentBankName ?? businessInfo.paymentBankName ?? '',
-        paymentAccountNumber: formData.paymentAccountNumber ?? businessInfo.paymentAccountNumber ?? '',
-        paymentInstructions: formData.paymentInstructions ?? businessInfo.paymentInstructions ?? '',
-        autoEmailInvoices: formData.autoEmailInvoices ?? businessInfo.autoEmailInvoices ?? false,
-    };
+const ASSET_FIELDS = [
+    'businessLogo',
+    'companyLogoUrl',
+    'companyLogoAvatarUrl',
+    'companyStampUrl',
+    'authorizedSignatureUrl',
+];
+
+function hasOwn(formData, key) {
+    return Object.prototype.hasOwnProperty.call(formData, key);
+}
+
+export function buildBusinessInfoPayload(formData, businessInfo = {}) {
+    const plan = hasOwn(formData, 'plan') ? formData.plan : (businessInfo.plan ?? PLANS.FREE);
+    const premium = plan === PLANS.PREMIUM;
+    const payload = {};
+
+    for (const key of SCALAR_FIELDS) {
+        if (hasOwn(formData, key)) {
+            payload[key] = formData[key];
+        }
+    }
+
+    if (hasOwn(formData, 'defaultCurrency') && payload.defaultCurrency == null) {
+        payload.defaultCurrency = 'NGN';
+    }
+
+    const hasAssetUpdate = ASSET_FIELDS.some((key) => hasOwn(formData, key));
+    if (!hasAssetUpdate) {
+        return payload;
+    }
+
+    if (!premium) {
+        for (const key of ASSET_FIELDS) {
+            if (hasOwn(formData, key)) {
+                payload[key] = '';
+            }
+        }
+        return payload;
+    }
+
+    if (hasOwn(formData, 'companyLogoUrl') || hasOwn(formData, 'businessLogo')) {
+        const logo = formData.companyLogoUrl ?? formData.businessLogo ?? '';
+        payload.companyLogoUrl = logo;
+        payload.businessLogo = logo;
+    }
+
+    if (hasOwn(formData, 'companyLogoAvatarUrl')) {
+        payload.companyLogoAvatarUrl = formData.companyLogoAvatarUrl;
+    }
+    if (hasOwn(formData, 'companyStampUrl')) {
+        payload.companyStampUrl = formData.companyStampUrl;
+    }
+    if (hasOwn(formData, 'authorizedSignatureUrl')) {
+        payload.authorizedSignatureUrl = formData.authorizedSignatureUrl;
+    }
+
+    return payload;
 }
 
 export function canPersistLogoOnServer(businessInfo) {

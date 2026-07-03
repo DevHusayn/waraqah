@@ -64,11 +64,8 @@ export function SettingsProvider({ children }) {
         return updated;
     };
 
-    const saveBusinessAsset = async (field, dataUrl, formSnapshot = {}) => {
-        const payload = buildBusinessInfoPayload(
-            { ...businessInfo, ...formSnapshot, [field]: dataUrl },
-            businessInfo
-        );
+    const saveBusinessAsset = async (field, dataUrl) => {
+        const payload = buildBusinessInfoPayload({ [field]: dataUrl }, businessInfo);
         const updated = await apiFetch('/business-info', {
             method: 'PUT',
             body: JSON.stringify(payload),

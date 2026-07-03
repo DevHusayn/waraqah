@@ -23,7 +23,7 @@ export const InvoiceProvider = ({ children }) => {
     const [productsLoading, setProductsLoading] = useState(false);
     const productsFetchedRef = useRef(false);
     const { isAuthenticated, loading: authLoading } = useAuth();
-    const shouldFetch = shouldPrefetchUserData(isAuthenticated, authLoading);
+    const shouldFetch = shouldPrefetchUserData(isAuthenticated);
 
     const mapInvoice = (i) => ({ ...i, id: i._id || i.id });
     const mapClient = (c) => ({ ...c, id: c._id || c.id });

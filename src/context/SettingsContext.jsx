@@ -42,7 +42,7 @@ export const SettingsProvider = ({ children }) => {
     const [businessInfo, setBusinessInfo] = useState(EMPTY_BUSINESS);
     const [loading, setLoading] = useState(false);
     const { isAuthenticated, loading: authLoading } = useAuth();
-    const shouldFetch = shouldPrefetchUserData(isAuthenticated, authLoading);
+    const shouldFetch = shouldPrefetchUserData(isAuthenticated);
 
     const fetchBusinessInfo = useCallback(async () => {
         if (!shouldFetch) {
@@ -90,11 +90,8 @@ export const SettingsProvider = ({ children }) => {
         return updated;
     };
 
-    const saveBusinessAsset = async (field, dataUrl, formSnapshot = {}) => {
-        const payload = buildBusinessInfoPayload(
-            { ...businessInfo, ...formSnapshot, [field]: dataUrl },
-            businessInfo
-        );
+    const saveBusinessAsset = async (field, dataUrl) => {
+        const payload = buildBusinessInfoPayload({ [field]: dataUrl }, businessInfo);
         const updated = await apiFetch('/business-info', {
             method: 'PUT',
             body: JSON.stringify(payload),
@@ -103,14 +100,9 @@ export const SettingsProvider = ({ children }) => {
         return updated;
     };
 
-    const saveCompanyLogo = async (
-        { companyLogoUrl, companyLogoAvatarUrl },
-        formSnapshot = {}
-    ) => {
+    const saveCompanyLogo = async ({ companyLogoUrl, companyLogoAvatarUrl }) => {
         const payload = buildBusinessInfoPayload(
             {
-                ...businessInfo,
-                ...formSnapshot,
                 companyLogoUrl,
                 companyLogoAvatarUrl,
                 businessLogo: companyLogoUrl,
@@ -125,8 +117,8 @@ export const SettingsProvider = ({ children }) => {
         return updated;
     };
 
-    const saveBusinessLogo = async (logoDataUrl, formSnapshot = {}) => {
-        return saveBusinessAsset('companyLogoUrl', logoDataUrl, formSnapshot);
+    const saveBusinessLogo = async (logoDataUrl) => {
+        return saveBusinessAsset('companyLogoUrl', logoDataUrl);
     };
 
     const value = {

@@ -1,13 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
-import { buildBusinessInfoPayload } from '../utils/businessPayload';
 import { firstFieldError, focusFieldById, clearFieldError } from '../utils/formFieldValidation';
 import { SETTINGS_FIELD_IDS } from '../utils/settingsValidation';
+
+function pickFormSlice(formData, keys) {
+    return Object.fromEntries(keys.map((key) => [key, formData[key]]));
+}
+
+function getSaveErrorMessage(err) {
+    const message = err?.message || '';
+    if (
+        err?.name === 'AbortError' ||
+        err?.name === 'TimeoutError' ||
+        /abort/i.test(message) ||
+        /timed out/i.test(message)
+    ) {
+        return 'The request took too long. Please check your connection and try again.';
+    }
+    return message || 'Failed to save settings';
+}
 
 export default function useBusinessSettingsForm({
     validate,
     fieldOrder,
+    payloadKeys,
     autoEditIfEmpty = false,
     successMessage = 'Settings saved successfully',
 }) {
@@ -17,6 +34,7 @@ export default function useBusinessSettingsForm({
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
     const [errors, setErrors] = useState({});
+    const savingRef = useRef(false);
 
     useEffect(() => {
         if (!isEditing) {
@@ -38,6 +56,8 @@ export default function useBusinessSettingsForm({
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (savingRef.current) return;
+
         const newErrors = validate(formData);
         const firstInvalid = firstFieldError(newErrors, fieldOrder);
         if (firstInvalid) {
@@ -45,17 +65,21 @@ export default function useBusinessSettingsForm({
             focusFieldById(SETTINGS_FIELD_IDS[firstInvalid]);
             return;
         }
+
         setErrors({});
+        savingRef.current = true;
         setSaving(true);
         try {
-            const payload = buildBusinessInfoPayload(formData, businessInfo);
-            await updateBusinessInfo(payload);
+            const update = payloadKeys ? pickFormSlice(formData, payloadKeys) : formData;
+            await updateBusinessInfo(update);
             setIsEditing(false);
             showToast(successMessage, 'success');
         } catch (err) {
-            setErrors({ submit: err.message });
-            showToast(err.message || 'Failed to save settings', 'error');
+            const message = getSaveErrorMessage(err);
+            setErrors({ submit: message });
+            showToast(message, 'error');
         } finally {
+            savingRef.current = false;
             setSaving(false);
         }
     };

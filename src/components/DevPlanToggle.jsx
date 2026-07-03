@@ -33,13 +33,10 @@ export default function DevPlanToggle({ formData, setFormData, className = '' })
 
         setSwitching(true);
         try {
-            const payload = buildBusinessInfoPayload(
-                { ...businessInfo, ...(formData || {}), plan },
-                businessInfo
-            );
+            const payload = buildBusinessInfoPayload({ plan }, businessInfo);
             const updated = await apiFetch('/business-info', {
                 method: 'PUT',
-                body: JSON.stringify({ ...payload, plan }),
+                body: JSON.stringify(payload),
             });
             await refreshBusinessInfo();
             if (setFormData) {

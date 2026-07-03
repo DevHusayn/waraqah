@@ -27,6 +27,7 @@ export default function CompanyProfileSettings() {
     } = useBusinessSettingsForm({
         validate: buildProfileFieldErrors,
         fieldOrder: PROFILE_FIELD_ORDER,
+        payloadKeys: ['name', 'address', 'email', 'phone', 'website'],
         autoEditIfEmpty: true,
         successMessage: 'Company profile saved',
     });

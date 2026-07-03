@@ -15,7 +15,6 @@ import { formatInvoiceUsageLabel } from '../utils/invoiceLimits';
 import { isPremiumUser } from '../utils/premium';
 import CustomSelect from '../components/CustomSelect';
 import Spinner from '../components/Spinner';
-import { TableSkeleton } from '../components/Skeleton';
 import FilterTabs from '../components/FilterTabs';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
@@ -122,8 +121,8 @@ const Invoices = () => {
 
                 <FilterTabs tabs={filterTabs} value={filter} onChange={setFilter} className="mb-4" />
 
-                {loading ? (
-                    <TableSkeleton rows={6} columns={6} />
+                {loading && activeInvoices.length === 0 ? (
+                    <p className="py-16 text-center text-sm text-zinc-500">Loading invoices…</p>
                 ) : displayedInvoices.length === 0 ? (
                     <div className="data-table-wrap">
                         <EmptyState

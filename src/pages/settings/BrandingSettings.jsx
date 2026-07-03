@@ -30,6 +30,7 @@ export default function BrandingSettings() {
     } = useBusinessSettingsForm({
         validate: buildBrandingFieldErrors,
         fieldOrder: BRANDING_FIELD_ORDER,
+        payloadKeys: ['brandColor'],
         successMessage: 'Branding saved',
     });
 

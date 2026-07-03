@@ -8,6 +8,17 @@ clearLegacyAuthStorage();
 const UNSAFE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const DEFAULT_TIMEOUT_MS = 20000;
 
+function isAbortLikeError(err) {
+    const candidates = [err, err?.cause].filter(Boolean);
+    return candidates.some(
+        (candidate) =>
+            candidate.name === 'AbortError' ||
+            candidate.name === 'TimeoutError' ||
+            /abort/i.test(candidate.message || '') ||
+            /timed out/i.test(candidate.message || '')
+    );
+}
+
 function createFetchSignal(options = {}) {
     if (options.signal) return { signal: options.signal, cancelTimeout: () => {} };
 
@@ -102,7 +113,7 @@ export async function apiFetch(path, options = {}) {
             signal,
         });
     } catch (err) {
-        if (err?.name === 'TimeoutError' || err?.name === 'AbortError') {
+        if (isAbortLikeError(err)) {
             throw new Error('The request took too long. Please check your connection and try again.');
         }
         throw new Error(getNetworkErrorMessage());
@@ -112,6 +123,9 @@ export async function apiFetch(path, options = {}) {
 
     if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        if (/abort/i.test(data.message || '')) {
+            throw new Error('The request took too long. Please check your connection and try again.');
+        }
         if (res.status === 401 && !path.startsWith('/auth/me')) {
             clearLegacyAuthStorage();
             clearAccessToken();
@@ -143,7 +157,7 @@ export async function authFetch(path, options = {}) {
             signal,
         });
     } catch (err) {
-        if (err?.name === 'TimeoutError' || err?.name === 'AbortError') {
+        if (isAbortLikeError(err)) {
             throw new Error('The request took too long. Please check your connection and try again.');
         }
         throw new Error(getNetworkErrorMessage());
@@ -153,6 +167,9 @@ export async function authFetch(path, options = {}) {
 
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
+        if (/abort/i.test(data.message || '')) {
+            throw new Error('The request took too long. Please check your connection and try again.');
+        }
         const err = new Error(data.message || 'Something went wrong. Please try again.');
         if (data.code) err.code = data.code;
         err.status = res.status;

@@ -5,7 +5,6 @@ import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import PageHeader from '../components/PageHeader';
 import Spinner from '../components/Spinner';
-import { StatementPageSkeleton } from '../components/Skeleton';
 import { formatCurrency } from '../utils/currency';
 import { isPremiumUser } from '../utils/premium';
 import {
@@ -45,10 +44,6 @@ export default function MonthlyStatement() {
             setExporting(false);
         }
     };
-
-    if (loading || settingsLoading) {
-        return <StatementPageSkeleton />;
-    }
 
     if (!premium) {
         return (

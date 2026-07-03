@@ -8,6 +8,33 @@ import {
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 
+const SECTION_PAYLOAD_KEYS = {
+    profile: ['name', 'address', 'email', 'phone', 'website'],
+    account: [
+        'paymentAccountName',
+        'paymentBankName',
+        'paymentAccountNumber',
+        'paymentInstructions',
+    ],
+    branding: ['brandColor'],
+    all: [
+        'name',
+        'address',
+        'email',
+        'phone',
+        'website',
+        'paymentAccountName',
+        'paymentBankName',
+        'paymentAccountNumber',
+        'paymentInstructions',
+        'brandColor',
+    ],
+};
+
+function pickFormSlice(form, keys) {
+    return Object.fromEntries(keys.map((key) => [key, form[key]]));
+}
+
 export function useSettingsForm(section = 'all') {
     const { businessInfo, updateBusinessInfo, loading } = useSettings();
     const { showToast } = useToast();
@@ -38,7 +65,8 @@ export function useSettingsForm(section = 'all') {
         if (!validate()) return false;
         setSaving(true);
         try {
-            await updateBusinessInfo(form);
+            const keys = SECTION_PAYLOAD_KEYS[section] || SECTION_PAYLOAD_KEYS.all;
+            await updateBusinessInfo(pickFormSlice(form, keys));
             showToast('Settings saved', 'success');
             return true;
         } catch (err) {

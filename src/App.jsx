@@ -17,7 +17,6 @@ import { SettingsProvider } from './context/SettingsContext';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
 import BrandTheme from './components/BrandTheme';
-import { AppContentSkeleton } from './components/Skeleton';
 
 const Invoices = lazy(() => import('./pages/Invoices'));
 const Drafts = lazy(() => import('./pages/Drafts'));
@@ -46,7 +45,7 @@ function AppLayout({ children }) {
 }
 
 function LazyPage({ children }) {
-    return <Suspense fallback={<AppContentSkeleton />}>{children}</Suspense>;
+    return <Suspense fallback={null}>{children}</Suspense>;
 }
 
 function AppProviders({ children }) {

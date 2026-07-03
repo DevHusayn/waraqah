@@ -1,16 +1,14 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { AppContentSkeleton } from '../components/Skeleton';
 
 export default function PrivateRoute({ children }) {
     const location = useLocation();
-    const { isAuthenticated, loading, user } = useAuth();
-
-    if (loading) {
-        return <AppContentSkeleton />;
-    }
+    const { isAuthenticated, loading, user, resolving } = useAuth();
 
     if (!isAuthenticated) {
+        if (loading || resolving) {
+            return null;
+        }
         const returnTo = `${location.pathname}${location.search}`;
         return <Navigate to={`/auth?returnTo=${encodeURIComponent(returnTo)}`} replace />;
     }

@@ -145,7 +145,7 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
         }
         setSavingField(field);
         try {
-            await saveBusinessAsset(field, dataUrl || '', formData);
+            await saveBusinessAsset(field, dataUrl || '');
             setFormData((prev) => ({ ...prev, [field]: dataUrl || '', plan: PLANS.PREMIUM }));
             showToast(dataUrl ? `${label} saved` : `${label} removed`, 'success');
             return true;
@@ -168,7 +168,7 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
         }
         setSavingField('companyLogoUrl');
         try {
-            await saveCompanyLogo(result, formData);
+            await saveCompanyLogo(result);
             setFormData((prev) => ({
                 ...prev,
                 companyLogoUrl: result.companyLogoUrl,
@@ -188,10 +188,7 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
         if (!premium) return;
         setSavingField('companyLogoUrl');
         try {
-            await saveCompanyLogo(
-                { companyLogoUrl: '', companyLogoAvatarUrl: '' },
-                formData
-            );
+            await saveCompanyLogo({ companyLogoUrl: '', companyLogoAvatarUrl: '' });
             setFormData((prev) => ({
                 ...prev,
                 companyLogoUrl: '',

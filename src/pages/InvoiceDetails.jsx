@@ -24,7 +24,6 @@ import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import Spinner from '../components/Spinner';
-import { DetailPageSkeleton } from '../components/Skeleton';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import MarkAsPaidModal from '../components/MarkAsPaidModal';
@@ -567,7 +566,11 @@ const InvoiceDetails = () => {
     };
 
     if (loading || resolving || !invoice) {
-        return <DetailPageSkeleton />;
+        return (
+            <div className="max-w-6xl mx-auto py-20 text-center text-sm text-zinc-500">
+                Loading invoice…
+            </div>
+        );
     }
 
     const displayNumber = getDisplayNumber(invoice) || '—';

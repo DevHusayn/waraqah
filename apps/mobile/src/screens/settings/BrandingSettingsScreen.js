@@ -44,7 +44,7 @@ export function BrandingSettingsScreen({ navigation }) {
         try {
             const dataUrl = await pickImageAsBase64();
             if (!dataUrl) return;
-            await saveBusinessAsset(field, dataUrl, form);
+            await saveBusinessAsset(field, dataUrl);
             setField(field, dataUrl);
             showToast('Image uploaded', 'success');
         } catch (err) {
