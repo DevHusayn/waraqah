@@ -161,14 +161,6 @@ function InvoiceActionsPanel({
                     hidden: !invoice?.publicToken,
                     disabled: saving,
                 },
-                {
-                    id: 'delete-receipt',
-                    label: 'Delete Receipt',
-                    icon: Trash2,
-                    onClick: onDelete,
-                    destructive: true,
-                    disabled: saving,
-                },
             ]
           : [
                 {
