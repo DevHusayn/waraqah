@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { Package } from 'lucide-react-native';
 import { formatCurrency } from '@waraqah/shared';
@@ -30,7 +30,7 @@ function filterProducts(products, query) {
 }
 
 export function ProductsScreen() {
-    const { products, addProduct, updateProduct, deleteProduct, loading, fetchUserData } = useInvoice();
+    const { products, addProduct, updateProduct, deleteProduct, productsLoading, fetchProducts } = useInvoice();
     const { showToast } = useToast();
     const [search, setSearch] = useState('');
     const [refreshing, setRefreshing] = useState(false);
@@ -40,6 +40,10 @@ export function ProductsScreen() {
     const [deleteId, setDeleteId] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const sheetRef = useRef(null);
+
+    useEffect(() => {
+        fetchProducts().catch(() => {});
+    }, [fetchProducts]);
 
     const filtered = useMemo(() => filterProducts(products, search), [products, search]);
 
@@ -104,11 +108,11 @@ export function ProductsScreen() {
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await fetchUserData();
+        await fetchProducts({ force: true });
         setRefreshing(false);
     };
 
-    if (loading && !refreshing) return <PageLoader />;
+    if (productsLoading && products.length === 0 && !refreshing) return <PageLoader />;
 
     return (
         <View style={styles.screen}>

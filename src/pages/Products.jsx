@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Edit, Trash2, Package, Search } from 'lucide-react';
 import AlertModal from '../components/AlertModal';
@@ -31,7 +31,7 @@ const COLUMNS = [
 ];
 
 export default function Products() {
-    const { products, addProduct, updateProduct, deleteProduct, loading } = useInvoice();
+    const { products, addProduct, updateProduct, deleteProduct, loading, productsLoading, fetchProducts } = useInvoice();
     const { showToast } = useToast();
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,6 +40,10 @@ export default function Products() {
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [confirm, setConfirm] = useState({ open: false, productId: null });
     const [deleting, setDeleting] = useState(false);
+
+    useEffect(() => {
+        fetchProducts().catch(() => {});
+    }, [fetchProducts]);
 
     const filteredProducts = useMemo(
         () => filterProducts(products, search),
@@ -107,7 +111,7 @@ export default function Products() {
         }
     };
 
-    if (loading) return <PageLoader />;
+    if (productsLoading && products.length === 0) return <PageLoader />;
 
     return (
         <>

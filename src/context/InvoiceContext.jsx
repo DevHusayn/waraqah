@@ -1,8 +1,8 @@
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { apiFetch } from '../utils/api';
 import { useAuth } from './AuthContext';
 import { shouldPrefetchUserData } from '../utils/authHint';
-import { invoicesNeedingOverdueSync, isDraft } from '../utils/invoiceHelpers';
+import { isDraft } from '../utils/invoiceHelpers';
 
 const InvoiceContext = createContext();
 
@@ -20,6 +20,8 @@ export const InvoiceProvider = ({ children }) => {
     const [products, setProducts] = useState([]);
     const [invoiceUsage, setInvoiceUsage] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [productsLoading, setProductsLoading] = useState(false);
+    const productsFetchedRef = useRef(false);
     const { isAuthenticated, loading: authLoading } = useAuth();
     const shouldFetch = shouldPrefetchUserData(isAuthenticated, authLoading);
 
@@ -27,21 +29,33 @@ export const InvoiceProvider = ({ children }) => {
     const mapClient = (c) => ({ ...c, id: c._id || c.id });
     const mapProduct = (p) => ({ ...p, id: p._id || p.id });
 
-    const syncOverdueStatuses = useCallback(async (invoiceList) => {
-        const toUpdate = invoicesNeedingOverdueSync(invoiceList);
-        if (toUpdate.length === 0) return invoiceList;
-
-        await Promise.all(
-            toUpdate.map((inv) =>
-                apiFetch(`/invoices/${inv.id}`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ ...inv, status: 'overdue' }),
-                })
-            )
-        );
-        const refreshed = await apiFetch('/invoices');
-        return refreshed.map(mapInvoice);
+    const refreshInvoices = useCallback(async () => {
+        const [inv, usage] = await Promise.all([
+            apiFetch('/invoices'),
+            apiFetch('/invoices/usage').catch(() => null),
+        ]);
+        setInvoices(inv.map(mapInvoice));
+        if (usage) setInvoiceUsage(usage);
     }, []);
+
+    const fetchProducts = useCallback(async ({ force = false } = {}) => {
+        if (!shouldFetch && !isAuthenticated) return [];
+        if (productsFetchedRef.current && !force) return;
+
+        setProductsLoading(true);
+        try {
+            const pro = await apiFetch('/products');
+            const mapped = pro.map(mapProduct);
+            setProducts(mapped);
+            productsFetchedRef.current = true;
+            return mapped;
+        } catch {
+            setProducts([]);
+            return [];
+        } finally {
+            setProductsLoading(false);
+        }
+    }, [shouldFetch, isAuthenticated]);
 
     const fetchUserData = useCallback(async () => {
         if (!shouldFetch) {
@@ -50,40 +64,29 @@ export const InvoiceProvider = ({ children }) => {
                 setClients([]);
                 setProducts([]);
                 setInvoiceUsage(null);
+                productsFetchedRef.current = false;
             }
             setLoading(false);
             return;
         }
         setLoading(true);
         try {
-            const [inv, cli, pro, usage] = await Promise.all([
+            const [inv, cli, usage] = await Promise.all([
                 apiFetch('/invoices'),
                 apiFetch('/clients'),
-                apiFetch('/products').catch(() => []),
                 apiFetch('/invoices/usage').catch(() => null),
             ]);
-            const mappedInvoices = inv.map(mapInvoice);
             setInvoiceUsage(usage);
-            setInvoices(mappedInvoices);
+            setInvoices(inv.map(mapInvoice));
             setClients(cli.map(mapClient));
-            setProducts(pro.map(mapProduct));
-            setLoading(false);
-
-            syncOverdueStatuses(mappedInvoices)
-                .then((synced) => {
-                    if (synced !== mappedInvoices) {
-                        setInvoices(synced);
-                    }
-                })
-                .catch(() => {});
         } catch {
             setInvoices([]);
             setClients([]);
-            setProducts([]);
             setInvoiceUsage(null);
+        } finally {
             setLoading(false);
         }
-    }, [shouldFetch, authLoading, isAuthenticated, syncOverdueStatuses]);
+    }, [shouldFetch, authLoading, isAuthenticated]);
 
     useEffect(() => {
         fetchUserData();
@@ -94,6 +97,8 @@ export const InvoiceProvider = ({ children }) => {
             setProducts([]);
             setInvoiceUsage(null);
             setLoading(false);
+            setProductsLoading(false);
+            productsFetchedRef.current = false;
         };
         window.addEventListener('app-login', onLogin);
         window.addEventListener('app-logout', onLogout);
@@ -108,6 +113,7 @@ export const InvoiceProvider = ({ children }) => {
         setClients([]);
         setProducts([]);
         setInvoiceUsage(null);
+        productsFetchedRef.current = false;
     };
 
     const addInvoice = async (invoice, options = {}) => {
@@ -120,7 +126,7 @@ export const InvoiceProvider = ({ children }) => {
             setInvoices((prev) => [mapped, ...prev.filter((inv) => inv.id !== mapped.id)]);
             return mapped;
         }
-        await fetchUserData();
+        await refreshInvoices();
         return mapped;
     };
 
@@ -136,7 +142,7 @@ export const InvoiceProvider = ({ children }) => {
 
     const deleteInvoice = async (id) => {
         await apiFetch(`/invoices/${id}`, { method: 'DELETE' });
-        setInvoices(invoices.filter((inv) => inv.id !== id));
+        setInvoices((prev) => prev.filter((inv) => inv.id !== id));
     };
 
     const sendInvoiceEmailToClient = async (id) =>
@@ -153,8 +159,9 @@ export const InvoiceProvider = ({ children }) => {
             method: 'POST',
             body: JSON.stringify(client),
         });
-        await fetchUserData();
-        return { ...newClient, id: newClient._id };
+        const mapped = mapClient(newClient);
+        setClients((prev) => [...prev, mapped]);
+        return mapped;
     };
 
     const updateClient = async (id, updatedClient) => {
@@ -162,13 +169,14 @@ export const InvoiceProvider = ({ children }) => {
             method: 'PUT',
             body: JSON.stringify(updatedClient),
         });
-        const mapped = { ...updated, id: updated._id };
-        setClients(clients.map((client) => (client.id === id ? mapped : client)));
+        const mapped = mapClient(updated);
+        setClients((prev) => prev.map((client) => (client.id === id ? mapped : client)));
+        return mapped;
     };
 
     const deleteClient = async (id) => {
         await apiFetch(`/clients/${id}`, { method: 'DELETE' });
-        setClients(clients.filter((client) => client.id !== id));
+        setClients((prev) => prev.filter((client) => client.id !== id));
     };
 
     const addProduct = async (product) => {
@@ -176,8 +184,10 @@ export const InvoiceProvider = ({ children }) => {
             method: 'POST',
             body: JSON.stringify(product),
         });
-        await fetchUserData();
-        return { ...newProduct, id: newProduct._id };
+        const mapped = mapProduct(newProduct);
+        setProducts((prev) => [...prev, mapped]);
+        productsFetchedRef.current = true;
+        return mapped;
     };
 
     const updateProduct = async (id, updatedProduct) => {
@@ -185,13 +195,14 @@ export const InvoiceProvider = ({ children }) => {
             method: 'PUT',
             body: JSON.stringify(updatedProduct),
         });
-        const mapped = { ...updated, id: updated._id };
-        setProducts(products.map((product) => (product.id === id ? mapped : product)));
+        const mapped = mapProduct(updated);
+        setProducts((prev) => prev.map((product) => (product.id === id ? mapped : product)));
+        return mapped;
     };
 
     const deleteProduct = async (id) => {
         await apiFetch(`/products/${id}`, { method: 'DELETE' });
-        setProducts(products.filter((product) => product.id !== id));
+        setProducts((prev) => prev.filter((product) => product.id !== id));
     };
 
     const draftInvoices = useMemo(
@@ -221,8 +232,11 @@ export const InvoiceProvider = ({ children }) => {
         updateProduct,
         deleteProduct,
         fetchUserData,
+        fetchProducts,
+        refreshInvoices,
         resetAll,
         loading,
+        productsLoading,
     };
 
     return (

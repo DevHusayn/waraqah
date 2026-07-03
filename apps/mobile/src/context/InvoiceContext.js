@@ -1,7 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '../api/client';
 import { getToken } from '../api/storage';
-import { invoicesNeedingOverdueSync, isDraft } from '@waraqah/shared';
+import { isDraft } from '@waraqah/shared';
 import { useAuth } from './AuthContext';
 
 const InvoiceContext = createContext(null);
@@ -13,25 +13,41 @@ export function InvoiceProvider({ children }) {
     const [products, setProducts] = useState([]);
     const [invoiceUsage, setInvoiceUsage] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [productsLoading, setProductsLoading] = useState(false);
+    const productsFetchedRef = useRef(false);
 
     const mapInvoice = (i) => ({ ...i, id: i._id || i.id });
     const mapClient = (c) => ({ ...c, id: c._id || c.id });
     const mapProduct = (p) => ({ ...p, id: p._id || p.id });
 
-    const syncOverdueStatuses = async (invoiceList) => {
-        const toUpdate = invoicesNeedingOverdueSync(invoiceList);
-        if (toUpdate.length === 0) return invoiceList;
-        await Promise.all(
-            toUpdate.map((inv) =>
-                apiFetch(`/invoices/${inv.id}`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ ...inv, status: 'overdue' }),
-                })
-            )
-        );
-        const refreshed = await apiFetch('/invoices');
-        return refreshed.map(mapInvoice);
-    };
+    const refreshInvoices = useCallback(async () => {
+        const [inv, usage] = await Promise.all([
+            apiFetch('/invoices'),
+            apiFetch('/invoices/usage').catch(() => null),
+        ]);
+        setInvoices(inv.map(mapInvoice));
+        if (usage) setInvoiceUsage(usage);
+    }, []);
+
+    const fetchProducts = useCallback(async ({ force = false } = {}) => {
+        const token = await getToken();
+        if (!token) return [];
+        if (productsFetchedRef.current && !force) return;
+
+        setProductsLoading(true);
+        try {
+            const pro = await apiFetch('/products');
+            const mapped = pro.map(mapProduct);
+            setProducts(mapped);
+            productsFetchedRef.current = true;
+            return mapped;
+        } catch {
+            setProducts([]);
+            return [];
+        } finally {
+            setProductsLoading(false);
+        }
+    }, []);
 
     const fetchUserData = useCallback(async () => {
         const token = await getToken();
@@ -40,27 +56,23 @@ export function InvoiceProvider({ children }) {
             setClients([]);
             setProducts([]);
             setInvoiceUsage(null);
+            productsFetchedRef.current = false;
             setLoading(false);
             return;
         }
         setLoading(true);
         try {
-            const [inv, cli, pro, usage] = await Promise.all([
+            const [inv, cli, usage] = await Promise.all([
                 apiFetch('/invoices'),
                 apiFetch('/clients'),
-                apiFetch('/products').catch(() => []),
                 apiFetch('/invoices/usage').catch(() => null),
             ]);
             setInvoiceUsage(usage);
-            let mappedInvoices = inv.map(mapInvoice);
-            mappedInvoices = await syncOverdueStatuses(mappedInvoices);
-            setInvoices(mappedInvoices);
+            setInvoices(inv.map(mapInvoice));
             setClients(cli.map(mapClient));
-            setProducts(pro.map(mapProduct));
         } catch {
             setInvoices([]);
             setClients([]);
-            setProducts([]);
             setInvoiceUsage(null);
         } finally {
             setLoading(false);
@@ -74,6 +86,7 @@ export function InvoiceProvider({ children }) {
             setClients([]);
             setProducts([]);
             setInvoiceUsage(null);
+            productsFetchedRef.current = false;
             setLoading(false);
         }
     }, [sessionVersion, isAuthenticated, fetchUserData]);
@@ -83,6 +96,7 @@ export function InvoiceProvider({ children }) {
         setClients([]);
         setProducts([]);
         setInvoiceUsage(null);
+        productsFetchedRef.current = false;
     };
 
     const addInvoice = async (invoice, options = {}) => {
@@ -95,7 +109,7 @@ export function InvoiceProvider({ children }) {
             setInvoices((prev) => [mapped, ...prev.filter((inv) => inv.id !== mapped.id)]);
             return mapped;
         }
-        await fetchUserData();
+        await refreshInvoices();
         return mapped;
     };
 
@@ -119,8 +133,9 @@ export function InvoiceProvider({ children }) {
             method: 'POST',
             body: JSON.stringify(client),
         });
-        await fetchUserData();
-        return { ...newClient, id: newClient._id };
+        const mapped = mapClient(newClient);
+        setClients((prev) => [...prev, mapped]);
+        return mapped;
     };
 
     const updateClient = async (id, updatedClient) => {
@@ -128,7 +143,7 @@ export function InvoiceProvider({ children }) {
             method: 'PUT',
             body: JSON.stringify(updatedClient),
         });
-        const mapped = { ...updated, id: updated._id };
+        const mapped = mapClient(updated);
         setClients((prev) => prev.map((c) => (c.id === id ? mapped : c)));
         return mapped;
     };
@@ -143,8 +158,10 @@ export function InvoiceProvider({ children }) {
             method: 'POST',
             body: JSON.stringify(product),
         });
-        await fetchUserData();
-        return { ...newProduct, id: newProduct._id };
+        const mapped = mapProduct(newProduct);
+        setProducts((prev) => [...prev, mapped]);
+        productsFetchedRef.current = true;
+        return mapped;
     };
 
     const updateProduct = async (id, updatedProduct) => {
@@ -152,7 +169,7 @@ export function InvoiceProvider({ children }) {
             method: 'PUT',
             body: JSON.stringify(updatedProduct),
         });
-        const mapped = { ...updated, id: updated._id };
+        const mapped = mapProduct(updated);
         setProducts((prev) => prev.map((p) => (p.id === id ? mapped : p)));
         return mapped;
     };
@@ -179,6 +196,7 @@ export function InvoiceProvider({ children }) {
                 products,
                 invoiceUsage,
                 loading,
+                productsLoading,
                 addInvoice,
                 updateInvoice,
                 deleteInvoice,
@@ -189,6 +207,8 @@ export function InvoiceProvider({ children }) {
                 updateProduct,
                 deleteProduct,
                 fetchUserData,
+                fetchProducts,
+                refreshInvoices,
                 resetAll,
             }}
         >

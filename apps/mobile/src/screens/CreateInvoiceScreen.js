@@ -33,7 +33,7 @@ function Section({ title, open, onToggle, children }) {
 
 export function CreateInvoiceScreen({ route, navigation }) {
     const editId = route.params?.id;
-    const { clients, invoices, products, addInvoice, updateInvoice } = useInvoice();
+    const { clients, invoices, products, addInvoice, updateInvoice, fetchProducts } = useInvoice();
     const { showToast } = useToast();
     const limitModalRef = useRef(null);
     const { invoiceUsage, tryCreate, goUpgrade } = useInvoiceCreateGuard(limitModalRef, navigation);
@@ -54,6 +54,10 @@ export function CreateInvoiceScreen({ route, navigation }) {
         recurringFrequency: 'monthly',
         recurringEndDate: '',
     });
+
+    useEffect(() => {
+        fetchProducts().catch(() => {});
+    }, [fetchProducts]);
 
     useEffect(() => {
         if (!editId) {

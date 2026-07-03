@@ -9,6 +9,23 @@ export default defineConfig({
             '@waraqah/shared': path.resolve(__dirname, 'packages/shared/src/index.js'),
         },
     },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (id.includes('node_modules/jspdf') || id.includes('node_modules/pdf-lib')) {
+                        return 'pdf';
+                    }
+                    if (id.includes('node_modules/@sentry')) {
+                        return 'sentry';
+                    }
+                    if (id.includes('node_modules/date-fns')) {
+                        return 'date-fns';
+                    }
+                },
+            },
+        },
+    },
     server: {
         port: 5173,
         strictPort: false,

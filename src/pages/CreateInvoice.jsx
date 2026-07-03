@@ -67,7 +67,8 @@ const CreateInvoice = () => {
         addInvoice,
         updateInvoice,
         invoices,
-        fetchUserData,
+        refreshInvoices,
+        fetchProducts,
         sendInvoiceEmailToClient,
     } = useInvoice();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen } = useInvoiceCreateGuard();
@@ -117,6 +118,10 @@ const CreateInvoice = () => {
             draftIdRef.current = id;
         }
     }, [id]);
+
+    useEffect(() => {
+        fetchProducts().catch(() => {});
+    }, [fetchProducts]);
 
     useEffect(() => {
         if (!id) return;
@@ -447,7 +452,7 @@ const CreateInvoice = () => {
         setShareModal(null);
         sharePdfRef.current = null;
         setSharePdfReady(false);
-        fetchUserData().catch(() => { });
+        refreshInvoices().catch(() => { });
         navigate('/invoices');
     };
 

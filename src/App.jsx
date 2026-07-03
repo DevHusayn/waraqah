@@ -1,46 +1,52 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Layout from './components/Layout';
 import Home from './pages/Home';
-import Dashboard from './pages/Dashboard';
-import Invoices from './pages/Invoices';
-import Drafts from './pages/Drafts';
-import CreateInvoice from './pages/CreateInvoice';
-import InvoiceDetails from './pages/InvoiceDetails';
-import Clients from './pages/Clients';
-import Products from './pages/Products';
-import SettingsLayout from './pages/settings/SettingsLayout';
-import SettingsIndex from './pages/settings/SettingsIndex';
-import BusinessSettingsIndex from './pages/settings/BusinessSettingsIndex';
-import CompanyProfileSettings from './pages/settings/CompanyProfileSettings';
-import AccountDetailsSettings from './pages/settings/AccountDetailsSettings';
-import BrandingSettings from './pages/settings/BrandingSettings';
-import PlanBillingSettings from './pages/settings/PlanBillingSettings';
-import TermsSettings from './pages/settings/TermsSettings';
-import PrivacySettings from './pages/settings/PrivacySettings';
-import AboutSettings from './pages/settings/AboutSettings';
-import TermsPage from './pages/legal/TermsPage';
-import PrivacyPage from './pages/legal/PrivacyPage';
-import NotificationSettings from './pages/settings/NotificationSettings';
 import Auth from './pages/Auth';
 import CheckEmailPage from './pages/CheckEmail';
 import ResetPassword from './pages/ResetPassword';
 import VerifyEmail from './pages/VerifyEmail';
 import PublicInvoice from './pages/PublicInvoice';
+import TermsPage from './pages/legal/TermsPage';
+import PrivacyPage from './pages/legal/PrivacyPage';
 import PrivateRoute from './utils/PrivateRoute';
 import AdminRoute from './utils/AdminRoute';
-import AdminDashboard from './pages/AdminDashboard';
-import Upgrade from './pages/Upgrade';
-import UpgradeCallback from './pages/UpgradeCallback';
-import MonthlyStatement from './pages/MonthlyStatement';
 import { InvoiceProvider } from './context/InvoiceContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
 import BrandTheme from './components/BrandTheme';
+import { AppContentSkeleton } from './components/Skeleton';
+
+const Invoices = lazy(() => import('./pages/Invoices'));
+const Drafts = lazy(() => import('./pages/Drafts'));
+const CreateInvoice = lazy(() => import('./pages/CreateInvoice'));
+const InvoiceDetails = lazy(() => import('./pages/InvoiceDetails'));
+const Clients = lazy(() => import('./pages/Clients'));
+const Products = lazy(() => import('./pages/Products'));
+const SettingsLayout = lazy(() => import('./pages/settings/SettingsLayout'));
+const SettingsIndex = lazy(() => import('./pages/settings/SettingsIndex'));
+const BusinessSettingsIndex = lazy(() => import('./pages/settings/BusinessSettingsIndex'));
+const CompanyProfileSettings = lazy(() => import('./pages/settings/CompanyProfileSettings'));
+const AccountDetailsSettings = lazy(() => import('./pages/settings/AccountDetailsSettings'));
+const BrandingSettings = lazy(() => import('./pages/settings/BrandingSettings'));
+const PlanBillingSettings = lazy(() => import('./pages/settings/PlanBillingSettings'));
+const TermsSettings = lazy(() => import('./pages/settings/TermsSettings'));
+const PrivacySettings = lazy(() => import('./pages/settings/PrivacySettings'));
+const AboutSettings = lazy(() => import('./pages/settings/AboutSettings'));
+const NotificationSettings = lazy(() => import('./pages/settings/NotificationSettings'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const Upgrade = lazy(() => import('./pages/Upgrade'));
+const UpgradeCallback = lazy(() => import('./pages/UpgradeCallback'));
+const MonthlyStatement = lazy(() => import('./pages/MonthlyStatement'));
 
 function AppLayout({ children }) {
     return <Layout>{children}</Layout>;
+}
+
+function LazyPage({ children }) {
+    return <Suspense fallback={<AppContentSkeleton />}>{children}</Suspense>;
 }
 
 function AppProviders({ children }) {
@@ -70,12 +76,13 @@ function App() {
                             <Route path="/terms" element={<TermsPage />} />
                             <Route path="/privacy" element={<PrivacyPage />} />
 
-                            {/* Public so Paystack redirect always loads the app (verify needs login) */}
                             <Route
                                 path="/upgrade/callback"
                                 element={
                                     <AppLayout>
-                                        <UpgradeCallback />
+                                        <LazyPage>
+                                            <UpgradeCallback />
+                                        </LazyPage>
                                     </AppLayout>
                                 }
                             />
@@ -84,6 +91,7 @@ function App() {
                                 path="/*"
                                 element={
                                     <AppLayout>
+                                        <LazyPage>
                                         <Routes>
                                             <Route path="/invoices" element={<PrivateRoute><Invoices /></PrivateRoute>} />
                                             <Route path="/invoices/drafts" element={<PrivateRoute><Drafts /></PrivateRoute>} />
@@ -109,6 +117,7 @@ function App() {
                                             <Route path="/upgrade" element={<PrivateRoute><Upgrade /></PrivateRoute>} />
                                             <Route path="/admin" element={<PrivateRoute><AdminRoute><AdminDashboard /></AdminRoute></PrivateRoute>} />
                                         </Routes>
+                                        </LazyPage>
                                     </AppLayout>
                                 }
                             />
