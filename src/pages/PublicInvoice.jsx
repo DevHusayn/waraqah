@@ -125,36 +125,11 @@ export default function PublicInvoice() {
     return (
         <div className="min-h-screen bg-slate-50 py-8 px-4">
             <div className="max-w-3xl mx-auto">
-                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mb-4">
                     <p className="text-sm text-zinc-600">
                         {showReceipt ? 'Receipt' : 'Invoice'} from {business?.name || 'Business'}
                     </p>
-                    <div className="flex flex-wrap gap-2">
-                        <button
-                            type="button"
-                            className="btn-secondary inline-flex items-center gap-2"
-                            onClick={handleDownloadPdf}
-                            disabled={pdfBusy}
-                        >
-                            {pdfBusy ? <Spinner size="sm" inline /> : <Download size={16} aria-hidden />}
-                            {downloadLabel}
-                        </button>
-                        <button
-                            type="button"
-                            className="btn-secondary inline-flex items-center gap-2"
-                            onClick={handlePrintPdf}
-                            disabled={pdfBusy}
-                        >
-                            <Printer size={16} aria-hidden />
-                            Print
-                        </button>
-                    </div>
                 </div>
-                {pdfError ? (
-                    <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                        {pdfError}
-                    </p>
-                ) : null}
                 <div className="card !p-0 overflow-hidden shadow-card border border-zinc-200">
                     <div
                         className="px-6 sm:px-8 py-6 border-b border-zinc-200"
@@ -322,6 +297,33 @@ export default function PublicInvoice() {
                             </div>
                         ) : null}
                     </div>
+                </div>
+
+                {pdfError ? (
+                    <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {pdfError}
+                    </p>
+                ) : null}
+
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full mt-6">
+                    <button
+                        type="button"
+                        onClick={handleDownloadPdf}
+                        disabled={pdfBusy}
+                        className="btn-primary w-full text-sm py-2.5 px-4 gap-2 min-h-[44px]"
+                    >
+                        {pdfBusy ? <Spinner size="sm" inline /> : <Download className="h-4 w-4" aria-hidden />}
+                        {downloadLabel}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handlePrintPdf}
+                        disabled={pdfBusy}
+                        className="btn-secondary w-full text-sm py-2.5 px-4 gap-2 min-h-[44px]"
+                    >
+                        <Printer className="h-4 w-4" aria-hidden />
+                        Print
+                    </button>
                 </div>
 
                 <footer className="mt-8 text-center text-xs text-zinc-500">

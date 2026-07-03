@@ -77,28 +77,7 @@ export default function MonthlyStatement() {
             <PageHeader
                 title="Monthly statement"
                 subtitle="Billing summary by client for the selected month"
-            >
-                <div className="flex flex-col sm:flex-row gap-2">
-                    <button
-                        type="button"
-                        onClick={() => handlePdf(false)}
-                        disabled={exporting}
-                        className="btn-primary"
-                    >
-                        <Download className="h-4 w-4" />
-                        {exporting ? 'Preparing…' : 'Download PDF'}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => handlePdf(true)}
-                        disabled={exporting}
-                        className="btn-secondary"
-                    >
-                        <Printer className="h-4 w-4" />
-                        Print
-                    </button>
-                </div>
-            </PageHeader>
+            />
 
             <div className="card mb-6 flex flex-col sm:flex-row sm:items-end gap-4">
                 <div className="flex-1">
@@ -233,6 +212,27 @@ export default function MonthlyStatement() {
                         </table>
                     </div>
                 )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full mt-6">
+                <button
+                    type="button"
+                    onClick={() => handlePdf(false)}
+                    disabled={exporting}
+                    className="btn-primary w-full text-sm py-2.5 px-4 gap-2 min-h-[44px]"
+                >
+                    <Download className="h-4 w-4" />
+                    {exporting ? 'Preparing…' : 'Download PDF'}
+                </button>
+                <button
+                    type="button"
+                    onClick={() => handlePdf(true)}
+                    disabled={exporting}
+                    className="btn-secondary w-full text-sm py-2.5 px-4 gap-2 min-h-[44px]"
+                >
+                    <Printer className="h-4 w-4" />
+                    Print
+                </button>
             </div>
         </div>
     );

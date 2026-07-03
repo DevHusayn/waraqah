@@ -8,9 +8,18 @@ export default function ProfileFormFields({
     onChange,
     idPrefix = 'settings-',
     emailInputId,
+    autoCompleteSection,
 }) {
     const fieldId = (key) => `${idPrefix}${key}`;
     const businessEmailId = emailInputId || fieldId('email');
+    const autoComplete = (token) =>
+        autoCompleteSection ? `${autoCompleteSection} ${token}` : token;
+
+    const syncAddressAutofill = (value) => {
+        if (!value) return;
+        onChange({ target: { name: 'address', value } });
+    };
+
     return (
         <div className="space-y-5">
             <div>
@@ -23,6 +32,7 @@ export default function ProfileFormFields({
                     onChange={onChange}
                     className={inputClass(Boolean(errors.name))}
                     placeholder="e.g. Waraqah Invoice"
+                    autoComplete={autoComplete('organization')}
                     aria-invalid={Boolean(errors.name)}
                 />
                 <FieldValidationMessage message={errors.name} />
@@ -30,6 +40,15 @@ export default function ProfileFormFields({
 
             <div>
                 <RequiredLabel htmlFor={fieldId('address')}>Business address</RequiredLabel>
+                {/* Hidden input catches browser address autofill (Chrome targets inputs, not textareas). */}
+                <input
+                    type="text"
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    autoComplete={autoComplete('street-address')}
+                    className="sr-only"
+                    onChange={(e) => syncAddressAutofill(e.target.value)}
+                />
                 <textarea
                     id={fieldId('address')}
                     name="address"
@@ -38,6 +57,7 @@ export default function ProfileFormFields({
                     className={inputClass(Boolean(errors.address), 'resize-none min-h-[88px]')}
                     rows={3}
                     placeholder="123 Asokoro, Abuja"
+                    autoComplete="off"
                     aria-invalid={Boolean(errors.address)}
                 />
                 <FieldValidationMessage message={errors.address} />
@@ -54,6 +74,7 @@ export default function ProfileFormFields({
                         onChange={onChange}
                         className={inputClass(Boolean(errors.email))}
                         placeholder="contact@company.com"
+                        autoComplete={autoComplete('email')}
                         aria-invalid={Boolean(errors.email)}
                     />
                     <FieldValidationMessage message={errors.email} />
@@ -68,6 +89,7 @@ export default function ProfileFormFields({
                         onChange={onChange}
                         className={inputClass(Boolean(errors.phone))}
                         placeholder="+234 818 121 0108"
+                        autoComplete={autoComplete('tel')}
                         aria-invalid={Boolean(errors.phone)}
                     />
                     <FieldValidationMessage message={errors.phone} />
@@ -86,6 +108,7 @@ export default function ProfileFormFields({
                     onChange={onChange}
                     className="input-field"
                     placeholder="https://www.example.com"
+                    autoComplete={autoComplete('url')}
                 />
             </div>
         </div>

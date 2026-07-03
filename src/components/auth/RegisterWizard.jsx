@@ -403,13 +403,16 @@ export default function RegisterWizard({ returnTo }) {
                 )}
 
                 {step === 2 && (
-                    <ProfileFormFields
-                        formData={profileFormData}
-                        errors={profileErrors}
-                        onChange={handleProfileChange}
-                        idPrefix="reg-"
-                        emailInputId="reg-business-email"
-                    />
+                    <form autoComplete="on" noValidate onSubmit={(e) => e.preventDefault()}>
+                        <ProfileFormFields
+                            formData={profileFormData}
+                            errors={profileErrors}
+                            onChange={handleProfileChange}
+                            idPrefix="reg-"
+                            emailInputId="reg-business-email"
+                            autoCompleteSection="section-business"
+                        />
+                    </form>
                 )}
 
                 {step === 3 && (
