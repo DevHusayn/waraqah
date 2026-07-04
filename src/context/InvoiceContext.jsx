@@ -151,6 +151,18 @@ export const InvoiceProvider = ({ children }) => {
     const sendPaymentReminderToClient = async (id) =>
         apiFetch(`/invoices/${id}/send-reminder`, { method: 'POST' });
 
+    const markInvoiceReminderSent = (id, lastPaymentReminderAt) => {
+        const sentAt = lastPaymentReminderAt || new Date().toISOString();
+        setInvoices((prev) =>
+            prev.map((inv) =>
+                String(inv.id) === String(id) || String(inv._id) === String(id)
+                    ? { ...inv, lastPaymentReminderAt: sentAt }
+                    : inv
+            )
+        );
+        return sentAt;
+    };
+
     const sendReceiptEmailToClient = async (id) =>
         apiFetch(`/invoices/${id}/send-receipt`, { method: 'POST' });
 
@@ -224,6 +236,7 @@ export const InvoiceProvider = ({ children }) => {
         deleteInvoice,
         sendInvoiceEmailToClient,
         sendPaymentReminderToClient,
+        markInvoiceReminderSent,
         sendReceiptEmailToClient,
         addClient,
         updateClient,

@@ -28,6 +28,7 @@ const EMPTY_BUSINESS = {
     paymentInstructions: '',
     invoiceTemplateId: 'classic',
     autoEmailInvoices: false,
+    autoPaymentReminders: true,
 };
 
 export const useSettings = () => {

@@ -17,3 +17,4 @@ export * from './pricing.js';
 export * from './planFeatures.js';
 export * from './settingsValidation.js';
 export * from './registerValidation.js';
+export * from './paymentReminders.js';

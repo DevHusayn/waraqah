@@ -43,6 +43,13 @@ import {
 } from '../utils/receiptHelpers';
 import { getPublicInvoiceUrl } from '../utils/publicApi';
 import { apiFetch } from '../utils/api';
+import {
+    canSendPaymentReminderNow,
+    getNextPaymentReminderDate,
+    isAutoPaymentRemindersEnabled,
+    PAYMENT_REMINDER_DUE_WINDOW_DAYS,
+    PAYMENT_REMINDER_MIN_DAYS_BETWEEN,
+} from '@waraqah/shared';
 
 function mapInvoiceRecord(invoice) {
     return { ...invoice, id: invoice._id || invoice.id };
@@ -87,6 +94,38 @@ function DocumentTypeToggle({ documentMode, onDocumentModeChange }) {
     );
 }
 
+function PaymentReminderInfo({ reminderContext }) {
+    if (!reminderContext) return null;
+
+    return (
+        <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 space-y-1.5 text-sm text-zinc-600">
+            <p className="font-medium text-zinc-800 flex items-center gap-1.5">
+                <Bell size={14} aria-hidden />
+                Payment reminders
+            </p>
+            {reminderContext.lastSentLabel ? (
+                <p>Last reminder sent: {reminderContext.lastSentLabel}</p>
+            ) : (
+                <p>No reminder sent yet for this invoice.</p>
+            )}
+            {reminderContext.nextAvailableLabel ? (
+                <p>{reminderContext.nextAvailableLabel}</p>
+            ) : null}
+            {reminderContext.autoRemindersOn ? (
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                    Automatic reminders are on. Waraqah may email your client when payment is due within{' '}
+                    {PAYMENT_REMINDER_DUE_WINDOW_DAYS} days or overdue, at most once every{' '}
+                    {PAYMENT_REMINDER_MIN_DAYS_BETWEEN} days.
+                </p>
+            ) : (
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                    Turn on automatic reminders in Settings → Notifications if you want Waraqah to follow up for you.
+                </p>
+            )}
+        </div>
+    );
+}
+
 function InvoiceActionsPanel({
     invoice,
     paid,
@@ -96,6 +135,8 @@ function InvoiceActionsPanel({
     canEdit,
     canEmailClient,
     canSendReminder,
+    canSendReminderNow,
+    reminderContext,
     canResendReceipt,
     saving,
     emailing,
@@ -185,7 +226,7 @@ function InvoiceActionsPanel({
                     icon: Bell,
                     onClick: onSendReminder,
                     hidden: !canSendReminder,
-                    disabled: actionsDisabled,
+                    disabled: actionsDisabled || !canSendReminderNow,
                 },
                 {
                     id: 'copy-public-link',
@@ -282,6 +323,8 @@ function InvoiceActionsPanel({
                         />
                     </div>
                 ) : null}
+
+                {reminderContext ? <PaymentReminderInfo reminderContext={reminderContext} /> : null}
             </div>
         </div>
     );
@@ -292,7 +335,7 @@ const InvoiceDetails = () => {
     const [searchParams] = useSearchParams();
     const initialView = searchParams.get('view');
     const navigate = useNavigate();
-    const { invoices, clients, updateInvoice, deleteInvoice, loading, sendInvoiceEmailToClient, sendPaymentReminderToClient, sendReceiptEmailToClient } = useInvoice();
+    const { invoices, clients, updateInvoice, deleteInvoice, loading, sendInvoiceEmailToClient, sendPaymentReminderToClient, markInvoiceReminderSent, sendReceiptEmailToClient } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
 
@@ -301,6 +344,7 @@ const InvoiceDetails = () => {
     const [alert, setAlert] = useState({ open: false, message: '' });
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [confirmCancel, setConfirmCancel] = useState(false);
+    const [confirmSendReminder, setConfirmSendReminder] = useState(false);
     const [emailing, setEmailing] = useState(false);
     const [fetchedInvoice, setFetchedInvoice] = useState(null);
     const [resolving, setResolving] = useState(false);
@@ -323,7 +367,27 @@ const InvoiceDetails = () => {
     const clientHasEmail = Boolean(client?.email?.trim());
     const canEmailClient = invoice && !cancelled && invoice.status !== 'draft' && clientHasEmail;
     const canSendReminder = invoice && ['pending', 'overdue'].includes(invoice.status) && clientHasEmail;
+    const canSendReminderNow = canSendReminder && canSendPaymentReminderNow(invoice?.lastPaymentReminderAt);
     const canResendReceipt = paid && clientHasEmail;
+    const autoRemindersOn = isAutoPaymentRemindersEnabled(businessInfo);
+
+    const reminderContext = useMemo(() => {
+        if (!canSendReminder) return null;
+
+        const lastSent = invoice.lastPaymentReminderAt
+            ? format(new Date(invoice.lastPaymentReminderAt), 'MMM d, yyyy')
+            : null;
+        const nextAvailable = getNextPaymentReminderDate(invoice.lastPaymentReminderAt);
+        const nextAvailableLabel = !canSendReminderNow && nextAvailable
+            ? `You can send another reminder after ${format(nextAvailable, 'MMM d, yyyy')}.`
+            : null;
+
+        return {
+            lastSentLabel: lastSent,
+            nextAvailableLabel,
+            autoRemindersOn,
+        };
+    }, [canSendReminder, canSendReminderNow, invoice?.lastPaymentReminderAt, autoRemindersOn]);
 
     useEffect(() => {
         if (!id) {
@@ -533,10 +597,18 @@ const InvoiceDetails = () => {
         }
     };
 
-    const handleSendReminder = async () => {
+    const handleSendReminder = () => {
+        if (!canSendReminderNow) return;
+        setConfirmSendReminder(true);
+    };
+
+    const confirmSendReminderEmail = async () => {
         setEmailing(true);
         try {
             const result = await sendPaymentReminderToClient(id);
+            const sentAt = markInvoiceReminderSent(id, result.lastPaymentReminderAt);
+            setFetchedInvoice((prev) => (prev ? { ...prev, lastPaymentReminderAt: sentAt } : prev));
+            setConfirmSendReminder(false);
             showToast(`Payment reminder sent to ${result.sentTo}`, 'success');
         } catch (err) {
             setAlert({ open: true, message: err.message || 'Failed to send payment reminder.' });
@@ -577,6 +649,8 @@ const InvoiceDetails = () => {
         canEdit,
         canEmailClient,
         canSendReminder,
+        canSendReminderNow,
+        reminderContext,
         canResendReceipt,
         saving,
         emailing,
@@ -616,6 +690,20 @@ const InvoiceDetails = () => {
                 onConfirm={handleCancelInvoice}
                 onCancel={() => setConfirmCancel(false)}
                 loading={saving}
+            />
+            <ConfirmModal
+                open={confirmSendReminder}
+                title="Send payment reminder?"
+                description={
+                    client?.email
+                        ? `We'll email ${client.email} a friendly reminder with the outstanding balance, due date, and a link to pay. You'll receive a copy in your inbox.`
+                        : "Send a payment reminder email to your client with the outstanding balance, due date, and a link to pay. You'll receive a copy in your inbox."
+                }
+                confirmLabel={emailing ? 'Sending…' : 'Send reminder'}
+                cancelLabel="Not now"
+                onConfirm={confirmSendReminderEmail}
+                onCancel={() => setConfirmSendReminder(false)}
+                loading={emailing}
             />
             <MarkAsPaidModal
                 open={markPaidOpen}
@@ -773,6 +861,12 @@ const InvoiceDetails = () => {
                                     <SummaryRow
                                         label="Due date"
                                         value={format(new Date(invoice.dueDate), 'MMM dd, yyyy')}
+                                    />
+                                ) : null}
+                                {canSendReminder && invoice.lastPaymentReminderAt ? (
+                                    <SummaryRow
+                                        label="Last reminder"
+                                        value={format(new Date(invoice.lastPaymentReminderAt), 'MMM dd, yyyy')}
                                     />
                                 ) : null}
                                 <SummaryRow

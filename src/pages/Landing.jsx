@@ -73,7 +73,7 @@ const EMAIL_FEATURES = [
     {
         icon: Bell,
         title: 'Payment reminders',
-        text: 'Follow up on pending or overdue invoices with reminder emails — sent manually or on a schedule you control.',
+        text: 'Follow up on pending or overdue invoices with reminder emails — send manually from the invoice page or turn on automatic reminders in Settings.',
     },
     {
         icon: Receipt,
@@ -106,7 +106,7 @@ const FAQ_ITEMS = [
     },
     {
         q: 'Can Waraqah email my clients?',
-        a: 'Yes. Email finalized invoices from the share dialog or invoice page, send payment reminders for outstanding balances, and deliver receipt emails when you mark an invoice paid. You can also enable automatic invoice emails in Settings so clients are notified as soon as an invoice is ready.',
+        a: 'Yes. Email finalized invoices from the share dialog or invoice page, send payment reminders for outstanding balances, and deliver receipt emails when you mark an invoice paid. You can enable automatic invoice emails and automatic payment reminders in Settings → Notifications.',
     },
     {
         q: 'Can I use Waraqah on my phone?',
