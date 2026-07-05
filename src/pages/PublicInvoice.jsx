@@ -164,16 +164,11 @@ export default function PublicInvoice() {
     return (
         <div className="min-h-screen bg-slate-50 py-8 px-4">
             <div className="max-w-3xl mx-auto">
-                <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                        <p className="text-sm text-zinc-600">
-                            {showReceipt ? 'Receipt' : 'Invoice'} from {business?.name || 'Business'}
-                        </p>
-                        <h1 className="text-lg font-semibold text-zinc-900 mt-1">{docTitle}</h1>
-                    </div>
-                    <p className="text-xs text-zinc-500">
-                        Preview matches the PDF download
+                <div className="mb-4">
+                    <p className="text-sm text-zinc-600">
+                        {showReceipt ? 'Receipt' : 'Invoice'} from {business?.name || 'Business'}
                     </p>
+                    <h1 className="text-lg font-semibold text-zinc-900 mt-1">{docTitle}</h1>
                 </div>
 
                 <div className="card !p-0 overflow-hidden shadow-card border border-zinc-200 bg-zinc-100">
@@ -182,11 +177,18 @@ export default function PublicInvoice() {
                             <Spinner label="Preparing document…" centered />
                         </div>
                     ) : pdfBundle?.url ? (
-                        <iframe
-                            src={pdfBundle.url}
+                        <object
+                            data={pdfBundle.url}
+                            type="application/pdf"
                             title={`${docTitle} document`}
-                            className="block w-full min-h-[480px] h-[min(85vh,1123px)] border-0 bg-white"
-                        />
+                            className="block w-full min-h-[480px] h-[min(85vh,1123px)] bg-white"
+                        >
+                            <iframe
+                                src={pdfBundle.url}
+                                title={`${docTitle} document`}
+                                className="block w-full min-h-[480px] h-[min(85vh,1123px)] border-0 bg-white"
+                            />
+                        </object>
                     ) : (
                         <div className="flex min-h-[320px] items-center justify-center bg-white px-6 text-center">
                             <p className="text-sm text-zinc-600">

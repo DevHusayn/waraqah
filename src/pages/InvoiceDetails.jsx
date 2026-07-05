@@ -31,7 +31,7 @@ import FormSection from '../components/FormSection';
 import StatusBadge from '../components/StatusBadge';
 import ActionMenu from '../components/ActionMenu';
 import { generateInvoicePdfBlob } from '../utils/pdfGenerator';
-import { shareInvoicePdf, getShareFallbackHint, downloadPdfBlob } from '../utils/shareInvoicePdf';
+import { shareInvoicePdf, getShareFallbackHint, downloadPdfBlob, printPdfBlob } from '../utils/shareInvoicePdf';
 import { getCachedPdf, setCachedPdf, clearCachedPdf } from '../utils/pdfCache';
 import { formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
@@ -515,19 +515,7 @@ const InvoiceDetails = () => {
     const handlePrintPdf = async (mode) => {
         try {
             const cached = await getPdfForMode(mode);
-            const url = URL.createObjectURL(cached.blob);
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = url;
-            document.body.appendChild(iframe);
-            iframe.onload = () => {
-                iframe.contentWindow?.focus();
-                iframe.contentWindow?.print();
-                window.setTimeout(() => {
-                    document.body.removeChild(iframe);
-                    URL.revokeObjectURL(url);
-                }, 1000);
-            };
+            await printPdfBlob(cached.blob);
         } catch (err) {
             setAlert({ open: true, message: err.message || 'Failed to print PDF.' });
         }
