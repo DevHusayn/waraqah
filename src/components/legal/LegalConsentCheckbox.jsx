@@ -16,11 +16,11 @@ export default function LegalConsentCheckbox({
                     type="checkbox"
                     checked={checked}
                     onChange={(e) => onChange(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-zinc-300 text-brand focus:ring-brand/30"
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300 accent-brand focus:ring-brand/30"
                     aria-invalid={Boolean(error)}
                 />
                 <span className="text-[13px] text-zinc-600 leading-relaxed">
-                    I agree to the{' '}
+                    By registering, you agree to our{' '}
                     <Link
                         to={TERMS_PATH}
                         target="_blank"
@@ -28,7 +28,7 @@ export default function LegalConsentCheckbox({
                         className="font-medium text-brand hover:underline"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        Terms and Conditions
+                        Terms
                     </Link>{' '}
                     and{' '}
                     <Link

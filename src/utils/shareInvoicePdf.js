@@ -34,34 +34,36 @@ export function downloadPdfBlob(blob, filename) {
 
 /** Open PDF in a new tab and trigger the browser print dialog. */
 export function printPdfBlob(blob) {
-    return new Promise((resolve, reject) => {
-        const url = URL.createObjectURL(blob);
-        const printWindow = window.open(url, '_blank', 'noopener,noreferrer');
+    const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, '_blank');
 
-        if (!printWindow) {
-            URL.revokeObjectURL(url);
-            reject(new Error('Allow pop-ups to print this document.'));
-            return;
+    if (!printWindow) {
+        URL.revokeObjectURL(url);
+        return Promise.reject(new Error('Allow pop-ups to print this document.'));
+    }
+
+    let printed = false;
+    const cleanup = () => {
+        window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    };
+
+    const runPrint = () => {
+        if (printed) return;
+        printed = true;
+        try {
+            printWindow.focus();
+            printWindow.print();
+        } catch {
+            // PDF opened in a new tab — user can print from the browser viewer.
+        } finally {
+            cleanup();
         }
+    };
 
-        let printed = false;
-        const runPrint = () => {
-            if (printed) return;
-            printed = true;
-            try {
-                printWindow.focus();
-                printWindow.print();
-                resolve();
-            } catch (err) {
-                reject(err instanceof Error ? err : new Error('Failed to print PDF.'));
-            } finally {
-                window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-            }
-        };
+    printWindow.addEventListener('load', runPrint, { once: true });
+    window.setTimeout(runPrint, 1000);
 
-        printWindow.addEventListener('load', runPrint, { once: true });
-        window.setTimeout(runPrint, 1000);
-    });
+    return Promise.resolve();
 }
 
 export async function shareCachedPdfBlob({ blob, filename, message, docNumber }) {

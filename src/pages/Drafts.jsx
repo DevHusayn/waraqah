@@ -7,7 +7,7 @@ import { getDraftLabel } from '../utils/invoiceHelpers';
 import { formatCurrency } from '../utils/currency';
 import PageHeader from '../components/PageHeader';
 import ConfirmModal from '../components/ConfirmModal';
-import Spinner from '../components/Spinner';
+import { PageSpinner } from '../components/Spinner';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 
@@ -69,7 +69,7 @@ const Drafts = () => {
             </PageHeader>
 
             {draftsLoading && sortedDrafts.length === 0 ? (
-                <p className="py-16 text-center text-sm text-zinc-500">Loading drafts…</p>
+                <PageSpinner label="Loading drafts…" />
             ) : sortedDrafts.length === 0 ? (
                 <div className="data-table-wrap">
                     <EmptyState

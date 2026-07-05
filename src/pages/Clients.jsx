@@ -7,7 +7,7 @@ import ClientFormModal, { EMPTY_CLIENT } from '../components/ClientFormModal';
 import PageHeader from '../components/PageHeader';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
-import Spinner from '../components/Spinner';
+import { PageSpinner } from '../components/Spinner';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 import Toolbar, { ToolbarSearch } from '../components/Toolbar';
@@ -172,7 +172,7 @@ const Clients = () => {
             </PageHeader>
 
             {loading && clients.length === 0 ? (
-                <p className="py-16 text-center text-sm text-zinc-500">Loading clients…</p>
+                <PageSpinner label="Loading clients…" />
             ) : clients.length === 0 ? (
                 <div className="data-table-wrap">
                     <EmptyState

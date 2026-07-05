@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { MoreHorizontal } from 'lucide-react';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
 
@@ -72,6 +73,90 @@ function MenuItems({ items, onSelect, variant }) {
     );
 }
 
+function DesktopDropdownMenu({
+    open,
+    menuId,
+    ariaLabel,
+    items,
+    anchorRef,
+    menuRef,
+    onSelect,
+    onClose,
+}) {
+    const [position, setPosition] = useState(null);
+
+    useLayoutEffect(() => {
+        if (!open || !anchorRef.current) {
+            setPosition(null);
+            return undefined;
+        }
+
+        const updatePosition = () => {
+            const anchor = anchorRef.current;
+            const menu = menuRef.current;
+            if (!anchor) return;
+
+            const rect = anchor.getBoundingClientRect();
+            const menuWidth = menu?.offsetWidth || 220;
+            const menuHeight = menu?.offsetHeight || 240;
+            const gap = 6;
+            const spaceBelow = window.innerHeight - rect.bottom - gap;
+            const spaceAbove = rect.top - gap;
+            const openUp = spaceBelow < menuHeight && spaceAbove > spaceBelow;
+            const top = openUp ? rect.top - gap : rect.bottom + gap;
+            const left = Math.min(
+                Math.max(8, rect.right - menuWidth),
+                window.innerWidth - menuWidth - 8
+            );
+
+            setPosition({
+                top: openUp ? top - menuHeight : top,
+                left,
+            });
+        };
+
+        updatePosition();
+        window.addEventListener('resize', updatePosition);
+        window.addEventListener('scroll', updatePosition, true);
+
+        return () => {
+            window.removeEventListener('resize', updatePosition);
+            window.removeEventListener('scroll', updatePosition, true);
+        };
+    }, [open, anchorRef, menuRef, items]);
+
+    useEffect(() => {
+        if (!open) return undefined;
+
+        const onPointerDown = (event) => {
+            const target = event.target;
+            if (menuRef.current?.contains(target) || anchorRef.current?.contains(target)) {
+                return;
+            }
+            onClose();
+        };
+
+        document.addEventListener('pointerdown', onPointerDown);
+        return () => document.removeEventListener('pointerdown', onPointerDown);
+    }, [open, anchorRef, menuRef, onClose]);
+
+    if (!open || !position) return null;
+
+    return createPortal(
+        <div
+            id={menuId}
+            ref={menuRef}
+            role="menu"
+            aria-label={ariaLabel}
+            className="fixed z-[1200] min-w-[220px] rounded-lg border border-zinc-200/80 bg-white p-1 shadow-lift animate-fade-in"
+            style={{ top: position.top, left: position.left }}
+        >
+            <MenuItems items={items} onSelect={onSelect} variant="default" />
+        </div>,
+        document.body
+    );
+}
+
 export default function ActionMenu({
     items = [],
     disabled = false,
@@ -81,7 +166,8 @@ export default function ActionMenu({
     const [open, setOpen] = useState(false);
     const isMobile = useIsMobile();
     const menuId = useId();
-    const containerRef = useRef(null);
+    const anchorRef = useRef(null);
+    const menuRef = useRef(null);
     const visibleCount = items.filter((item) => !item.hidden).length;
 
     const close = useCallback(() => setOpen(false), []);
@@ -95,9 +181,9 @@ export default function ActionMenu({
     );
 
     useEffect(() => {
-        if (!open) return undefined;
+        if (!open || !isMobile) return undefined;
         return lockBodyScroll();
-    }, [open]);
+    }, [open, isMobile]);
 
     useEffect(() => {
         if (!open) return undefined;
@@ -110,71 +196,65 @@ export default function ActionMenu({
         return () => document.removeEventListener('keydown', onKeyDown);
     }, [open, close]);
 
-    useEffect(() => {
-        if (!open || isMobile) return undefined;
-
-        const onPointerDown = (event) => {
-            if (!containerRef.current?.contains(event.target)) {
-                close();
-            }
-        };
-
-        document.addEventListener('pointerdown', onPointerDown);
-        return () => document.removeEventListener('pointerdown', onPointerDown);
-    }, [open, isMobile, close]);
-
     if (visibleCount === 0) return null;
 
     return (
-        <div ref={containerRef} className={`relative shrink-0 ${className}`}>
-            <button
-                type="button"
-                className="btn-secondary h-full min-h-[40px] px-3 gap-1.5"
-                aria-haspopup="menu"
-                aria-expanded={open}
-                aria-controls={open ? menuId : undefined}
-                aria-label={ariaLabel}
-                disabled={disabled}
-                onClick={() => setOpen((value) => !value)}
-            >
-                <MoreHorizontal size={18} aria-hidden />
-                <span className="sr-only sm:not-sr-only sm:inline">More</span>
-            </button>
+        <>
+            <div ref={anchorRef} className={`relative shrink-0 ${className}`}>
+                <button
+                    type="button"
+                    className="btn-secondary h-full min-h-[40px] px-3 gap-1.5"
+                    aria-haspopup="menu"
+                    aria-expanded={open}
+                    aria-controls={open ? menuId : undefined}
+                    aria-label={ariaLabel}
+                    disabled={disabled}
+                    onClick={() => setOpen((value) => !value)}
+                >
+                    <MoreHorizontal size={18} aria-hidden />
+                    <span className="sr-only sm:not-sr-only sm:inline">More</span>
+                </button>
+            </div>
 
             {open && isMobile ? (
-                <div className="fixed inset-0 z-[9998]" role="presentation">
-                    <button
-                        type="button"
-                        className="absolute inset-0 bg-zinc-950/40 backdrop-blur-[1px] animate-fade-in"
-                        aria-label="Close menu"
-                        onClick={close}
-                    />
-                    <div
-                        id={menuId}
-                        role="menu"
-                        aria-label={ariaLabel}
-                        className="absolute inset-x-0 bottom-0 z-[9999] rounded-t-2xl border border-zinc-200/60 bg-white shadow-lift animate-sheet-up safe-area-pb"
-                    >
-                        <div className="flex justify-center pt-3 pb-2">
-                            <div className="h-1 w-10 rounded-full bg-zinc-200" aria-hidden />
+                createPortal(
+                    <div className="fixed inset-0 z-[9998]" role="presentation">
+                        <button
+                            type="button"
+                            className="absolute inset-0 bg-zinc-950/40 backdrop-blur-[1px] animate-fade-in"
+                            aria-label="Close menu"
+                            onClick={close}
+                        />
+                        <div
+                            id={menuId}
+                            role="menu"
+                            aria-label={ariaLabel}
+                            className="absolute inset-x-0 bottom-0 z-[9999] rounded-t-2xl border border-zinc-200/60 bg-white shadow-lift animate-sheet-up safe-area-pb"
+                        >
+                            <div className="flex justify-center pt-3 pb-2">
+                                <div className="h-1 w-10 rounded-full bg-zinc-200" aria-hidden />
+                            </div>
+                            <div className="px-2 pb-3">
+                                <MenuItems items={items} onSelect={handleSelect} variant="sheet" />
+                            </div>
                         </div>
-                        <div className="px-2 pb-3">
-                            <MenuItems items={items} onSelect={handleSelect} variant="sheet" />
-                        </div>
-                    </div>
-                </div>
+                    </div>,
+                    document.body
+                )
             ) : null}
 
-            {open && !isMobile ? (
-                <div
-                    id={menuId}
-                    role="menu"
-                    aria-label={ariaLabel}
-                    className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[220px] rounded-lg border border-zinc-200/80 bg-white p-1 shadow-lift animate-fade-in"
-                >
-                    <MenuItems items={items} onSelect={handleSelect} variant="default" />
-                </div>
+            {!isMobile ? (
+                <DesktopDropdownMenu
+                    open={open}
+                    menuId={menuId}
+                    ariaLabel={ariaLabel}
+                    items={items}
+                    anchorRef={anchorRef}
+                    menuRef={menuRef}
+                    onSelect={handleSelect}
+                    onClose={close}
+                />
             ) : null}
-        </div>
+        </>
     );
 }

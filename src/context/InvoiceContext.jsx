@@ -213,8 +213,12 @@ export const InvoiceProvider = ({ children }) => {
             method: 'PUT',
             body: JSON.stringify(updatedInvoice),
         });
-        const mapped = { ...updated, id: updated._id || id };
-        setInvoices((prev) => prev.map((inv) => (inv.id === id ? mapped : inv)));
+        const mapped = mapInvoice(updated);
+        setInvoices((prev) => {
+            const exists = prev.some((inv) => inv.id === id);
+            if (!exists) return [mapped, ...prev];
+            return prev.map((inv) => (inv.id === id ? mapped : inv));
+        });
         setDrafts((prev) => prev.map((inv) => (inv.id === id ? mapped : inv)));
         if (isDraft(mapped)) {
             await refreshMeta();
@@ -320,6 +324,23 @@ export const InvoiceProvider = ({ children }) => {
         [drafts, invoices]
     );
 
+    const upsertInvoice = useCallback((record) => {
+        if (!record) return;
+        const mapped = mapInvoice(record);
+        setInvoices((prev) => {
+            const exists = prev.some((inv) => inv.id === mapped.id);
+            if (!exists) return [mapped, ...prev];
+            return prev.map((inv) => (inv.id === mapped.id ? mapped : inv));
+        });
+        if (isDraft(mapped)) {
+            setDrafts((prev) => {
+                const exists = prev.some((inv) => inv.id === mapped.id);
+                if (!exists) return [mapped, ...prev];
+                return prev.map((inv) => (inv.id === mapped.id ? mapped : inv));
+            });
+        }
+    }, []);
+
     const value = {
         invoices,
         draftInvoices,
@@ -346,6 +367,7 @@ export const InvoiceProvider = ({ children }) => {
         fetchProducts,
         refreshInvoices,
         refreshMeta,
+        upsertInvoice,
         resetAll,
         loading,
         invoicesLoading,

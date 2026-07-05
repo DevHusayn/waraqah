@@ -126,13 +126,15 @@ export default function ProfileFormFields({
                 </label>
                 <input
                     id={fieldId('website')}
-                    type="url"
+                    type="text"
+                    inputMode="url"
                     name="website"
                     value={formData.website || ''}
                     onChange={onChange}
                     className="input-field"
-                    placeholder="https://www.example.com"
+                    placeholder="mybusiness.com"
                     autoComplete={autoComplete('url')}
+                    spellCheck={false}
                 />
             </div>
         </div>

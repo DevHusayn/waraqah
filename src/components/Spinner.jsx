@@ -74,4 +74,22 @@ export function SpinnerOverlay({ label = 'Loading…' }) {
     );
 }
 
+/** Centered spinner for full-width page sections (detail views, lists). */
+export function PageSpinner({ label = 'Loading…', className = '' }) {
+    return (
+        <div className={`flex items-center justify-center py-20 ${className}`.trim()}>
+            <Spinner size="lg" label={label} centered />
+        </div>
+    );
+}
+
+/** Minimal public-route loader (no skeleton chrome). */
+export function PublicPageSpinner() {
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-surface-muted px-4">
+            <Spinner size="lg" centered />
+        </div>
+    );
+}
+
 export { PageLoader } from './Skeleton';

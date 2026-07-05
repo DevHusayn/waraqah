@@ -10,7 +10,7 @@ import { SettingsProvider } from './context/SettingsContext';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
 import BrandTheme from './components/BrandTheme';
-import { PageLoader, PublicPageLoader } from './components/Skeleton';
+import { PageLoader, PublicPageSpinner } from './components/Spinner';
 
 const Auth = lazy(() => import('./pages/Auth'));
 const CheckEmailPage = lazy(() => import('./pages/CheckEmail'));
@@ -50,8 +50,12 @@ function LazyPage({ children }) {
     return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
 }
 
+function AuthPage({ children }) {
+    return <Suspense fallback={null}>{children}</Suspense>;
+}
+
 function PublicPage({ children }) {
-    return <Suspense fallback={<PublicPageLoader />}>{children}</Suspense>;
+    return <Suspense fallback={<PublicPageSpinner />}>{children}</Suspense>;
 }
 
 function AppProviders({ children }) {
@@ -73,7 +77,7 @@ function App() {
                         <Router>
                         <Routes>
                             <Route path="/" element={<Home />} />
-                            <Route path="/auth" element={<PublicPage><Auth /></PublicPage>} />
+                            <Route path="/auth" element={<AuthPage><Auth /></AuthPage>} />
                             <Route path="/auth/check-email" element={<PublicPage><CheckEmailPage /></PublicPage>} />
                             <Route path="/reset-password/:token" element={<PublicPage><ResetPassword /></PublicPage>} />
                             <Route path="/verify-email/:token" element={<PublicPage><VerifyEmail /></PublicPage>} />

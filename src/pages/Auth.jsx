@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Eye, EyeOff, FileText, Shield, Zap } from 'lucide-react';
+import { Eye, EyeOff, FileText, Shield, Zap } from 'lucide-react';
 import Spinner from '../components/Spinner';
 import AlertModal from '../components/AlertModal';
 import ForgotPasswordModal from '../components/ForgotPasswordModal';
@@ -7,7 +7,7 @@ import RegisterWizard, { clearRegisterDraft } from '../components/auth/RegisterW
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
 import { useAuth } from '../context/AuthContext';
-import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import WaraqahLogo from '../components/WaraqahLogo';
 import RequiredLabel from '../components/RequiredLabel';
 import { getNetworkErrorMessage } from '../utils/apiConfig';
@@ -278,14 +278,6 @@ function Auth() {
                     } lg:justify-center`}
                 >
                     <div className="w-full max-w-[420px] mx-auto">
-                        <Link
-                            to="/"
-                            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-500 hover:text-zinc-900 mb-6 transition-colors"
-                        >
-                            <ArrowLeft size={15} aria-hidden />
-                            Back to home
-                        </Link>
-
                         <div className="mb-6">
                             <WaraqahLogo size="md" />
                         </div>
@@ -436,18 +428,6 @@ function Auth() {
                                     <RegisterWizard returnTo={returnTo} />
 
                                     <p className="mt-5 pt-5 border-t border-zinc-100 text-center text-[13px] text-zinc-500">
-                                        By registering, you agree to our{' '}
-                                        <Link to="/terms" className="font-medium text-brand hover:underline">
-                                            Terms
-                                        </Link>{' '}
-                                        and{' '}
-                                        <Link to="/privacy" className="font-medium text-brand hover:underline">
-                                            Privacy Policy
-                                        </Link>
-                                        .
-                                    </p>
-
-                                    <p className="mt-4 text-center text-[13px] text-zinc-500">
                                         Already have an account?{' '}
                                         <button
                                             type="button"

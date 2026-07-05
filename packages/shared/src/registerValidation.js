@@ -106,7 +106,7 @@ export function buildRegisterStepErrors(step, form, confirmPassword, options = {
                 ...buildBrandingFieldErrors(form),
                 acceptedTerms: options.acceptedTerms
                     ? ''
-                    : 'You must agree to the Terms and Privacy Policy to create an account.',
+                    : 'Please agree to our Terms and Privacy Policy to continue.',
             };
         default:
             return {};

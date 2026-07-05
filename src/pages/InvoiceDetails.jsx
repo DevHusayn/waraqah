@@ -23,7 +23,7 @@ import {
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
-import Spinner from '../components/Spinner';
+import { PageSpinner } from '../components/Spinner';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import MarkAsPaidModal from '../components/MarkAsPaidModal';
@@ -52,6 +52,10 @@ import {
 
 function mapInvoiceRecord(invoice) {
     return { ...invoice, id: invoice._id || invoice.id };
+}
+
+function invoiceHasLineItems(invoice) {
+    return Boolean(invoice && Array.isArray(invoice.items) && invoice.items.length > 0);
 }
 
 async function generateInvoicePdf(invoice, client, businessInfo, options) {
@@ -290,7 +294,7 @@ function InvoiceActionsPanel({
     const PrimaryIcon = primaryAction?.icon;
 
     return (
-        <div className="card">
+        <div className="card overflow-visible">
             <h3 className="text-sm font-semibold text-zinc-900 pb-3 mb-4 border-b border-zinc-200">
                 Actions
             </h3>
@@ -339,7 +343,7 @@ const InvoiceDetails = () => {
     const [searchParams] = useSearchParams();
     const initialView = searchParams.get('view');
     const navigate = useNavigate();
-    const { invoices, clients, updateInvoice, deleteInvoice, loading, sendInvoiceEmailToClient, sendPaymentReminderToClient, markInvoiceReminderSent, sendReceiptEmailToClient } = useInvoice();
+    const { invoices, clients, updateInvoice, deleteInvoice, loading, upsertInvoice, sendInvoiceEmailToClient, sendPaymentReminderToClient, markInvoiceReminderSent, sendReceiptEmailToClient } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
 
@@ -357,7 +361,11 @@ const InvoiceDetails = () => {
         () => invoices.find((inv) => String(inv.id) === String(id) || String(inv._id) === String(id)),
         [invoices, id]
     );
-    const invoice = invoiceFromList || fetchedInvoice;
+    const invoice = useMemo(() => {
+        if (invoiceHasLineItems(invoiceFromList)) return invoiceFromList;
+        if (invoiceHasLineItems(fetchedInvoice)) return fetchedInvoice;
+        return fetchedInvoice || invoiceFromList || null;
+    }, [invoiceFromList, fetchedInvoice]);
     const client = useMemo(
         () => clients.find((c) => c.id === invoice?.clientId || c._id === invoice?.clientId),
         [clients, invoice?.clientId]
@@ -398,7 +406,7 @@ const InvoiceDetails = () => {
             return undefined;
         }
 
-        if (invoiceFromList && Array.isArray(invoiceFromList.items)) {
+        if (invoiceHasLineItems(invoiceFromList)) {
             setFetchedInvoice(null);
             setResolving(false);
             return undefined;
@@ -414,7 +422,9 @@ const InvoiceDetails = () => {
         apiFetch(`/invoices/${id}`)
             .then((data) => {
                 if (!cancelled) {
-                    setFetchedInvoice(mapInvoiceRecord(data));
+                    const mapped = mapInvoiceRecord(data);
+                    setFetchedInvoice(mapped);
+                    upsertInvoice(mapped);
                 }
             })
             .catch(() => {
@@ -431,10 +441,10 @@ const InvoiceDetails = () => {
         return () => {
             cancelled = true;
         };
-    }, [loading, id, invoiceFromList, navigate]);
+    }, [loading, id, invoiceFromList, navigate, upsertInvoice]);
 
     useEffect(() => {
-        if (!invoice || !client || cancelled) return undefined;
+        if (!invoice || !client || cancelled || !invoiceHasLineItems(invoice)) return undefined;
 
         clearCachedPdf(id);
 
@@ -621,12 +631,11 @@ const InvoiceDetails = () => {
         }
     };
 
-    if (loading || resolving || !invoice) {
-        return (
-            <div className="max-w-6xl mx-auto py-20 text-center text-sm text-zinc-500">
-                Loading invoice…
-            </div>
-        );
+    const waitingForFullInvoice =
+        Boolean(invoiceFromList) && !invoiceHasLineItems(invoiceFromList) && !invoiceHasLineItems(fetchedInvoice);
+
+    if (loading || resolving || waitingForFullInvoice || !invoice || !invoiceHasLineItems(invoice)) {
+        return <PageSpinner label="Loading invoice…" className="max-w-6xl mx-auto" />;
     }
 
     const displayNumber = getDisplayNumber(invoice) || '—';

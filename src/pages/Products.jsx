@@ -8,7 +8,7 @@ import PageHeader from '../components/PageHeader';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
 import { formatCurrency } from '../utils/currency';
-import Spinner from '../components/Spinner';
+import { PageSpinner } from '../components/Spinner';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 import Toolbar, { ToolbarSearch } from '../components/Toolbar';
@@ -145,7 +145,7 @@ export default function Products() {
             </PageHeader>
 
             {productsLoading && products.length === 0 ? (
-                <p className="py-16 text-center text-sm text-zinc-500">Loading products…</p>
+                <PageSpinner label="Loading products…" />
             ) : products.length === 0 ? (
                 <div className="data-table-wrap">
                     <EmptyState
