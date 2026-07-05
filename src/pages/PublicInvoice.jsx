@@ -5,7 +5,6 @@ import { publicFetch } from '../utils/publicApi';
 import { getDownloadLabel } from '../utils/receiptHelpers';
 import {
     downloadPublicInvoicePdf,
-    printPublicInvoicePdf,
 } from '../utils/publicInvoicePdf';
 import InvoiceDocumentPreview from '../components/InvoiceDocumentPreview';
 import WaraqahLogo from '../components/WaraqahLogo';
@@ -20,7 +19,7 @@ export default function PublicInvoice() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
     const [pdfError, setPdfError] = useState('');
-    const [actionBusy, setActionBusy] = useState(false);
+    const [downloadBusy, setDownloadBusy] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
@@ -57,30 +56,22 @@ export default function PublicInvoice() {
     const downloadLabel = invoice ? getDownloadLabel(invoice, pdfMode) : 'Download PDF';
 
     const handleDownloadPdf = useCallback(async () => {
-        if (!invoice || !client || !business || actionBusy) return;
-        setActionBusy(true);
+        if (!invoice || !client || !business || downloadBusy) return;
+        setDownloadBusy(true);
         setPdfError('');
         try {
             await downloadPublicInvoicePdf(invoice, client, business, showReceipt);
         } catch (err) {
             setPdfError(err.message || 'Failed to download PDF.');
         } finally {
-            setActionBusy(false);
+            setDownloadBusy(false);
         }
-    }, [invoice, client, business, showReceipt, actionBusy]);
+    }, [invoice, client, business, showReceipt, downloadBusy]);
 
-    const handlePrintPdf = useCallback(async () => {
-        if (!invoice || !client || !business || actionBusy) return;
-        setActionBusy(true);
+    const handlePrintPdf = useCallback(() => {
         setPdfError('');
-        try {
-            await printPublicInvoicePdf(invoice, client, business, showReceipt);
-        } catch (err) {
-            setPdfError(err.message || 'Failed to print PDF.');
-        } finally {
-            setActionBusy(false);
-        }
-    }, [invoice, client, business, showReceipt, actionBusy]);
+        window.print();
+    }, []);
 
     if (loading) {
         return (
@@ -105,16 +96,16 @@ export default function PublicInvoice() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 py-8 px-4">
-            <div className="max-w-3xl mx-auto">
-                <div className="mb-4">
+        <div className="min-h-screen bg-slate-50 py-8 px-4 print:min-h-0 print:bg-white print:p-0">
+            <div className="max-w-3xl mx-auto print:max-w-none">
+                <div className="mb-4 print:hidden">
                     <p className="text-sm text-zinc-600">
                         {showReceipt ? 'Receipt' : 'Invoice'} from {business?.name || 'Business'}
                     </p>
                     <h1 className="text-lg font-semibold text-zinc-900 mt-1">{docTitle}</h1>
                 </div>
 
-                <div className="card !p-0 overflow-hidden shadow-card border border-zinc-200">
+                <div className="card !p-0 overflow-hidden shadow-card border border-zinc-200 print:shadow-none print:border-0 print:rounded-none">
                     <InvoiceDocumentPreview
                         invoice={invoice}
                         client={client}
@@ -124,25 +115,25 @@ export default function PublicInvoice() {
                 </div>
 
                 {pdfError ? (
-                    <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <p className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 print:hidden">
                         {pdfError}
                     </p>
                 ) : null}
 
-                <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full mt-6">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full mt-6 print:hidden">
                     <button
                         type="button"
                         onClick={handleDownloadPdf}
-                        disabled={actionBusy}
+                        disabled={downloadBusy}
                         className="btn-primary w-full text-sm py-2.5 px-4 gap-2 min-h-[44px]"
                     >
-                        {actionBusy ? <Spinner size="sm" inline /> : <Download className="h-4 w-4" aria-hidden />}
+                        {downloadBusy ? <Spinner size="sm" inline /> : <Download className="h-4 w-4" aria-hidden />}
                         {downloadLabel}
                     </button>
                     <button
                         type="button"
                         onClick={handlePrintPdf}
-                        disabled={actionBusy}
+                        disabled={downloadBusy}
                         className="btn-secondary w-full text-sm py-2.5 px-4 gap-2 min-h-[44px]"
                     >
                         <Printer className="h-4 w-4" aria-hidden />
@@ -150,7 +141,7 @@ export default function PublicInvoice() {
                     </button>
                 </div>
 
-                <footer className="mt-8 text-center text-xs text-zinc-500">
+                <footer className="mt-8 text-center text-xs text-zinc-500 print:hidden">
                     <Link to="/" className="inline-flex items-center gap-2 hover:text-brand transition-colors">
                         <WaraqahLogo className="h-5 w-auto" />
                         <span>Powered by Waraqah</span>
