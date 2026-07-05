@@ -1,13 +1,11 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
     FileText,
     PenLine,
     Users,
-    Settings as SettingsIcon,
     Menu,
     X,
-    LogOut,
     FileBarChart,
     Crown,
     Package,
@@ -16,12 +14,11 @@ import { useState, useEffect } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
 import { useAuth } from '../context/AuthContext';
-import ConfirmModal from './ConfirmModal';
 import WaraqahLogo from './WaraqahLogo';
-import SidebarAccountFooter from './SidebarAccountFooter';
+import AccountAvatar from './AccountAvatar';
 import { isPremiumUser } from '../utils/premium';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
-import { DEFAULT_BRAND_COLOR } from '@waraqah/shared';
+import { APP_TAGLINE } from '../constants/brand';
 
 const NAV_ITEMS = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -30,7 +27,6 @@ const NAV_ITEMS = [
     { name: 'Statements', href: '/statements', icon: FileBarChart, premiumFeature: true },
     { name: 'Clients', href: '/clients', icon: Users },
     { name: 'Products', href: '/products', icon: Package },
-    { name: 'Settings', href: '/settings', icon: SettingsIcon },
 ];
 
 function NavLinks({ items, isActive, onNavigate, premium, badges }) {
@@ -67,13 +63,11 @@ function NavLinks({ items, isActive, onNavigate, premium, badges }) {
 
 const Layout = ({ children }) => {
     const location = useLocation();
-    const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const { businessInfo, setBusinessInfo, fetchBusinessAssets } = useSettings();
+    const { businessInfo, fetchBusinessAssets } = useSettings();
     const premium = isPremiumUser(businessInfo);
-    const { resetAll, draftCount } = useInvoice();
-    const { isAuthenticated, isAdmin, logout } = useAuth();
-    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const { draftCount } = useInvoice();
+    const { isAuthenticated, isAdmin } = useAuth();
 
     useEffect(() => {
         if (!isAuthenticated) return undefined;
@@ -100,13 +94,6 @@ const Layout = ({ children }) => {
         setSidebarOpen(false);
     }, [location.pathname]);
 
-    const handleLogout = async () => {
-        setBusinessInfo({ name: '', address: '', email: '', phone: '', website: '', defaultCurrency: 'NGN', taxRate: 10, brandColor: DEFAULT_BRAND_COLOR, plan: 'free', businessLogo: '', companyLogoUrl: '', companyLogoAvatarUrl: '', companyStampUrl: '', authorizedSignatureUrl: '', paymentAccountName: '', paymentBankName: '', paymentAccountNumber: '', paymentInstructions: '', invoiceTemplateId: 'classic' });
-        resetAll();
-        await logout();
-        navigate('/auth');
-    };
-
     const adminItem = isAdmin
         ? [{ name: 'Admin', href: '/admin', icon: LayoutDashboard }]
         : [];
@@ -128,7 +115,7 @@ const Layout = ({ children }) => {
     const sidebarContent = (onNavigate) => (
         <>
             <div className="px-2 mb-5 min-w-0">
-                <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
+                <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} subtitle={APP_TAGLINE} />
             </div>
             <nav className="flex flex-1 flex-col gap-0.5">
                 <NavLinks
@@ -138,18 +125,7 @@ const Layout = ({ children }) => {
                     premium={premium}
                     badges={{ drafts: draftCount }}
                 />
-                {isAuthenticated && (
-                    <button
-                        type="button"
-                        onClick={() => setShowLogoutModal(true)}
-                        className="nav-link text-red-600 hover:bg-red-50/80 hover:text-red-700 mt-4 w-full"
-                    >
-                        <LogOut className="h-4 w-4 flex-shrink-0" strokeWidth={1.75} />
-                        Log out
-                    </button>
-                )}
             </nav>
-            <SidebarAccountFooter onNavigate={onNavigate} />
         </>
     );
 
@@ -185,18 +161,30 @@ const Layout = ({ children }) => {
             )}
 
             <div className="md:pl-[15.5rem] flex flex-col flex-1 min-h-screen min-w-0">
-                <header className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200/50 bg-white/80 backdrop-blur-xl px-4 py-2.5 md:hidden">
-                    <div className="flex items-center min-w-0">
+                <header className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200/50 bg-white/80 backdrop-blur-xl px-4 py-2.5">
+                    <div className="flex items-center min-w-0 md:hidden">
                         <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
                     </div>
-                    <button
-                        type="button"
-                        className="inline-flex items-center justify-center rounded-md p-2 text-zinc-600 hover:bg-zinc-100/80 transition-colors"
-                        onClick={() => setSidebarOpen(true)}
-                        aria-label="Open menu"
-                    >
-                        <Menu className="h-5 w-5" strokeWidth={1.75} />
-                    </button>
+                    <div className="hidden md:block flex-1" aria-hidden />
+                    <div className="flex items-center gap-1.5">
+                        {isAuthenticated ? (
+                            <Link
+                                to="/settings"
+                                aria-label="Settings"
+                                className="rounded-md p-1 outline-none transition-colors hover:bg-zinc-100/80 focus-visible:ring-2 focus-visible:ring-zinc-900/10"
+                            >
+                                <AccountAvatar size="sm" />
+                            </Link>
+                        ) : null}
+                        <button
+                            type="button"
+                            className="inline-flex items-center justify-center rounded-md p-2 text-zinc-600 hover:bg-zinc-100/80 transition-colors md:hidden"
+                            onClick={() => setSidebarOpen(true)}
+                            aria-label="Open menu"
+                        >
+                            <Menu className="h-5 w-5" strokeWidth={1.75} />
+                        </button>
+                    </div>
                 </header>
 
                 <main className="flex-1 min-w-0 overflow-x-hidden">
@@ -205,16 +193,6 @@ const Layout = ({ children }) => {
                     </div>
                 </main>
             </div>
-
-            <ConfirmModal
-                open={showLogoutModal}
-                title="Log out?"
-                description="You will need to sign in again to access your account."
-                confirmLabel="Log out"
-                cancelLabel="Stay signed in"
-                onConfirm={() => { setShowLogoutModal(false); handleLogout(); }}
-                onCancel={() => setShowLogoutModal(false)}
-            />
         </div>
     );
 };
