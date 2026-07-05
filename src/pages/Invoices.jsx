@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
@@ -21,6 +21,7 @@ import EmptyState from '../components/EmptyState';
 import InvoiceUsageBanner from '../components/InvoiceUsageBanner';
 import Toolbar, { ToolbarSearch, ToolbarActions } from '../components/Toolbar';
 import StatusBadge from '../components/StatusBadge';
+import { ListPageSkeleton } from '../components/Skeleton';
 
 const SORT_OPTIONS = [
     { value: 'newest', label: 'Newest first' },
@@ -41,12 +42,16 @@ const TABLE_COLUMNS = [
 
 const Invoices = () => {
     const navigate = useNavigate();
-    const { invoices, clients, loading } = useInvoice();
+    const { invoices, clients, fetchInvoices, invoicesLoading } = useInvoice();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen, tryNavigateToCreate } = useInvoiceCreateGuard();
     const { businessInfo } = useSettings();
     const [filter, setFilter] = useState('all');
     const [search, setSearch] = useState('');
     const [sortBy, setSortBy] = useState('newest');
+
+    useEffect(() => {
+        fetchInvoices();
+    }, [fetchInvoices]);
 
     const activeInvoices = useMemo(() => filterNonDraftInvoices(invoices), [invoices]);
 
@@ -121,8 +126,8 @@ const Invoices = () => {
 
                 <FilterTabs tabs={filterTabs} value={filter} onChange={setFilter} className="mb-4" />
 
-                {loading && activeInvoices.length === 0 ? (
-                    <p className="py-16 text-center text-sm text-zinc-500">Loading invoices…</p>
+                {invoicesLoading && activeInvoices.length === 0 ? (
+                    <ListPageSkeleton rows={8} columns={6} withAction={false} />
                 ) : displayedInvoices.length === 0 ? (
                     <div className="data-table-wrap">
                         <EmptyState

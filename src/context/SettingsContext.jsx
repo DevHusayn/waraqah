@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { apiFetch } from '../utils/api';
 import { useAuth } from './AuthContext';
 import { shouldPrefetchUserData } from '../utils/authHint';
@@ -42,6 +42,7 @@ export const useSettings = () => {
 export const SettingsProvider = ({ children }) => {
     const [businessInfo, setBusinessInfo] = useState(EMPTY_BUSINESS);
     const [loading, setLoading] = useState(false);
+    const assetsLoadedRef = useRef(false);
     const { isAuthenticated, loading: authLoading } = useAuth();
     const shouldFetch = shouldPrefetchUserData(isAuthenticated);
 
@@ -49,13 +50,14 @@ export const SettingsProvider = ({ children }) => {
         if (!shouldFetch) {
             if (!authLoading && !isAuthenticated) {
                 setBusinessInfo(EMPTY_BUSINESS);
+                assetsLoadedRef.current = false;
             }
             setLoading(false);
             return;
         }
         setLoading(true);
         try {
-            const info = await apiFetch('/business-info');
+            const info = await apiFetch('/business-info?summary=1');
             setBusinessInfo(info);
         } catch {
             if (!authLoading && !isAuthenticated) {
@@ -66,12 +68,27 @@ export const SettingsProvider = ({ children }) => {
         }
     }, [shouldFetch, authLoading, isAuthenticated]);
 
+    const fetchBusinessAssets = useCallback(async () => {
+        if (!shouldFetch || assetsLoadedRef.current) return;
+        try {
+            const assets = await apiFetch('/business-info/assets');
+            assetsLoadedRef.current = true;
+            setBusinessInfo((prev) => ({ ...prev, ...assets }));
+        } catch {
+            /* branding assets are optional for initial render */
+        }
+    }, [shouldFetch]);
+
     useEffect(() => {
         fetchBusinessInfo();
-        const onLogin = () => fetchBusinessInfo();
+        const onLogin = () => {
+            assetsLoadedRef.current = false;
+            fetchBusinessInfo();
+        };
         const onLogout = () => {
             setBusinessInfo(EMPTY_BUSINESS);
             setLoading(false);
+            assetsLoadedRef.current = false;
         };
         window.addEventListener('app-login', onLogin);
         window.addEventListener('app-logout', onLogout);
@@ -87,6 +104,7 @@ export const SettingsProvider = ({ children }) => {
             method: 'PUT',
             body: JSON.stringify(payload),
         });
+        assetsLoadedRef.current = true;
         setBusinessInfo(updated);
         return updated;
     };
@@ -97,6 +115,7 @@ export const SettingsProvider = ({ children }) => {
             method: 'PUT',
             body: JSON.stringify(payload),
         });
+        assetsLoadedRef.current = true;
         setBusinessInfo(updated);
         return updated;
     };
@@ -114,6 +133,7 @@ export const SettingsProvider = ({ children }) => {
             method: 'PUT',
             body: JSON.stringify(payload),
         });
+        assetsLoadedRef.current = true;
         setBusinessInfo(updated);
         return updated;
     };
@@ -128,6 +148,7 @@ export const SettingsProvider = ({ children }) => {
         setBusinessInfo,
         loading,
         refreshBusinessInfo: fetchBusinessInfo,
+        fetchBusinessAssets,
         saveBusinessLogo,
         saveCompanyLogo,
         saveBusinessAsset,

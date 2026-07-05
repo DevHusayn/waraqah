@@ -69,11 +69,27 @@ const Layout = ({ children }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const { businessInfo, setBusinessInfo } = useSettings();
+    const { businessInfo, setBusinessInfo, fetchBusinessAssets } = useSettings();
     const premium = isPremiumUser(businessInfo);
-    const { resetAll, draftInvoices } = useInvoice();
+    const { resetAll, draftCount } = useInvoice();
     const { isAuthenticated, isAdmin, logout } = useAuth();
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+    useEffect(() => {
+        if (!isAuthenticated) return undefined;
+
+        if (typeof window.requestIdleCallback === 'function') {
+            const idleId = window.requestIdleCallback(() => {
+                fetchBusinessAssets();
+            }, { timeout: 2500 });
+            return () => window.cancelIdleCallback(idleId);
+        }
+
+        const timerId = window.setTimeout(() => {
+            fetchBusinessAssets();
+        }, 150);
+        return () => window.clearTimeout(timerId);
+    }, [isAuthenticated, fetchBusinessAssets]);
 
     useEffect(() => {
         if (!sidebarOpen) return undefined;
@@ -120,7 +136,7 @@ const Layout = ({ children }) => {
                     isActive={isActive}
                     onNavigate={onNavigate}
                     premium={premium}
-                    badges={{ drafts: draftInvoices.length }}
+                    badges={{ drafts: draftCount }}
                 />
                 {isAuthenticated && (
                     <button

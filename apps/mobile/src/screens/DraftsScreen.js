@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { formatDistanceToNow } from 'date-fns';
 import { PenLine } from 'lucide-react-native';
@@ -9,16 +9,20 @@ import { EmptyState, ListRow, PageHeader, PageLoader, StatusBadge } from '../com
 import { colors, spacing } from '../theme';
 
 export function DraftsScreen({ navigation }) {
-    const { draftInvoices, clients, deleteInvoice, loading, fetchUserData } = useInvoice();
+    const { draftInvoices, clients, deleteInvoice, fetchDrafts, draftsLoading } = useInvoice();
     const [refreshing, setRefreshing] = useState(false);
     const [deleteId, setDeleteId] = useState(null);
     const [deleting, setDeleting] = useState(false);
+
+    useEffect(() => {
+        fetchDrafts();
+    }, [fetchDrafts]);
 
     const getClient = (clientId) => clients.find((c) => c.id === clientId);
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await fetchUserData();
+        await fetchDrafts({ force: true });
         setRefreshing(false);
     };
 
@@ -33,7 +37,7 @@ export function DraftsScreen({ navigation }) {
         }
     };
 
-    if (loading && !refreshing) return <PageLoader />;
+    if (draftsLoading && !refreshing && draftInvoices.length === 0) return <PageLoader />;
 
     return (
         <View style={styles.screen}>

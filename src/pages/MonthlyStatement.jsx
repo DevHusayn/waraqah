@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Crown, Download, Printer, FileBarChart } from 'lucide-react';
 import { useInvoice } from '../context/InvoiceContext';
@@ -20,11 +20,15 @@ import { format } from 'date-fns';
 const STATUS_COLS = ['paid', 'pending', 'overdue', 'cancelled'];
 
 export default function MonthlyStatement() {
-    const { invoices, clients, loading } = useInvoice();
+    const { invoices, clients, fetchInvoices, invoicesLoading } = useInvoice();
     const { businessInfo, loading: settingsLoading } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const [monthValue, setMonthValue] = useState(getDefaultStatementMonth);
     const [exporting, setExporting] = useState(false);
+
+    useEffect(() => {
+        fetchInvoices();
+    }, [fetchInvoices]);
 
     const { year, month } = parseStatementMonth(monthValue);
 

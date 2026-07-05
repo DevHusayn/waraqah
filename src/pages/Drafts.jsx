@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { PenLine, Plus, Trash2 } from 'lucide-react';
@@ -20,9 +20,13 @@ const COLUMNS = [
 
 const Drafts = () => {
     const navigate = useNavigate();
-    const { draftInvoices, clients, deleteInvoice, loading } = useInvoice();
+    const { draftInvoices, clients, deleteInvoice, fetchDrafts, draftsLoading } = useInvoice();
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
+
+    useEffect(() => {
+        fetchDrafts();
+    }, [fetchDrafts]);
 
     const getClient = (clientId) => clients.find((c) => c.id === clientId);
 
@@ -64,7 +68,7 @@ const Drafts = () => {
                 </button>
             </PageHeader>
 
-            {loading && sortedDrafts.length === 0 ? (
+            {draftsLoading && sortedDrafts.length === 0 ? (
                 <p className="py-16 text-center text-sm text-zinc-500">Loading drafts…</p>
             ) : sortedDrafts.length === 0 ? (
                 <div className="data-table-wrap">

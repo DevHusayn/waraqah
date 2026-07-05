@@ -332,6 +332,25 @@ export function AppContentSkeleton() {
     );
 }
 
+/** Centered loader for public routes (auth, legal) outside the app shell. */
+export function PublicPageLoader() {
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-surface-muted px-4">
+            <LoadingStatus label="Loading page">
+                <div className="w-full max-w-md space-y-4">
+                    <Skeleton className="h-8 w-40 mx-auto" />
+                    <Skeleton className="h-4 w-56 mx-auto" />
+                    <div className="card space-y-3 mt-8">
+                        <Skeleton className="h-10 w-full rounded-lg" />
+                        <Skeleton className="h-10 w-full rounded-lg" />
+                        <Skeleton className="h-11 w-full rounded-lg" />
+                    </div>
+                </div>
+            </LoadingStatus>
+        </div>
+    );
+}
+
 /** Full-page skeleton for list views already wrapped in Layout. */
 export function PageLoader({ className = '' }) {
     return (

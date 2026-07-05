@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
+import { apiFetch } from '../utils/api';
 import { APP_CURRENCY, CURRENCY_INFO, formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
 import InvoiceLimitModal from '../components/InvoiceLimitModal';
@@ -67,6 +68,7 @@ const CreateInvoice = () => {
         addInvoice,
         updateInvoice,
         invoices,
+        loading: invoicesLoading,
         refreshInvoices,
         fetchProducts,
         sendInvoiceEmailToClient,
@@ -125,26 +127,61 @@ const CreateInvoice = () => {
     }, [fetchProducts]);
 
     useEffect(() => {
-        if (!id) return;
-        const invoice = invoices.find((inv) => inv.id === id);
-        if (!invoice) return;
-        if (invoice.status === 'paid' || invoice.status === 'cancelled') {
-            navigate(`/invoices/${id}`, { replace: true });
-            return;
-        }
-        const client = invoice.clientId
-            ? clients.find((c) => c.id === invoice.clientId)
-            : null;
-        setFormData({
-            ...invoice,
-            clientName: client?.name || '',
-            clientEmail: client?.email || '',
-            hasDueDate: Boolean(invoice.dueDate),
-            discountType: invoice.discountType || 'percent',
-            discountValue: invoice.discountValue ?? '',
-        });
-        isDirtyRef.current = false;
-    }, [id, invoices, clients, navigate]);
+        if (!id) return undefined;
+
+        let cancelled = false;
+
+        const applyInvoiceToForm = (invoice) => {
+            if (invoice.status === 'paid' || invoice.status === 'cancelled') {
+                navigate(`/invoices/${id}`, { replace: true });
+                return;
+            }
+            const client = invoice.clientId
+                ? clients.find((c) => c.id === invoice.clientId)
+                : null;
+            setFormData({
+                ...invoice,
+                clientName: client?.name || '',
+                clientEmail: client?.email || '',
+                hasDueDate: Boolean(invoice.dueDate),
+                discountType: invoice.discountType || 'percent',
+                discountValue: invoice.discountValue ?? '',
+            });
+            isDirtyRef.current = false;
+        };
+
+        const loadInvoice = async () => {
+            let invoice = invoices.find((inv) => inv.id === id);
+
+            if (!invoice) {
+                if (invoicesLoading) return;
+                try {
+                    const data = await apiFetch(`/invoices/${id}`);
+                    invoice = { ...data, id: data._id || data.id };
+                } catch {
+                    if (!cancelled) navigate('/invoices/drafts', { replace: true });
+                    return;
+                }
+            } else if (!Array.isArray(invoice.items)) {
+                try {
+                    const data = await apiFetch(`/invoices/${id}`);
+                    invoice = { ...data, id: data._id || data.id };
+                } catch {
+                    if (!cancelled) navigate('/invoices/drafts', { replace: true });
+                    return;
+                }
+            }
+
+            if (!cancelled) {
+                applyInvoiceToForm(invoice);
+            }
+        };
+
+        loadInvoice();
+        return () => {
+            cancelled = true;
+        };
+    }, [id, invoices, clients, navigate, invoicesLoading]);
 
     const getTotals = () =>
         calculateInvoiceTotals(formData.items, {

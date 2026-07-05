@@ -3,13 +3,6 @@ import { lazy, Suspense } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Layout from './components/Layout';
 import Home from './pages/Home';
-import Auth from './pages/Auth';
-import CheckEmailPage from './pages/CheckEmail';
-import ResetPassword from './pages/ResetPassword';
-import VerifyEmail from './pages/VerifyEmail';
-import PublicInvoice from './pages/PublicInvoice';
-import TermsPage from './pages/legal/TermsPage';
-import PrivacyPage from './pages/legal/PrivacyPage';
 import PrivateRoute from './utils/PrivateRoute';
 import AdminRoute from './utils/AdminRoute';
 import { InvoiceProvider } from './context/InvoiceContext';
@@ -17,6 +10,15 @@ import { SettingsProvider } from './context/SettingsContext';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
 import BrandTheme from './components/BrandTheme';
+import { PageLoader, PublicPageLoader } from './components/Skeleton';
+
+const Auth = lazy(() => import('./pages/Auth'));
+const CheckEmailPage = lazy(() => import('./pages/CheckEmail'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
+const PublicInvoice = lazy(() => import('./pages/PublicInvoice'));
+const TermsPage = lazy(() => import('./pages/legal/TermsPage'));
+const PrivacyPage = lazy(() => import('./pages/legal/PrivacyPage'));
 
 const Invoices = lazy(() => import('./pages/Invoices'));
 const Drafts = lazy(() => import('./pages/Drafts'));
@@ -45,7 +47,11 @@ function AppLayout({ children }) {
 }
 
 function LazyPage({ children }) {
-    return <Suspense fallback={null}>{children}</Suspense>;
+    return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
+}
+
+function PublicPage({ children }) {
+    return <Suspense fallback={<PublicPageLoader />}>{children}</Suspense>;
 }
 
 function AppProviders({ children }) {
@@ -67,13 +73,13 @@ function App() {
                         <Router>
                         <Routes>
                             <Route path="/" element={<Home />} />
-                            <Route path="/auth" element={<Auth />} />
-                            <Route path="/auth/check-email" element={<CheckEmailPage />} />
-                            <Route path="/reset-password/:token" element={<ResetPassword />} />
-                            <Route path="/verify-email/:token" element={<VerifyEmail />} />
-                            <Route path="/i/:token" element={<PublicInvoice />} />
-                            <Route path="/terms" element={<TermsPage />} />
-                            <Route path="/privacy" element={<PrivacyPage />} />
+                            <Route path="/auth" element={<PublicPage><Auth /></PublicPage>} />
+                            <Route path="/auth/check-email" element={<PublicPage><CheckEmailPage /></PublicPage>} />
+                            <Route path="/reset-password/:token" element={<PublicPage><ResetPassword /></PublicPage>} />
+                            <Route path="/verify-email/:token" element={<PublicPage><VerifyEmail /></PublicPage>} />
+                            <Route path="/i/:token" element={<PublicPage><PublicInvoice /></PublicPage>} />
+                            <Route path="/terms" element={<PublicPage><TermsPage /></PublicPage>} />
+                            <Route path="/privacy" element={<PublicPage><PrivacyPage /></PublicPage>} />
 
                             <Route
                                 path="/upgrade/callback"

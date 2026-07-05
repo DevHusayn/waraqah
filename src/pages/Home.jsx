@@ -1,10 +1,11 @@
+import { lazy, Suspense } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
-import Dashboard from './Dashboard';
 import PrivateRoute from '../utils/PrivateRoute';
-import { lazy, Suspense } from 'react';
+import { DashboardSkeleton } from '../components/Skeleton';
 
 const Landing = lazy(() => import('./Landing'));
+const Dashboard = lazy(() => import('./Dashboard'));
 
 /** Guests see marketing landing; signed-in users go straight to the dashboard. */
 export default function Home() {
@@ -14,7 +15,9 @@ export default function Home() {
         return (
             <PrivateRoute>
                 <Layout>
-                    <Dashboard />
+                    <Suspense fallback={<DashboardSkeleton />}>
+                        <Dashboard />
+                    </Suspense>
                 </Layout>
             </PrivateRoute>
         );

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { format } from 'date-fns';
 import { PenLine } from 'lucide-react-native';
@@ -37,13 +37,17 @@ const FILTERS = [
 ];
 
 export function InvoicesListScreen({ navigation }) {
-    const { invoices, clients, draftInvoices, loading, fetchUserData } = useInvoice();
+    const { invoices, clients, draftCount, fetchInvoices, invoicesLoading } = useInvoice();
     const { businessInfo } = useSettings();
     const [filter, setFilter] = useState('all');
     const [search, setSearch] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const limitModalRef = useRef(null);
     const { invoiceUsage, tryCreate, goUpgrade } = useInvoiceCreateGuard(limitModalRef, navigation);
+
+    useEffect(() => {
+        fetchInvoices();
+    }, [fetchInvoices]);
 
     const activeInvoices = useMemo(() => filterNonDraftInvoices(invoices), [invoices]);
 
@@ -55,17 +59,16 @@ export function InvoicesListScreen({ navigation }) {
 
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
     const premium = isPremiumUser(businessInfo);
-    const draftCount = draftInvoices?.length || 0;
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await fetchUserData();
+        await fetchInvoices({ force: true });
         setRefreshing(false);
     };
 
     const getClientName = (clientId) => clients.find((c) => c.id === clientId)?.name || 'Unknown';
 
-    if (loading && !refreshing) return <PageLoader />;
+    if (invoicesLoading && !refreshing && activeInvoices.length === 0) return <PageLoader />;
 
     return (
         <View style={styles.screen}>

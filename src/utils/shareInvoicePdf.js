@@ -1,4 +1,3 @@
-import { generateInvoicePdfBlob } from './pdfGenerator';
 import {
     getDocumentNumber,
     resolvePdfMode,
@@ -92,6 +91,7 @@ export async function shareInvoicePdf(invoice, client, businessInfo, options = {
         });
     }
 
+    const { generateInvoicePdfBlob } = await import('./pdfGenerator');
     const { blob, filename } = await generateInvoicePdfBlob(invoice, client, businessInfo, { mode });
     return shareCachedPdfBlob({ blob, filename, message, docNumber });
 }

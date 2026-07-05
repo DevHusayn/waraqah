@@ -9,16 +9,31 @@ const InvoiceContext = createContext(null);
 export function InvoiceProvider({ children }) {
     const { sessionVersion, isAuthenticated } = useAuth();
     const [invoices, setInvoices] = useState([]);
+    const [drafts, setDrafts] = useState([]);
     const [clients, setClients] = useState([]);
     const [products, setProducts] = useState([]);
     const [invoiceUsage, setInvoiceUsage] = useState(null);
+    const [draftCount, setDraftCount] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [invoicesLoading, setInvoicesLoading] = useState(false);
+    const [draftsLoading, setDraftsLoading] = useState(false);
     const [productsLoading, setProductsLoading] = useState(false);
     const productsFetchedRef = useRef(false);
+    const invoicesFetchedRef = useRef(false);
+    const draftsFetchedRef = useRef(false);
 
     const mapInvoice = (i) => ({ ...i, id: i._id || i.id });
     const mapClient = (c) => ({ ...c, id: c._id || c.id });
     const mapProduct = (p) => ({ ...p, id: p._id || p.id });
+
+    const refreshMeta = useCallback(async () => {
+        try {
+            const meta = await apiFetch('/invoices/meta');
+            setDraftCount(meta?.draftCount ?? 0);
+        } catch {
+            setDraftCount(0);
+        }
+    }, []);
 
     const refreshInvoices = useCallback(async () => {
         const [inv, usage] = await Promise.all([
@@ -26,13 +41,56 @@ export function InvoiceProvider({ children }) {
             apiFetch('/invoices/usage').catch(() => null),
         ]);
         setInvoices(inv.map(mapInvoice));
+        invoicesFetchedRef.current = true;
         if (usage) setInvoiceUsage(usage);
-    }, []);
+        await refreshMeta();
+    }, [refreshMeta]);
+
+    const fetchInvoices = useCallback(async ({ force = false } = {}) => {
+        const token = await getToken();
+        if (!token) return [];
+        if (invoicesFetchedRef.current && !force) return invoices;
+
+        setInvoicesLoading(true);
+        try {
+            const inv = await apiFetch('/invoices');
+            const mapped = inv.map(mapInvoice);
+            setInvoices(mapped);
+            invoicesFetchedRef.current = true;
+            return mapped;
+        } catch {
+            setInvoices([]);
+            return [];
+        } finally {
+            setInvoicesLoading(false);
+        }
+    }, [invoices]);
+
+    const fetchDrafts = useCallback(async ({ force = false } = {}) => {
+        const token = await getToken();
+        if (!token) return [];
+        if (draftsFetchedRef.current && !force) return drafts;
+
+        setDraftsLoading(true);
+        try {
+            const draftList = await apiFetch('/invoices/drafts');
+            const mapped = draftList.map(mapInvoice);
+            setDrafts(mapped);
+            setDraftCount(mapped.length);
+            draftsFetchedRef.current = true;
+            return mapped;
+        } catch {
+            setDrafts([]);
+            return [];
+        } finally {
+            setDraftsLoading(false);
+        }
+    }, [drafts]);
 
     const fetchProducts = useCallback(async ({ force = false } = {}) => {
         const token = await getToken();
         if (!token) return [];
-        if (productsFetchedRef.current && !force) return;
+        if (productsFetchedRef.current && !force) return [];
 
         setProductsLoading(true);
         try {
@@ -53,27 +111,31 @@ export function InvoiceProvider({ children }) {
         const token = await getToken();
         if (!token) {
             setInvoices([]);
+            setDrafts([]);
             setClients([]);
             setProducts([]);
             setInvoiceUsage(null);
+            setDraftCount(0);
             productsFetchedRef.current = false;
+            invoicesFetchedRef.current = false;
+            draftsFetchedRef.current = false;
             setLoading(false);
             return;
         }
         setLoading(true);
         try {
-            const [inv, cli, usage] = await Promise.all([
-                apiFetch('/invoices'),
+            const [cli, usage, meta] = await Promise.all([
                 apiFetch('/clients'),
                 apiFetch('/invoices/usage').catch(() => null),
+                apiFetch('/invoices/meta').catch(() => ({ draftCount: 0 })),
             ]);
             setInvoiceUsage(usage);
-            setInvoices(inv.map(mapInvoice));
             setClients(cli.map(mapClient));
+            setDraftCount(meta?.draftCount ?? 0);
         } catch {
-            setInvoices([]);
             setClients([]);
             setInvoiceUsage(null);
+            setDraftCount(0);
         } finally {
             setLoading(false);
         }
@@ -83,20 +145,28 @@ export function InvoiceProvider({ children }) {
         if (isAuthenticated) fetchUserData();
         else {
             setInvoices([]);
+            setDrafts([]);
             setClients([]);
             setProducts([]);
             setInvoiceUsage(null);
+            setDraftCount(0);
             productsFetchedRef.current = false;
+            invoicesFetchedRef.current = false;
+            draftsFetchedRef.current = false;
             setLoading(false);
         }
     }, [sessionVersion, isAuthenticated, fetchUserData]);
 
     const resetAll = () => {
         setInvoices([]);
+        setDrafts([]);
         setClients([]);
         setProducts([]);
         setInvoiceUsage(null);
+        setDraftCount(0);
         productsFetchedRef.current = false;
+        invoicesFetchedRef.current = false;
+        draftsFetchedRef.current = false;
     };
 
     const addInvoice = async (invoice, options = {}) => {
@@ -106,10 +176,18 @@ export function InvoiceProvider({ children }) {
         });
         const mapped = mapInvoice(newInvoice);
         if (options.skipRefresh) {
-            setInvoices((prev) => [mapped, ...prev.filter((inv) => inv.id !== mapped.id)]);
+            if (isDraft(mapped)) {
+                setDrafts((prev) => [mapped, ...prev.filter((inv) => inv.id !== mapped.id)]);
+                setDraftCount((count) => count + 1);
+            } else {
+                setInvoices((prev) => [mapped, ...prev.filter((inv) => inv.id !== mapped.id)]);
+                invoicesFetchedRef.current = true;
+            }
+            await refreshMeta();
             return mapped;
         }
         await refreshInvoices();
+        draftsFetchedRef.current = false;
         return mapped;
     };
 
@@ -118,73 +196,35 @@ export function InvoiceProvider({ children }) {
             method: 'PUT',
             body: JSON.stringify(updatedInvoice),
         });
-        const mapped = { ...updated, id: updated._id || id };
+        const mapped = mapInvoice(updated);
         setInvoices((prev) => prev.map((inv) => (inv.id === id ? mapped : inv)));
+        setDrafts((prev) => prev.map((inv) => (inv.id === id ? mapped : inv)));
         return mapped;
     };
 
     const deleteInvoice = async (id) => {
+        const wasDraft = drafts.some((inv) => inv.id === id);
         await apiFetch(`/invoices/${id}`, { method: 'DELETE' });
         setInvoices((prev) => prev.filter((inv) => inv.id !== id));
-    };
-
-    const addClient = async (client) => {
-        const newClient = await apiFetch('/clients', {
-            method: 'POST',
-            body: JSON.stringify(client),
-        });
-        const mapped = mapClient(newClient);
-        setClients((prev) => [...prev, mapped]);
-        return mapped;
-    };
-
-    const updateClient = async (id, updatedClient) => {
-        const updated = await apiFetch(`/clients/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(updatedClient),
-        });
-        const mapped = mapClient(updated);
-        setClients((prev) => prev.map((c) => (c.id === id ? mapped : c)));
-        return mapped;
-    };
-
-    const deleteClient = async (id) => {
-        await apiFetch(`/clients/${id}`, { method: 'DELETE' });
-        setClients((prev) => prev.filter((c) => c.id !== id));
-    };
-
-    const addProduct = async (product) => {
-        const newProduct = await apiFetch('/products', {
-            method: 'POST',
-            body: JSON.stringify(product),
-        });
-        const mapped = mapProduct(newProduct);
-        setProducts((prev) => [...prev, mapped]);
-        productsFetchedRef.current = true;
-        return mapped;
-    };
-
-    const updateProduct = async (id, updatedProduct) => {
-        const updated = await apiFetch(`/products/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(updatedProduct),
-        });
-        const mapped = mapProduct(updated);
-        setProducts((prev) => prev.map((p) => (p.id === id ? mapped : p)));
-        return mapped;
-    };
-
-    const deleteProduct = async (id) => {
-        await apiFetch(`/products/${id}`, { method: 'DELETE' });
-        setProducts((prev) => prev.filter((p) => p.id !== id));
+        setDrafts((prev) => prev.filter((inv) => inv.id !== id));
+        if (wasDraft) {
+            setDraftCount((count) => Math.max(0, count - 1));
+            await refreshMeta();
+        }
     };
 
     const draftInvoices = useMemo(
         () =>
-            [...invoices]
-                .filter(isDraft)
-                .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)),
-        [invoices]
+            drafts.length > 0
+                ? [...drafts].sort(
+                      (a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
+                  )
+                : [...invoices]
+                      .filter(isDraft)
+                      .sort(
+                          (a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
+                      ),
+        [drafts, invoices]
     );
 
     return (
@@ -192,23 +232,23 @@ export function InvoiceProvider({ children }) {
             value={{
                 invoices,
                 draftInvoices,
+                draftCount,
                 clients,
                 products,
                 invoiceUsage,
                 loading,
+                invoicesLoading,
+                draftsLoading,
                 productsLoading,
                 addInvoice,
                 updateInvoice,
                 deleteInvoice,
-                addClient,
-                updateClient,
-                deleteClient,
-                addProduct,
-                updateProduct,
-                deleteProduct,
                 fetchUserData,
+                fetchInvoices,
+                fetchDrafts,
                 fetchProducts,
                 refreshInvoices,
+                refreshMeta,
                 resetAll,
             }}
         >

@@ -10,8 +10,8 @@ import { CustomTabBar } from './CustomTabBar';
 const Tab = createBottomTabNavigator();
 
 export function MainTabs() {
-    const { draftInvoices } = useInvoice();
-    const draftCount = draftInvoices?.length || 0;
+    const { draftCount } = useInvoice();
+    const draftBadge = draftCount > 0 ? draftCount : undefined;
 
     return (
         <Tab.Navigator
@@ -34,7 +34,7 @@ export function MainTabs() {
                 options={{
                     title: 'Invoices',
                     tabBarIcon: ({ color, size }) => <FileText color={color} size={size} strokeWidth={2} />,
-                    tabBarBadge: draftCount > 0 ? draftCount : undefined,
+                    tabBarBadge: draftBadge,
                 }}
             />
             <Tab.Screen

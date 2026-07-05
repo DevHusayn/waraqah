@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Crown, ImagePlus, Trash2, Lock, Stamp, PenLine } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
@@ -121,10 +121,16 @@ function AssetUploadCard({
 }
 
 export default function PremiumLogoSettings({ formData, setFormData, isEditing, embedded = false }) {
-    const { businessInfo, saveBusinessAsset, saveCompanyLogo } = useSettings();
+    const { businessInfo, saveBusinessAsset, saveCompanyLogo, fetchBusinessAssets } = useSettings();
     const { showToast } = useToast();
     const [savingField, setSavingField] = useState(null);
     const premium = isPremiumUser(businessInfo);
+
+    useEffect(() => {
+        if (premium) {
+            fetchBusinessAssets();
+        }
+    }, [premium, fetchBusinessAssets]);
 
     const logo = (
         formData.companyLogoAvatarUrl ||

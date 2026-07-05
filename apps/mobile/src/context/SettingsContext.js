@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { buildBusinessInfoPayload } from '@waraqah/shared';
 import { apiFetch } from '../api/client';
 import { getToken } from '../api/storage';
@@ -27,17 +27,19 @@ export function SettingsProvider({ children }) {
     const { sessionVersion, isAuthenticated } = useAuth();
     const [businessInfo, setBusinessInfo] = useState(EMPTY_BUSINESS);
     const [loading, setLoading] = useState(true);
+    const assetsLoadedRef = useRef(false);
 
     const fetchBusinessInfo = useCallback(async () => {
         const token = await getToken();
         if (!token) {
             setBusinessInfo(EMPTY_BUSINESS);
+            assetsLoadedRef.current = false;
             setLoading(false);
             return;
         }
         setLoading(true);
         try {
-            const info = await apiFetch('/business-info');
+            const info = await apiFetch('/business-info?summary=1');
             setBusinessInfo(info);
         } catch {
             setBusinessInfo(EMPTY_BUSINESS);
@@ -46,10 +48,25 @@ export function SettingsProvider({ children }) {
         }
     }, []);
 
+    const fetchBusinessAssets = useCallback(async () => {
+        const token = await getToken();
+        if (!token || assetsLoadedRef.current) return;
+        try {
+            const assets = await apiFetch('/business-info/assets');
+            assetsLoadedRef.current = true;
+            setBusinessInfo((prev) => ({ ...prev, ...assets }));
+        } catch {
+            /* optional branding assets */
+        }
+    }, []);
+
     useEffect(() => {
-        if (isAuthenticated) fetchBusinessInfo();
-        else {
+        if (isAuthenticated) {
+            assetsLoadedRef.current = false;
+            fetchBusinessInfo();
+        } else {
             setBusinessInfo(EMPTY_BUSINESS);
+            assetsLoadedRef.current = false;
             setLoading(false);
         }
     }, [sessionVersion, isAuthenticated, fetchBusinessInfo]);
@@ -60,6 +77,7 @@ export function SettingsProvider({ children }) {
             method: 'PUT',
             body: JSON.stringify(payload),
         });
+        assetsLoadedRef.current = true;
         setBusinessInfo(updated);
         return updated;
     };
@@ -70,6 +88,7 @@ export function SettingsProvider({ children }) {
             method: 'PUT',
             body: JSON.stringify(payload),
         });
+        assetsLoadedRef.current = true;
         setBusinessInfo(updated);
         return updated;
     };
@@ -82,6 +101,7 @@ export function SettingsProvider({ children }) {
                 loading,
                 updateBusinessInfo,
                 refreshBusinessInfo: fetchBusinessInfo,
+                fetchBusinessAssets,
                 saveBusinessAsset,
             }}
         >

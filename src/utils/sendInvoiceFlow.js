@@ -1,6 +1,4 @@
 import { calculateInvoiceTotals } from './invoiceTotals';
-import { generateInvoicePdfBlob } from './pdfGenerator';
-import { shareInvoicePdf } from './shareInvoicePdf';
 import { setCachedPdf } from './pdfCache';
 
 export function buildInvoicePayload(formData, status) {
@@ -50,6 +48,7 @@ export function buildInvoicePayload(formData, status) {
 }
 
 export async function prepareInvoicePdf(invoice, client, businessInfo, invoiceId, mode = 'invoice') {
+    const { generateInvoicePdfBlob } = await import('./pdfGenerator');
     const generated = await generateInvoicePdfBlob(invoice, client, businessInfo, { mode });
     if (invoiceId) {
         setCachedPdf(invoiceId, mode, generated);
@@ -59,6 +58,7 @@ export async function prepareInvoicePdf(invoice, client, businessInfo, invoiceId
 
 export async function finalizeAndShareInvoice(invoice, client, businessInfo, invoiceId) {
     const generated = await prepareInvoicePdf(invoice, client, businessInfo, invoiceId, 'invoice');
+    const { shareInvoicePdf } = await import('./shareInvoicePdf');
     return shareInvoicePdf(invoice, client, businessInfo, {
         mode: 'invoice',
         cached: generated,

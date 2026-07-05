@@ -1,15 +1,14 @@
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { format } from 'date-fns';
 import { Clock, FileText, Users, Wallet } from 'lucide-react-native';
 import {
     formatCurrency,
     formatInvoiceUsageLabel,
-    filterNonDraftInvoices,
     getDisplayNumber,
     isPremiumUser,
 } from '@waraqah/shared';
-import { useInvoice } from '../context/InvoiceContext';
+import { apiFetch } from '../api/client';
 import { useSettings } from '../context/SettingsContext';
 import { InvoiceLimitModal } from '../components/InvoiceLimitModal';
 import {
@@ -26,31 +25,41 @@ import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { colors, fontFamily, fontSize, spacing } from '../theme';
 
 export function DashboardScreen({ navigation }) {
-    const { invoices, clients, loading, fetchUserData } = useInvoice();
     const { businessInfo } = useSettings();
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const limitModalRef = useRef(null);
     const { invoiceUsage, tryCreate, goUpgrade } = useInvoiceCreateGuard(limitModalRef, navigation);
 
-    const activeInvoices = filterNonDraftInvoices(invoices);
-    const totalRevenue = activeInvoices.filter((i) => i.status === 'paid').reduce((s, i) => s + (i.total || 0), 0);
-    const pendingRevenue = activeInvoices.filter((i) => i.status === 'pending').reduce((s, i) => s + (i.total || 0), 0);
-    const recent = [...activeInvoices]
-        .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.createdAt))
-        .slice(0, 5);
-    const overdue = activeInvoices.filter((i) => i.status === 'overdue');
-    const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
-    const premium = isPremiumUser(businessInfo);
+    const loadDashboard = useCallback(async () => {
+        try {
+            const dashboard = await apiFetch('/invoices/dashboard');
+            setData(dashboard);
+        } catch {
+            setData(null);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
-    const getClientName = (clientId) => clients.find((c) => c.id === clientId)?.name || 'Unknown';
+    useEffect(() => {
+        loadDashboard();
+    }, [loadDashboard]);
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await fetchUserData();
+        await loadDashboard();
         setRefreshing(false);
     };
 
-    if (loading && !refreshing) return <PageLoader />;
+    const stats = data?.stats;
+    const recent = data?.recentInvoices || [];
+    const overdue = data?.overdueInvoices || [];
+    const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
+    const premium = isPremiumUser(businessInfo);
+
+    if (loading && !refreshing && !data) return <PageLoader />;
 
     return (
         <>
@@ -63,10 +72,10 @@ export function DashboardScreen({ navigation }) {
                 {!premium && usageLabel ? <UsageBanner label={usageLabel} /> : null}
 
                 <View style={styles.statsGrid}>
-                    <StatCard label="Total invoices" value={String(activeInvoices.length)} icon={FileText} theme="brand" />
-                    <StatCard label="Total clients" value={String(clients.length)} icon={Users} theme="violet" />
-                    <StatCard label="Revenue (paid)" value={formatCurrency(totalRevenue)} icon={Wallet} theme="revenue" />
-                    <StatCard label="Pending" value={formatCurrency(pendingRevenue)} icon={Clock} theme="amber" />
+                    <StatCard label="Total invoices" value={String(stats?.totalInvoices ?? 0)} icon={FileText} theme="brand" />
+                    <StatCard label="Total clients" value={String(stats?.totalClients ?? 0)} icon={Users} theme="violet" />
+                    <StatCard label="Revenue (paid)" value={formatCurrency(stats?.paidRevenue ?? 0)} icon={Wallet} theme="revenue" />
+                    <StatCard label="Pending" value={formatCurrency(stats?.pendingRevenue ?? 0)} icon={Clock} theme="amber" />
                 </View>
 
                 <Card style={styles.quickActions} elevated>
@@ -95,7 +104,7 @@ export function DashboardScreen({ navigation }) {
                         <ListRow
                             key={inv.id}
                             title={getDisplayNumber(inv)}
-                            subtitle={`${getClientName(inv.clientId)} · ${format(new Date(inv.date), 'MMM d, yyyy')} · ${formatCurrency(inv.total)}`}
+                            subtitle={`${inv.clientName || 'Unknown'} · ${format(new Date(inv.date), 'MMM d, yyyy')} · ${formatCurrency(inv.total)}`}
                             onPress={() => navigation.navigate('Invoices', { screen: 'InvoiceDetail', params: { id: inv.id } })}
                             badge={<StatusBadge status={inv.status} />}
                         />

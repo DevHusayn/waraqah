@@ -30,7 +30,6 @@ import MarkAsPaidModal from '../components/MarkAsPaidModal';
 import FormSection from '../components/FormSection';
 import StatusBadge from '../components/StatusBadge';
 import ActionMenu from '../components/ActionMenu';
-import { generateInvoicePdfBlob } from '../utils/pdfGenerator';
 import { shareInvoicePdf, getShareFallbackHint, downloadPdfBlob, printPdfBlob } from '../utils/shareInvoicePdf';
 import { getCachedPdf, setCachedPdf, clearCachedPdf } from '../utils/pdfCache';
 import { formatCurrency } from '../utils/currency';
@@ -53,6 +52,11 @@ import {
 
 function mapInvoiceRecord(invoice) {
     return { ...invoice, id: invoice._id || invoice.id };
+}
+
+async function generateInvoicePdf(invoice, client, businessInfo, options) {
+    const { generateInvoicePdfBlob } = await import('../utils/pdfGenerator');
+    return generateInvoicePdfBlob(invoice, client, businessInfo, options);
 }
 
 function SummaryRow({ label, value }) {
@@ -394,7 +398,7 @@ const InvoiceDetails = () => {
             return undefined;
         }
 
-        if (invoiceFromList) {
+        if (invoiceFromList && Array.isArray(invoiceFromList.items)) {
             setFetchedInvoice(null);
             setResolving(false);
             return undefined;
@@ -445,7 +449,7 @@ const InvoiceDetails = () => {
                 if (existing) continue;
 
                 try {
-                    const generated = await generateInvoicePdfBlob(invoice, client, businessInfo, { mode });
+                    const generated = await generateInvoicePdf(invoice, client, businessInfo, { mode });
                     if (cancelledEffect) return;
                     setCachedPdf(id, mode, generated);
                 } catch (err) {
@@ -473,7 +477,7 @@ const InvoiceDetails = () => {
         try {
             let cached = getCachedPdf(id, mode);
             if (!cached) {
-                cached = await generateInvoicePdfBlob(invoice, client, businessInfo, { mode });
+                cached = await generateInvoicePdf(invoice, client, businessInfo, { mode });
                 setCachedPdf(id, mode, cached);
             }
 
@@ -495,7 +499,7 @@ const InvoiceDetails = () => {
 
         let cached = getCachedPdf(id, mode);
         if (!cached) {
-            cached = await generateInvoicePdfBlob(invoice, client, businessInfo, { mode });
+            cached = await generateInvoicePdf(invoice, client, businessInfo, { mode });
             setCachedPdf(id, mode, cached);
         }
 
