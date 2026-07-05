@@ -1,14 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Download, Printer } from 'lucide-react';
 import { publicFetch } from '../utils/publicApi';
 import { getDownloadLabel } from '../utils/receiptHelpers';
 import {
-    downloadPublicInvoicePdfBundle,
-    loadPublicInvoicePdfBundle,
-    printPublicInvoicePdfBundle,
-    revokePublicInvoicePdfBundle,
+    downloadPublicInvoicePdf,
+    printPublicInvoicePdf,
 } from '../utils/publicInvoicePdf';
+import InvoiceDocumentPreview from '../components/InvoiceDocumentPreview';
 import WaraqahLogo from '../components/WaraqahLogo';
 import Spinner from '../components/Spinner';
 
@@ -20,8 +19,6 @@ export default function PublicInvoice() {
     const [data, setData] = useState(null);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
-    const [pdfBundle, setPdfBundle] = useState(null);
-    const [pdfLoading, setPdfLoading] = useState(false);
     const [pdfError, setPdfError] = useState('');
     const [actionBusy, setActionBusy] = useState(false);
 
@@ -57,87 +54,33 @@ export default function PublicInvoice() {
         ? invoice?.receiptNumber || 'Receipt'
         : invoice?.invoiceNumber || 'Invoice';
 
-    const pdfSourceKey = useMemo(
-        () => JSON.stringify({
-            token,
-            pdfMode,
-            invoice,
-            client,
-            business,
-        }),
-        [token, pdfMode, invoice, client, business]
-    );
-
-    useEffect(() => {
-        if (!invoice || !client || !business) {
-            setPdfBundle((current) => {
-                revokePublicInvoicePdfBundle(current);
-                return null;
-            });
-            return undefined;
-        }
-
-        let cancelled = false;
-
-        (async () => {
-            setPdfLoading(true);
-            setPdfError('');
-
-            try {
-                const bundle = await loadPublicInvoicePdfBundle(invoice, client, business, showReceipt);
-                if (cancelled) {
-                    revokePublicInvoicePdfBundle(bundle);
-                    return;
-                }
-                setPdfBundle((current) => {
-                    revokePublicInvoicePdfBundle(current);
-                    return bundle;
-                });
-            } catch (err) {
-                if (!cancelled) {
-                    setPdfError(err.message || 'Could not render document preview.');
-                }
-            } finally {
-                if (!cancelled) setPdfLoading(false);
-            }
-        })();
-
-        return () => {
-            cancelled = true;
-            setPdfBundle((current) => {
-                revokePublicInvoicePdfBundle(current);
-                return null;
-            });
-        };
-    }, [pdfSourceKey, invoice, client, business, showReceipt]);
-
     const downloadLabel = invoice ? getDownloadLabel(invoice, pdfMode) : 'Download PDF';
 
     const handleDownloadPdf = useCallback(async () => {
-        if (!pdfBundle || actionBusy) return;
+        if (!invoice || !client || !business || actionBusy) return;
         setActionBusy(true);
         setPdfError('');
         try {
-            await downloadPublicInvoicePdfBundle(pdfBundle);
+            await downloadPublicInvoicePdf(invoice, client, business, showReceipt);
         } catch (err) {
             setPdfError(err.message || 'Failed to download PDF.');
         } finally {
             setActionBusy(false);
         }
-    }, [pdfBundle, actionBusy]);
+    }, [invoice, client, business, showReceipt, actionBusy]);
 
     const handlePrintPdf = useCallback(async () => {
-        if (!pdfBundle || actionBusy) return;
+        if (!invoice || !client || !business || actionBusy) return;
         setActionBusy(true);
         setPdfError('');
         try {
-            await printPublicInvoicePdfBundle(pdfBundle);
+            await printPublicInvoicePdf(invoice, client, business, showReceipt);
         } catch (err) {
             setPdfError(err.message || 'Failed to print PDF.');
         } finally {
             setActionBusy(false);
         }
-    }, [pdfBundle, actionBusy]);
+    }, [invoice, client, business, showReceipt, actionBusy]);
 
     if (loading) {
         return (
@@ -171,31 +114,13 @@ export default function PublicInvoice() {
                     <h1 className="text-lg font-semibold text-zinc-900 mt-1">{docTitle}</h1>
                 </div>
 
-                <div className="card !p-0 overflow-hidden shadow-card border border-zinc-200 bg-zinc-100">
-                    {pdfLoading ? (
-                        <div className="flex min-h-[480px] items-center justify-center bg-white">
-                            <Spinner label="Preparing document…" centered />
-                        </div>
-                    ) : pdfBundle?.url ? (
-                        <object
-                            data={pdfBundle.url}
-                            type="application/pdf"
-                            title={`${docTitle} document`}
-                            className="block w-full min-h-[480px] h-[min(85vh,1123px)] bg-white"
-                        >
-                            <iframe
-                                src={pdfBundle.url}
-                                title={`${docTitle} document`}
-                                className="block w-full min-h-[480px] h-[min(85vh,1123px)] border-0 bg-white"
-                            />
-                        </object>
-                    ) : (
-                        <div className="flex min-h-[320px] items-center justify-center bg-white px-6 text-center">
-                            <p className="text-sm text-zinc-600">
-                                {pdfError || 'Document preview is unavailable.'}
-                            </p>
-                        </div>
-                    )}
+                <div className="card !p-0 overflow-hidden shadow-card border border-zinc-200">
+                    <InvoiceDocumentPreview
+                        invoice={invoice}
+                        client={client}
+                        businessInfo={business}
+                        mode={pdfMode}
+                    />
                 </div>
 
                 {pdfError ? (
@@ -208,7 +133,7 @@ export default function PublicInvoice() {
                     <button
                         type="button"
                         onClick={handleDownloadPdf}
-                        disabled={!pdfBundle || pdfLoading || actionBusy}
+                        disabled={actionBusy}
                         className="btn-primary w-full text-sm py-2.5 px-4 gap-2 min-h-[44px]"
                     >
                         {actionBusy ? <Spinner size="sm" inline /> : <Download className="h-4 w-4" aria-hidden />}
@@ -217,7 +142,7 @@ export default function PublicInvoice() {
                     <button
                         type="button"
                         onClick={handlePrintPdf}
-                        disabled={!pdfBundle || pdfLoading || actionBusy}
+                        disabled={actionBusy}
                         className="btn-secondary w-full text-sm py-2.5 px-4 gap-2 min-h-[44px]"
                     >
                         <Printer className="h-4 w-4" aria-hidden />
