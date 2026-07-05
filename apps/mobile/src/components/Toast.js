@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
 
 export function Toast({ message, type = 'info', onHide }) {
+    const insets = useSafeAreaInsets();
     useEffect(() => {
         const timer = setTimeout(onHide, 3200);
         return () => clearTimeout(timer);
@@ -16,7 +18,12 @@ export function Toast({ message, type = 'info', onHide }) {
         type === 'success' ? colors.green600 : type === 'error' ? colors.red700 : colors.brand;
 
     return (
-        <Animated.View style={[styles.wrap, { backgroundColor: bg, borderColor: border }]}>
+        <Animated.View
+            style={[
+                styles.wrap,
+                { backgroundColor: bg, borderColor: border, top: insets.top + 16 },
+            ]}
+        >
             <Text style={[styles.text, { color: text }]}>{message}</Text>
         </Animated.View>
     );
@@ -25,7 +32,6 @@ export function Toast({ message, type = 'info', onHide }) {
 const styles = StyleSheet.create({
     wrap: {
         position: 'absolute',
-        bottom: 48,
         left: 16,
         right: 16,
         padding: 14,
