@@ -12,13 +12,9 @@ import {
     TrendingUp,
     Smartphone,
     Mail,
-    Bell,
-    Receipt,
-    Send,
 } from 'lucide-react';
 import LandingNav from '../components/LandingNav';
 import LandingInvoicePreview from '../components/LandingInvoicePreview';
-import LandingEmailPreview from '../components/LandingEmailPreview';
 import WaraqahLogo from '../components/WaraqahLogo';
 import { APP_NAME, APP_TAGLINE } from '../constants/brand';
 import { AUTH_LOGIN_PATH, AUTH_REGISTER_PATH } from '../constants/authRoutes';
@@ -62,29 +58,6 @@ const STEPS = [
     { step: '01', title: 'Add your business', text: 'Set your profile, bank account details, and brand color. Premium adds your logo, stamp, and signature on PDFs.' },
     { step: '02', title: 'Save clients & products', text: 'Store contacts and catalog items once, then pick them on every new invoice.' },
     { step: '03', title: 'Send and track', text: 'Email the invoice to your client, share a PDF, or enable automatic delivery. Mark it paid to send a receipt.' },
-];
-
-const EMAIL_FEATURES = [
-    {
-        icon: Mail,
-        title: 'Invoice delivery',
-        text: 'Send polished invoice emails with amount due, due date, and a secure link clients can open without logging in.',
-    },
-    {
-        icon: Bell,
-        title: 'Payment reminders',
-        text: 'Follow up on pending or overdue invoices with reminder emails — send manually from the invoice page or turn on automatic reminders in Settings.',
-    },
-    {
-        icon: Receipt,
-        title: 'Receipts on payment',
-        text: 'When you mark an invoice paid, your client receives a receipt email with payment details for their records.',
-    },
-    {
-        icon: Send,
-        title: 'Send on your terms',
-        text: 'Email from the share dialog after creating an invoice, or turn on automatic delivery in Settings when you are ready.',
-    },
 ];
 
 const FAQ_ITEMS = [
@@ -167,10 +140,8 @@ export default function Landing() {
             <LandingNav />
 
             {/* Hero */}
-            <section className="relative pt-28 pb-20 sm:pt-32 sm:pb-28 landing-hero-gradient border-b border-zinc-200/80 overflow-hidden">
-                <div className="landing-blob landing-blob-1" aria-hidden />
-                <div className="landing-blob landing-blob-2" aria-hidden />
-                <div className="mx-auto max-w-6xl px-4 sm:px-6 relative z-10">
+            <section className="relative pt-28 pb-20 sm:pt-32 sm:pb-28 bg-white border-b border-zinc-200/80">
+                <div className="mx-auto max-w-6xl px-4 sm:px-6">
                     <div
                         ref={heroRef}
                         className={`grid lg:grid-cols-2 gap-12 lg:gap-16 items-center ${revealClass(heroVisible)}`}
@@ -249,52 +220,8 @@ export default function Landing() {
                 </div>
             </section>
 
-            {/* Client emails */}
-            <section id="emails" className="py-20 sm:py-24 landing-section-muted scroll-mt-20">
-                <div className="mx-auto max-w-6xl px-4 sm:px-6">
-                    <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-                        <SectionReveal>
-                            <p className="inline-flex items-center gap-2 rounded-full bg-white border border-zinc-200/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                                <Mail className="h-3.5 w-3.5 text-brand" aria-hidden />
-                                Client emails
-                            </p>
-                            <h2 className="mt-4 text-3xl sm:text-4xl font-bold text-zinc-900 tracking-tight">
-                                Deliver invoices without leaving {APP_NAME}
-                            </h2>
-                            <p className="mt-4 text-zinc-600 text-lg leading-relaxed">
-                                Skip copying PDFs into your personal inbox. {APP_NAME} sends professional,
-                                branded emails to your clients — and keeps you notified when each message goes out.
-                            </p>
-                            <ul className="mt-8 space-y-5">
-                                {EMAIL_FEATURES.map((item) => {
-                                    const Icon = item.icon;
-                                    return (
-                                        <li key={item.title} className="flex gap-4">
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white border border-zinc-200/80 text-brand">
-                                                <Icon className="h-5 w-5" aria-hidden />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-sm font-semibold text-zinc-950">{item.title}</h3>
-                                                <p className="mt-1 text-sm text-zinc-500 leading-relaxed">{item.text}</p>
-                                            </div>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </SectionReveal>
-
-                        <SectionReveal delay={2}>
-                            <LandingEmailPreview />
-                            <p className="mt-4 text-center text-xs text-zinc-500">
-                                Included on Free and Premium · No extra email setup required
-                            </p>
-                        </SectionReveal>
-                    </div>
-                </div>
-            </section>
-
             {/* How it works */}
-            <section className="py-20 sm:py-24 landing-section-muted">
+            <section className="py-20 sm:py-24 bg-white">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6">
                     <SectionReveal className="text-center max-w-2xl mx-auto">
                         <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900 tracking-tight">
@@ -425,26 +352,26 @@ export default function Landing() {
             </section>
 
             {/* Final CTA */}
-            <section className="py-20 sm:py-28 landing-cta-gradient">
+            <section className="py-20 sm:py-28 bg-white border-t border-zinc-200/80">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center">
                     <SectionReveal>
-                        <h2 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-zinc-950 tracking-tight">
                             Ready to invoice like a pro?
                         </h2>
-                        <p className="mt-4 text-lg text-green-100">
+                        <p className="mt-4 text-lg text-zinc-600">
                             Join {APP_NAME} today and send your next invoice in seconds.
                         </p>
                         <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
                             <Link
                                 to={AUTH_REGISTER_PATH}
-                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white text-brand font-semibold py-3.5 px-8 shadow-card-md hover:bg-green-50 transition-colors"
+                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand text-white font-semibold py-3.5 px-8 shadow-soft shadow-brand/20 hover:bg-brand-hover transition-colors"
                             >
                                 Get started
                                 <ArrowRight className="h-4 w-4" />
                             </Link>
                             <Link
                                 to={AUTH_LOGIN_PATH}
-                                className="inline-flex items-center justify-center rounded-xl border border-white/40 text-white font-medium py-3.5 px-8 hover:bg-white/10 transition-colors"
+                                className="inline-flex items-center justify-center rounded-xl border border-zinc-200 text-zinc-700 font-medium py-3.5 px-8 hover:bg-zinc-50 transition-colors"
                             >
                                 Log in
                             </Link>
