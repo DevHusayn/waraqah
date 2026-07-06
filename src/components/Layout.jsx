@@ -6,6 +6,7 @@ import {
     Users,
     Menu,
     X,
+    LogOut,
     FileBarChart,
     Crown,
     Package,
@@ -16,9 +17,11 @@ import { useInvoice } from '../context/InvoiceContext';
 import { useAuth } from '../context/AuthContext';
 import WaraqahLogo from './WaraqahLogo';
 import AccountAvatar from './AccountAvatar';
+import ConfirmModal from './ConfirmModal';
 import { isPremiumUser } from '../utils/premium';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
 import { APP_TAGLINE } from '../constants/brand';
+import useAppLogout from '../hooks/useAppLogout';
 
 const NAV_ITEMS = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -64,6 +67,8 @@ function NavLinks({ items, isActive, onNavigate, premium, badges }) {
 const Layout = ({ children }) => {
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const handleLogout = useAppLogout();
     const { businessInfo, fetchBusinessAssets } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const { draftCount } = useInvoice();
@@ -127,6 +132,18 @@ const Layout = ({ children }) => {
                     premium={premium}
                     badges={{ drafts: draftCount }}
                 />
+                {isAuthenticated ? (
+                    <div className="mt-4 pt-4 border-t border-zinc-200/50">
+                        <button
+                            type="button"
+                            onClick={() => setShowLogoutModal(true)}
+                            className="nav-link text-red-600 hover:bg-red-50/80 hover:text-red-700 w-full"
+                        >
+                            <LogOut className="h-4 w-4 flex-shrink-0" strokeWidth={1.75} />
+                            Log out
+                        </button>
+                    </div>
+                ) : null}
             </nav>
         </>
     );
@@ -212,6 +229,20 @@ const Layout = ({ children }) => {
                     </div>
                 </main>
             </div>
+
+            <ConfirmModal
+                open={showLogoutModal}
+                title="Log out?"
+                description="You will need to sign in again to access your account."
+                confirmLabel="Log out"
+                cancelLabel="Stay signed in"
+                variant="danger"
+                onConfirm={() => {
+                    setShowLogoutModal(false);
+                    handleLogout();
+                }}
+                onCancel={() => setShowLogoutModal(false)}
+            />
         </div>
     );
 };

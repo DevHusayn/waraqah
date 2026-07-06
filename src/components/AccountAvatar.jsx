@@ -4,12 +4,12 @@ import { getCompanyLogoAvatarUrl } from '../utils/brandAssets';
 
 const SIZE_CLASSES = {
     sm: {
-        box: 'h-7 w-7',
-        text: 'text-[10px]',
+        box: 'h-8 w-8',
+        text: 'text-[11px]',
     },
     md: {
-        box: 'h-7 w-7',
-        text: 'text-[10px]',
+        box: 'h-9 w-9',
+        text: 'text-xs',
     },
 };
 
