@@ -273,12 +273,18 @@ export function AppShellSkeleton() {
     return (
         <LoadingStatus label="Loading">
             <div className="min-h-screen bg-surface-muted">
-                <aside className="hidden md:fixed md:inset-y-0 md:flex md:w-[15.5rem] md:flex-col border-r border-zinc-200/50 bg-zinc-50/40">
+                <header className="hidden md:flex fixed top-0 inset-x-0 z-50 h-14 items-center border-b border-zinc-200/50 bg-white px-4">
+                    <div className="flex h-full w-[15.5rem] shrink-0 items-center gap-2 min-w-0">
+                        <Skeleton className="h-7 w-7 rounded-md shrink-0" />
+                        <Skeleton className="h-4 w-24" />
+                    </div>
+                    <div className="flex flex-1 justify-end">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                    </div>
+                </header>
+
+                <aside className="hidden md:fixed md:left-0 md:top-14 md:bottom-0 md:flex md:w-[15.5rem] md:flex-col border-r border-zinc-200/50 bg-zinc-50/40">
                     <div className="flex flex-1 flex-col overflow-y-auto px-2.5 py-4">
-                        <div className="px-2 mb-5 flex items-center gap-2">
-                            <Skeleton className="h-7 w-7 rounded-md shrink-0" />
-                            <Skeleton className="h-4 w-24" />
-                        </div>
                         <div className="flex flex-col gap-1 px-2">
                             {Array.from({ length: 6 }).map((_, i) => (
                                 <Skeleton key={i} className="h-9 w-full rounded-md" />
@@ -287,7 +293,7 @@ export function AppShellSkeleton() {
                     </div>
                 </aside>
 
-                <div className="md:pl-[15.5rem] flex flex-col flex-1 min-h-screen min-w-0">
+                <div className="md:pl-[15.5rem] md:pt-14 flex flex-col flex-1 min-h-screen min-w-0">
                     <header className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200/50 bg-white/80 px-4 py-2.5 md:hidden">
                         <Skeleton className="h-7 w-28" />
                         <Skeleton className="h-9 w-9 rounded-md" />

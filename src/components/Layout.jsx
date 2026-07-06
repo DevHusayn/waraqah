@@ -150,13 +150,30 @@ const Layout = ({ children }) => {
 
     return (
         <div className="min-h-screen bg-surface-muted">
-            <aside className="hidden md:fixed md:inset-y-0 md:flex md:w-[15.5rem] md:flex-col border-r border-zinc-200/50 bg-zinc-50/40 backdrop-blur-sm">
+            <header className="hidden md:flex fixed top-0 inset-x-0 z-50 h-14 items-center border-b border-zinc-200/50 bg-white">
+                <div className="flex h-full w-[15.5rem] shrink-0 items-center px-4 min-w-0">
+                    <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} subtitle={APP_TAGLINE} />
+                </div>
+                <div className="flex flex-1 items-center justify-end px-4 sm:px-6 lg:px-8">
+                    {isAuthenticated ? (
+                        <Link
+                            to="/settings"
+                            aria-label="Settings"
+                            className="rounded-md p-1 outline-none transition-colors hover:bg-zinc-100/80 focus-visible:ring-2 focus-visible:ring-zinc-900/10"
+                        >
+                            <AccountAvatar size="sm" />
+                        </Link>
+                    ) : null}
+                </div>
+            </header>
+
+            <aside className="hidden md:fixed md:left-0 md:top-14 md:bottom-0 md:flex md:w-[15.5rem] md:flex-col border-r border-zinc-200/50 bg-zinc-50/40">
                 <div className="flex flex-1 flex-col overflow-y-auto px-2.5 py-4">
-                    {sidebarContent()}
+                    {sidebarContent(undefined, { showBrand: false })}
                 </div>
             </aside>
 
-            <div className="md:pl-[15.5rem] flex flex-col flex-1 min-h-screen min-w-0">
+            <div className="md:pl-[15.5rem] md:pt-14 flex flex-col flex-1 min-h-screen min-w-0">
                 <header className="sticky top-0 z-50 flex md:hidden items-center justify-between border-b border-zinc-200/50 bg-white px-4 py-2.5">
                     <div className="flex items-center min-w-0">
                         <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
@@ -207,21 +224,6 @@ const Layout = ({ children }) => {
                         {sidebarContent(() => setSidebarOpen(false), { showBrand: false })}
                     </div>
                 </div>
-
-                <header className="sticky top-0 z-10 hidden md:flex items-center justify-between border-b border-zinc-200/50 bg-white px-4 py-2.5">
-                    <div className="flex-1" aria-hidden />
-                    <div className="flex items-center gap-1.5">
-                        {isAuthenticated ? (
-                            <Link
-                                to="/settings"
-                                aria-label="Settings"
-                                className="rounded-md p-1 outline-none transition-colors hover:bg-zinc-100/80 focus-visible:ring-2 focus-visible:ring-zinc-900/10"
-                            >
-                                <AccountAvatar size="sm" />
-                            </Link>
-                        ) : null}
-                    </div>
-                </header>
 
                 <main className="flex-1 min-w-0 overflow-x-hidden">
                     <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full min-w-0">
