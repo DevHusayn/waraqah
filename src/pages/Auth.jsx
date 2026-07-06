@@ -11,7 +11,7 @@ import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import WaraqahLogo from '../components/WaraqahLogo';
 import RequiredLabel from '../components/RequiredLabel';
 import { getNetworkErrorMessage } from '../utils/apiConfig';
-import { authFetch, apiFetch, applyLoginResponse } from '../utils/api';
+import { authFetch, apiFetch, applyLoginResponse, prepareForLogin } from '../utils/api';
 import SocialAuthButtons from '../components/auth/SocialAuthButtons';
 import {
     validateRequired,
@@ -139,6 +139,7 @@ function Auth() {
     };
 
     const handleSocialSuccess = async (data) => {
+        resetAll();
         applyLoginResponse(data);
         setSession(data.user);
         await fetchUserData();
@@ -172,6 +173,8 @@ function Auth() {
         setFieldErrors({});
         setSubmitLoading(true);
         try {
+            await prepareForLogin();
+            resetAll();
             const email = form.email.trim().toLowerCase();
             const data = await authFetch('/auth/login', {
                 method: 'POST',

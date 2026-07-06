@@ -2,6 +2,7 @@
 import { API_BASE, getNetworkErrorMessage } from './apiConfig';
 import { getCsrfToken, clearLegacyAuthStorage, setCsrfToken, clearCsrfToken } from './csrf';
 import { getAccessToken, setAccessToken, clearAccessToken } from './authToken';
+import { clearAuthSessionHint, clearUserProfileCache } from './authHint';
 
 clearLegacyAuthStorage();
 
@@ -54,6 +55,28 @@ export function applyLoginResponse(data) {
     }
     if (data?.csrfToken) {
         setCsrfToken(data.csrfToken);
+    }
+}
+
+/** Drop any prior session in this tab before signing in again. */
+export function clearClientAuthState() {
+    clearLegacyAuthStorage();
+    clearAccessToken();
+    clearCsrfToken();
+    clearAuthSessionHint();
+    clearUserProfileCache();
+}
+
+/** End any server session and clear local auth state before a new login. */
+export async function prepareForLogin() {
+    clearClientAuthState();
+    try {
+        await fetch(`${API_BASE}/auth/logout`, {
+            method: 'POST',
+            credentials: 'include',
+        });
+    } catch {
+        /* best effort */
     }
 }
 

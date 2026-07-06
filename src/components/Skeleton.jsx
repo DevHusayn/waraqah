@@ -274,7 +274,7 @@ export function AppShellSkeleton() {
         <LoadingStatus label="Loading">
             <div className="min-h-screen bg-surface-muted">
                 <aside className="hidden md:fixed md:inset-y-0 md:flex md:w-[15.5rem] md:flex-col border-r border-zinc-200/50 bg-zinc-50/40">
-                    <div className="flex flex-1 flex-col px-2.5 py-4">
+                    <div className="flex flex-1 flex-col overflow-y-auto px-2.5 py-4">
                         <div className="px-2 mb-5 flex items-center gap-2">
                             <Skeleton className="h-7 w-7 rounded-md shrink-0" />
                             <Skeleton className="h-4 w-24" />
@@ -283,17 +283,6 @@ export function AppShellSkeleton() {
                             {Array.from({ length: 6 }).map((_, i) => (
                                 <Skeleton key={i} className="h-9 w-full rounded-md" />
                             ))}
-                        </div>
-                        <div className="mt-auto pt-4 border-t border-zinc-200/40">
-                            <div className="rounded-lg border border-zinc-200/50 bg-white/60 p-2.5">
-                                <div className="flex items-center gap-2.5">
-                                    <Skeleton className="h-7 w-7 rounded-md shrink-0" />
-                                    <div className="flex-1 space-y-1.5">
-                                        <Skeleton className="h-3 w-24" />
-                                        <Skeleton className="h-2.5 w-14" />
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </aside>

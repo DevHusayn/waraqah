@@ -33,9 +33,9 @@ export default function LandingNav() {
     return (
         <>
             <header
-                className={`fixed inset-x-0 top-0 z-50 transition-all duration-200 ${
-                    scrolled
-                        ? 'bg-white/90 backdrop-blur-md border-b border-zinc-200/80'
+                className={`fixed inset-x-0 top-0 z-50 transition-colors duration-200 ${
+                    scrolled || open
+                        ? 'bg-white border-b border-zinc-200/80'
                         : 'bg-transparent'
                 }`}
             >
@@ -61,60 +61,58 @@ export default function LandingNav() {
                     <button
                         type="button"
                         className="md:hidden inline-flex items-center justify-center rounded-md p-2 text-zinc-700 hover:bg-zinc-100"
-                        onClick={() => setOpen(true)}
-                        aria-label="Open menu"
+                        onClick={() => setOpen((isOpen) => !isOpen)}
+                        aria-label={open ? 'Close menu' : 'Open menu'}
+                        aria-expanded={open}
                     >
-                        <Menu className="h-5 w-5" />
+                        {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                     </button>
                 </div>
             </header>
 
-            {open && (
-                <div className="fixed inset-0 z-[60] md:hidden">
-                    <div
-                        className="absolute inset-0 bg-zinc-950/40 backdrop-blur-[2px] landing-menu-backdrop"
-                        onClick={closeMenu}
-                        aria-hidden
-                    />
-                    <div className="absolute right-0 top-0 flex h-full w-[min(100%,20rem)] flex-col bg-white border-l border-zinc-200/80 landing-menu-panel">
-                        <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-3">
-                            <WaraqahLogo size="sm" iconStyle="solid" />
-                            <button
-                                type="button"
-                                onClick={closeMenu}
-                                className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100"
-                                aria-label="Close menu"
-                            >
-                                <X className="h-5 w-5" />
-                            </button>
-                        </div>
-                        <nav className="flex flex-1 flex-col gap-0.5 p-3">
-                            {NAV_LINKS.map((item) => (
-                                <a
-                                    key={item.href}
-                                    href={item.href}
-                                    onClick={closeMenu}
-                                    className="rounded-md px-3 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
-                                >
-                                    {item.label}
-                                </a>
-                            ))}
-                            <Link
-                                to={AUTH_LOGIN_PATH}
+            <div
+                className={`fixed inset-x-0 top-14 bottom-0 z-30 bg-zinc-950/40 md:hidden transition-opacity duration-200 ease-out ${
+                    open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                }`}
+                onClick={closeMenu}
+                aria-hidden={!open}
+            />
+
+            <div
+                className={`fixed inset-x-0 top-14 z-40 md:hidden transition-[opacity,transform] duration-200 ease-out ${
+                    open
+                        ? 'opacity-100 translate-y-0 pointer-events-auto'
+                        : 'pointer-events-none opacity-0 -translate-y-1'
+                }`}
+                aria-hidden={!open}
+            >
+                <div className="border-b border-zinc-200/50 bg-white shadow-sm max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain px-4 py-4">
+                    <nav className="flex flex-col gap-0.5">
+                        {NAV_LINKS.map((item) => (
+                            <a
+                                key={item.href}
+                                href={item.href}
                                 onClick={closeMenu}
                                 className="rounded-md px-3 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
                             >
-                                Log in
-                            </Link>
-                        </nav>
-                        <div className="border-t border-zinc-100 p-3">
-                            <Link to={AUTH_REGISTER_PATH} onClick={closeMenu} className="btn-primary w-full">
-                                Get started
-                            </Link>
-                        </div>
+                                {item.label}
+                            </a>
+                        ))}
+                        <Link
+                            to={AUTH_LOGIN_PATH}
+                            onClick={closeMenu}
+                            className="rounded-md px-3 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+                        >
+                            Log in
+                        </Link>
+                    </nav>
+                    <div className="mt-3 pt-3 border-t border-zinc-200/50">
+                        <Link to={AUTH_REGISTER_PATH} onClick={closeMenu} className="btn-primary w-full">
+                            Get started
+                        </Link>
                     </div>
                 </div>
-            )}
+            </div>
         </>
     );
 }

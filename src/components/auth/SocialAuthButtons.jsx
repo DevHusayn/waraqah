@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
-import { authFetch, applyLoginResponse } from '../../utils/api';
+import { authFetch, applyLoginResponse, prepareForLogin } from '../../utils/api';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 const APPLE_CLIENT_ID = import.meta.env.VITE_APPLE_CLIENT_ID || '';
@@ -53,6 +53,7 @@ export default function SocialAuthButtons({ onSuccess, onError, disabled = false
     }, []);
 
     const finishAuth = async (path, body) => {
+        await prepareForLogin();
         const data = await authFetch(path, {
             method: 'POST',
             body: JSON.stringify(body),

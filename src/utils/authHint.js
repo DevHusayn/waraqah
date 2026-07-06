@@ -6,13 +6,7 @@ const USER_CACHE_KEY = 'waraqah_user_cache';
 
 function readAuthHint() {
     try {
-        if (localStorage.getItem(HINT_KEY) === '1') return true;
-        // One-time migration from tab-scoped hint (older builds).
-        if (sessionStorage.getItem(HINT_KEY) === '1') {
-            localStorage.setItem(HINT_KEY, '1');
-            sessionStorage.removeItem(HINT_KEY);
-            return true;
-        }
+        if (sessionStorage.getItem(HINT_KEY) === '1') return true;
     } catch {
         /* private browsing / storage blocked */
     }
@@ -21,7 +15,7 @@ function readAuthHint() {
 
 export function setAuthSessionHint() {
     try {
-        localStorage.setItem(HINT_KEY, '1');
+        sessionStorage.setItem(HINT_KEY, '1');
     } catch {
         /* private browsing / storage blocked */
     }
@@ -29,8 +23,8 @@ export function setAuthSessionHint() {
 
 export function clearAuthSessionHint() {
     try {
-        localStorage.removeItem(HINT_KEY);
         sessionStorage.removeItem(HINT_KEY);
+        localStorage.removeItem(HINT_KEY);
     } catch {
         /* ignore */
     }
@@ -42,7 +36,7 @@ export function cacheUserProfile(user) {
         return;
     }
     try {
-        localStorage.setItem(
+        sessionStorage.setItem(
             USER_CACHE_KEY,
             JSON.stringify({
                 id: user.id || user._id || null,
@@ -58,7 +52,7 @@ export function cacheUserProfile(user) {
 
 export function getCachedUserProfile() {
     try {
-        const raw = localStorage.getItem(USER_CACHE_KEY);
+        const raw = sessionStorage.getItem(USER_CACHE_KEY);
         if (!raw) return null;
         const parsed = JSON.parse(raw);
         return parsed?.email ? parsed : null;
@@ -69,13 +63,14 @@ export function getCachedUserProfile() {
 
 export function clearUserProfileCache() {
     try {
+        sessionStorage.removeItem(USER_CACHE_KEY);
         localStorage.removeItem(USER_CACHE_KEY);
     } catch {
         /* ignore */
     }
 }
 
-/** Best-effort signal that the user was recently signed in in this browser. */
+/** Best-effort signal that this tab has an active session (tab-scoped only). */
 export function hasLikelyAuthSession() {
     if (getAccessToken()) return true;
     if (getCsrfToken()) return true;
@@ -83,7 +78,13 @@ export function hasLikelyAuthSession() {
     return readAuthHint();
 }
 
-/** Start user data fetches as soon as a session is likely — don't wait for /auth/me. */
+/** Start user data fetches once auth is confirmed or this tab holds a session token. */
 export function shouldPrefetchUserData(isAuthenticated) {
-    return isAuthenticated || hasLikelyAuthSession();
+    return isAuthenticated || Boolean(getAccessToken());
+}
+
+/** Remove stale cross-tab auth artifacts from older builds. */
+export function clearLegacyAuthHints() {
+    clearAuthSessionHint();
+    clearUserProfileCache();
 }

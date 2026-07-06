@@ -9,6 +9,7 @@ import {
     cacheUserProfile,
     getCachedUserProfile,
     clearUserProfileCache,
+    clearLegacyAuthHints,
 } from '../utils/authHint';
 
 const AuthContext = createContext(null);
@@ -71,6 +72,7 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         clearLegacyAuthStorage();
+        clearLegacyAuthHints();
         refreshSession().finally(() => setResolving(false));
     }, [refreshSession]);
 
@@ -106,11 +108,9 @@ export function AuthProvider({ children }) {
         window.dispatchEvent(new Event('app-logout'));
     }, [clearSession]);
 
-    const isAuthenticated = resolving
-        ? Boolean(user) || likelySessionRef.current
-        : Boolean(user);
+    const isAuthenticated = Boolean(user);
 
-    const loading = resolving && !likelySessionRef.current && !user;
+    const loading = resolving;
 
     const value = useMemo(
         () => ({

@@ -112,12 +112,14 @@ const Layout = ({ children }) => {
         return location.pathname.startsWith(path);
     };
 
-    const sidebarContent = (onNavigate) => (
+    const sidebarContent = (onNavigate, { showBrand = true } = {}) => (
         <>
-            <div className="px-2 mb-5 min-w-0">
-                <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} subtitle={APP_TAGLINE} />
-            </div>
-            <nav className="flex flex-1 flex-col gap-0.5">
+            {showBrand ? (
+                <div className="px-2 mb-5 min-w-0">
+                    <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} subtitle={APP_TAGLINE} />
+                </div>
+            ) : null}
+            <nav className="flex flex-col gap-0.5">
                 <NavLinks
                     items={navigation}
                     isActive={isActive}
@@ -137,35 +139,11 @@ const Layout = ({ children }) => {
                 </div>
             </aside>
 
-            {sidebarOpen && (
-                <div className="fixed inset-0 z-50 flex md:hidden overflow-hidden overscroll-none">
-                    <div
-                        className="fixed inset-0 bg-zinc-950/30 backdrop-blur-[3px] touch-none"
-                        onClick={() => setSidebarOpen(false)}
-                        aria-hidden
-                    />
-                    <div className="relative flex w-full max-w-[17rem] flex-1 flex-col bg-zinc-50/95 backdrop-blur-md border-r border-zinc-200/50 shadow-lift">
-                        <button
-                            type="button"
-                            className="absolute top-3 right-3 p-1.5 rounded-md text-zinc-500 hover:bg-white/80 hover:text-zinc-700 transition-colors"
-                            onClick={() => setSidebarOpen(false)}
-                            aria-label="Close menu"
-                        >
-                            <X className="h-4 w-4" />
-                        </button>
-                        <div className="flex flex-1 flex-col overflow-y-auto px-2.5 py-4 pt-11">
-                            {sidebarContent(() => setSidebarOpen(false))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
             <div className="md:pl-[15.5rem] flex flex-col flex-1 min-h-screen min-w-0">
-                <header className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200/50 bg-white/80 backdrop-blur-xl px-4 py-2.5">
-                    <div className="flex items-center min-w-0 md:hidden">
+                <header className="sticky top-0 z-50 flex md:hidden items-center justify-between border-b border-zinc-200/50 bg-white px-4 py-2.5">
+                    <div className="flex items-center min-w-0">
                         <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
                     </div>
-                    <div className="hidden md:block flex-1" aria-hidden />
                     <div className="flex items-center gap-1.5">
                         {isAuthenticated ? (
                             <Link
@@ -178,12 +156,53 @@ const Layout = ({ children }) => {
                         ) : null}
                         <button
                             type="button"
-                            className="inline-flex items-center justify-center rounded-md p-2 text-zinc-600 hover:bg-zinc-100/80 transition-colors md:hidden"
-                            onClick={() => setSidebarOpen(true)}
-                            aria-label="Open menu"
+                            className="inline-flex items-center justify-center rounded-md p-2 text-zinc-600 hover:bg-zinc-100/80 transition-colors"
+                            onClick={() => setSidebarOpen((open) => !open)}
+                            aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+                            aria-expanded={sidebarOpen}
                         >
-                            <Menu className="h-5 w-5" strokeWidth={1.75} />
+                            {sidebarOpen ? (
+                                <X className="h-5 w-5 stroke-[1.75]" />
+                            ) : (
+                                <Menu className="h-5 w-5 stroke-[1.75]" />
+                            )}
                         </button>
+                    </div>
+                </header>
+
+                <div
+                    className={`fixed inset-x-0 top-14 bottom-0 z-30 bg-zinc-950/40 md:hidden transition-opacity duration-200 ease-out ${
+                        sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                    }`}
+                    onClick={() => setSidebarOpen(false)}
+                    aria-hidden={!sidebarOpen}
+                />
+
+                <div
+                    className={`fixed inset-x-0 top-14 z-40 md:hidden transition-[opacity,transform] duration-200 ease-out ${
+                        sidebarOpen
+                            ? 'opacity-100 translate-y-0 pointer-events-auto'
+                            : 'pointer-events-none opacity-0 -translate-y-1'
+                    }`}
+                    aria-hidden={!sidebarOpen}
+                >
+                    <div className="border-b border-zinc-200/50 bg-white shadow-sm max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain px-4 py-4">
+                        {sidebarContent(() => setSidebarOpen(false), { showBrand: false })}
+                    </div>
+                </div>
+
+                <header className="sticky top-0 z-10 hidden md:flex items-center justify-between border-b border-zinc-200/50 bg-white px-4 py-2.5">
+                    <div className="flex-1" aria-hidden />
+                    <div className="flex items-center gap-1.5">
+                        {isAuthenticated ? (
+                            <Link
+                                to="/settings"
+                                aria-label="Settings"
+                                className="rounded-md p-1 outline-none transition-colors hover:bg-zinc-100/80 focus-visible:ring-2 focus-visible:ring-zinc-900/10"
+                            >
+                                <AccountAvatar size="sm" />
+                            </Link>
+                        ) : null}
                     </div>
                 </header>
 
