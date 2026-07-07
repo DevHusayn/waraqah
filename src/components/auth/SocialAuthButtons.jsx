@@ -19,6 +19,7 @@ function AppleIcon() {
 export default function SocialAuthButtons({ onSuccess, onError, disabled = false }) {
     const [appleReady, setAppleReady] = useState(false);
     const [appleLoading, setAppleLoading] = useState(false);
+    const [googleLoading, setGoogleLoading] = useState(false);
 
     useEffect(() => {
         if (!APPLE_CLIENT_ID || typeof window === 'undefined') return undefined;
@@ -63,10 +64,13 @@ export default function SocialAuthButtons({ onSuccess, onError, disabled = false
     };
 
     const handleGoogleSuccess = async (response) => {
+        setGoogleLoading(true);
         try {
             await finishAuth('/auth/google', { credential: response.credential });
         } catch (err) {
             onError(err.message || 'Google sign-in failed.');
+        } finally {
+            setGoogleLoading(false);
         }
     };
 
@@ -96,6 +100,8 @@ export default function SocialAuthButtons({ onSuccess, onError, disabled = false
         }
     };
 
+    const socialBusy = googleLoading || appleLoading;
+
     if (!GOOGLE_CLIENT_ID && !APPLE_CLIENT_ID) {
         return null;
     }
@@ -112,15 +118,24 @@ export default function SocialAuthButtons({ onSuccess, onError, disabled = false
             </div>
 
             {GOOGLE_CLIENT_ID ? (
-                <div className="w-full [&>div]:!w-full [&>div>div]:!w-full">
+                <div
+                    className={
+                        socialBusy || disabled ? 'pointer-events-none opacity-60' : undefined
+                    }
+                >
                     <GoogleLogin
                         onSuccess={handleGoogleSuccess}
-                        onError={() => onError('Google sign-in was cancelled or failed.')}
+                        onError={(err) => {
+                            console.error('Google sign-in error:', err);
+                            onError('Google sign-in was cancelled or failed.');
+                        }}
                         theme="outline"
                         size="large"
                         shape="rectangular"
                         text="continue_with"
+                        width="400"
                         useOneTap={false}
+                        ux_mode="popup"
                     />
                 </div>
             ) : null}
@@ -129,7 +144,7 @@ export default function SocialAuthButtons({ onSuccess, onError, disabled = false
                 <button
                     type="button"
                     onClick={handleAppleSignIn}
-                    disabled={disabled || !appleReady || appleLoading}
+                    disabled={disabled || !appleReady || socialBusy}
                     className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium text-zinc-900 hover:bg-zinc-50 disabled:opacity-50"
                 >
                     <AppleIcon />

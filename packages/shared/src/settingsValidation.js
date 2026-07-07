@@ -36,6 +36,12 @@ export function buildProfileFieldErrors(formData) {
     };
 }
 
+/** True when required company profile fields are still missing (e.g. after OAuth sign-in). */
+export function needsBusinessSetup(formData = {}) {
+    const errors = buildProfileFieldErrors(formData);
+    return Object.values(errors).some(Boolean);
+}
+
 export function buildAccountFieldErrors(formData) {
     const errors = {};
     const hasPartialPayment =

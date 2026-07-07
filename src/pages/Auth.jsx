@@ -13,6 +13,7 @@ import RequiredLabel from '../components/RequiredLabel';
 import { getNetworkErrorMessage } from '../utils/apiConfig';
 import { authFetch, apiFetch, applyLoginResponse, prepareForLogin } from '../utils/api';
 import SocialAuthButtons from '../components/auth/SocialAuthButtons';
+import { markBusinessSetupCoachmark } from '../utils/businessSetupCoachmark';
 import {
     validateRequired,
     validateEmail,
@@ -142,6 +143,9 @@ function Auth() {
         resetAll();
         applyLoginResponse(data);
         setSession(data.user);
+        if (data.needsBusinessSetup) {
+            markBusinessSetupCoachmark();
+        }
         await fetchUserData();
         try {
             const info = await apiFetch('/business-info');
@@ -387,13 +391,13 @@ function Auth() {
                                                 'Sign in'
                                             )}
                                         </button>
-
-                                        <SocialAuthButtons
-                                            disabled={submitLoading}
-                                            onSuccess={handleSocialSuccess}
-                                            onError={(message) => setError(message)}
-                                        />
                                     </form>
+
+                                    <SocialAuthButtons
+                                        disabled={submitLoading}
+                                        onSuccess={handleSocialSuccess}
+                                        onError={(message) => setError(message)}
+                                    />
 
                                     <p className="mt-5 pt-5 border-t border-zinc-100 text-center text-[13px] text-zinc-500">
                                         Don&apos;t have an account?{' '}
@@ -427,6 +431,12 @@ function Auth() {
                                             Register
                                         </button>
                                     </div>
+
+                                    <SocialAuthButtons
+                                        disabled={submitLoading}
+                                        onSuccess={handleSocialSuccess}
+                                        onError={(message) => setError(message)}
+                                    />
 
                                     <RegisterWizard returnTo={returnTo} />
 

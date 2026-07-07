@@ -17,8 +17,15 @@ import { useInvoice } from '../context/InvoiceContext';
 import { useAuth } from '../context/AuthContext';
 import WaraqahLogo from './WaraqahLogo';
 import AccountAvatar from './AccountAvatar';
+import BusinessSetupCoachmark from './BusinessSetupCoachmark';
 import ConfirmModal from './ConfirmModal';
 import { isPremiumUser } from '../utils/premium';
+import { needsBusinessSetup } from '@waraqah/shared';
+import {
+    clearBusinessSetupCoachmarkFlag,
+    hasBusinessSetupCoachmarkFlag,
+    isBusinessSetupCoachmarkDismissed,
+} from '../utils/businessSetupCoachmark';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
 import { APP_TAGLINE } from '../constants/brand';
 import useAppLogout from '../hooks/useAppLogout';
@@ -69,10 +76,31 @@ const Layout = ({ children }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const handleLogout = useAppLogout();
-    const { businessInfo, fetchBusinessAssets } = useSettings();
+    const { businessInfo, fetchBusinessAssets, loading: settingsLoading } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const { draftCount } = useInvoice();
-    const { isAuthenticated, isAdmin } = useAuth();
+    const { isAuthenticated, isAdmin, user } = useAuth();
+    const [showSetupCoachmark, setShowSetupCoachmark] = useState(false);
+
+    useEffect(() => {
+        if (!isAuthenticated || settingsLoading || !user?.id) {
+            setShowSetupCoachmark(false);
+            return;
+        }
+
+        const profileIncomplete = needsBusinessSetup(businessInfo);
+        const dismissed = isBusinessSetupCoachmarkDismissed(user.id);
+        const shouldShow =
+            profileIncomplete &&
+            !dismissed &&
+            (hasBusinessSetupCoachmarkFlag() || user.authProvider === 'google' || user.authProvider === 'apple');
+
+        setShowSetupCoachmark(shouldShow);
+
+        if (!profileIncomplete) {
+            clearBusinessSetupCoachmarkFlag();
+        }
+    }, [isAuthenticated, settingsLoading, user, businessInfo]);
 
     useEffect(() => {
         if (!isAuthenticated) return undefined;
@@ -158,6 +186,7 @@ const Layout = ({ children }) => {
                     {isAuthenticated ? (
                         <Link
                             to="/settings"
+                            data-business-setup-anchor
                             aria-label="Settings"
                             className="rounded-md p-1 outline-none transition-colors hover:bg-zinc-100/80 focus-visible:ring-2 focus-visible:ring-zinc-900/10"
                         >
@@ -182,6 +211,7 @@ const Layout = ({ children }) => {
                         {isAuthenticated ? (
                             <Link
                                 to="/settings"
+                                data-business-setup-anchor
                                 aria-label="Settings"
                                 className="rounded-md p-1 outline-none transition-colors hover:bg-zinc-100/80 focus-visible:ring-2 focus-visible:ring-zinc-900/10"
                             >
@@ -245,6 +275,14 @@ const Layout = ({ children }) => {
                 }}
                 onCancel={() => setShowLogoutModal(false)}
             />
+
+            {showSetupCoachmark ? (
+                <BusinessSetupCoachmark
+                    userId={user?.id}
+                    authProvider={user?.authProvider}
+                    onDismiss={() => setShowSetupCoachmark(false)}
+                />
+            ) : null}
         </div>
     );
 };
