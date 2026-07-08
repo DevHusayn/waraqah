@@ -432,13 +432,11 @@ function Auth() {
                                         </button>
                                     </div>
 
-                                    <SocialAuthButtons
-                                        disabled={submitLoading}
-                                        onSuccess={handleSocialSuccess}
-                                        onError={(message) => setError(message)}
+                                    <RegisterWizard
+                                        returnTo={returnTo}
+                                        onSocialSuccess={handleSocialSuccess}
+                                        socialDisabled={submitLoading}
                                     />
-
-                                    <RegisterWizard returnTo={returnTo} />
 
                                     <p className="mt-5 pt-5 border-t border-zinc-100 text-center text-[13px] text-zinc-500">
                                         Already have an account?{' '}

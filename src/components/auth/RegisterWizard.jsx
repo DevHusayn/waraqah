@@ -24,6 +24,7 @@ import {
 } from '../../utils/registerValidation';
 import { BRAND_PRESETS } from '../../utils/settingsValidation';
 import LegalConsentCheckbox from '../legal/LegalConsentCheckbox';
+import SocialAuthButtons from './SocialAuthButtons';
 
 const DRAFT_KEY = 'registerDraft';
 
@@ -112,7 +113,11 @@ function StepIndicator({ currentStep }) {
     );
 }
 
-export default function RegisterWizard({ returnTo }) {
+export default function RegisterWizard({
+    returnTo,
+    onSocialSuccess,
+    socialDisabled = false,
+}) {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { resetAll } = useInvoice();
@@ -302,11 +307,24 @@ export default function RegisterWizard({ returnTo }) {
     return (
         <div>
             <div className="mb-6">
-                <h2 className="page-title">{currentStepMeta.title}</h2>
-                <p className="page-subtitle mt-1">{currentStepMeta.subtitle}</p>
+                <h2 className="page-title">
+                    {step === 1 ? 'Create your account' : currentStepMeta.title}
+                </h2>
+                {step > 1 ? (
+                    <p className="page-subtitle mt-1">{currentStepMeta.subtitle}</p>
+                ) : null}
             </div>
 
             <StepIndicator currentStep={step} />
+
+            {step === 1 && onSocialSuccess ? (
+                <SocialAuthButtons
+                    variant="register"
+                    disabled={socialDisabled || submitLoading}
+                    onSuccess={onSocialSuccess}
+                    onError={(message) => setError(message)}
+                />
+            ) : null}
 
             <div className="space-y-4">
                 {step === 1 && (
