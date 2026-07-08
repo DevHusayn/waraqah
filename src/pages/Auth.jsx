@@ -279,11 +279,7 @@ function Auth() {
             </div>
 
             <div className="min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col bg-zinc-50/80">
-                <div
-                    className={`flex-1 flex flex-col px-5 py-8 sm:px-8 sm:py-10 ${
-                        !isLogin ? 'justify-start' : 'justify-center'
-                    } lg:justify-center`}
-                >
+                <div className="flex-1 flex flex-col justify-center px-5 py-8 sm:px-8 sm:py-10">
                     <div className="w-full max-w-[420px] mx-auto">
                         <div className="mb-6">
                             <WaraqahLogo size="md" />
