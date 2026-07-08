@@ -93,7 +93,7 @@ const Layout = ({ children }) => {
         const shouldShow =
             profileIncomplete &&
             !dismissed &&
-            (hasBusinessSetupCoachmarkFlag() || user.authProvider === 'google' || user.authProvider === 'apple');
+            (hasBusinessSetupCoachmarkFlag() || user.authProvider === 'google');
 
         setShowSetupCoachmark(shouldShow);
 

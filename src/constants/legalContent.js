@@ -44,7 +44,7 @@ export const PRIVACY_SECTIONS = [
     },
     {
         title: 'Information we collect',
-        body: 'We collect information you provide directly, including your name, email address, business details, bank account information for invoices, client and product records, invoice data, and payment-related information when you subscribe to Premium. If you sign in with Google or Apple, we receive basic profile information from those providers. We also collect technical data such as IP address, browser type, and usage logs needed to operate and secure the service.',
+        body: 'We collect information you provide directly, including your name, email address, business details, bank account information for invoices, client and product records, invoice data, and payment-related information when you subscribe to Premium. If you sign in with Google, we receive basic profile information from that provider. We also collect technical data such as IP address, browser type, and usage logs needed to operate and secure the service.',
     },
     {
         title: 'How we use your information',
@@ -60,7 +60,7 @@ export const PRIVACY_SECTIONS = [
     },
     {
         title: 'Third-party services',
-        body: 'Premium billing is processed by Paystack. Transactional email is delivered through Resend. Optional sign-in may use Google or Apple. We may use error monitoring tools such as Sentry. These providers have their own privacy policies governing how they handle data.',
+        body: 'Premium billing is processed by Paystack. Transactional email is delivered through Resend. Optional sign-in may use Google. We may use error monitoring tools such as Sentry. These providers have their own privacy policies governing how they handle data.',
     },
     {
         title: 'Data retention',

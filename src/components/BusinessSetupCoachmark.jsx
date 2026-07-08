@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
 import {
-    clearBusinessSetupCoachmarkFlag,
     dismissBusinessSetupCoachmark,
 } from '../utils/businessSetupCoachmark';
 
@@ -22,9 +21,6 @@ function getVisibleAvatarAnchor() {
 function getCoachmarkMessage(authProvider) {
     if (authProvider === 'google') {
         return 'You signed in with Google. Add your business details so your invoices look professional.';
-    }
-    if (authProvider === 'apple') {
-        return 'You signed in with Apple. Add your business details so your invoices look professional.';
     }
     return 'Complete your business profile to start creating invoices.';
 }
@@ -57,7 +53,7 @@ export default function BusinessSetupCoachmark({ userId, authProvider, onDismiss
     };
 
     const handleSetup = () => {
-        clearBusinessSetupCoachmarkFlag();
+        dismissBusinessSetupCoachmark(userId);
         onDismiss?.();
     };
 
