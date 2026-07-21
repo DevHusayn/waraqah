@@ -3,6 +3,7 @@ import { API_BASE, getNetworkErrorMessage } from './apiConfig';
 import { getCsrfToken, clearLegacyAuthStorage, setCsrfToken, clearCsrfToken } from './csrf';
 import { getAccessToken, setAccessToken, clearAccessToken } from './authToken';
 import { clearAuthSessionHint, clearUserProfileCache } from './authHint';
+import { tagNetworkError, tagServerError } from '../errors/classifyError';
 
 clearLegacyAuthStorage();
 
@@ -137,9 +138,11 @@ export async function apiFetch(path, options = {}) {
         });
     } catch (err) {
         if (isAbortLikeError(err)) {
-            throw new Error('The request took too long. Please check your connection and try again.');
+            throw tagNetworkError(
+                new Error('The request took too long. Please check your connection and try again.')
+            );
         }
-        throw new Error(getNetworkErrorMessage());
+        throw tagNetworkError(new Error(getNetworkErrorMessage()));
     } finally {
         cancelTimeout();
     }
@@ -147,7 +150,9 @@ export async function apiFetch(path, options = {}) {
     if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         if (/abort/i.test(data.message || '')) {
-            throw new Error('The request took too long. Please check your connection and try again.');
+            throw tagNetworkError(
+                new Error('The request took too long. Please check your connection and try again.')
+            );
         }
         if (res.status === 401 && !path.startsWith('/auth/me')) {
             clearLegacyAuthStorage();
@@ -158,6 +163,7 @@ export async function apiFetch(path, options = {}) {
         if (data.code) err.code = data.code;
         if (data.usage) err.usage = data.usage;
         err.status = res.status;
+        if (res.status >= 500) tagServerError(err, res.status);
         throw err;
     }
 
@@ -181,9 +187,11 @@ export async function authFetch(path, options = {}) {
         });
     } catch (err) {
         if (isAbortLikeError(err)) {
-            throw new Error('The request took too long. Please check your connection and try again.');
+            throw tagNetworkError(
+                new Error('The request took too long. Please check your connection and try again.')
+            );
         }
-        throw new Error(getNetworkErrorMessage());
+        throw tagNetworkError(new Error(getNetworkErrorMessage()));
     } finally {
         cancelTimeout();
     }
@@ -191,11 +199,14 @@ export async function authFetch(path, options = {}) {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
         if (/abort/i.test(data.message || '')) {
-            throw new Error('The request took too long. Please check your connection and try again.');
+            throw tagNetworkError(
+                new Error('The request took too long. Please check your connection and try again.')
+            );
         }
         const err = new Error(data.message || 'Something went wrong. Please try again.');
         if (data.code) err.code = data.code;
         err.status = res.status;
+        if (res.status >= 500) tagServerError(err, res.status);
         throw err;
     }
 

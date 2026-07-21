@@ -1,4 +1,5 @@
 import { API_BASE, getNetworkErrorMessage } from './apiConfig';
+import { tagNetworkError, tagServerError } from '../errors/classifyError';
 
 /** Unauthenticated API calls (public invoice view, etc.). */
 export async function publicFetch(path, options = {}) {
@@ -12,13 +13,14 @@ export async function publicFetch(path, options = {}) {
             },
         });
     } catch {
-        throw new Error(getNetworkErrorMessage());
+        throw tagNetworkError(new Error(getNetworkErrorMessage()));
     }
 
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
         const err = new Error(data.message || 'Something went wrong. Please try again.');
         err.status = res.status;
+        if (res.status >= 500) tagServerError(err, res.status);
         throw err;
     }
 
