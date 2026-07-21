@@ -13,6 +13,7 @@ import {
     readBrandImageAsDataUrl,
     prepareBrandLogoUpload,
     BRAND_IMAGE_ACCEPT,
+    BRAND_IMAGE_HINT,
     PLANS,
 } from '../utils/premium';
 import { premiumUpgradeLabel } from '../constants/pricing';
@@ -27,6 +28,7 @@ function AssetUploadCard({
     onRemove,
     icon: Icon,
     parseFile,
+    formatHint = BRAND_IMAGE_HINT,
 }) {
     const fileRef = useRef(null);
 
@@ -92,7 +94,7 @@ function AssetUploadCard({
                         ) : (
                             <p className="text-xs text-zinc-500">Not uploaded</p>
                         )}
-                        <p className="text-[11px] text-zinc-400 mt-2">PNG (recommended) or JPEG · max 1.5 MB</p>
+                        <p className="text-[11px] text-zinc-400 mt-2 leading-relaxed">{formatHint}</p>
                     </div>
                 </div>
             )}
@@ -238,6 +240,9 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
                     <p className="text-sm text-zinc-500 mt-0.5">
                         Logo, stamp, and signature on PDF invoices and receipts
                     </p>
+                    <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
+                        PNG (transparent background recommended), JPG, or SVG · max 2 MB · images are auto-resized
+                    </p>
                 </div>
                 <PlanBadge premium={premium} />
             </div>
@@ -257,7 +262,7 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <AssetUploadCard
                         title="Company logo"
-                        description="PNG with transparent background for PDF · JPEG or PNG for sidebar"
+                        description="Appears on PDF invoices and receipts · PNG with transparent background recommended"
                         value={logo}
                         isEditing={isEditing}
                         saving={savingField === 'companyLogoUrl'}
@@ -268,7 +273,7 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
                     />
                     <AssetUploadCard
                         title="Company stamp"
-                        description="Paid receipts only — ink-stamp effect"
+                        description="Shown near the signature on paid receipt PDFs"
                         value={stamp}
                         isEditing={isEditing}
                         saving={savingField === 'companyStampUrl'}
@@ -277,8 +282,8 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
                         onRemove={() => handleRemove('companyStampUrl', 'Stamp')()}
                     />
                     <AssetUploadCard
-                        title="Signature"
-                        description="Above company footer on all PDFs"
+                        title="Authorized signature"
+                        description="Placed under totals on PDF invoices and receipts"
                         value={signature}
                         isEditing={isEditing}
                         saving={savingField === 'authorizedSignatureUrl'}

@@ -43,7 +43,7 @@ export function RegisterWizard({ onComplete }) {
 
         setLoading(true);
         try {
-            await register(form.email, form.password, {
+            const data = await register(form.email, form.password, {
                 name: form.name,
                 address: form.address,
                 email: form.businessEmail,
@@ -57,8 +57,8 @@ export function RegisterWizard({ onComplete }) {
                 paymentInstructions: form.paymentInstructions,
             });
             hapticSuccess();
-            showToast('Account created!', 'success');
-            onComplete?.();
+            showToast(data?.message || 'Check your email to verify your account.', 'success');
+            onComplete?.({ email: form.email.trim().toLowerCase() });
         } catch (err) {
             showToast(err.message, 'error');
         } finally {

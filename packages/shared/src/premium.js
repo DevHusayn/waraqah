@@ -24,4 +24,8 @@ export function isPremiumUser(businessInfo) {
     return businessInfo.plan === PLANS.PREMIUM || businessInfo.isPremium === true;
 }
 
-export const LOGO_MAX_BYTES = 1.5 * 1024 * 1024;
+/** Max upload size for logo, stamp, and signature images. */
+export const LOGO_MAX_BYTES = 2 * 1024 * 1024;
+
+/** Longest edge (px) after auto-resize on upload. */
+export const BRAND_IMAGE_MAX_EDGE = 1200;

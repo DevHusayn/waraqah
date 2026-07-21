@@ -1,46 +1,87 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, fontFamily, fontSize, radii, shadows, spacing, statIconThemes } from '../../theme';
-import { Card } from './Card';
+import { colors, fontFamily, fontSize, lineHeight, radii, spacing } from '../../theme';
 
-export function StatCard({ label, value, icon: Icon, theme = 'brand' }) {
-    const t = statIconThemes[theme] || statIconThemes.brand;
+/** Compact horizontal summary tile — not a large card */
+export function StatTile({ label, value }) {
     return (
-        <Card style={styles.stat} elevated>
-            <View style={[styles.iconWrap, { backgroundColor: t.bg }]}>
-                {Icon ? <Icon size={20} color={t.color} strokeWidth={2} /> : null}
-            </View>
+        <View style={styles.tile}>
+            <Text style={styles.label} numberOfLines={1}>
+                {label}
+            </Text>
+            <Text style={styles.value} numberOfLines={1}>
+                {value}
+            </Text>
+        </View>
+    );
+}
+
+export function StatStrip({ items = [] }) {
+    return (
+        <View style={styles.strip}>
+            {items.map((item, index) => (
+                <View key={item.label} style={[styles.cell, index < items.length - 1 && styles.cellBorder]}>
+                    <StatTile label={item.label} value={item.value} />
+                </View>
+            ))}
+        </View>
+    );
+}
+
+/** @deprecated Prefer StatTile / StatStrip for mobile density */
+export function StatCard({ label, value, icon: Icon, theme = 'brand' }) {
+    return (
+        <View style={styles.legacyCard}>
             <Text style={styles.label}>{label}</Text>
             <Text style={styles.value} numberOfLines={1}>
                 {value}
             </Text>
-        </Card>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    stat: {
-        width: '47%',
-        flexGrow: 1,
-        ...shadows.soft,
+    strip: {
+        flexDirection: 'row',
+        backgroundColor: colors.surfaceMuted,
+        borderRadius: radii.xl,
+        paddingVertical: spacing.lg,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: colors.border,
     },
-    iconWrap: {
-        width: 36,
-        height: 36,
-        borderRadius: radii.md,
+    cell: {
+        flex: 1,
+        paddingHorizontal: spacing.sm,
+    },
+    cellBorder: {
+        borderRightWidth: StyleSheet.hairlineWidth,
+        borderRightColor: colors.border,
+    },
+    tile: {
         alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: spacing.sm,
+        gap: 4,
     },
     label: {
         fontFamily: fontFamily.medium,
-        fontSize: fontSize.xs,
+        fontSize: 11,
         color: colors.muted,
+        textAlign: 'center',
     },
     value: {
         fontFamily: fontFamily.bold,
-        fontSize: fontSize.lg,
+        fontSize: fontSize.md,
         fontWeight: '700',
         color: colors.foreground,
-        marginTop: 2,
+        letterSpacing: -0.3,
+        textAlign: 'center',
+        lineHeight: lineHeight.md,
+    },
+    legacyCard: {
+        flex: 1,
+        minWidth: '45%',
+        backgroundColor: colors.surfaceMuted,
+        borderRadius: radii.lg,
+        padding: spacing.lg,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: colors.border,
     },
 });

@@ -1,49 +1,49 @@
-import { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
+import Animated, {
+    Easing,
+    useAnimatedStyle,
+    useSharedValue,
+    withRepeat,
+    withTiming,
+} from 'react-native-reanimated';
 import { colors, radii, spacing } from '../../theme';
 
-function SkeletonBlock({ width, height, style }) {
-    const opacity = useRef(new Animated.Value(0.4)).current;
+function ShimmerBlock({ width, height, style }) {
+    const opacity = useSharedValue(0.35);
 
     useEffect(() => {
-        const loop = Animated.loop(
-            Animated.sequence([
-                Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
-                Animated.timing(opacity, { toValue: 0.4, duration: 700, useNativeDriver: true }),
-            ])
+        opacity.value = withRepeat(
+            withTiming(0.85, { duration: 800, easing: Easing.inOut(Easing.quad) }),
+            -1,
+            true
         );
-        loop.start();
-        return () => loop.stop();
     }, [opacity]);
 
-    return (
-        <Animated.View
-            style={[
-                styles.block,
-                { width, height, opacity },
-                style,
-            ]}
-        />
-    );
+    const animStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+    return <Animated.View style={[styles.block, { width, height }, animStyle, style]} />;
 }
 
 export function SkeletonCard() {
     return (
         <View style={styles.card}>
-            <SkeletonBlock width={36} height={36} style={{ borderRadius: radii.md }} />
-            <SkeletonBlock width="60%" height={12} style={{ marginTop: spacing.sm }} />
-            <SkeletonBlock width="40%" height={20} style={{ marginTop: spacing.sm }} />
+            <ShimmerBlock width="40%" height={10} />
+            <ShimmerBlock width="70%" height={16} style={{ marginTop: spacing.sm }} />
         </View>
     );
 }
 
-export function SkeletonList({ count = 3 }) {
+export function SkeletonList({ count = 5 }) {
     return (
-        <View style={{ gap: spacing.sm }}>
+        <View>
             {Array.from({ length: count }).map((_, i) => (
-                <View key={i} style={styles.listRow}>
-                    <SkeletonBlock width="70%" height={14} />
-                    <SkeletonBlock width="30%" height={12} style={{ marginTop: 6 }} />
+                <View key={i} style={[styles.listRow, i < count - 1 && styles.listBorder]}>
+                    <View style={{ flex: 1, gap: 8 }}>
+                        <ShimmerBlock width="45%" height={14} />
+                        <ShimmerBlock width="65%" height={11} />
+                    </View>
+                    <ShimmerBlock width={56} height={14} />
                 </View>
             ))}
         </View>
@@ -53,11 +53,15 @@ export function SkeletonList({ count = 3 }) {
 export function PageLoader() {
     return (
         <View style={styles.page}>
-            <View style={styles.statsRow}>
+            <ShimmerBlock width="55%" height={28} style={{ marginBottom: spacing.sm }} />
+            <ShimmerBlock width="35%" height={14} style={{ marginBottom: spacing.xxl }} />
+            <View style={styles.strip}>
+                <SkeletonCard />
+                <SkeletonCard />
                 <SkeletonCard />
                 <SkeletonCard />
             </View>
-            <SkeletonList count={4} />
+            <SkeletonList count={5} />
         </View>
     );
 }
@@ -68,30 +72,33 @@ const styles = StyleSheet.create({
         borderRadius: radii.sm,
     },
     card: {
-        width: '47%',
-        flexGrow: 1,
-        backgroundColor: colors.surface,
-        borderRadius: radii.lg,
-        padding: spacing.lg,
-        borderWidth: 1,
-        borderColor: colors.border,
+        flex: 1,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.sm,
+        alignItems: 'center',
     },
     listRow: {
-        backgroundColor: colors.surface,
-        borderRadius: radii.lg,
-        padding: spacing.lg,
-        borderWidth: 1,
-        borderColor: colors.border,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+        paddingVertical: spacing.lg,
+        paddingHorizontal: spacing.xl,
+    },
+    listBorder: {
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: colors.borderLight,
     },
     page: {
         flex: 1,
-        padding: spacing.lg,
+        paddingTop: spacing.xxl,
         backgroundColor: colors.surfaceMuted,
     },
-    statsRow: {
+    strip: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: spacing.sm,
-        marginBottom: spacing.lg,
+        marginHorizontal: spacing.xl,
+        marginBottom: spacing.xxl,
+        backgroundColor: colors.surfaceMuted,
+        borderRadius: radii.xl,
+        paddingVertical: spacing.sm,
     },
 });

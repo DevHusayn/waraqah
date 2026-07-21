@@ -16,9 +16,7 @@ export function MainTabs() {
     return (
         <Tab.Navigator
             tabBar={(props) => <CustomTabBar {...props} />}
-            screenOptions={{
-                headerShown: false,
-            }}
+            screenOptions={{ headerShown: false }}
         >
             <Tab.Screen
                 name="Dashboard"
@@ -26,6 +24,7 @@ export function MainTabs() {
                 options={{
                     title: 'Home',
                     tabBarIcon: ({ color, size }) => <LayoutDashboard color={color} size={size} strokeWidth={2} />,
+                    tabBarAccessibilityLabel: 'Home',
                 }}
             />
             <Tab.Screen
@@ -35,6 +34,7 @@ export function MainTabs() {
                     title: 'Invoices',
                     tabBarIcon: ({ color, size }) => <FileText color={color} size={size} strokeWidth={2} />,
                     tabBarBadge: draftBadge,
+                    tabBarAccessibilityLabel: 'Invoices',
                 }}
             />
             <Tab.Screen
@@ -43,6 +43,7 @@ export function MainTabs() {
                 options={{
                     title: 'Clients',
                     tabBarIcon: ({ color, size }) => <Users color={color} size={size} strokeWidth={2} />,
+                    tabBarAccessibilityLabel: 'Clients',
                 }}
             />
             <Tab.Screen
@@ -51,6 +52,7 @@ export function MainTabs() {
                 options={{
                     title: 'More',
                     tabBarIcon: ({ color, size }) => <Menu color={color} size={size} strokeWidth={2} />,
+                    tabBarAccessibilityLabel: 'More',
                 }}
             />
         </Tab.Navigator>

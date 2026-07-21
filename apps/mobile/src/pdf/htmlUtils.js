@@ -54,8 +54,59 @@ export function wrapHtml(body, title = 'Document') {
   .totals { width: 45%; margin-left: auto; margin-top: 12px; }
   .total-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
   .total-bold { font-weight: 700; font-size: 12px; }
+  .sig-stamp-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+    gap: 36px;
+    margin: 36px 0 8px;
+    min-height: 72px;
+  }
+  .sig-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 140px;
+    max-width: 200px;
+  }
+  .sig-rule {
+    width: 100%;
+    border-top: 1px solid #9ca3af;
+    margin-bottom: 8px;
+  }
+  .sig-img {
+    max-height: 56px;
+    max-width: 180px;
+    object-fit: contain;
+  }
+  .sig-name {
+    margin: 8px 0 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1f2937;
+    text-align: center;
+  }
+  .sig-label {
+    margin: 2px 0 0;
+    font-size: 9px;
+    color: #6b7280;
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+  .stamp-block {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 4px;
+  }
+  .stamp-img {
+    max-height: 88px;
+    max-width: 88px;
+    object-fit: contain;
+    opacity: 0.95;
+  }
   .footer {
-    margin-top: 32px;
+    margin-top: 28px;
     padding-top: 8px;
     border-top: 1px solid #e5e7eb;
     text-align: center;

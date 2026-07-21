@@ -1,8 +1,17 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors } from '../theme/colors';
+import { colors, fontFamily, fontSize, lineHeight, radii, spacing } from '../theme';
 import { Button } from './ui';
 
-export function ConfirmModal({ visible, title, message, confirmLabel = 'Confirm', onConfirm, onCancel, danger, loading }) {
+export function ConfirmModal({
+    visible,
+    title,
+    message,
+    confirmLabel = 'Confirm',
+    onConfirm,
+    onCancel,
+    danger,
+    loading,
+}) {
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
             <View style={styles.overlay}>
@@ -41,30 +50,32 @@ export function AlertModal({ visible, message, onClose }) {
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(15,23,42,0.45)',
+        backgroundColor: colors.overlay,
         justifyContent: 'center',
-        padding: 24,
+        padding: spacing.xl,
     },
     box: {
-        backgroundColor: colors.white,
-        borderRadius: 16,
-        padding: 20,
+        backgroundColor: colors.surface,
+        borderRadius: radii.xl,
+        padding: spacing.xl,
     },
     title: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: colors.slate900,
-        marginBottom: 8,
+        fontFamily: fontFamily.semibold,
+        fontSize: fontSize.lg,
+        color: colors.foreground,
+        marginBottom: spacing.sm,
+        letterSpacing: -0.3,
     },
     message: {
-        fontSize: 15,
-        color: colors.slate600,
-        marginBottom: 16,
-        lineHeight: 22,
+        fontFamily: fontFamily.regular,
+        fontSize: fontSize.md,
+        color: colors.muted,
+        marginBottom: spacing.xl,
+        lineHeight: lineHeight.md,
     },
     actions: {
         flexDirection: 'row',
-        gap: 10,
+        gap: spacing.sm,
     },
     btn: {
         flex: 1,

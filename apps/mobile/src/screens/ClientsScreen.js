@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Users } from 'lucide-react-native';
 import { getBusinessInitials } from '@waraqah/shared';
 import { useInvoice } from '../context/InvoiceContext';
@@ -10,15 +11,13 @@ import {
     BottomSheet,
     Button,
     EmptyState,
-    FAB,
     Input,
     Label,
     ListRow,
-    PageHeader,
     PageLoader,
     SearchBar,
 } from '../components/ui';
-import { colors, fontFamily, fontSize, spacing } from '../theme';
+import { colors, fontFamily, fontSize, shadows, spacing } from '../theme';
 
 const EMPTY = { name: '', business: '', email: '', phone: '', address: '' };
 
@@ -40,6 +39,7 @@ export function ClientsScreen() {
             (c) =>
                 c.name?.toLowerCase().includes(q) ||
                 c.business?.toLowerCase().includes(q) ||
+                c.company?.toLowerCase().includes(q) ||
                 c.email?.toLowerCase().includes(q)
         );
     }, [clients, search]);
@@ -66,7 +66,7 @@ export function ClientsScreen() {
 
     const handleSave = async () => {
         if (!form.name.trim()) {
-            showToast('Business name is required', 'error');
+            showToast('Name is required', 'error');
             return;
         }
         setSaving(true);
@@ -105,59 +105,176 @@ export function ClientsScreen() {
     if (loading && !refreshing) return <PageLoader />;
 
     return (
-        <View style={styles.screen}>
+        <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
             <FlatList
                 data={filtered}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.list}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />}
                 ListHeaderComponent={
-                    <>
-                        <PageHeader title="Clients" subtitle="Manage your client list" />
-                        <SearchBar value={search} onChangeText={setSearch} placeholder="Search clients…" style={{ marginTop: 0 }} />
-                    </>
+                    <View>
+                        <View style={styles.titleRow}>
+                            <View style={{ flex: 1 }}>
+                                <Text style={styles.pageTitle}>Clients</Text>
+                                <Text style={styles.pageSub}>People and businesses you invoice</Text>
+                            </View>
+                            <Pressable onPress={openAdd} style={styles.addBtn} accessibilityRole="button" accessibilityLabel="Add client">
+                                <Text style={styles.addBtnText}>Add</Text>
+                            </Pressable>
+                        </View>
+                        <View style={styles.padX}>
+                            <SearchBar value={search} onChangeText={setSearch} placeholder="Search clients…" />
+                        </View>
+                    </View>
                 }
                 ListEmptyComponent={
-                    <EmptyState
-                        icon={Users}
-                        title="No clients"
-                        message="Add your first client to start invoicing"
-                        action={<Button title="Add client" onPress={openAdd} style={{ marginTop: spacing.md }} />}
-                    />
+                    <View style={[styles.cardShell, shadows.soft]}>
+                        <EmptyState
+                            icon={Users}
+                            title="No clients yet"
+                            message="Add your first client to start invoicing."
+                            actionLabel="Add client"
+                            onAction={openAdd}
+                        />
+                    </View>
                 }
-                renderItem={({ item }) => (
-                    <ListRow
-                        title={item.name}
-                        subtitle={[item.business, item.email].filter(Boolean).join(' · ')}
-                        onPress={() => openEdit(item)}
-                        onLongPress={() => setDeleteId(item.id)}
-                        left={<AvatarInitials initials={getBusinessInitials(item.name)} />}
-                    />
+                renderItem={({ item, index }) => (
+                    <View
+                        style={[
+                            styles.rowShell,
+                            index === 0 && styles.rowFirst,
+                            index === filtered.length - 1 && styles.rowLast,
+                            index === 0 && shadows.soft,
+                        ]}
+                    >
+                        <ListRow
+                            title={item.name}
+                            subtitle={[item.business || item.company, item.email].filter(Boolean).join(' · ')}
+                            onPress={() => openEdit(item)}
+                            onLongPress={() => setDeleteId(item.id)}
+                            left={<AvatarInitials initials={getBusinessInitials(item.name)} />}
+                            last={index === filtered.length - 1}
+                        />
+                    </View>
                 )}
             />
-            <FAB onPress={openAdd} label="Add" />
-            <BottomSheet ref={sheetRef} snapPoints={['70%']} onClose={() => setForm(EMPTY)}>
+            <BottomSheet ref={sheetRef} snapPoints={['72%']} onClose={() => setForm(EMPTY)}>
                 <Text style={styles.sheetTitle}>{editing ? 'Edit client' : 'New client'}</Text>
                 <Label required>Name</Label>
                 <Input value={form.name} onChangeText={(v) => setForm((f) => ({ ...f, name: v }))} />
+                <View style={styles.fieldGap} />
                 <Label>Business</Label>
                 <Input value={form.business} onChangeText={(v) => setForm((f) => ({ ...f, business: v }))} />
+                <View style={styles.fieldGap} />
                 <Label>Email</Label>
-                <Input value={form.email} onChangeText={(v) => setForm((f) => ({ ...f, email: v }))} keyboardType="email-address" autoCapitalize="none" />
+                <Input
+                    value={form.email}
+                    onChangeText={(v) => setForm((f) => ({ ...f, email: v }))}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                />
+                <View style={styles.fieldGap} />
                 <Label>Phone</Label>
-                <Input value={form.phone} onChangeText={(v) => setForm((f) => ({ ...f, phone: v }))} keyboardType="phone-pad" />
+                <Input
+                    value={form.phone}
+                    onChangeText={(v) => setForm((f) => ({ ...f, phone: v }))}
+                    keyboardType="phone-pad"
+                />
+                <View style={styles.fieldGap} />
                 <Label>Address</Label>
-                <Input value={form.address} onChangeText={(v) => setForm((f) => ({ ...f, address: v }))} multiline style={{ minHeight: 64, textAlignVertical: 'top' }} />
-                <Button title="Save" onPress={handleSave} loading={saving} style={{ marginTop: spacing.lg }} />
+                <Input
+                    value={form.address}
+                    onChangeText={(v) => setForm((f) => ({ ...f, address: v }))}
+                    multiline
+                    style={{ minHeight: 72, textAlignVertical: 'top' }}
+                />
+                <Button title="Save" onPress={handleSave} loading={saving} style={{ marginTop: spacing.xxl }} />
                 <Button title="Cancel" variant="secondary" onPress={closeSheet} style={{ marginTop: spacing.sm }} />
             </BottomSheet>
-            <ConfirmModal visible={Boolean(deleteId)} title="Delete client?" message="This cannot be undone." confirmLabel="Delete" danger onConfirm={handleDelete} onCancel={() => setDeleteId(null)} />
-        </View>
+            <ConfirmModal
+                visible={Boolean(deleteId)}
+                title="Delete client?"
+                message="This cannot be undone."
+                confirmLabel="Delete"
+                danger
+                onConfirm={handleDelete}
+                onCancel={() => setDeleteId(null)}
+            />
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.surfaceMuted },
-    list: { padding: spacing.lg, paddingBottom: 100, flexGrow: 1 },
-    sheetTitle: { fontFamily: fontFamily.bold, fontSize: fontSize.lg, marginBottom: spacing.lg, color: colors.foreground },
+    safe: { flex: 1, backgroundColor: colors.surfaceMuted },
+    list: { paddingBottom: 110, flexGrow: 1 },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        paddingHorizontal: spacing.xl,
+        paddingTop: spacing.lg,
+        marginBottom: spacing.xl,
+        gap: spacing.md,
+    },
+    pageTitle: {
+        fontFamily: fontFamily.bold,
+        fontSize: 30,
+        color: colors.foreground,
+        letterSpacing: -0.8,
+    },
+    pageSub: {
+        fontFamily: fontFamily.regular,
+        fontSize: fontSize.md,
+        color: colors.muted,
+        marginTop: 4,
+    },
+    addBtn: {
+        marginTop: 6,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 12,
+        backgroundColor: colors.brand,
+    },
+    addBtnText: {
+        fontFamily: fontFamily.semibold,
+        fontSize: fontSize.sm,
+        color: colors.white,
+    },
+    padX: { paddingHorizontal: spacing.xl, marginBottom: spacing.md },
+    cardShell: {
+        marginHorizontal: spacing.xl,
+        backgroundColor: colors.surface,
+        borderRadius: 20,
+        overflow: 'hidden',
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: colors.borderLight,
+    },
+    rowShell: {
+        marginHorizontal: spacing.xl,
+        backgroundColor: colors.surface,
+        borderLeftWidth: StyleSheet.hairlineWidth,
+        borderRightWidth: StyleSheet.hairlineWidth,
+        borderColor: colors.borderLight,
+    },
+    rowFirst: {
+        marginTop: spacing.sm,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        overflow: 'hidden',
+    },
+    rowLast: {
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
+        overflow: 'hidden',
+        marginBottom: spacing.md,
+    },
+    fieldGap: { height: spacing.lg },
+    sheetTitle: {
+        fontFamily: fontFamily.semibold,
+        fontSize: fontSize.lg,
+        marginBottom: spacing.xl,
+        color: colors.foreground,
+        letterSpacing: -0.3,
+    },
 });

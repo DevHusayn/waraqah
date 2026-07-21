@@ -213,6 +213,66 @@ export function InvoiceProvider({ children }) {
         }
     };
 
+    const addClient = async (client) => {
+        const created = await apiFetch('/clients', {
+            method: 'POST',
+            body: JSON.stringify(client),
+        });
+        const mapped = mapClient(created);
+        setClients((prev) => [...prev, mapped].sort((a, b) => a.name.localeCompare(b.name)));
+        return mapped;
+    };
+
+    const updateClient = async (id, updatedClient) => {
+        const updated = await apiFetch(`/clients/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(updatedClient),
+        });
+        const mapped = mapClient(updated);
+        setClients((prev) => prev.map((c) => (c.id === id ? mapped : c)));
+        return mapped;
+    };
+
+    const deleteClient = async (id) => {
+        await apiFetch(`/clients/${id}`, { method: 'DELETE' });
+        setClients((prev) => prev.filter((c) => c.id !== id));
+    };
+
+    const addProduct = async (product) => {
+        const body = {
+            name: product.name,
+            description: product.description || '',
+            unitPrice: Number(product.unitPrice ?? product.price ?? 0),
+        };
+        const created = await apiFetch('/products', {
+            method: 'POST',
+            body: JSON.stringify(body),
+        });
+        const mapped = mapProduct(created);
+        setProducts((prev) => [...prev, mapped].sort((a, b) => a.name.localeCompare(b.name)));
+        return mapped;
+    };
+
+    const updateProduct = async (id, product) => {
+        const body = {
+            name: product.name,
+            description: product.description || '',
+            unitPrice: Number(product.unitPrice ?? product.price ?? 0),
+        };
+        const updated = await apiFetch(`/products/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(body),
+        });
+        const mapped = mapProduct(updated);
+        setProducts((prev) => prev.map((p) => (p.id === id ? mapped : p)));
+        return mapped;
+    };
+
+    const deleteProduct = async (id) => {
+        await apiFetch(`/products/${id}`, { method: 'DELETE' });
+        setProducts((prev) => prev.filter((p) => p.id !== id));
+    };
+
     const draftInvoices = useMemo(
         () =>
             drafts.length > 0
@@ -243,6 +303,12 @@ export function InvoiceProvider({ children }) {
                 addInvoice,
                 updateInvoice,
                 deleteInvoice,
+                addClient,
+                updateClient,
+                deleteClient,
+                addProduct,
+                updateProduct,
+                deleteProduct,
                 fetchUserData,
                 fetchInvoices,
                 fetchDrafts,

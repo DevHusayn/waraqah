@@ -1,22 +1,24 @@
 import { Platform } from 'react-native';
 
+/** Soft UI elevation matching the Waraqah mobile mockup */
 export const shadows = {
+    none: {},
     soft: Platform.select({
         ios: {
-            shadowColor: '#0f172a',
-            shadowOffset: { width: 0, height: 1 },
+            shadowColor: '#0F172A',
+            shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.06,
-            shadowRadius: 4,
+            shadowRadius: 8,
         },
         android: { elevation: 2 },
         default: {},
     }),
     card: Platform.select({
         ios: {
-            shadowColor: '#0f172a',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.08,
-            shadowRadius: 8,
+            shadowColor: '#0F172A',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.07,
+            shadowRadius: 16,
         },
         android: { elevation: 3 },
         default: {},
@@ -24,11 +26,11 @@ export const shadows = {
     fab: Platform.select({
         ios: {
             shadowColor: '#16A34A',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.25,
-            shadowRadius: 12,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.35,
+            shadowRadius: 14,
         },
-        android: { elevation: 6 },
+        android: { elevation: 8 },
         default: {},
     }),
 };

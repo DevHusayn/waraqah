@@ -1,12 +1,15 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
-import { colors, fontFamily, fontSize, radii, spacing } from '../../theme';
+import { colors, fontFamily, fontSize, lineHeight, radii, spacing, touchTarget } from '../../theme';
 import { hapticSelection } from '../../utils/haptics';
-import { Card } from './Card';
 
+/**
+ * Banking-style list row — flat, separator-based, no card chrome.
+ */
 export function ListRow({
     title,
     subtitle,
+    meta,
     right,
     left,
     onPress,
@@ -14,9 +17,11 @@ export function ListRow({
     showChevron = true,
     style,
     badge,
+    last = false,
+    dense = false,
 }) {
-    const content = (
-        <Card style={[styles.row, style]} elevated={!!onPress}>
+    const inner = (
+        <View style={[styles.row, dense && styles.rowDense, !last && styles.rowBorder, style]}>
             {left ? <View style={styles.left}>{left}</View> : null}
             <View style={styles.body}>
                 <View style={styles.titleRow}>
@@ -30,12 +35,20 @@ export function ListRow({
                         {subtitle}
                     </Text>
                 ) : null}
+                {meta ? (
+                    <Text style={styles.meta} numberOfLines={1}>
+                        {meta}
+                    </Text>
+                ) : null}
             </View>
-            {right || (onPress && showChevron ? <ChevronRight size={18} color={colors.slate400} /> : null)}
-        </Card>
+            {right ? <View style={styles.right}>{right}</View> : null}
+            {onPress && showChevron && !right ? (
+                <ChevronRight size={18} color={colors.slate300} strokeWidth={2} />
+            ) : null}
+        </View>
     );
 
-    if (!onPress) return content;
+    if (!onPress) return inner;
 
     return (
         <Pressable
@@ -44,9 +57,10 @@ export function ListRow({
                 onPress();
             }}
             onLongPress={onLongPress}
-            style={({ pressed }) => [pressed && { opacity: 0.92 }]}
+            accessibilityRole="button"
+            style={({ pressed }) => [pressed && styles.pressed]}
         >
-            {content}
+            {inner}
         </Pressable>
     );
 }
@@ -56,11 +70,24 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.md,
-        marginBottom: spacing.sm,
+        minHeight: touchTarget + 12,
+        paddingVertical: spacing.lg,
+        paddingHorizontal: spacing.xl,
+        backgroundColor: colors.surface,
+    },
+    rowDense: {
+        minHeight: touchTarget,
         paddingVertical: spacing.md,
     },
+    rowBorder: {
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: colors.borderLight,
+    },
+    pressed: {
+        backgroundColor: colors.surfaceMuted,
+    },
     left: {
-        marginRight: -4,
+        marginRight: 0,
     },
     body: {
         flex: 1,
@@ -69,43 +96,50 @@ const styles = StyleSheet.create({
     titleRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
         gap: spacing.sm,
     },
     title: {
         fontFamily: fontFamily.semibold,
-        fontSize: fontSize.sm,
+        fontSize: fontSize.md,
         fontWeight: '600',
         color: colors.foreground,
-        flex: 1,
+        letterSpacing: -0.2,
+        flexShrink: 1,
     },
     subtitle: {
         fontFamily: fontFamily.regular,
-        fontSize: fontSize.xs,
+        fontSize: fontSize.sm,
         color: colors.muted,
+        marginTop: 3,
+        lineHeight: lineHeight.sm,
+    },
+    meta: {
+        fontFamily: fontFamily.regular,
+        fontSize: fontSize.xs,
+        color: colors.slate400,
         marginTop: 2,
+    },
+    right: {
+        alignItems: 'flex-end',
+        marginLeft: spacing.sm,
     },
 });
 
-export function AvatarInitials({ initials, color = colors.brand, bg = colors.brandLight }) {
+export function AvatarInitials({ initials, color = colors.brand, bg = colors.brandLight, size = 40 }) {
     return (
-        <View style={[avatarStyles.wrap, { backgroundColor: bg }]}>
-            <Text style={[avatarStyles.text, { color }]}>{initials}</Text>
+        <View style={[avatarStyles.wrap, { width: size, height: size, borderRadius: size / 2.5, backgroundColor: bg }]}>
+            <Text style={[avatarStyles.text, { color, fontSize: size * 0.34 }]}>{initials}</Text>
         </View>
     );
 }
 
 const avatarStyles = StyleSheet.create({
     wrap: {
-        width: 40,
-        height: 40,
-        borderRadius: radii.md,
         alignItems: 'center',
         justifyContent: 'center',
     },
     text: {
         fontFamily: fontFamily.bold,
-        fontSize: fontSize.sm,
         fontWeight: '700',
     },
 });

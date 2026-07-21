@@ -6,6 +6,8 @@ import {
     FREE_PDF_FOOTER_CTA_PREFIX,
     isPremiumUser,
     resolvePdfMode,
+    getCompanyStampUrl,
+    getAuthorizedSignatureUrl,
 } from '@waraqah/shared';
 import { escapeHtml, formatMoney, wrapHtml } from './htmlUtils';
 import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../constants/brand';
@@ -17,6 +19,9 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
     const brand = businessInfo?.brandColor || '#16A34A';
     const symbol = getCurrencySymbol(false);
     const docNumber = getDocumentNumber(invoice, resolvedMode);
+    const signatureUrl = premium ? getAuthorizedSignatureUrl(businessInfo) : '';
+    const stampUrl = premium && isReceipt ? getCompanyStampUrl(businessInfo) : '';
+    const ownerName = String(businessInfo?.name || '').trim();
 
     const itemRows = (invoice?.items || [])
         .map(
@@ -34,6 +39,24 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
       <p class="muted" style="margin-top:8px">Powered by ${escapeHtml(APP_NAME)}</p>
       <p class="muted" style="font-size:9px">${escapeHtml(APP_TAGLINE)}</p>
       <p style="margin-top:6px">${escapeHtml(FREE_PDF_FOOTER_CTA_PREFIX)}<a href="${escapeHtml(APP_WEBSITE_URL)}">${escapeHtml(APP_DOMAIN)}</a></p>`;
+
+    let signatureStampHtml = '';
+    if (signatureUrl || stampUrl) {
+        const signatureBlock = signatureUrl
+            ? `<div class="sig-block">
+          <div class="sig-rule"></div>
+          <img class="sig-img" src="${escapeHtml(signatureUrl)}" alt="Authorized signature" />
+          ${ownerName ? `<p class="sig-name">${escapeHtml(ownerName)}</p>` : ''}
+          <p class="sig-label">Authorized Signature</p>
+        </div>`
+            : '';
+        const stampBlock = stampUrl
+            ? `<div class="stamp-block">
+          <img class="stamp-img" src="${escapeHtml(stampUrl)}" alt="Company stamp" />
+        </div>`
+            : '';
+        signatureStampHtml = `<div class="sig-stamp-row">${signatureBlock}${stampBlock}</div>`;
+    }
 
     const body = `
     <div class="brand-bar" style="background:${escapeHtml(brand)}"></div>
@@ -95,6 +118,7 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
             ? `<div class="section-title" style="color:${escapeHtml(brand)}">NOTES</div><p class="muted">${escapeHtml(invoice.notes)}</p>`
             : ''
     }
+    ${signatureStampHtml}
     <div class="footer">
       <p>${isReceipt ? 'Payment received. Thank you!' : 'Thank you for your business!'}</p>
       <p style="font-size:8px;margin-top:4px">${escapeHtml(businessInfo?.name)} • ${escapeHtml(businessInfo?.email)} • ${escapeHtml(businessInfo?.phone)}</p>

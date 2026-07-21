@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
-import { format } from 'date-fns';
-import { PenLine } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { FileText, PenLine } from 'lucide-react-native';
 import {
-    formatCurrency,
     formatInvoiceUsageLabel,
     filterNonDraftInvoices,
-    getDisplayNumber,
     isPremiumUser,
     filterInvoicesBySearch,
     sortInvoices,
@@ -17,16 +15,13 @@ import { InvoiceLimitModal } from '../components/InvoiceLimitModal';
 import {
     ChipGroup,
     EmptyState,
-    FAB,
-    ListRow,
-    PageHeader,
+    InvoiceListItem,
     PageLoader,
     SearchBar,
-    StatusBadge,
     UsageBanner,
 } from '../components/ui';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
-import { colors, fontFamily, fontSize, spacing } from '../theme';
+import { colors, fontFamily, fontSize, shadows, spacing } from '../theme';
 
 const FILTERS = [
     { value: 'all', label: 'All' },
@@ -59,6 +54,7 @@ export function InvoicesListScreen({ navigation }) {
 
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
     const premium = isPremiumUser(businessInfo);
+    const getClientName = (clientId) => clients.find((c) => c.id === clientId)?.name || 'Unknown';
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -66,84 +62,136 @@ export function InvoicesListScreen({ navigation }) {
         setRefreshing(false);
     };
 
-    const getClientName = (clientId) => clients.find((c) => c.id === clientId)?.name || 'Unknown';
-
     if (invoicesLoading && !refreshing && activeInvoices.length === 0) return <PageLoader />;
 
     return (
-        <View style={styles.screen}>
+        <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
             <FlatList
                 data={displayed}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.list}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />}
                 ListHeaderComponent={
-                    <>
-                        <PageHeader title="Invoices" subtitle="Manage and track invoices" />
-                        {!premium && usageLabel ? <UsageBanner label={usageLabel} /> : null}
+                    <View>
+                        <Text style={styles.pageTitle}>Invoices</Text>
+                        <Text style={styles.pageSub}>Track every payment</Text>
+                        {!premium && usageLabel ? (
+                            <View style={styles.padX}>
+                                <UsageBanner label={usageLabel} />
+                            </View>
+                        ) : null}
                         {draftCount > 0 ? (
                             <Pressable style={styles.draftsLink} onPress={() => navigation.navigate('Drafts')}>
-                                <PenLine size={16} color={colors.brand} />
-                                <Text style={styles.draftsText}>{draftCount} draft{draftCount === 1 ? '' : 's'} saved</Text>
+                                <PenLine size={16} color={colors.brand} strokeWidth={2} />
+                                <Text style={styles.draftsText}>
+                                    {draftCount} draft{draftCount === 1 ? '' : 's'}
+                                </Text>
                             </Pressable>
                         ) : null}
-                        <SearchBar value={search} onChangeText={setSearch} placeholder="Search invoices…" style={{ marginTop: spacing.sm }} />
-                        <ChipGroup options={FILTERS} value={filter} onChange={setFilter} />
-                    </>
+                        <View style={styles.padX}>
+                            <SearchBar value={search} onChangeText={setSearch} placeholder="Search invoices…" />
+                            <ChipGroup options={FILTERS} value={filter} onChange={setFilter} style={{ marginTop: spacing.sm }} />
+                        </View>
+                    </View>
                 }
                 ListEmptyComponent={
-                    <EmptyState
-                        title="No invoices"
-                        message="Create your first invoice to get started"
-                        action={
-                            <Pressable onPress={() => tryCreate()}>
-                                <Text style={styles.cta}>Create invoice</Text>
-                            </Pressable>
-                        }
-                    />
+                    <View style={[styles.cardShell, shadows.soft]}>
+                        <EmptyState
+                            icon={FileText}
+                            title="No invoices yet"
+                            message="Create your first invoice to get paid."
+                            actionLabel="Create invoice"
+                            onAction={() => tryCreate()}
+                        />
+                    </View>
                 }
-                renderItem={({ item }) => (
-                    <ListRow
-                        title={getDisplayNumber(item)}
-                        subtitle={`${getClientName(item.clientId)} · ${format(new Date(item.date), 'MMM d, yyyy')}`}
-                        onPress={() => navigation.navigate('InvoiceDetail', { id: item.id })}
-                        badge={<StatusBadge status={item.status} />}
-                        right={<Text style={styles.amount}>{formatCurrency(item.total)}</Text>}
-                        showChevron={false}
-                    />
+                renderItem={({ item, index }) => (
+                    <View
+                        style={[
+                            styles.rowShell,
+                            index === 0 && styles.rowFirst,
+                            index === displayed.length - 1 && styles.rowLast,
+                            index === 0 && shadows.soft,
+                        ]}
+                    >
+                        <InvoiceListItem
+                            invoice={item}
+                            clientName={getClientName(item.clientId)}
+                            last={index === displayed.length - 1}
+                            onPress={() => navigation.navigate('InvoiceDetail', { id: item.id })}
+                        />
+                    </View>
                 )}
             />
-            <FAB onPress={() => tryCreate()} label="Create" />
             <InvoiceLimitModal ref={limitModalRef} usage={invoiceUsage} onUpgrade={goUpgrade} />
-        </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.surfaceMuted },
-    list: { padding: spacing.lg, paddingBottom: 100, flexGrow: 1 },
+    safe: { flex: 1, backgroundColor: colors.surfaceMuted },
+    list: { paddingBottom: 110, flexGrow: 1 },
+    pageTitle: {
+        fontFamily: fontFamily.bold,
+        fontSize: 30,
+        color: colors.foreground,
+        letterSpacing: -0.8,
+        paddingHorizontal: spacing.xl,
+        paddingTop: spacing.lg,
+    },
+    pageSub: {
+        fontFamily: fontFamily.regular,
+        fontSize: fontSize.md,
+        color: colors.muted,
+        paddingHorizontal: spacing.xl,
+        marginBottom: spacing.xl,
+        marginTop: 4,
+    },
+    padX: { paddingHorizontal: spacing.xl, marginBottom: spacing.md },
     draftsLink: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.sm,
-        marginTop: spacing.sm,
-        padding: spacing.md,
+        marginHorizontal: spacing.xl,
+        marginBottom: spacing.md,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
         backgroundColor: colors.brandSubtle,
-        borderRadius: 12,
+        borderRadius: 14,
     },
     draftsText: {
         fontFamily: fontFamily.semibold,
         fontSize: fontSize.sm,
         color: colors.brand,
     },
-    amount: {
-        fontFamily: fontFamily.semibold,
-        fontSize: fontSize.sm,
-        color: colors.foreground,
+    cardShell: {
+        marginHorizontal: spacing.xl,
+        marginTop: spacing.sm,
+        backgroundColor: colors.surface,
+        borderRadius: 20,
+        overflow: 'hidden',
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: colors.borderLight,
     },
-    cta: {
-        fontFamily: fontFamily.semibold,
-        color: colors.brand,
-        marginTop: spacing.md,
+    rowShell: {
+        marginHorizontal: spacing.xl,
+        backgroundColor: colors.surface,
+        borderLeftWidth: StyleSheet.hairlineWidth,
+        borderRightWidth: StyleSheet.hairlineWidth,
+        borderColor: colors.borderLight,
+    },
+    rowFirst: {
+        marginTop: spacing.sm,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        overflow: 'hidden',
+    },
+    rowLast: {
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
+        overflow: 'hidden',
+        marginBottom: spacing.md,
     },
 });

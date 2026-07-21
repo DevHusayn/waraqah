@@ -6,7 +6,7 @@ export function UsageBanner({ label, style }) {
     if (!label) return null;
     return (
         <View style={[styles.banner, style]}>
-            <Crown size={16} color={colors.amber600} />
+            <Crown size={15} color={colors.amber600} strokeWidth={2} />
             <Text style={styles.text}>{label}</Text>
         </View>
     );
@@ -17,17 +17,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.sm,
-        marginTop: spacing.md,
-        padding: spacing.md,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
         backgroundColor: colors.amber50,
         borderRadius: radii.md,
-        borderWidth: 1,
-        borderColor: '#fde68a',
     },
     text: {
         flex: 1,
         fontFamily: fontFamily.medium,
-        fontSize: fontSize.xs,
+        fontSize: fontSize.sm,
         color: '#92400e',
+        lineHeight: 18,
     },
 });

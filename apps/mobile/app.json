@@ -5,26 +5,37 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "scheme": "waraqah",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0284c7"
+      "backgroundColor": "#F0FDF4"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.waraqah.invoice",
-      "associatedDomains": []
+      "associatedDomains": [],
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Waraqah needs photo access to upload your business logo.",
+        "NSCameraUsageDescription": "Waraqah needs camera access to capture your business logo."
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0284c7",
+        "backgroundColor": "#16A34A",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.waraqah.invoice",
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "VIBRATE"
+      ],
       "intentFilters": [
         {
           "action": "VIEW",

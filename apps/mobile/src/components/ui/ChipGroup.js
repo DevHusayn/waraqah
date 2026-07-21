@@ -1,5 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
-import { colors, fontFamily, fontSize, radii, spacing } from '../../theme';
+import { colors, fontFamily, fontSize, radii, spacing, touchTarget } from '../../theme';
 import { hapticSelection } from '../../utils/haptics';
 
 export function ChipGroup({ options, value, onChange, style }) {
@@ -20,11 +20,11 @@ export function ChipGroup({ options, value, onChange, style }) {
                             hapticSelection();
                             onChange(key);
                         }}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
                         style={[styles.chip, active && styles.chipActive]}
                     >
-                        <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                            {label}
-                        </Text>
+                        <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
                     </Pressable>
                 );
             })}
@@ -39,25 +39,23 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.sm,
     },
     chip: {
-        paddingHorizontal: 14,
+        minHeight: touchTarget - 8,
+        paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: radii.full,
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
+        backgroundColor: colors.surfaceMuted,
+        justifyContent: 'center',
     },
     chipActive: {
-        backgroundColor: colors.brandSubtle,
-        borderColor: colors.brand,
+        backgroundColor: colors.brand,
     },
     chipText: {
         fontFamily: fontFamily.medium,
-        fontSize: fontSize.xs,
+        fontSize: fontSize.sm,
         color: colors.slate600,
-        textTransform: 'capitalize',
     },
     chipTextActive: {
-        color: colors.brand,
+        color: colors.white,
         fontFamily: fontFamily.semibold,
     },
 });

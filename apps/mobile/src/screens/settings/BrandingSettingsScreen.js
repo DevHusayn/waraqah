@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
-import { BRAND_PRESETS, isPremiumUser, LOGO_MAX_BYTES } from '@waraqah/shared';
+import { BRAND_PRESETS, isPremiumUser, LOGO_MAX_BYTES, BRAND_IMAGE_MAX_EDGE } from '@waraqah/shared';
 import { useSettings } from '../../context/SettingsContext';
 import { useToast } from '../../context/ToastContext';
 import { Button, Card, FieldError, Input, Label } from '../../components/ui';
@@ -18,11 +18,12 @@ async function pickImageAsBase64() {
     if (result.canceled || !result.assets?.[0]) return null;
     const asset = result.assets[0];
     if (asset.fileSize && asset.fileSize > LOGO_MAX_BYTES) {
-        throw new Error('Image must be smaller than 1.5 MB');
+        throw new Error('Image must be smaller than 2 MB');
     }
+    const resizeWidth = Math.min(asset.width || BRAND_IMAGE_MAX_EDGE, BRAND_IMAGE_MAX_EDGE);
     const manipulated = await ImageManipulator.manipulateAsync(
         asset.uri,
-        [{ resize: { width: 800 } }],
+        [{ resize: { width: resizeWidth } }],
         { compress: 0.85, format: ImageManipulator.SaveFormat.PNG, base64: true }
     );
     return `data:image/png;base64,${manipulated.base64}`;
@@ -78,9 +79,30 @@ export function BrandingSettingsScreen({ navigation }) {
                     <Text style={styles.hint}>Upgrade to Premium to upload logo, stamp, and signature.</Text>
                 ) : (
                     <>
-                        <AssetRow label="Company logo" uri={form.companyLogoUrl} loading={uploading === 'companyLogoUrl'} onUpload={() => uploadAsset('companyLogoUrl')} />
-                        <AssetRow label="Company stamp" uri={form.companyStampUrl} loading={uploading === 'companyStampUrl'} onUpload={() => uploadAsset('companyStampUrl')} />
-                        <AssetRow label="Signature" uri={form.authorizedSignatureUrl} loading={uploading === 'authorizedSignatureUrl'} onUpload={() => uploadAsset('authorizedSignatureUrl')} />
+                        <Text style={styles.formatHint}>
+                            PNG (transparent recommended), JPG, or SVG · max 2 MB · auto-resized
+                        </Text>
+                        <AssetRow
+                            label="Company logo"
+                            hint="Appears on PDF invoices and receipts"
+                            uri={form.companyLogoUrl}
+                            loading={uploading === 'companyLogoUrl'}
+                            onUpload={() => uploadAsset('companyLogoUrl')}
+                        />
+                        <AssetRow
+                            label="Company stamp"
+                            hint="Near signature on paid receipt PDFs"
+                            uri={form.companyStampUrl}
+                            loading={uploading === 'companyStampUrl'}
+                            onUpload={() => uploadAsset('companyStampUrl')}
+                        />
+                        <AssetRow
+                            label="Authorized signature"
+                            hint="Under totals on PDF invoices and receipts"
+                            uri={form.authorizedSignatureUrl}
+                            loading={uploading === 'authorizedSignatureUrl'}
+                            onUpload={() => uploadAsset('authorizedSignatureUrl')}
+                        />
                     </>
                 )}
             </Card>
@@ -89,11 +111,12 @@ export function BrandingSettingsScreen({ navigation }) {
     );
 }
 
-function AssetRow({ label, uri, onUpload, loading }) {
+function AssetRow({ label, hint, uri, onUpload, loading }) {
     return (
         <View style={styles.assetRow}>
             <View style={{ flex: 1 }}>
                 <Text style={styles.assetLabel}>{label}</Text>
+                {hint ? <Text style={styles.assetHint}>{hint}</Text> : null}
                 {uri ? <Image source={{ uri }} style={styles.preview} resizeMode="contain" /> : null}
             </View>
             <Button title="Upload" variant="secondary" onPress={onUpload} loading={loading} style={{ alignSelf: 'flex-start' }} />
@@ -107,10 +130,18 @@ const styles = StyleSheet.create({
     block: { marginBottom: spacing.lg },
     section: { fontFamily: fontFamily.semibold, fontSize: fontSize.sm, marginBottom: spacing.sm, color: colors.foreground },
     hint: { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.muted },
+    formatHint: {
+        fontFamily: fontFamily.regular,
+        fontSize: fontSize.xs,
+        color: colors.muted,
+        marginBottom: spacing.sm,
+        lineHeight: 18,
+    },
     presets: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.md },
     swatch: { width: 36, height: 36, borderRadius: radii.md },
     swatchActive: { borderWidth: 3, borderColor: colors.foreground },
     assetRow: { marginTop: spacing.md, gap: spacing.sm },
-    assetLabel: { fontFamily: fontFamily.semibold, marginBottom: 6 },
+    assetLabel: { fontFamily: fontFamily.semibold, marginBottom: 2 },
+    assetHint: { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.muted, marginBottom: 6 },
     preview: { width: 80, height: 80, borderRadius: radii.sm, backgroundColor: colors.slate100 },
 });

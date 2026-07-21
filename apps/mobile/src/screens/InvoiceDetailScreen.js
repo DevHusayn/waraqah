@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
 import {
     formatCurrency,
@@ -13,11 +14,12 @@ import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { ConfirmModal } from '../components/Modal';
-import { BottomSheet, Button, Card, PageLoader, StatusBadge, Subtitle, Title } from '../components/ui';
-import { colors, fontFamily, fontSize, spacing } from '../theme';
+import { BottomSheet, Button, PageLoader, StatusBadge } from '../components/ui';
+import { colors, fontFamily, fontSize, lineHeight, radii, spacing } from '../theme';
 
 export function InvoiceDetailScreen({ route, navigation }) {
     const { id } = route.params;
+    const insets = useSafeAreaInsets();
     const { invoices, clients, updateInvoice, deleteInvoice, loading } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
@@ -102,113 +104,262 @@ export function InvoiceDetailScreen({ route, navigation }) {
     };
 
     return (
-        <>
-            <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-                <View style={styles.headerRow}>
-                    <View style={{ flex: 1 }}>
-                        <Title>{getDisplayNumber(invoice)}</Title>
-                        <Subtitle>{client?.name}</Subtitle>
+        <View style={styles.root}>
+            <ScrollView
+                style={styles.screen}
+                contentContainerStyle={[styles.content, { paddingBottom: 120 + insets.bottom }]}
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={styles.header}>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                        <Text style={styles.number}>{getDisplayNumber(invoice)}</Text>
+                        <Text style={styles.client}>{client?.name || 'No client'}</Text>
                     </View>
                     <StatusBadge status={invoice.status} />
                 </View>
 
-                <Card style={styles.block} elevated>
-                    <Row label="Issue date" value={format(new Date(invoice.date), 'MMM d, yyyy')} />
-                    <Row label="Due date" value={format(new Date(invoice.dueDate), 'MMM d, yyyy')} />
+                <Text style={styles.amountHero}>{formatCurrency(invoice.total)}</Text>
+                <Text style={styles.amountHint}>Total</Text>
+
+                <Text style={styles.section}>Details</Text>
+                <View style={styles.group}>
+                    <MetaRow label="Issue date" value={format(new Date(invoice.date), 'MMM d, yyyy')} />
+                    <MetaRow label="Due date" value={format(new Date(invoice.dueDate), 'MMM d, yyyy')} />
                     {paid ? (
                         <>
-                            <Row label="Paid on" value={invoice.datePaid ? format(new Date(invoice.datePaid), 'MMM d, yyyy') : '—'} />
-                            <Row label="Payment" value={getPaymentMethodLabel(invoice.paymentMethod)} />
-                            <Row label="Receipt #" value={getReceiptNumber(invoice)} />
+                            <MetaRow
+                                label="Paid on"
+                                value={invoice.datePaid ? format(new Date(invoice.datePaid), 'MMM d, yyyy') : '—'}
+                            />
+                            <MetaRow label="Payment" value={getPaymentMethodLabel(invoice.paymentMethod)} />
+                            <MetaRow label="Receipt #" value={getReceiptNumber(invoice)} last />
                         </>
-                    ) : null}
-                </Card>
+                    ) : (
+                        <View style={styles.lastPad} />
+                    )}
+                </View>
 
-                <Card style={styles.block} elevated>
-                    <Text style={styles.section}>Line items</Text>
-                    {(invoice.items || []).map((item, i) => (
-                        <View key={i} style={styles.lineItem}>
+                <Text style={styles.section}>Line items</Text>
+                <View style={styles.group}>
+                    {(invoice.items || []).map((item, i, arr) => (
+                        <View
+                            key={i}
+                            style={[styles.lineItem, i < arr.length - 1 && styles.lineBorder]}
+                        >
                             <Text style={styles.lineDesc}>{item.description}</Text>
                             <Text style={styles.lineMeta}>
-                                {item.quantity} × {formatCurrency(item.rate)} = {formatCurrency(item.quantity * item.rate)}
+                                {item.quantity} × {formatCurrency(item.rate)}
                             </Text>
+                            <Text style={styles.lineTotal}>{formatCurrency(item.quantity * item.rate)}</Text>
                         </View>
                     ))}
-                    <Row label="Subtotal" value={formatCurrency(invoice.subtotal)} />
-                    <Row label={`Tax (${invoice.taxRate}%)`} value={formatCurrency(invoice.tax)} />
-                    <Row label="Total" value={formatCurrency(invoice.total)} bold />
-                </Card>
+                    <MetaRow label="Subtotal" value={formatCurrency(invoice.subtotal)} />
+                    <MetaRow label={`Tax (${invoice.taxRate}%)`} value={formatCurrency(invoice.tax)} />
+                    <MetaRow label="Total" value={formatCurrency(invoice.total)} bold last />
+                </View>
 
                 {invoice.notes ? (
-                    <Card style={styles.block} elevated>
+                    <>
                         <Text style={styles.section}>Notes</Text>
                         <Text style={styles.notes}>{invoice.notes}</Text>
-                    </Card>
+                    </>
                 ) : null}
 
                 {canEdit ? (
-                    <Card style={styles.block} elevated>
-                        <Button title="Cancel invoice" variant="secondary" onPress={() => setConfirmCancel(true)} style={{ marginBottom: spacing.sm }} />
-                        <Button title="Delete invoice" variant="danger" onPress={() => setConfirmDelete(true)} />
-                    </Card>
+                    <View style={styles.dangerZone}>
+                        <Button title="Cancel invoice" variant="secondary" onPress={() => setConfirmCancel(true)} />
+                        <Button
+                            title="Delete invoice"
+                            variant="danger"
+                            onPress={() => setConfirmDelete(true)}
+                            style={{ marginTop: spacing.sm }}
+                        />
+                    </View>
                 ) : null}
             </ScrollView>
 
-            <View style={styles.actionBar}>
+            <View style={[styles.actionBar, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
                 {canMarkPaid ? (
                     <Button title="Mark paid" onPress={() => markPaidSheetRef.current?.snapToIndex(0)} style={styles.actionBtn} />
                 ) : null}
                 <Button
-                    title="Share PDF"
+                    title="Share"
                     variant="secondary"
                     onPress={() => handleDownload(paid ? 'receipt' : 'invoice')}
                     loading={pdfLoading === (paid ? 'receipt' : 'invoice')}
                     style={styles.actionBtn}
                 />
                 {canEdit ? (
-                    <Button title="Edit" variant="secondary" onPress={() => navigation.navigate('CreateInvoice', { id })} style={styles.actionBtn} />
+                    <Button
+                        title="Edit"
+                        variant="secondary"
+                        onPress={() => navigation.navigate('CreateInvoice', { id })}
+                        style={styles.actionBtn}
+                    />
                 ) : null}
             </View>
 
-            <BottomSheet ref={markPaidSheetRef} snapPoints={['45%']}>
-                <Text style={styles.section}>Payment method</Text>
+            <BottomSheet ref={markPaidSheetRef} snapPoints={['48%']}>
+                <Text style={styles.sheetTitle}>Payment method</Text>
                 {MARK_PAID_METHODS.map((m) => (
-                    <Pressable key={m.value} onPress={() => setPaymentMethod(m.value)} style={[styles.method, paymentMethod === m.value && styles.methodActive]}>
+                    <Pressable
+                        key={m.value}
+                        onPress={() => setPaymentMethod(m.value)}
+                        style={[styles.method, paymentMethod === m.value && styles.methodActive]}
+                    >
                         <Text style={styles.methodText}>{m.label}</Text>
                     </Pressable>
                 ))}
                 <Button title="Confirm payment" onPress={handleMarkPaid} loading={saving} style={{ marginTop: spacing.lg }} />
             </BottomSheet>
 
-            <ConfirmModal visible={confirmDelete} title="Delete invoice?" message="This cannot be undone." confirmLabel="Delete" danger onConfirm={handleDelete} onCancel={() => setConfirmDelete(false)} />
-            <ConfirmModal visible={confirmCancel} title="Cancel invoice?" message="The invoice will be marked cancelled." confirmLabel="Cancel invoice" onConfirm={handleCancel} onCancel={() => setConfirmCancel(false)} />
-        </>
+            <ConfirmModal
+                visible={confirmDelete}
+                title="Delete invoice?"
+                message="This cannot be undone."
+                confirmLabel="Delete"
+                danger
+                onConfirm={handleDelete}
+                onCancel={() => setConfirmDelete(false)}
+            />
+            <ConfirmModal
+                visible={confirmCancel}
+                title="Cancel invoice?"
+                message="The invoice will be marked cancelled."
+                confirmLabel="Cancel invoice"
+                onConfirm={handleCancel}
+                onCancel={() => setConfirmCancel(false)}
+            />
+        </View>
     );
 }
 
-function Row({ label, value, bold }) {
+function MetaRow({ label, value, bold, last }) {
     return (
-        <View style={styles.row}>
-            <Text style={styles.rowLabel}>{label}</Text>
-            <Text style={[styles.rowValue, bold && styles.rowBold]}>{value}</Text>
+        <View style={[styles.metaRow, !last && styles.metaBorder]}>
+            <Text style={styles.metaLabel}>{label}</Text>
+            <Text style={[styles.metaValue, bold && styles.metaBold]}>{value}</Text>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.surfaceMuted },
-    content: { padding: spacing.lg, paddingBottom: 100 },
-    headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.md, marginBottom: spacing.lg },
-    block: { marginBottom: spacing.md },
-    section: { fontFamily: fontFamily.semibold, fontSize: fontSize.sm, marginBottom: spacing.sm, color: colors.foreground },
-    lineItem: { marginBottom: spacing.sm, paddingBottom: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.slate100 },
-    lineDesc: { fontFamily: fontFamily.semibold, color: colors.foreground },
-    lineMeta: { fontFamily: fontFamily.regular, color: colors.muted, marginTop: 2, fontSize: fontSize.xs },
-    row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-    rowLabel: { fontFamily: fontFamily.regular, color: colors.muted, fontSize: fontSize.sm },
-    rowValue: { fontFamily: fontFamily.medium, color: colors.foreground },
-    rowBold: { fontFamily: fontFamily.bold, fontWeight: '700' },
-    notes: { fontFamily: fontFamily.regular, color: colors.slate600, lineHeight: 20 },
+    root: { flex: 1, backgroundColor: colors.surface },
+    screen: { flex: 1 },
+    content: { paddingTop: spacing.lg },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: spacing.md,
+        paddingHorizontal: spacing.xl,
+        marginBottom: spacing.lg,
+    },
+    number: {
+        fontFamily: fontFamily.bold,
+        fontSize: fontSize.xl,
+        color: colors.foreground,
+        letterSpacing: -0.4,
+    },
+    client: {
+        marginTop: 4,
+        fontFamily: fontFamily.regular,
+        fontSize: fontSize.md,
+        color: colors.muted,
+    },
+    amountHero: {
+        paddingHorizontal: spacing.xl,
+        fontFamily: fontFamily.bold,
+        fontSize: 34,
+        color: colors.foreground,
+        letterSpacing: -1,
+    },
+    amountHint: {
+        paddingHorizontal: spacing.xl,
+        marginBottom: spacing.xxl,
+        fontFamily: fontFamily.medium,
+        fontSize: fontSize.sm,
+        color: colors.muted,
+    },
+    section: {
+        paddingHorizontal: spacing.xl,
+        marginBottom: spacing.sm,
+        marginTop: spacing.lg,
+        fontFamily: fontFamily.semibold,
+        fontSize: 12,
+        color: colors.slate400,
+        textTransform: 'uppercase',
+        letterSpacing: 0.7,
+    },
+    group: {
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderColor: colors.borderLight,
+    },
+    metaRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: spacing.xl,
+        paddingVertical: spacing.lg,
+        gap: spacing.md,
+    },
+    metaBorder: {
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: colors.borderLight,
+    },
+    metaLabel: {
+        fontFamily: fontFamily.regular,
+        fontSize: fontSize.md,
+        color: colors.muted,
+    },
+    metaValue: {
+        fontFamily: fontFamily.medium,
+        fontSize: fontSize.md,
+        color: colors.foreground,
+        textAlign: 'right',
+        flexShrink: 1,
+    },
+    metaBold: {
+        fontFamily: fontFamily.bold,
+        fontWeight: '700',
+    },
+    lastPad: { height: 0 },
+    lineItem: {
+        paddingHorizontal: spacing.xl,
+        paddingVertical: spacing.lg,
+    },
+    lineBorder: {
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: colors.borderLight,
+    },
+    lineDesc: {
+        fontFamily: fontFamily.semibold,
+        fontSize: fontSize.md,
+        color: colors.foreground,
+    },
+    lineMeta: {
+        marginTop: 2,
+        fontFamily: fontFamily.regular,
+        fontSize: fontSize.sm,
+        color: colors.muted,
+    },
+    lineTotal: {
+        marginTop: 4,
+        fontFamily: fontFamily.semibold,
+        fontSize: fontSize.sm,
+        color: colors.foreground,
+    },
+    notes: {
+        paddingHorizontal: spacing.xl,
+        fontFamily: fontFamily.regular,
+        fontSize: fontSize.md,
+        color: colors.slate600,
+        lineHeight: lineHeight.md,
+    },
+    dangerZone: {
+        paddingHorizontal: spacing.xl,
+        marginTop: spacing.xxl,
+    },
     actionBar: {
         position: 'absolute',
         left: 0,
@@ -217,13 +368,34 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: spacing.sm,
-        padding: spacing.lg,
+        paddingHorizontal: spacing.xl,
+        paddingTop: spacing.lg,
         backgroundColor: colors.surface,
-        borderTopWidth: 1,
+        borderTopWidth: StyleSheet.hairlineWidth,
         borderTopColor: colors.border,
     },
-    actionBtn: { flex: 1, minWidth: '45%' },
-    method: { padding: spacing.md, borderRadius: 12, borderWidth: 1, borderColor: colors.border, marginBottom: spacing.sm },
-    methodActive: { borderColor: colors.brand, backgroundColor: colors.brandSubtle },
-    methodText: { fontFamily: fontFamily.medium, color: colors.foreground },
+    actionBtn: { flex: 1, minWidth: '30%' },
+    sheetTitle: {
+        fontFamily: fontFamily.semibold,
+        fontSize: fontSize.lg,
+        color: colors.foreground,
+        marginBottom: spacing.lg,
+    },
+    method: {
+        paddingVertical: spacing.lg,
+        paddingHorizontal: spacing.lg,
+        borderRadius: radii.md,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: colors.border,
+        marginBottom: spacing.sm,
+    },
+    methodActive: {
+        borderColor: colors.brand,
+        backgroundColor: colors.brandSubtle,
+    },
+    methodText: {
+        fontFamily: fontFamily.medium,
+        color: colors.foreground,
+        fontSize: fontSize.md,
+    },
 });

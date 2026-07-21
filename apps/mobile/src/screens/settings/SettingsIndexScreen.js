@@ -1,9 +1,8 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Building2, CreditCard, Palette, Crown, Info, FileText } from 'lucide-react-native';
-import { isPremiumUser } from '@waraqah/shared';
+import { getBusinessInitials, isPremiumUser } from '@waraqah/shared';
 import { useSettings } from '../../context/SettingsContext';
-import { getBusinessInitials } from '@waraqah/shared';
-import { AvatarInitials, ListRow, PageHeader } from '../../components/ui';
+import { AvatarInitials, ListRow } from '../../components/ui';
 import { colors, fontFamily, fontSize, spacing } from '../../theme';
 
 const MENU = [
@@ -21,54 +20,60 @@ export function SettingsIndexScreen({ navigation }) {
     const initials = getBusinessInitials(businessInfo?.name || 'W');
 
     return (
-        <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
-            <PageHeader title="Settings" subtitle="Manage your business and account" />
+        <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
             <View style={styles.summary}>
-                <AvatarInitials initials={initials} />
+                <AvatarInitials initials={initials} size={52} />
                 <View style={{ flex: 1 }}>
                     <Text style={styles.name}>{businessInfo?.name || 'Your business'}</Text>
                     <Text style={styles.plan}>{premium ? 'Premium plan' : 'Free plan'}</Text>
                 </View>
             </View>
-            {MENU.map((item) => {
-                const Icon = item.icon;
-                return (
-                    <ListRow
-                        key={item.screen}
-                        title={item.title}
-                        subtitle={item.subtitle}
-                        onPress={() => navigation.navigate(item.screen)}
-                        left={<Icon size={20} color={colors.brand} />}
-                    />
-                );
-            })}
+
+            <View style={styles.group}>
+                {MENU.map((item, index) => {
+                    const Icon = item.icon;
+                    return (
+                        <ListRow
+                            key={item.screen}
+                            title={item.title}
+                            subtitle={item.subtitle}
+                            onPress={() => navigation.navigate(item.screen)}
+                            left={<Icon size={20} color={colors.slate600} strokeWidth={2} />}
+                            last={index === MENU.length - 1}
+                            dense
+                        />
+                    );
+                })}
+            </View>
         </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.surfaceMuted },
-    content: { padding: spacing.lg, paddingBottom: spacing.xxl },
+    screen: { flex: 1, backgroundColor: colors.surface },
+    content: { paddingBottom: spacing.huge, paddingTop: spacing.lg },
     summary: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.md,
-        backgroundColor: colors.surface,
-        borderRadius: 16,
-        padding: spacing.lg,
-        marginBottom: spacing.lg,
-        borderWidth: 1,
-        borderColor: colors.border,
+        gap: spacing.lg,
+        paddingHorizontal: spacing.xl,
+        marginBottom: spacing.xxl,
     },
     name: {
-        fontFamily: fontFamily.bold,
-        fontSize: fontSize.md,
+        fontFamily: fontFamily.semibold,
+        fontSize: fontSize.lg,
         color: colors.foreground,
+        letterSpacing: -0.3,
     },
     plan: {
-        fontFamily: fontFamily.regular,
-        fontSize: fontSize.xs,
-        color: colors.muted,
         marginTop: 2,
+        fontFamily: fontFamily.regular,
+        fontSize: fontSize.sm,
+        color: colors.muted,
+    },
+    group: {
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderColor: colors.borderLight,
     },
 });

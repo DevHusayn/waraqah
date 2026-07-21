@@ -84,26 +84,38 @@ export async function drawHeaderLogo(doc, logoDataUrl, cache, options = {}) {
     return { width: w, height: h, x, y };
 }
 
-/** Authorized signature in the footer block */
+/**
+ * Authorized signature image — returns drawn bounds for labels / layout.
+ * Pass `rightX` to right-align within the available width.
+ * @returns {{ x: number, y: number, w: number, h: number } | null}
+ */
 export async function drawAuthorizedSignature(doc, signatureDataUrl, y, cache, options = {}) {
     const png = await resolvePdfPng(signatureDataUrl, cache);
-    if (!png) return;
+    if (!png) return null;
 
-    const { x = 22, maxW = 52, maxH = 14 } = options;
+    const { x = 22, rightX, maxW = 48, maxH = 16 } = options;
     const { width, height } = await loadImageMeta(png);
     const { w, h } = fitImage(width / height, maxW, maxH);
-    addPngWithOpacity(doc, png, x, y, w, h, 1);
+    const drawX = rightX != null ? rightX - w : x;
+    addPngWithOpacity(doc, png, drawX, y, w, h, 1);
+    return { x: drawX, y, w, h };
 }
 
-/** Company stamp on paid receipts — bottom-right, above footer rule */
+/**
+ * Company stamp — clean, unrotated placement for premium receipts.
+ * Pass `rightX` to right-align within the available width.
+ * @returns {{ x: number, y: number, w: number, h: number } | null}
+ */
 export async function drawCompanyStamp(doc, stampDataUrl, y, cache, options = {}) {
     const png = await resolvePdfPng(stampDataUrl, cache);
-    if (!png) return;
+    if (!png) return null;
 
-    const { x = PAGE_W - 50, maxW = 34, maxH = 34, rotation = -10, opacity = 0.9 } = options;
+    const { x = PAGE_W - 50, rightX, maxW = 28, maxH = 28, opacity = 0.95 } = options;
     const { width, height } = await loadImageMeta(png);
     const { w, h } = fitImage(width / height, maxW, maxH);
-    addPngWithOpacity(doc, png, x, y, w, h, opacity, rotation);
+    const drawX = rightX != null ? rightX - w : x;
+    addPngWithOpacity(doc, png, drawX, y, w, h, opacity);
+    return { x: drawX, y, w, h };
 }
 
 /** @deprecated jsPDF always receives flattened PNG after resolvePdfPng */
@@ -111,4 +123,4 @@ export function getImageFormat() {
     return 'PNG';
 }
 
-export { PAGE_W, PAGE_H };
+export { PAGE_W, PAGE_H, fitImage, loadImageMeta, resolvePdfPng };

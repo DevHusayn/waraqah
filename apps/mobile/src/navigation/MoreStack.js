@@ -1,5 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MoreScreen } from '../screens/MoreScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
 import { UpgradeScreen } from '../screens/UpgradeScreen';
 import { MonthlyStatementScreen } from '../screens/MonthlyStatementScreen';
 import { AdminDashboardScreen } from '../screens/AdminDashboardScreen';
@@ -12,7 +13,8 @@ const Stack = createNativeStackNavigator();
 export function MoreStack() {
     return (
         <Stack.Navigator screenOptions={stackScreenOptions}>
-            <Stack.Screen name="MoreMenu" component={MoreScreen} options={{ title: 'More', headerShown: false }} />
+            <Stack.Screen name="MoreMenu" component={MoreScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="ProfileHome" component={ProfileScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Settings" component={SettingsStack} options={{ headerShown: false }} />
             <Stack.Screen name="Products" component={ProductsScreen} options={{ title: 'Products' }} />
             <Stack.Screen name="Upgrade" component={UpgradeScreen} options={{ title: 'Upgrade' }} />

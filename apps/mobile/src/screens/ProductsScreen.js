@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Package } from 'lucide-react-native';
 import { formatCurrency } from '@waraqah/shared';
 import { useInvoice } from '../context/InvoiceContext';
@@ -17,7 +18,7 @@ import {
     PageLoader,
     SearchBar,
 } from '../components/ui';
-import { colors, spacing } from '../theme';
+import { colors, fontFamily, fontSize, spacing } from '../theme';
 
 const EMPTY = { name: '', description: '', price: '' };
 
@@ -58,7 +59,7 @@ export function ProductsScreen() {
         setForm({
             name: product.name || '',
             description: product.description || '',
-            price: String(product.price ?? ''),
+            price: String(product.price ?? product.unitPrice ?? ''),
         });
         sheetRef.current?.snapToIndex(0);
     };
@@ -76,6 +77,7 @@ export function ProductsScreen() {
                 name: form.name.trim(),
                 description: form.description.trim(),
                 price: Number(form.price) || 0,
+                unitPrice: Number(form.price) || 0,
             };
             if (editing) {
                 await updateProduct(editing.id, payload);
@@ -115,46 +117,71 @@ export function ProductsScreen() {
     if (productsLoading && products.length === 0 && !refreshing) return <PageLoader />;
 
     return (
-        <View style={styles.screen}>
+        <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
             <FlatList
                 data={filtered}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.list}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />}
                 ListHeaderComponent={
-                    <>
-                        <PageHeader title="Products" subtitle="Catalog for quick line items" />
-                        <SearchBar value={search} onChangeText={setSearch} placeholder="Search products…" style={{ marginTop: 0 }} />
-                    </>
+                    <View>
+                        <PageHeader title="Products" subtitle="Reusable line items" />
+                        <View style={styles.padX}>
+                            <SearchBar value={search} onChangeText={setSearch} placeholder="Search products…" />
+                        </View>
+                        <View style={styles.divider} />
+                    </View>
                 }
                 ListEmptyComponent={
                     <EmptyState
                         icon={Package}
-                        title="No products"
-                        message="Add products to fill invoice line items faster"
-                        action={<Button title="Add product" onPress={openAdd} style={{ marginTop: spacing.md }} />}
+                        title="No products yet"
+                        message="Add products to fill invoice line items faster."
+                        actionLabel="Add product"
+                        onAction={openAdd}
                     />
                 }
-                renderItem={({ item }) => (
+                renderItem={({ item, index }) => (
                     <ListRow
                         title={item.name}
-                        subtitle={item.description || formatCurrency(item.price)}
+                        subtitle={item.description || undefined}
                         onPress={() => openEdit(item)}
                         onLongPress={() => setDeleteId(item.id)}
-                        right={<Text style={styles.price}>{formatCurrency(item.price)}</Text>}
+                        right={
+                            <Text style={styles.price}>
+                                {formatCurrency(item.price ?? item.unitPrice ?? 0)}
+                            </Text>
+                        }
+                        last={index === filtered.length - 1}
                     />
                 )}
             />
             <FAB onPress={openAdd} label="Add" />
-            <BottomSheet ref={sheetRef} snapPoints={['55%']} onClose={() => setForm(EMPTY)}>
+            <BottomSheet ref={sheetRef} snapPoints={['58%']} onClose={() => setForm(EMPTY)}>
                 <Text style={styles.sheetTitle}>{editing ? 'Edit product' : 'New product'}</Text>
                 <Label required>Name</Label>
                 <Input value={form.name} onChangeText={(v) => setForm((f) => ({ ...f, name: v }))} />
+                <View style={styles.fieldGap} />
                 <Label>Description</Label>
-                <Input value={form.description} onChangeText={(v) => setForm((f) => ({ ...f, description: v }))} multiline style={{ minHeight: 64, textAlignVertical: 'top' }} />
+                <Input
+                    value={form.description}
+                    onChangeText={(v) => setForm((f) => ({ ...f, description: v }))}
+                    multiline
+                    style={{ minHeight: 72, textAlignVertical: 'top' }}
+                />
+                <View style={styles.fieldGap} />
                 <Label required>Price</Label>
-                <Input value={form.price} onChangeText={(v) => setForm((f) => ({ ...f, price: v }))} keyboardType="decimal-pad" />
-                <Button title={editing ? 'Save changes' : 'Add product'} onPress={handleSave} loading={saving} style={{ marginTop: spacing.lg }} />
+                <Input
+                    value={form.price}
+                    onChangeText={(v) => setForm((f) => ({ ...f, price: v }))}
+                    keyboardType="decimal-pad"
+                />
+                <Button
+                    title={editing ? 'Save changes' : 'Add product'}
+                    onPress={handleSave}
+                    loading={saving}
+                    style={{ marginTop: spacing.xxl }}
+                />
                 <Button title="Cancel" variant="secondary" onPress={closeSheet} style={{ marginTop: spacing.sm }} />
             </BottomSheet>
             <ConfirmModal
@@ -167,13 +194,27 @@ export function ProductsScreen() {
                 onConfirm={handleDelete}
                 onCancel={() => setDeleteId(null)}
             />
-        </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.surfaceMuted },
-    list: { padding: spacing.lg, paddingBottom: 100, flexGrow: 1 },
-    price: { fontWeight: '600', color: colors.foreground },
-    sheetTitle: { fontSize: 18, fontWeight: '700', marginBottom: spacing.lg, color: colors.foreground },
+    safe: { flex: 1, backgroundColor: colors.surface },
+    list: { paddingBottom: 100, flexGrow: 1 },
+    padX: { paddingHorizontal: spacing.xl, marginBottom: spacing.md },
+    divider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.borderLight },
+    fieldGap: { height: spacing.lg },
+    price: {
+        fontFamily: fontFamily.semibold,
+        fontSize: fontSize.sm,
+        color: colors.foreground,
+        letterSpacing: -0.2,
+    },
+    sheetTitle: {
+        fontFamily: fontFamily.semibold,
+        fontSize: fontSize.lg,
+        marginBottom: spacing.xl,
+        color: colors.foreground,
+        letterSpacing: -0.3,
+    },
 });

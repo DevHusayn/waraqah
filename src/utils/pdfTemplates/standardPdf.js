@@ -358,6 +358,87 @@ function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayC
     );
 }
 
+/**
+ * Premium signature (+ optional stamp) block — right-aligned under totals, above footer.
+ * Renders only uploaded assets (no placeholders). Stamp appears only on receipts.
+ */
+async function drawSignatureStampBlock(
+    doc,
+    {
+        signatureUrl,
+        stampUrl,
+        ownerName,
+        footerLineY,
+        isReceiptDoc,
+        pngCache,
+        textColor,
+        grayColor,
+    }
+) {
+    const hasSignature = Boolean(signatureUrl);
+    const hasStamp = isReceiptDoc && Boolean(stampUrl);
+    if (!hasSignature && !hasStamp) return;
+
+    const contentRight = 195;
+    const pairGap = 14;
+    const sigMaxW = 48;
+    const sigMaxH = 16;
+    const stampMaxW = 28;
+    const stampMaxH = 28;
+    const nameGap = 4.5;
+    const ruleGap = 2.5;
+
+    const signatureTextH = hasSignature ? nameGap + 10 : 0;
+    const blockH = Math.max(
+        hasSignature ? sigMaxH + signatureTextH + ruleGap + 4 : 0,
+        hasStamp ? stampMaxH : 0
+    );
+    const blockTop = footerLineY - blockH - 4;
+    const imageY = blockTop + (hasSignature ? ruleGap + 1 : 0);
+
+    let stampDrawn = null;
+    if (hasStamp) {
+        stampDrawn = await drawCompanyStamp(doc, stampUrl, imageY, pngCache, {
+            rightX: contentRight,
+            maxW: stampMaxW,
+            maxH: stampMaxH,
+            opacity: 0.95,
+        });
+    }
+
+    if (hasSignature) {
+        const signatureRight =
+            stampDrawn != null ? stampDrawn.x - pairGap : contentRight;
+        const drawn = await drawAuthorizedSignature(doc, signatureUrl, imageY, pngCache, {
+            rightX: signatureRight,
+            maxW: sigMaxW,
+            maxH: sigMaxH,
+        });
+
+        if (drawn) {
+            const ruleY = drawn.y - ruleGap;
+            doc.setDrawColor(...grayColor);
+            doc.setLineWidth(0.35);
+            doc.line(drawn.x, ruleY, drawn.x + drawn.w, ruleY);
+
+            const name = String(ownerName || '').trim();
+            let textY = drawn.y + drawn.h + 4;
+            if (name) {
+                doc.setFontSize(8);
+                doc.setFont(undefined, 'bold');
+                doc.setTextColor(...textColor);
+                doc.text(name, drawn.x + drawn.w / 2, textY, { align: 'center' });
+                textY += nameGap;
+            }
+
+            doc.setFontSize(6.5);
+            setPdfBodyFont(doc);
+            doc.setTextColor(...grayColor);
+            doc.text('Authorized Signature', drawn.x + drawn.w / 2, textY, { align: 'center' });
+        }
+    }
+}
+
 export async function generateStandardPdf(invoice, client, businessInfo, options = {}) {
     const mode = resolvePdfMode(invoice, options.mode);
     const isReceiptDoc = mode === 'receipt';
@@ -389,10 +470,13 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
 
     const docNumber = getDocumentNumber(invoice, mode) || (isReceiptDoc ? 'RCP' : 'INV');
     const footerReserve = 22;
-    const signatureReserve = signatureUrl ? 16 : 0;
-    const stampReserve = isReceiptDoc && stampUrl ? 26 : 0;
+    const hasSignatureAsset = Boolean(signatureUrl);
+    const hasStampAsset = isReceiptDoc && Boolean(stampUrl);
+    // Signature block: rule + image + name + label; stamp sits beside it with breathing room
+    const signatureReserve = hasSignatureAsset ? 36 : 0;
+    const stampReserve = hasStampAsset ? 32 : 0;
     const assetZone = Math.max(signatureReserve, stampReserve);
-    const FOOTER_ZONE = footerReserve + assetZone + 8;
+    const FOOTER_ZONE = footerReserve + (assetZone ? assetZone + 6 : 0);
     const CONTENT_BOTTOM = PAGE_H - FOOTER_ZONE;
     const LINE_HEIGHT = 3.8;
 
@@ -559,26 +643,18 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     );
 
     const footerLineY = PAGE_H - footerReserve;
-    const signatureY = footerLineY - signatureReserve - 2;
-    const stampY = footerLineY - stampReserve;
 
     try {
-        if (signatureUrl) {
-            await drawAuthorizedSignature(doc, signatureUrl, signatureY, pngCache, {
-                x: 18,
-                maxW: 48,
-                maxH: 12,
-            });
-        }
-        if (isReceiptDoc && stampUrl) {
-            await drawCompanyStamp(doc, stampUrl, stampY, pngCache, {
-                x: PAGE_W - 46,
-                maxW: 30,
-                maxH: 30,
-                rotation: -8,
-                opacity: 0.92,
-            });
-        }
+        await drawSignatureStampBlock(doc, {
+            signatureUrl,
+            stampUrl,
+            ownerName: businessInfo.name,
+            footerLineY,
+            isReceiptDoc,
+            pngCache,
+            textColor,
+            grayColor,
+        });
     } catch {
         /* optional assets */
     }

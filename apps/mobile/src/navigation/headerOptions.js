@@ -2,14 +2,18 @@ import { fontFamily } from '../theme/typography';
 import { colors } from '../theme/colors';
 
 export const stackScreenOptions = {
-    headerStyle: { backgroundColor: colors.surface },
-    headerTintColor: colors.brand,
+    headerStyle: {
+        backgroundColor: colors.surface,
+    },
+    headerTintColor: colors.foreground,
     headerTitleStyle: {
-        fontFamily: fontFamily.bold,
-        fontWeight: '700',
+        fontFamily: fontFamily.semibold,
+        fontWeight: '600',
+        fontSize: 17,
         color: colors.foreground,
     },
     headerShadowVisible: false,
     headerBackTitleVisible: false,
-    contentStyle: { backgroundColor: colors.surfaceMuted },
+    headerBackButtonDisplayMode: 'minimal',
+    contentStyle: { backgroundColor: colors.surface },
 };

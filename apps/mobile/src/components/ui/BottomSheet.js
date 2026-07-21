@@ -15,7 +15,7 @@ export const BottomSheet = forwardRef(function BottomSheet(
                 {...props}
                 disappearsOnIndex={-1}
                 appearsOnIndex={0}
-                opacity={0.45}
+                opacity={0.4}
             />
         ),
         []
@@ -47,15 +47,16 @@ export function BottomSheetModalContent({ children, style }) {
 const styles = StyleSheet.create({
     background: {
         backgroundColor: colors.surface,
-        borderTopLeftRadius: radii.xl,
-        borderTopRightRadius: radii.xl,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
     },
     indicator: {
-        backgroundColor: colors.slate200,
-        width: 40,
+        backgroundColor: colors.slate300,
+        width: 36,
+        height: 4,
     },
     content: {
-        padding: spacing.lg,
-        paddingBottom: spacing.xxl,
+        padding: spacing.xl,
+        paddingBottom: spacing.huge,
     },
 });

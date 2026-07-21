@@ -297,23 +297,36 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                 )}
 
                 {(signatureUrl || stampUrl) && (
-                    <div className="mt-8 flex items-end justify-between gap-4 min-h-[72px]">
-                        {signatureUrl ? (
-                            <img
-                                src={signatureUrl}
-                                alt="Authorized signature"
-                                className="max-h-12 max-w-[180px] object-contain"
-                            />
-                        ) : (
-                            <span />
-                        )}
-                        {stampUrl ? (
-                            <img
-                                src={stampUrl}
-                                alt="Company stamp"
-                                className="max-h-16 max-w-[96px] object-contain opacity-90 -rotate-6"
-                            />
-                        ) : null}
+                    <div className="mt-10 mb-2 flex justify-end">
+                        <div className="flex items-end gap-8 sm:gap-10">
+                            {signatureUrl ? (
+                                <div className="flex flex-col items-center min-w-[140px] max-w-[200px]">
+                                    <div className="w-full border-t border-zinc-300 mb-2" />
+                                    <img
+                                        src={signatureUrl}
+                                        alt="Authorized signature"
+                                        className="max-h-14 max-w-full object-contain"
+                                    />
+                                    {businessInfo?.name ? (
+                                        <p className="mt-2 text-sm font-semibold text-zinc-800 text-center">
+                                            {businessInfo.name}
+                                        </p>
+                                    ) : null}
+                                    <p className="mt-0.5 text-[10px] tracking-wide text-zinc-500 text-center">
+                                        Authorized Signature
+                                    </p>
+                                </div>
+                            ) : null}
+                            {stampUrl ? (
+                                <div className="flex items-center justify-center pb-1">
+                                    <img
+                                        src={stampUrl}
+                                        alt="Company stamp"
+                                        className="max-h-[88px] max-w-[88px] object-contain opacity-95"
+                                    />
+                                </div>
+                            ) : null}
+                        </div>
                     </div>
                 )}
 
