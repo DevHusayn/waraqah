@@ -47,6 +47,13 @@ import ShareDocumentModal from '../components/ShareDocumentModal';
 import { getDisplayNumber } from '../utils/receiptHelpers';
 import CustomSelect from '../components/CustomSelect';
 import DatePickerField from '../components/DatePickerField';
+import CustomUnitModal from '../components/CustomUnitModal';
+import {
+    CUSTOM_UNIT_OPTION,
+    DEFAULT_INVOICE_UNIT,
+    buildUnitSelectOptions,
+    normalizeInvoiceUnit,
+} from '@waraqah/shared';
 
 function hasDraftContent(data) {
     if (String(data.clientName || '').trim()) return true;
@@ -82,6 +89,7 @@ const CreateInvoice = () => {
     const [sharePdfReady, setSharePdfReady] = useState(false);
     const [shareModal, setShareModal] = useState(null);
     const [fieldErrors, setFieldErrors] = useState({});
+    const [customUnitModal, setCustomUnitModal] = useState(null);
 
     const draftIdRef = useRef(null);
     const saveInFlightRef = useRef(false);
@@ -101,7 +109,7 @@ const CreateInvoice = () => {
         date: format(new Date(), 'yyyy-MM-dd'),
         hasDueDate: true,
         dueDate: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
-        items: [{ description: '', quantity: 1, rate: 0 }],
+        items: [{ description: '', quantity: 1, rate: 0, unit: DEFAULT_INVOICE_UNIT }],
         notes: '',
         status: 'draft',
         currency: APP_CURRENCY,
@@ -146,6 +154,10 @@ const CreateInvoice = () => {
                 hasDueDate: Boolean(invoice.dueDate),
                 discountType: invoice.discountType || 'percent',
                 discountValue: invoice.discountValue ?? '',
+                items: (invoice.items || []).map((item) => ({
+                    ...item,
+                    unit: normalizeInvoiceUnit(item.unit),
+                })),
             });
             isDirtyRef.current = false;
         };
@@ -266,11 +278,28 @@ const CreateInvoice = () => {
         clearFieldError(setFieldErrors, `item-${index}-${field}`);
     };
 
+    const handleUnitChange = (index, value) => {
+        if (value === CUSTOM_UNIT_OPTION) {
+            setCustomUnitModal({ index });
+            return;
+        }
+        handleItemChange(index, 'unit', value);
+    };
+
+    const handleCustomUnitSave = (unitName) => {
+        if (customUnitModal == null) return;
+        handleItemChange(customUnitModal.index, 'unit', unitName.trim());
+        setCustomUnitModal(null);
+    };
+
     const addItem = () => {
         markDirty();
         setFormData({
             ...formData,
-            items: [...formData.items, { description: '', quantity: 1, rate: 0 }],
+            items: [
+                ...formData.items,
+                { description: '', quantity: 1, rate: 0, unit: DEFAULT_INVOICE_UNIT },
+            ],
         });
     };
 
@@ -283,7 +312,12 @@ const CreateInvoice = () => {
         const description = product.description
             ? `${product.name} — ${product.description}`
             : product.name;
-        const newLine = { description, quantity: 1, rate: product.unitPrice || 0 };
+        const newLine = {
+            description,
+            quantity: 1,
+            rate: product.unitPrice || 0,
+            unit: DEFAULT_INVOICE_UNIT,
+        };
 
         const emptyIndex = formData.items.findIndex(isEmptyItem);
 
@@ -711,6 +745,12 @@ const CreateInvoice = () => {
                 onSkip={handleSkipShare}
             />
 
+            <CustomUnitModal
+                open={customUnitModal != null}
+                onClose={() => setCustomUnitModal(null)}
+                onSave={handleCustomUnitSave}
+            />
+
             <button
                 type="button"
                 onClick={handleLeavePage}
@@ -960,7 +1000,7 @@ const CreateInvoice = () => {
                                             )}
                                         </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-                                            <div className="sm:col-span-12 md:col-span-5">
+                                            <div className="sm:col-span-12 md:col-span-4">
                                                 <RequiredLabel htmlFor={`invoice-item-${index}-description`}>
                                                     Description
                                                 </RequiredLabel>
@@ -983,23 +1023,40 @@ const CreateInvoice = () => {
                                                     message={fieldErrors[`item-${index}-description`]}
                                                 />
                                             </div>
-                                            <div className="sm:col-span-4 md:col-span-2">
-                                                <RequiredLabel htmlFor={`invoice-item-${index}-quantity`}>
-                                                    Qty
+                                            <div className="sm:col-span-4 md:col-span-3">
+                                                <RequiredLabel htmlFor={`invoice-item-${index}-unit`}>
+                                                    Unit
                                                 </RequiredLabel>
-                                                <input
-                                                    id={`invoice-item-${index}-quantity`}
-                                                    type="number"
-                                                    value={item.quantity}
-                                                    onChange={(e) =>
-                                                        handleItemChange(index, 'quantity', e.target.value)
-                                                    }
-                                                    className={inputClass(
-                                                        Boolean(fieldErrors[`item-${index}-quantity`])
-                                                    )}
-                                                    min="1"
-                                                    aria-invalid={Boolean(fieldErrors[`item-${index}-quantity`])}
-                                                />
+                                                <div className="flex gap-2">
+                                                    <CustomSelect
+                                                        id={`invoice-item-${index}-unit`}
+                                                        value={normalizeInvoiceUnit(item.unit)}
+                                                        onChange={(value) => handleUnitChange(index, value)}
+                                                        options={buildUnitSelectOptions(item.unit)}
+                                                        aria-label={`Unit for item ${index + 1}`}
+                                                        className="min-w-0 flex-1"
+                                                    />
+                                                    <input
+                                                        id={`invoice-item-${index}-quantity`}
+                                                        type="number"
+                                                        value={item.quantity}
+                                                        onChange={(e) =>
+                                                            handleItemChange(
+                                                                index,
+                                                                'quantity',
+                                                                e.target.value
+                                                            )
+                                                        }
+                                                        className={`${inputClass(
+                                                            Boolean(fieldErrors[`item-${index}-quantity`])
+                                                        )} w-[4.75rem] shrink-0`}
+                                                        min="1"
+                                                        aria-label={`${normalizeInvoiceUnit(item.unit)} for item ${index + 1}`}
+                                                        aria-invalid={Boolean(
+                                                            fieldErrors[`item-${index}-quantity`]
+                                                        )}
+                                                    />
+                                                </div>
                                                 <FieldValidationMessage
                                                     message={fieldErrors[`item-${index}-quantity`]}
                                                 />

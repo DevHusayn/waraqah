@@ -58,7 +58,7 @@ export default function LandingInvoicePreview() {
                                 <th className="text-left font-bold py-1.5 px-2" style={{ color: BRAND }}>
                                     Description
                                 </th>
-                                <th className="text-center font-bold py-1.5 px-1 w-8">Qty</th>
+                                <th className="text-center font-bold py-1.5 px-1 w-10">Hours</th>
                                 <th className="text-right font-bold py-1.5 px-1">Total</th>
                             </tr>
                         </thead>

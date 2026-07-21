@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     KeyboardAvoidingView,
+    Modal,
     Platform,
     Pressable,
     ScrollView,
     StyleSheet,
     Switch,
     Text,
+    TextInput,
     View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,11 +18,15 @@ import {
     APP_CURRENCY,
     buildInvoiceFieldErrors,
     buildDraftFieldErrors,
+    buildUnitSelectOptions,
     calculateInvoiceTotals,
+    CUSTOM_UNIT_OPTION,
+    DEFAULT_INVOICE_UNIT,
     DRAFT_STATUS,
     formatCurrency,
     getClientBusiness,
     isDraft,
+    normalizeInvoiceUnit,
 } from '@waraqah/shared';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
@@ -37,13 +43,19 @@ import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { ensureInvoiceClient } from '../utils/ensureInvoiceClient';
 import { colors, fontFamily, fontSize, lineHeight, radii, spacing, touchTarget } from '../theme';
 
-const emptyItem = () => ({ description: '', quantity: '1', rate: '0' });
+const emptyItem = () => ({
+    description: '',
+    quantity: '1',
+    rate: '0',
+    unit: DEFAULT_INVOICE_UNIT,
+});
 
 function buildPayload(form, status) {
     const items = form.items.map((it) => ({
         description: it.description,
         quantity: Number(it.quantity),
         rate: Number(it.rate),
+        unit: normalizeInvoiceUnit(it.unit),
     }));
     const totals = calculateInvoiceTotals(items, {
         taxRate: form.taxRate,
@@ -89,6 +101,10 @@ export function CreateInvoiceScreen({ route, navigation }) {
     const limitModalRef = useRef(null);
     const clientSheetRef = useRef(null);
     const productSheetRef = useRef(null);
+    const unitSheetRef = useRef(null);
+    const [unitSheetIndex, setUnitSheetIndex] = useState(null);
+    const [customUnitIndex, setCustomUnitIndex] = useState(null);
+    const [customUnitName, setCustomUnitName] = useState('');
     const { invoiceUsage, tryCreate, goUpgrade } = useInvoiceCreateGuard(limitModalRef, navigation);
 
     const existing = useMemo(() => {
@@ -141,6 +157,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
                           description: it.description || '',
                           quantity: String(it.quantity ?? 1),
                           rate: String(it.rate ?? 0),
+                          unit: normalizeInvoiceUnit(it.unit),
                       }))
                     : [emptyItem()],
             notes: existing.notes || '',
@@ -214,7 +231,12 @@ export function CreateInvoiceScreen({ route, navigation }) {
         setForm((f) => {
             const items = [...f.items];
             const emptyIndex = items.findIndex((it) => !it.description.trim());
-            const nextItem = { description: product.name, quantity: '1', rate };
+            const nextItem = {
+                description: product.name,
+                quantity: '1',
+                rate,
+                unit: DEFAULT_INVOICE_UNIT,
+            };
             if (emptyIndex >= 0) {
                 items[emptyIndex] = nextItem;
             } else {
@@ -296,6 +318,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
             description: it.description,
             quantity: Number(it.quantity),
             rate: Number(it.rate),
+            unit: normalizeInvoiceUnit(it.unit),
         })),
         {
             taxRate: form.taxRate,
@@ -304,12 +327,40 @@ export function CreateInvoiceScreen({ route, navigation }) {
         }
     );
 
+    const openUnitSheet = (index) => {
+        setUnitSheetIndex(index);
+        unitSheetRef.current?.expand();
+    };
+
+    const handleUnitOptionSelect = (value) => {
+        if (unitSheetIndex == null) return;
+        unitSheetRef.current?.close();
+        if (value === CUSTOM_UNIT_OPTION) {
+            setCustomUnitName('');
+            setCustomUnitIndex(unitSheetIndex);
+            return;
+        }
+        setItem(unitSheetIndex, 'unit', value);
+    };
+
+    const saveCustomUnit = () => {
+        const trimmed = customUnitName.trim();
+        if (!trimmed || customUnitIndex == null) return;
+        setItem(customUnitIndex, 'unit', trimmed);
+        setCustomUnitIndex(null);
+        setCustomUnitName('');
+    };
+
     const invoiceNumberDisplay = isDraftFlow
         ? form.invoiceNumber || 'Assigned when sent'
         : form.invoiceNumber || '—';
 
     const title = !editId ? 'Create invoice' : isDraftFlow ? 'Complete invoice' : 'Edit invoice';
     const primaryLabel = !editId || isDraftFlow ? 'Create invoice' : 'Save changes';
+    const unitSheetOptions =
+        unitSheetIndex != null
+            ? buildUnitSelectOptions(form.items[unitSheetIndex]?.unit)
+            : buildUnitSelectOptions(DEFAULT_INVOICE_UNIT);
 
     return (
         <KeyboardAvoidingView
@@ -495,12 +546,25 @@ export function CreateInvoiceScreen({ route, navigation }) {
                         <FieldError message={fieldErrors[`item-${index}-description`]} />
                         <View style={styles.row}>
                             <View style={{ flex: 1 }}>
-                                <Label required>Qty</Label>
+                                <Label required>Unit</Label>
+                                <Pressable
+                                    onPress={() => openUnitSheet(index)}
+                                    style={styles.selectTrigger}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`Unit for item ${index + 1}`}
+                                >
+                                    <Text style={styles.selectText} numberOfLines={1}>
+                                        {normalizeInvoiceUnit(item.unit)}
+                                    </Text>
+                                    <ChevronDown size={18} color={colors.slate400} strokeWidth={2} />
+                                </Pressable>
                                 <Input
                                     value={item.quantity}
                                     onChangeText={(v) => setItem(index, 'quantity', v)}
                                     keyboardType="number-pad"
                                     error={Boolean(fieldErrors[`item-${index}-quantity`])}
+                                    accessibilityLabel={`${normalizeInvoiceUnit(item.unit)} for item ${index + 1}`}
+                                    style={{ marginTop: spacing.sm }}
                                 />
                                 <FieldError message={fieldErrors[`item-${index}-quantity`]} />
                             </View>
@@ -597,6 +661,61 @@ export function CreateInvoiceScreen({ route, navigation }) {
                     ))}
                 </ScrollView>
             </BottomSheet>
+
+            <BottomSheet
+                ref={unitSheetRef}
+                snapPoints={['55%']}
+                onClose={() => setUnitSheetIndex(null)}
+            >
+                <Text style={styles.sheetTitle}>Select unit</Text>
+                <ScrollView>
+                    {unitSheetOptions.map((opt, i) => (
+                        <ListRow
+                            key={opt.value}
+                            title={opt.label}
+                            onPress={() => handleUnitOptionSelect(opt.value)}
+                            last={i === unitSheetOptions.length - 1}
+                            dense
+                        />
+                    ))}
+                </ScrollView>
+            </BottomSheet>
+
+            <Modal
+                visible={customUnitIndex != null}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setCustomUnitIndex(null)}
+            >
+                <View style={styles.customUnitOverlay}>
+                    <View style={styles.customUnitBox}>
+                        <Text style={styles.customUnitTitle}>Enter Unit Name</Text>
+                        <TextInput
+                            value={customUnitName}
+                            onChangeText={setCustomUnitName}
+                            placeholder="e.g. Lesson"
+                            placeholderTextColor={colors.slate400}
+                            style={styles.customUnitInput}
+                            autoFocus
+                            maxLength={40}
+                        />
+                        <View style={styles.customUnitActions}>
+                            <Button
+                                title="Cancel"
+                                variant="secondary"
+                                onPress={() => setCustomUnitIndex(null)}
+                                style={{ flex: 1 }}
+                            />
+                            <Button
+                                title="Save"
+                                onPress={saveCustomUnit}
+                                disabled={!customUnitName.trim()}
+                                style={{ flex: 1 }}
+                            />
+                        </View>
+                    </View>
+                </View>
+            </Modal>
 
             <InvoiceLimitModal ref={limitModalRef} usage={invoiceUsage} onUpgrade={goUpgrade} />
         </KeyboardAvoidingView>
@@ -773,5 +892,39 @@ const styles = StyleSheet.create({
         color: colors.foreground,
         marginBottom: spacing.md,
         letterSpacing: -0.3,
+    },
+    customUnitOverlay: {
+        flex: 1,
+        backgroundColor: colors.overlay,
+        justifyContent: 'center',
+        padding: spacing.xl,
+    },
+    customUnitBox: {
+        backgroundColor: colors.surface,
+        borderRadius: radii.xl,
+        padding: spacing.xl,
+    },
+    customUnitTitle: {
+        fontFamily: fontFamily.semibold,
+        fontSize: fontSize.lg,
+        color: colors.foreground,
+        marginBottom: spacing.lg,
+        letterSpacing: -0.3,
+    },
+    customUnitInput: {
+        minHeight: touchTarget + 8,
+        paddingHorizontal: spacing.lg,
+        borderRadius: radii.md,
+        backgroundColor: colors.surfaceMuted,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: colors.border,
+        fontFamily: fontFamily.regular,
+        fontSize: fontSize.md,
+        color: colors.foreground,
+        marginBottom: spacing.xl,
+    },
+    customUnitActions: {
+        flexDirection: 'row',
+        gap: spacing.sm,
     },
 });

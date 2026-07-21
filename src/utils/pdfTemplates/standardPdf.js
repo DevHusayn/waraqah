@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../../constants/brand';
-import { FREE_PDF_FOOTER_CTA_PREFIX } from '@waraqah/shared';
+import { FREE_PDF_FOOTER_CTA_PREFIX, resolveQuantityColumnLabel } from '@waraqah/shared';
 import { getCurrencySymbol } from '../currency';
 import { getClientBusiness } from '../clientHelpers';
 import { isPremiumUser } from '../premium';
@@ -535,18 +535,19 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
 
     const tableColumnWidths = {
         0: 10,
-        1: 76,
-        2: 16,
+        1: 68,
+        2: 24,
         3: 38,
         4: 38,
     };
     const pdfContentLeft = 15;
     const pdfContentWidth = 180;
     const pdfContentRight = pdfContentLeft + pdfContentWidth;
+    const quantityColumnLabel = resolveQuantityColumnLabel(invoice.items).toUpperCase();
 
     doc.autoTable({
         startY: tableStartY,
-        head: [['#', 'DESCRIPTION', 'QTY', 'UNIT PRICE', 'TOTAL']],
+        head: [['#', 'DESCRIPTION', quantityColumnLabel, 'RATE', 'TOTAL']],
         body: tableData,
         theme: 'plain',
         showHead: 'everyPage',

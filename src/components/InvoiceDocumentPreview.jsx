@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { FREE_PDF_FOOTER_CTA_PREFIX } from '@waraqah/shared';
+import { FREE_PDF_FOOTER_CTA_PREFIX, resolveQuantityColumnLabel } from '@waraqah/shared';
 import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../constants/brand';
 import { formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
@@ -73,6 +73,7 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
     );
     const showPaymentBox = !isReceipt && hasPaymentDetails;
     const notesText = invoice?.notes?.trim() || '';
+    const quantityColumnLabel = resolveQuantityColumnLabel(invoice?.items).toUpperCase();
 
     const paymentLines = [];
     if (showPaymentBox) {
@@ -203,8 +204,8 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                             <tr style={{ backgroundColor: lightBrand, color: brandColor }}>
                                 <th className="px-2 py-2.5 font-bold text-center w-10">#</th>
                                 <th className="px-2 py-2.5 font-bold text-left">DESCRIPTION</th>
-                                <th className="px-2 py-2.5 font-bold text-center w-14">QTY</th>
-                                <th className="px-2 py-2.5 font-bold text-right w-24">UNIT PRICE</th>
+                                <th className="px-2 py-2.5 font-bold text-center w-20">{quantityColumnLabel}</th>
+                                <th className="px-2 py-2.5 font-bold text-right w-24">RATE</th>
                                 <th className="px-2 py-2.5 font-bold text-right w-24">TOTAL</th>
                             </tr>
                         </thead>

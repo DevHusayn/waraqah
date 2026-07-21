@@ -9,6 +9,7 @@ import {
     getReceiptNumber,
     isReceipt,
     MARK_PAID_METHODS,
+    normalizeInvoiceUnit,
 } from '@waraqah/shared';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
@@ -148,7 +149,8 @@ export function InvoiceDetailScreen({ route, navigation }) {
                         >
                             <Text style={styles.lineDesc}>{item.description}</Text>
                             <Text style={styles.lineMeta}>
-                                {item.quantity} × {formatCurrency(item.rate)}
+                                {item.quantity} {normalizeInvoiceUnit(item.unit)} ×{' '}
+                                {formatCurrency(item.rate)}
                             </Text>
                             <Text style={styles.lineTotal}>{formatCurrency(item.quantity * item.rate)}</Text>
                         </View>

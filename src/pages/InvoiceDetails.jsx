@@ -46,6 +46,8 @@ import {
     canSendPaymentReminderNow,
     getNextPaymentReminderDate,
     isAutoPaymentRemindersEnabled,
+    normalizeInvoiceUnit,
+    resolveQuantityColumnLabel,
     PAYMENT_REMINDER_DUE_WINDOW_DAYS,
     PAYMENT_REMINDER_MIN_DAYS_BETWEEN,
 } from '@waraqah/shared';
@@ -786,7 +788,8 @@ const InvoiceDetails = () => {
                                         <p className="font-medium text-zinc-900">{item.description}</p>
                                         <div className="mt-2 flex items-center justify-between gap-3 text-sm">
                                             <span className="text-zinc-500">
-                                                Qty {item.quantity} · {formatCurrency(item.rate)}
+                                                {normalizeInvoiceUnit(item.unit)} {item.quantity} ·{' '}
+                                                {formatCurrency(item.rate)}
                                             </span>
                                             <span className="font-semibold text-zinc-900 shrink-0">
                                                 {formatCurrency(Number(item.quantity) * Number(item.rate))}
@@ -800,7 +803,9 @@ const InvoiceDetails = () => {
                                 <thead className="bg-zinc-50 text-zinc-500 uppercase text-xs">
                                     <tr>
                                         <th className="text-left px-6 py-3 font-semibold">Description</th>
-                                        <th className="text-center px-4 py-3 w-20 font-semibold">Qty</th>
+                                        <th className="text-center px-4 py-3 w-24 font-semibold">
+                                            {resolveQuantityColumnLabel(invoice.items)}
+                                        </th>
                                         <th className="text-right px-4 py-3 font-semibold">Rate</th>
                                         <th className="text-right px-6 py-3 font-semibold">Amount</th>
                                     </tr>

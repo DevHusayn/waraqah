@@ -8,6 +8,7 @@ import {
     resolvePdfMode,
     getCompanyStampUrl,
     getAuthorizedSignatureUrl,
+    resolveQuantityColumnLabel,
 } from '@waraqah/shared';
 import { escapeHtml, formatMoney, wrapHtml } from './htmlUtils';
 import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../constants/brand';
@@ -22,6 +23,9 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
     const signatureUrl = premium ? getAuthorizedSignatureUrl(businessInfo) : '';
     const stampUrl = premium && isReceipt ? getCompanyStampUrl(businessInfo) : '';
     const ownerName = String(businessInfo?.name || '').trim();
+    const quantityColumnLabel = escapeHtml(
+        resolveQuantityColumnLabel(invoice?.items).toUpperCase()
+    );
 
     const itemRows = (invoice?.items || [])
         .map(
@@ -97,7 +101,7 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
       <thead>
         <tr style="background:${escapeHtml(brand)}">
           <th>DESCRIPTION</th>
-          <th class="num">QTY</th>
+          <th class="num">${quantityColumnLabel}</th>
           <th class="num">RATE</th>
           <th class="num">AMOUNT</th>
         </tr>
