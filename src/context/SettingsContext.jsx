@@ -3,6 +3,8 @@ import { apiFetch } from '../utils/api';
 import { useAuth } from './AuthContext';
 import { shouldPrefetchUserData } from '../utils/authHint';
 import { buildBusinessInfoPayload } from '../utils/businessPayload';
+import { BRAND_ASSET_FIELDS } from '../utils/brandAssets';
+import { isPremiumUser } from '../utils/premium';
 import { DEFAULT_BRAND_COLOR } from '@waraqah/shared';
 
 const SettingsContext = createContext();
@@ -31,6 +33,24 @@ const EMPTY_BUSINESS = {
     autoPaymentReminders: true,
 };
 
+/** Summary responses intentionally send empty asset placeholders — keep loaded branding in memory. */
+const SUMMARY_ASSET_FIELDS = ['businessLogo', ...BRAND_ASSET_FIELDS];
+
+function mergeSummaryBusinessInfo(prev, info) {
+    if (!isPremiumUser(info)) {
+        return info;
+    }
+    const next = { ...info };
+    for (const field of SUMMARY_ASSET_FIELDS) {
+        const incoming = (info[field] || '').trim();
+        const existing = (prev[field] || '').trim();
+        if (!incoming && existing) {
+            next[field] = prev[field];
+        }
+    }
+    return next;
+}
+
 export const useSettings = () => {
     const context = useContext(SettingsContext);
     if (!context) {
@@ -43,30 +63,41 @@ export const SettingsProvider = ({ children }) => {
     const [businessInfo, setBusinessInfo] = useState(EMPTY_BUSINESS);
     const [loading, setLoading] = useState(false);
     const assetsLoadedRef = useRef(false);
+    const hasHydratedRef = useRef(false);
     const { isAuthenticated, loading: authLoading } = useAuth();
     const shouldFetch = shouldPrefetchUserData(isAuthenticated);
+    const authLoadingRef = useRef(authLoading);
+    const isAuthenticatedRef = useRef(isAuthenticated);
+    authLoadingRef.current = authLoading;
+    isAuthenticatedRef.current = isAuthenticated;
 
     const fetchBusinessInfo = useCallback(async () => {
         if (!shouldFetch) {
-            if (!authLoading && !isAuthenticated) {
+            if (!authLoadingRef.current && !isAuthenticatedRef.current) {
                 setBusinessInfo(EMPTY_BUSINESS);
                 assetsLoadedRef.current = false;
+                hasHydratedRef.current = false;
             }
             setLoading(false);
             return;
         }
-        setLoading(true);
+        // Avoid avatar/skeleton flicker on auth settle or billing refresh.
+        if (!hasHydratedRef.current) {
+            setLoading(true);
+        }
         try {
             const info = await apiFetch('/business-info?summary=1');
-            setBusinessInfo(info);
+            setBusinessInfo((prev) => mergeSummaryBusinessInfo(prev, info));
+            hasHydratedRef.current = true;
         } catch {
-            if (!authLoading && !isAuthenticated) {
+            if (!authLoadingRef.current && !isAuthenticatedRef.current) {
                 setBusinessInfo(EMPTY_BUSINESS);
+                hasHydratedRef.current = false;
             }
         } finally {
             setLoading(false);
         }
-    }, [shouldFetch, authLoading, isAuthenticated]);
+    }, [shouldFetch]);
 
     const fetchBusinessAssets = useCallback(async () => {
         if (!shouldFetch || assetsLoadedRef.current) return;
@@ -83,12 +114,15 @@ export const SettingsProvider = ({ children }) => {
         fetchBusinessInfo();
         const onLogin = () => {
             assetsLoadedRef.current = false;
-            fetchBusinessInfo();
+            fetchBusinessInfo().then(() => {
+                fetchBusinessAssets();
+            });
         };
         const onLogout = () => {
             setBusinessInfo(EMPTY_BUSINESS);
             setLoading(false);
             assetsLoadedRef.current = false;
+            hasHydratedRef.current = false;
         };
         window.addEventListener('app-login', onLogin);
         window.addEventListener('app-logout', onLogout);
@@ -96,7 +130,7 @@ export const SettingsProvider = ({ children }) => {
             window.removeEventListener('app-login', onLogin);
             window.removeEventListener('app-logout', onLogout);
         };
-    }, [fetchBusinessInfo]);
+    }, [fetchBusinessInfo, fetchBusinessAssets]);
 
     const updateBusinessInfo = async (info) => {
         const payload = buildBusinessInfoPayload(info, businessInfo);
