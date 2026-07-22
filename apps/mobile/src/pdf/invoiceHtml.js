@@ -18,7 +18,7 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
     const isReceipt = resolvedMode === 'receipt';
     const premium = isPremiumUser(businessInfo);
     const brand = businessInfo?.brandColor || '#16A34A';
-    const symbol = getCurrencySymbol(false);
+    const symbol = getCurrencySymbol(invoice?.currency || 'NGN', false);
     const docNumber = getDocumentNumber(invoice, resolvedMode);
     const signatureUrl = premium ? getAuthorizedSignatureUrl(businessInfo) : '';
     const stampUrl = premium && isReceipt ? getCompanyStampUrl(businessInfo) : '';

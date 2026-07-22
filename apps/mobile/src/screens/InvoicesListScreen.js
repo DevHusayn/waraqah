@@ -1,17 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FileText, PenLine } from 'lucide-react-native';
-import {
-    formatInvoiceUsageLabel,
-    filterNonDraftInvoices,
-    isPremiumUser,
-    filterInvoicesBySearch,
-    sortInvoices,
-} from '@waraqah/shared';
+import { formatInvoiceUsageLabel, isPremiumUser } from '@waraqah/shared';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { InvoiceLimitModal } from '../components/InvoiceLimitModal';
+import { PaginationBar } from '../components/PaginationBar';
 import {
     ChipGroup,
     EmptyState,
@@ -21,56 +16,86 @@ import {
     UsageBanner,
 } from '../components/ui';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
+import { usePagedList } from '../hooks/usePagedList';
+import { apiFetch } from '../api/client';
+import { buildListQuery } from '../utils/pagination';
 import { colors, fontFamily, fontSize, shadows, spacing } from '../theme';
 
-const FILTERS = [
-    { value: 'all', label: 'All' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'paid', label: 'Paid' },
-    { value: 'overdue', label: 'Overdue' },
-    { value: 'cancelled', label: 'Cancelled' },
-];
+const FILTER_VALUES = ['all', 'pending', 'paid', 'overdue', 'cancelled'];
+
+const mapInvoice = (i) => ({ ...i, id: i._id || i.id });
 
 export function InvoicesListScreen({ navigation }) {
-    const { invoices, clients, draftCount, fetchInvoices, invoicesLoading } = useInvoice();
+    const { draftCount } = useInvoice();
     const { businessInfo } = useSettings();
     const [filter, setFilter] = useState('all');
-    const [search, setSearch] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const limitModalRef = useRef(null);
     const { invoiceUsage, tryCreate, goUpgrade } = useInvoiceCreateGuard(limitModalRef, navigation);
 
+    const fetcher = useCallback(
+        ({ page, limit, search }) =>
+            apiFetch(
+                `/invoices?${buildListQuery({
+                    page,
+                    limit,
+                    search,
+                    status: filter,
+                    sort: 'newest',
+                })}`
+            ),
+        [filter]
+    );
+
+    const {
+        page,
+        setPage,
+        search,
+        setSearch,
+        data,
+        pagination,
+        statusCounts,
+        loading,
+        refresh,
+    } = usePagedList({
+        fetcher,
+        extraDeps: [filter],
+    });
+
     useEffect(() => {
-        fetchInvoices();
-    }, [fetchInvoices]);
+        setPage(1);
+    }, [filter, setPage]);
 
-    const activeInvoices = useMemo(() => filterNonDraftInvoices(invoices), [invoices]);
+    const invoices = useMemo(() => data.map(mapInvoice), [data]);
 
-    const displayed = useMemo(() => {
-        let list = filter === 'all' ? activeInvoices : activeInvoices.filter((i) => i.status === filter);
-        list = filterInvoicesBySearch(list, search, clients);
-        return sortInvoices(list, 'newest');
-    }, [activeInvoices, clients, filter, search]);
+    const filterOptions = useMemo(() => {
+        const counts = statusCounts || {};
+        return FILTER_VALUES.map((value) => ({
+            value,
+            label: counts[value] != null ? `${value[0].toUpperCase()}${value.slice(1)} (${counts[value]})` : value[0].toUpperCase() + value.slice(1),
+        }));
+    }, [statusCounts]);
 
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
     const premium = isPremiumUser(businessInfo);
-    const getClientName = (clientId) => clients.find((c) => c.id === clientId)?.name || 'Unknown';
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await fetchInvoices({ force: true });
+        await refresh();
         setRefreshing(false);
     };
 
-    if (invoicesLoading && !refreshing && activeInvoices.length === 0) return <PageLoader />;
+    if (loading && !refreshing && invoices.length === 0) return <PageLoader />;
 
     return (
         <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
             <FlatList
-                data={displayed}
+                data={invoices}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.list}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />
+                }
                 ListHeaderComponent={
                     <View>
                         <Text style={styles.pageTitle}>Invoices</Text>
@@ -90,7 +115,12 @@ export function InvoicesListScreen({ navigation }) {
                         ) : null}
                         <View style={styles.padX}>
                             <SearchBar value={search} onChangeText={setSearch} placeholder="Search invoices…" />
-                            <ChipGroup options={FILTERS} value={filter} onChange={setFilter} style={{ marginTop: spacing.sm }} />
+                            <ChipGroup
+                                options={filterOptions}
+                                value={filter}
+                                onChange={setFilter}
+                                style={{ marginTop: spacing.sm }}
+                            />
                         </View>
                     </View>
                 }
@@ -98,10 +128,25 @@ export function InvoicesListScreen({ navigation }) {
                     <View style={[styles.cardShell, shadows.soft]}>
                         <EmptyState
                             icon={FileText}
-                            title="No invoices yet"
-                            message="Create your first invoice to get paid."
-                            actionLabel="Create invoice"
-                            onAction={() => tryCreate()}
+                            title={search ? 'No matching invoices' : 'No invoices yet'}
+                            message={
+                                search
+                                    ? 'Try a different search term.'
+                                    : 'Create your first invoice to get paid.'
+                            }
+                            actionLabel={search ? undefined : 'Create invoice'}
+                            onAction={search ? undefined : () => tryCreate()}
+                        />
+                    </View>
+                }
+                ListFooterComponent={
+                    <View style={styles.padX}>
+                        <PaginationBar
+                            page={pagination.page}
+                            totalPages={pagination.totalPages}
+                            total={pagination.total}
+                            onPageChange={setPage}
+                            disabled={loading}
                         />
                     </View>
                 }
@@ -110,14 +155,14 @@ export function InvoicesListScreen({ navigation }) {
                         style={[
                             styles.rowShell,
                             index === 0 && styles.rowFirst,
-                            index === displayed.length - 1 && styles.rowLast,
+                            index === invoices.length - 1 && styles.rowLast,
                             index === 0 && shadows.soft,
                         ]}
                     >
                         <InvoiceListItem
                             invoice={item}
-                            clientName={getClientName(item.clientId)}
-                            last={index === displayed.length - 1}
+                            clientName={item.clientName || 'Unknown'}
+                            last={index === invoices.length - 1}
                             onPress={() => navigation.navigate('InvoiceDetail', { id: item.id })}
                         />
                     </View>

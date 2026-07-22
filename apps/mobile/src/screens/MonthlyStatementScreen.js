@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
     buildMonthlyStatement,
@@ -14,14 +14,26 @@ import { Button, Card, Input, Label, PageHeader } from '../components/ui';
 import { colors, spacing } from '../theme';
 
 export function MonthlyStatementScreen({ navigation }) {
-    const { invoices, clients } = useInvoice();
+    const { clients, fetchInvoices } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
     const [monthValue, setMonthValue] = useState(getDefaultStatementMonth());
     const [pdfLoading, setPdfLoading] = useState(false);
+    const [invoices, setInvoices] = useState([]);
 
     const premium = isPremiumUser(businessInfo);
     const { year, month } = parseStatementMonth(monthValue);
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            const list = await fetchInvoices({ force: true, year, month, limit: 100 });
+            if (!cancelled) setInvoices(list);
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [fetchInvoices, year, month]);
 
     const statement = useMemo(
         () => buildMonthlyStatement({ invoices, clients, year, month }),

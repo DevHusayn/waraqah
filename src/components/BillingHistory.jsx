@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { Receipt } from 'lucide-react';
 import { format } from 'date-fns';
 import { apiFetch } from '../utils/api';
@@ -6,6 +6,9 @@ import { formatCurrency } from '../utils/currency';
 import EmptyState from './EmptyState';
 import { TableSkeleton } from './Skeleton';
 import DataTable, { DataTableRow, DataTableCell } from './DataTable';
+import PaginationBar from './PaginationBar';
+import { usePagedList } from '../hooks/usePagedList';
+import { buildListQuery } from '../utils/pagination';
 
 const COLUMNS = [
     { key: 'date', label: 'Date' },
@@ -48,36 +51,17 @@ function paymentDate(payment) {
 }
 
 export default function BillingHistory() {
-    const [payments, setPayments] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const fetcher = useCallback(
+        ({ page, limit }) =>
+            apiFetch(`/payments/history?${buildListQuery({ page, limit })}`),
+        []
+    );
 
-    useEffect(() => {
-        let cancelled = false;
+    const { setPage, data: payments, pagination, loading, error } = usePagedList({
+        fetcher,
+    });
 
-        (async () => {
-            try {
-                const data = await apiFetch('/payments/history');
-                if (!cancelled) {
-                    setPayments(Array.isArray(data) ? data : []);
-                }
-            } catch (err) {
-                if (!cancelled) {
-                    setError(err.message || 'Could not load billing history');
-                }
-            } finally {
-                if (!cancelled) {
-                    setLoading(false);
-                }
-            }
-        })();
-
-        return () => {
-            cancelled = true;
-        };
-    }, []);
-
-    if (loading) {
+    if (loading && payments.length === 0) {
         return <TableSkeleton rows={3} columns={4} />;
     }
 
@@ -102,32 +86,41 @@ export default function BillingHistory() {
     }
 
     return (
-        <DataTable columns={COLUMNS}>
-            {payments.map((payment) => (
-                <DataTableRow key={payment.id}>
-                    <DataTableCell>
-                        <span className="text-zinc-700 tabular-nums">{paymentDate(payment)}</span>
-                    </DataTableCell>
-                    <DataTableCell>
-                        <div className="min-w-0">
-                            <p className="text-zinc-950 font-medium">{paymentDescription(payment)}</p>
-                            {payment.reference ? (
-                                <p className="text-xs text-zinc-500 truncate max-w-[200px]">
-                                    Ref: {payment.reference}
-                                </p>
-                            ) : null}
-                        </div>
-                    </DataTableCell>
-                    <DataTableCell className="text-right">
-                        <span className="font-medium text-zinc-950 tabular-nums">
-                            {formatCurrency(payment.amount)}
-                        </span>
-                    </DataTableCell>
-                    <DataTableCell>
-                        <PaymentStatusBadge status={payment.status} />
-                    </DataTableCell>
-                </DataTableRow>
-            ))}
-        </DataTable>
+        <>
+            <DataTable columns={COLUMNS}>
+                {payments.map((payment) => (
+                    <DataTableRow key={payment.id}>
+                        <DataTableCell>
+                            <span className="text-zinc-700 tabular-nums">{paymentDate(payment)}</span>
+                        </DataTableCell>
+                        <DataTableCell>
+                            <div className="min-w-0">
+                                <p className="text-zinc-950 font-medium">{paymentDescription(payment)}</p>
+                                {payment.reference ? (
+                                    <p className="text-xs text-zinc-500 truncate max-w-[200px]">
+                                        Ref: {payment.reference}
+                                    </p>
+                                ) : null}
+                            </div>
+                        </DataTableCell>
+                        <DataTableCell className="text-right">
+                            <span className="font-medium text-zinc-950 tabular-nums">
+                                {formatCurrency(payment.amount)}
+                            </span>
+                        </DataTableCell>
+                        <DataTableCell>
+                            <PaymentStatusBadge status={payment.status} />
+                        </DataTableCell>
+                    </DataTableRow>
+                ))}
+            </DataTable>
+            <PaginationBar
+                page={pagination.page}
+                totalPages={pagination.totalPages}
+                total={pagination.total}
+                onPageChange={setPage}
+                disabled={loading}
+            />
+        </>
     );
 }

@@ -137,7 +137,7 @@ const Dashboard = () => {
                                     </DataTableCell>
                                     <DataTableCell className="text-right">
                                         <span className="font-medium tabular-nums">
-                                            {formatCurrency(invoice.total)}
+                                            {formatCurrency(invoice.total, invoice.currency)}
                                         </span>
                                     </DataTableCell>
                                     <DataTableCell>
@@ -192,7 +192,7 @@ const Dashboard = () => {
                                             </DataTableCell>
                                             <DataTableCell className="text-right">
                                                 <span className="font-medium text-red-600 tabular-nums">
-                                                    {formatCurrency(invoice.total)}
+                                                    {formatCurrency(invoice.total, invoice.currency)}
                                                 </span>
                                             </DataTableCell>
                                         </DataTableRow>

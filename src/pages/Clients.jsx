@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Edit, Trash2, Search, Users } from 'lucide-react';
 import AlertModal from '../components/AlertModal';
@@ -11,23 +11,15 @@ import { PageSpinner } from '../components/Spinner';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 import Toolbar, { ToolbarSearch } from '../components/Toolbar';
+import PaginationBar from '../components/PaginationBar';
+import { usePagedList } from '../hooks/usePagedList';
+import { apiFetch } from '../utils/api';
+import { buildListQuery } from '../utils/pagination';
+import { getClientBusiness } from '../utils/clientHelpers';
 
 function safeReturnPath(path) {
     if (!path || !path.startsWith('/') || path.startsWith('//')) return null;
     return path;
-}
-
-function filterClients(clients, query) {
-    const q = query.trim().toLowerCase();
-    if (!q) return clients;
-    return clients.filter(
-        (c) =>
-            c.name?.toLowerCase().includes(q) ||
-            c.business?.toLowerCase().includes(q) ||
-            c.email?.toLowerCase().includes(q) ||
-            c.phone?.toLowerCase().includes(q) ||
-            c.address?.toLowerCase().includes(q)
-    );
 }
 
 const COLUMNS = [
@@ -38,8 +30,10 @@ const COLUMNS = [
     { key: 'actions', label: '', className: 'text-right w-24' },
 ];
 
+const mapClient = (c) => ({ ...c, id: c._id || c.id });
+
 const Clients = () => {
-    const { clients, addClient, updateClient, deleteClient, loading } = useInvoice();
+    const { addClient, updateClient, deleteClient } = useInvoice();
     const { showToast } = useToast();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -47,13 +41,30 @@ const Clients = () => {
     const shouldOpenAdd = searchParams.get('add') === '1';
     const openedAddModal = useRef(false);
 
-    const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingClient, setEditingClient] = useState(null);
     const [modalInitialData, setModalInitialData] = useState(EMPTY_CLIENT);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [confirm, setConfirm] = useState({ open: false, clientId: null });
     const [deleting, setDeleting] = useState(false);
+
+    const fetcher = useCallback(
+        ({ page, limit, search }) =>
+            apiFetch(`/clients?${buildListQuery({ page, limit, search })}`),
+        []
+    );
+
+    const {
+        setPage,
+        search,
+        setSearch,
+        data,
+        pagination,
+        loading,
+        refresh,
+    } = usePagedList({ fetcher });
+
+    const clients = data.map(mapClient);
 
     useEffect(() => {
         if (shouldOpenAdd && !openedAddModal.current) {
@@ -64,17 +75,12 @@ const Clients = () => {
         }
     }, [shouldOpenAdd]);
 
-    const filteredClients = useMemo(
-        () => filterClients(clients, search),
-        [clients, search]
-    );
-
     const openModal = (client = null) => {
         if (client) {
             setEditingClient(client);
             setModalInitialData({
                 name: client.name || '',
-                business: client.business || '',
+                business: getClientBusiness(client) || '',
                 email: client.email || '',
                 phone: client.phone || '',
                 address: client.address || '',
@@ -98,6 +104,7 @@ const Clients = () => {
                 await updateClient(editing.id, formData);
                 showToast('Client updated successfully', 'success');
                 closeModal();
+                await refresh();
             } else {
                 const newClient = await addClient(formData);
                 showToast('Client added successfully', 'success');
@@ -105,6 +112,8 @@ const Clients = () => {
                 if (returnTo) {
                     const join = returnTo.includes('?') ? '&' : '?';
                     navigate(`${returnTo}${join}clientId=${encodeURIComponent(newClient.id)}`);
+                } else {
+                    await refresh();
                 }
             }
         } catch (err) {
@@ -126,6 +135,7 @@ const Clients = () => {
             await deleteClient(id);
             showToast('Client deleted successfully', 'success');
             setConfirm({ open: false, clientId: null });
+            await refresh();
         } catch (err) {
             setAlert({
                 open: true,
@@ -136,6 +146,8 @@ const Clients = () => {
             setDeleting(false);
         }
     };
+
+    const hasNoClientsAtAll = !loading && pagination.total === 0 && !search;
 
     return (
         <>
@@ -171,9 +183,9 @@ const Clients = () => {
                 </button>
             </PageHeader>
 
-            {loading && clients.length === 0 ? (
+            {loading && clients.length === 0 && !search ? (
                 <PageSpinner label="Loading clients…" />
-            ) : clients.length === 0 ? (
+            ) : hasNoClientsAtAll ? (
                 <div className="data-table-wrap">
                     <EmptyState
                         icon={Users}
@@ -200,60 +212,73 @@ const Clients = () => {
                         />
                     </Toolbar>
 
-                    {filteredClients.length === 0 ? (
+                    {clients.length === 0 ? (
                         <div className="data-table-wrap">
                             <EmptyState
                                 title="No clients match your search"
                                 action={
-                                    <button type="button" onClick={() => setSearch('')} className="btn-secondary">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearch('')}
+                                        className="btn-secondary"
+                                    >
                                         Clear search
                                     </button>
                                 }
                             />
                         </div>
                     ) : (
-                        <DataTable columns={COLUMNS}>
-                            {filteredClients.map((client) => (
-                                <DataTableRow key={client.id}>
-                                    <DataTableCell>
-                                        <span className="font-medium text-zinc-950">{client.name}</span>
-                                    </DataTableCell>
-                                    <DataTableCell>
-                                        <span className="text-zinc-600 truncate max-w-[160px] block">
-                                            {client.business || '—'}
-                                        </span>
-                                    </DataTableCell>
-                                    <DataTableCell>
-                                        <span className="text-zinc-600 truncate max-w-[180px] block">
-                                            {client.email || '—'}
-                                        </span>
-                                    </DataTableCell>
-                                    <DataTableCell>
-                                        {client.phone || '—'}
-                                    </DataTableCell>
-                                    <DataTableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-1">
-                                            <button
-                                                type="button"
-                                                onClick={() => openModal(client)}
-                                                className="btn-ghost text-xs py-1 px-2"
-                                                aria-label="Edit client"
-                                            >
-                                                <Edit size={14} />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDelete(client.id)}
-                                                className="btn-ghost text-xs py-1 px-2 text-red-600 hover:bg-red-50"
-                                                aria-label="Delete client"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </div>
-                                    </DataTableCell>
-                                </DataTableRow>
-                            ))}
-                        </DataTable>
+                        <>
+                            <DataTable columns={COLUMNS}>
+                                {clients.map((client) => (
+                                    <DataTableRow key={client.id}>
+                                        <DataTableCell>
+                                            <span className="font-medium text-zinc-950">
+                                                {client.name}
+                                            </span>
+                                        </DataTableCell>
+                                        <DataTableCell>
+                                            <span className="text-zinc-600 truncate max-w-[160px] block">
+                                                {getClientBusiness(client) || '—'}
+                                            </span>
+                                        </DataTableCell>
+                                        <DataTableCell>
+                                            <span className="text-zinc-600 truncate max-w-[180px] block">
+                                                {client.email || '—'}
+                                            </span>
+                                        </DataTableCell>
+                                        <DataTableCell>{client.phone || '—'}</DataTableCell>
+                                        <DataTableCell className="text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openModal(client)}
+                                                    className="btn-ghost text-xs py-1 px-2"
+                                                    aria-label="Edit client"
+                                                >
+                                                    <Edit size={14} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDelete(client.id)}
+                                                    className="btn-ghost text-xs py-1 px-2 text-red-600 hover:bg-red-50"
+                                                    aria-label="Delete client"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </DataTableCell>
+                                    </DataTableRow>
+                                ))}
+                            </DataTable>
+                            <PaginationBar
+                                page={pagination.page}
+                                totalPages={pagination.totalPages}
+                                total={pagination.total}
+                                onPageChange={setPage}
+                                disabled={loading}
+                            />
+                        </>
                     )}
                 </>
             )}

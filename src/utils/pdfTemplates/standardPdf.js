@@ -460,7 +460,7 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     const grayColor = [107, 114, 128];
     const lightGray = [229, 231, 235];
     const whiteColor = [255, 255, 255];
-    const currencySymbol = getCurrencySymbol(false);
+    const currencySymbol = getCurrencySymbol(invoice.currency || 'NGN', false);
 
     const formatMoney = (value) =>
         Number(value || 0).toLocaleString('en-US', {
@@ -534,11 +534,11 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     ]);
 
     const tableColumnWidths = {
-        0: 10,
-        1: 68,
+        0: 14,
+        1: 64,
         2: 24,
-        3: 38,
-        4: 38,
+        3: 39,
+        4: 39,
     };
     const pdfContentLeft = 15;
     const pdfContentWidth = 180;

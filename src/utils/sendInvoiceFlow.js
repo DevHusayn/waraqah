@@ -11,7 +11,7 @@ export function buildInvoicePayload(formData, status) {
     const payload = {
         ...formData,
         status,
-        currency: formData.currency,
+        currency: formData.currency || 'NGN',
         discountType: formData.discountType || 'fixed',
         discountValue: Number(formData.discountValue) || 0,
         subtotal: totals.subtotal,

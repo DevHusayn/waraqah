@@ -119,7 +119,9 @@ export function InvoiceDetailScreen({ route, navigation }) {
                     <StatusBadge status={invoice.status} />
                 </View>
 
-                <Text style={styles.amountHero}>{formatCurrency(invoice.total)}</Text>
+                <Text style={styles.amountHero}>
+                    {formatCurrency(invoice.total, invoice.currency)}
+                </Text>
                 <Text style={styles.amountHint}>Total</Text>
 
                 <Text style={styles.section}>Details</Text>
@@ -150,14 +152,27 @@ export function InvoiceDetailScreen({ route, navigation }) {
                             <Text style={styles.lineDesc}>{item.description}</Text>
                             <Text style={styles.lineMeta}>
                                 {item.quantity} {normalizeInvoiceUnit(item.unit)} ×{' '}
-                                {formatCurrency(item.rate)}
+                                {formatCurrency(item.rate, invoice.currency)}
                             </Text>
-                            <Text style={styles.lineTotal}>{formatCurrency(item.quantity * item.rate)}</Text>
+                            <Text style={styles.lineTotal}>
+                                {formatCurrency(item.quantity * item.rate, invoice.currency)}
+                            </Text>
                         </View>
                     ))}
-                    <MetaRow label="Subtotal" value={formatCurrency(invoice.subtotal)} />
-                    <MetaRow label={`Tax (${invoice.taxRate}%)`} value={formatCurrency(invoice.tax)} />
-                    <MetaRow label="Total" value={formatCurrency(invoice.total)} bold last />
+                    <MetaRow
+                        label="Subtotal"
+                        value={formatCurrency(invoice.subtotal, invoice.currency)}
+                    />
+                    <MetaRow
+                        label={`Tax (${invoice.taxRate}%)`}
+                        value={formatCurrency(invoice.tax, invoice.currency)}
+                    />
+                    <MetaRow
+                        label="Total"
+                        value={formatCurrency(invoice.total, invoice.currency)}
+                        bold
+                        last
+                    />
                 </View>
 
                 {invoice.notes ? (

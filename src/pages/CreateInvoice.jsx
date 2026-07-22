@@ -18,7 +18,12 @@ import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
-import { APP_CURRENCY, CURRENCY_INFO, formatCurrency } from '../utils/currency';
+import {
+    APP_CURRENCY,
+    formatCurrency,
+    getCurrencySelectOptions,
+    normalizeCurrency,
+} from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
 import InvoiceLimitModal from '../components/InvoiceLimitModal';
 import InvoiceUsageBanner from '../components/InvoiceUsageBanner';
@@ -154,6 +159,7 @@ const CreateInvoice = () => {
                 hasDueDate: Boolean(invoice.dueDate),
                 discountType: invoice.discountType || 'percent',
                 discountValue: invoice.discountValue ?? '',
+                currency: normalizeCurrency(invoice.currency || APP_CURRENCY),
                 items: (invoice.items || []).map((item) => ({
                     ...item,
                     unit: normalizeInvoiceUnit(item.unit),
@@ -284,6 +290,14 @@ const CreateInvoice = () => {
             return;
         }
         handleItemChange(index, 'unit', value);
+    };
+
+    const handleCurrencyChange = (currency) => {
+        markDirty();
+        setFormData((prev) => ({
+            ...prev,
+            currency: normalizeCurrency(currency),
+        }));
     };
 
     const handleCustomUnitSave = (unitName) => {
@@ -593,7 +607,7 @@ const CreateInvoice = () => {
                 clientId,
                 dueDate: formData.hasDueDate ? formData.dueDate : null,
                 status: formData.status,
-                currency: APP_CURRENCY,
+                currency: normalizeCurrency(formData.currency || APP_CURRENCY),
                 discountType: 'percent',
                 discountValue: Number(formData.discountValue) || 0,
                 subtotal: totals.subtotal,
@@ -1063,22 +1077,36 @@ const CreateInvoice = () => {
                                             </div>
                                             <div className="sm:col-span-4 md:col-span-3">
                                                 <RequiredLabel htmlFor={`invoice-item-${index}-rate`}>
-                                                    Rate ({CURRENCY_INFO.symbol})
+                                                    Rate
                                                 </RequiredLabel>
-                                                <input
-                                                    id={`invoice-item-${index}-rate`}
-                                                    type="number"
-                                                    value={item.rate}
-                                                    onChange={(e) =>
-                                                        handleItemChange(index, 'rate', e.target.value)
-                                                    }
-                                                    className={inputClass(
-                                                        Boolean(fieldErrors[`item-${index}-rate`])
-                                                    )}
-                                                    min="0"
-                                                    step="0.01"
-                                                    aria-invalid={Boolean(fieldErrors[`item-${index}-rate`])}
-                                                />
+                                                <div className="flex gap-2">
+                                                    <CustomSelect
+                                                        id={`invoice-item-${index}-currency`}
+                                                        value={normalizeCurrency(
+                                                            formData.currency || APP_CURRENCY
+                                                        )}
+                                                        onChange={handleCurrencyChange}
+                                                        options={getCurrencySelectOptions()}
+                                                        aria-label={`Currency for rate on item ${index + 1}`}
+                                                        className="w-[5.75rem] shrink-0"
+                                                    />
+                                                    <input
+                                                        id={`invoice-item-${index}-rate`}
+                                                        type="number"
+                                                        value={item.rate}
+                                                        onChange={(e) =>
+                                                            handleItemChange(index, 'rate', e.target.value)
+                                                        }
+                                                        className={`${inputClass(
+                                                            Boolean(fieldErrors[`item-${index}-rate`])
+                                                        )} min-w-0 flex-1`}
+                                                        min="0"
+                                                        step="0.01"
+                                                        aria-invalid={Boolean(
+                                                            fieldErrors[`item-${index}-rate`]
+                                                        )}
+                                                    />
+                                                </div>
                                                 <FieldValidationMessage
                                                     message={fieldErrors[`item-${index}-rate`]}
                                                 />
@@ -1086,7 +1114,10 @@ const CreateInvoice = () => {
                                             <div className="sm:col-span-4 md:col-span-2 flex flex-col justify-end">
                                                 <span className="label">Amount</span>
                                                 <p className="text-base font-semibold text-zinc-900 py-2.5">
-                                                    {formatCurrency(item.quantity * item.rate)}
+                                                    {formatCurrency(
+                                                        item.quantity * item.rate,
+                                                        formData.currency
+                                                    )}
                                                 </p>
                                             </div>
                                         </div>
@@ -1107,7 +1138,7 @@ const CreateInvoice = () => {
                                             }}
                                             options={products.map((product) => ({
                                                 value: product.id,
-                                                label: `${product.name} — ${formatCurrency(product.unitPrice || 0)}`,
+                                                label: `${product.name} — ${formatCurrency(product.unitPrice || 0, formData.currency)}`,
                                             }))}
                                             placeholder="Select a saved product…"
                                             leadingIcon={<Package size={18} aria-hidden />}
@@ -1163,27 +1194,27 @@ const CreateInvoice = () => {
                                 <div className="flex justify-between">
                                     <dt className="text-zinc-500">Subtotal</dt>
                                     <dd className="font-medium text-zinc-900">
-                                        {formatCurrency(totals.subtotal)}
+                                        {formatCurrency(totals.subtotal, formData.currency)}
                                     </dd>
                                 </div>
                                 {totals.discount > 0 && (
                                     <div className="flex justify-between">
                                         <dt className="text-zinc-500">{discountLabel}</dt>
                                         <dd className="font-medium text-red-600">
-                                            −{formatCurrency(totals.discount)}
+                                            −{formatCurrency(totals.discount, formData.currency)}
                                         </dd>
                                     </div>
                                 )}
                                 <div className="flex justify-between">
                                     <dt className="text-zinc-500">Tax ({formData.taxRate}%)</dt>
                                     <dd className="font-medium text-zinc-900">
-                                        {formatCurrency(totals.tax)}
+                                        {formatCurrency(totals.tax, formData.currency)}
                                     </dd>
                                 </div>
                                 <div className="pt-3 border-t border-zinc-200 flex justify-between items-center">
                                     <dt className="font-semibold text-zinc-900">Total</dt>
                                     <dd className="text-2xl font-bold text-brand">
-                                        {formatCurrency(totals.total)}
+                                        {formatCurrency(totals.total, formData.currency)}
                                     </dd>
                                 </div>
                             </dl>

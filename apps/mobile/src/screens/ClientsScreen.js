@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Users } from 'lucide-react-native';
@@ -6,6 +6,7 @@ import { getBusinessInitials } from '@waraqah/shared';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
 import { ConfirmModal } from '../components/Modal';
+import { PaginationBar } from '../components/PaginationBar';
 import {
     AvatarInitials,
     BottomSheet,
@@ -17,14 +18,17 @@ import {
     PageLoader,
     SearchBar,
 } from '../components/ui';
+import { usePagedList } from '../hooks/usePagedList';
+import { apiFetch } from '../api/client';
+import { buildListQuery } from '../utils/pagination';
 import { colors, fontFamily, fontSize, shadows, spacing } from '../theme';
 
 const EMPTY = { name: '', business: '', email: '', phone: '', address: '' };
+const mapClient = (c) => ({ ...c, id: c._id || c.id });
 
 export function ClientsScreen() {
-    const { clients, addClient, updateClient, deleteClient, loading, fetchUserData } = useInvoice();
+    const { addClient, updateClient, deleteClient } = useInvoice();
     const { showToast } = useToast();
-    const [search, setSearch] = useState('');
     const [form, setForm] = useState(EMPTY);
     const [editing, setEditing] = useState(null);
     const [deleteId, setDeleteId] = useState(null);
@@ -32,17 +36,24 @@ export function ClientsScreen() {
     const [refreshing, setRefreshing] = useState(false);
     const sheetRef = useRef(null);
 
-    const filtered = useMemo(() => {
-        const q = search.trim().toLowerCase();
-        if (!q) return clients;
-        return clients.filter(
-            (c) =>
-                c.name?.toLowerCase().includes(q) ||
-                c.business?.toLowerCase().includes(q) ||
-                c.company?.toLowerCase().includes(q) ||
-                c.email?.toLowerCase().includes(q)
-        );
-    }, [clients, search]);
+    const fetcher = useCallback(
+        ({ page, limit, search }) =>
+            apiFetch(`/clients?${buildListQuery({ page, limit, search })}`),
+        []
+    );
+
+    const {
+        page,
+        setPage,
+        search,
+        setSearch,
+        data,
+        pagination,
+        loading,
+        refresh,
+    } = usePagedList({ fetcher });
+
+    const clients = data.map(mapClient);
 
     const openAdd = () => {
         setEditing(null);
@@ -79,6 +90,7 @@ export function ClientsScreen() {
                 showToast('Client added', 'success');
             }
             closeSheet();
+            await refresh();
         } catch (err) {
             showToast(err.message, 'error');
         } finally {
@@ -91,6 +103,7 @@ export function ClientsScreen() {
             await deleteClient(deleteId);
             setDeleteId(null);
             showToast('Client deleted', 'success');
+            await refresh();
         } catch (err) {
             showToast(err.message, 'error');
         }
@@ -98,19 +111,21 @@ export function ClientsScreen() {
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await fetchUserData();
+        await refresh();
         setRefreshing(false);
     };
 
-    if (loading && !refreshing) return <PageLoader />;
+    if (loading && !refreshing && clients.length === 0 && !search) return <PageLoader />;
 
     return (
         <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
             <FlatList
-                data={filtered}
+                data={clients}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.list}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />
+                }
                 ListHeaderComponent={
                     <View>
                         <View style={styles.titleRow}>
@@ -118,7 +133,12 @@ export function ClientsScreen() {
                                 <Text style={styles.pageTitle}>Clients</Text>
                                 <Text style={styles.pageSub}>People and businesses you invoice</Text>
                             </View>
-                            <Pressable onPress={openAdd} style={styles.addBtn} accessibilityRole="button" accessibilityLabel="Add client">
+                            <Pressable
+                                onPress={openAdd}
+                                style={styles.addBtn}
+                                accessibilityRole="button"
+                                accessibilityLabel="Add client"
+                            >
                                 <Text style={styles.addBtnText}>Add</Text>
                             </Pressable>
                         </View>
@@ -131,10 +151,25 @@ export function ClientsScreen() {
                     <View style={[styles.cardShell, shadows.soft]}>
                         <EmptyState
                             icon={Users}
-                            title="No clients yet"
-                            message="Add your first client to start invoicing."
-                            actionLabel="Add client"
-                            onAction={openAdd}
+                            title={search ? 'No matching clients' : 'No clients yet'}
+                            message={
+                                search
+                                    ? 'Try a different search term.'
+                                    : 'Add your first client to start invoicing.'
+                            }
+                            actionLabel={search ? undefined : 'Add client'}
+                            onAction={search ? undefined : openAdd}
+                        />
+                    </View>
+                }
+                ListFooterComponent={
+                    <View style={styles.padX}>
+                        <PaginationBar
+                            page={pagination.page}
+                            totalPages={pagination.totalPages}
+                            total={pagination.total}
+                            onPageChange={setPage}
+                            disabled={loading}
                         />
                     </View>
                 }
@@ -143,7 +178,7 @@ export function ClientsScreen() {
                         style={[
                             styles.rowShell,
                             index === 0 && styles.rowFirst,
-                            index === filtered.length - 1 && styles.rowLast,
+                            index === clients.length - 1 && styles.rowLast,
                             index === 0 && shadows.soft,
                         ]}
                     >
@@ -153,7 +188,7 @@ export function ClientsScreen() {
                             onPress={() => openEdit(item)}
                             onLongPress={() => setDeleteId(item.id)}
                             left={<AvatarInitials initials={getBusinessInitials(item.name)} />}
-                            last={index === filtered.length - 1}
+                            last={index === clients.length - 1}
                         />
                     </View>
                 )}

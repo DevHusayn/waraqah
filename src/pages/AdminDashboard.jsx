@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Navigate } from 'react-router-dom';
 import {
@@ -24,6 +24,9 @@ import PageHeader from '../components/PageHeader';
 import Spinner from '../components/Spinner';
 import { AdminPageSkeleton } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
+import PaginationBar from '../components/PaginationBar';
+import { usePagedList } from '../hooks/usePagedList';
+import { buildListQuery } from '../utils/pagination';
 
 function StatusBadge({ status }) {
     const active = status === 'active';
@@ -276,60 +279,44 @@ function AdminActionsMenu({
 }
 
 export default function AdminDashboard() {
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [forbidden, setForbidden] = useState(false);
-    const [search, setSearch] = useState('');
     const [actionLoading, setActionLoading] = useState('');
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [confirm, setConfirm] = useState({ open: false, userId: null });
+    const [forbidden, setForbidden] = useState(false);
+    const [summary, setSummary] = useState({ total: 0, premium: 0, suspended: 0 });
 
     const { user } = useAuth();
     const currentUserId = user?.id ? String(user.id) : '';
 
-    useEffect(() => {
-        let cancelled = false;
-
-        async function fetchUsers() {
-            try {
-                const data = await apiFetch('/auth/admin/users');
-                if (cancelled) return;
-                setUsers(Array.isArray(data) ? data : []);
-            } catch (e) {
-                if (cancelled) return;
-                if (e.status === 403) {
-                    setForbidden(true);
-                    return;
-                }
-                setError(e.message || 'Could not load users.');
-            } finally {
-                if (!cancelled) {
-                    setLoading(false);
-                }
+    const fetcher = useCallback(async ({ page, limit, search }) => {
+        try {
+            const payload = await apiFetch(
+                `/auth/admin/users?${buildListQuery({ page, limit, search })}`
+            );
+            if (payload?.summary) setSummary(payload.summary);
+            return payload;
+        } catch (e) {
+            if (e.status === 403) {
+                setForbidden(true);
+                return { data: [], pagination: { page: 1, limit, total: 0, totalPages: 0 } };
             }
+            throw e;
         }
-
-        fetchUsers();
-        return () => {
-            cancelled = true;
-        };
     }, []);
 
-    const filteredUsers = users.filter((user) => {
-        const q = search.toLowerCase();
-        return (
-            (user.name && user.name.toLowerCase().includes(q)) ||
-            (user.email && user.email.toLowerCase().includes(q)) ||
-            (user.businessInfo?.name && user.businessInfo.name.toLowerCase().includes(q))
-        );
-    });
+    const {
+        setPage,
+        search,
+        setSearch,
+        data: users,
+        pagination,
+        loading,
+        error,
+        refresh,
+        setData: setUsers,
+    } = usePagedList({ fetcher, enabled: !forbidden });
 
-    const stats = {
-        total: users.length,
-        premium: users.filter((u) => u.businessInfo?.plan === 'premium').length,
-        suspended: users.filter((u) => u.status === 'suspended').length,
-    };
+    const stats = summary;
 
     const handleStatus = async (userId) => {
         setActionLoading(`${userId}-status`);
@@ -342,6 +329,7 @@ export default function AdminDashboard() {
                         : u
                 )
             );
+            await refresh();
         } catch (e) {
             setAlert({ open: true, message: e.message });
         }
@@ -355,7 +343,8 @@ export default function AdminDashboard() {
         setActionLoading(`${userId}-delete`);
         try {
             await apiFetch(`/auth/admin/users/${userId}`, { method: 'DELETE' });
-            setUsers((prev) => prev.filter((u) => u._id !== userId));
+            setConfirm({ open: false, userId: null });
+            await refresh();
         } catch (e) {
             setAlert({ open: true, message: e.message });
         }
@@ -407,6 +396,7 @@ export default function AdminDashboard() {
                         : u
                 )
             );
+            await refresh();
         } catch (e) {
             setAlert({ open: true, message: e.message });
         }
@@ -451,7 +441,7 @@ export default function AdminDashboard() {
         setActionLoading('');
     };
 
-    if (loading) {
+    if (loading && users.length === 0) {
         return <AdminPageSkeleton />;
     }
 
@@ -527,7 +517,7 @@ export default function AdminDashboard() {
                         <div className="flex items-center gap-2 text-sm text-zinc-600">
                             <FileText size={16} aria-hidden />
                             <span>
-                                {filteredUsers.length} user{filteredUsers.length === 1 ? '' : 's'}
+                                {pagination.total} user{pagination.total === 1 ? '' : 's'}
                             </span>
                         </div>
                         <div className="relative max-w-xs w-full sm:w-72">
@@ -559,7 +549,7 @@ export default function AdminDashboard() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-100">
-                                {filteredUsers.map((user) => (
+                                {users.map((user) => (
                                     <tr key={user._id} className="hover:bg-zinc-50/80 transition-colors">
                                         <td className="px-4 sm:px-6 py-4">
                                             <div className="min-w-[180px]">
@@ -633,10 +623,10 @@ export default function AdminDashboard() {
                         </table>
                     </div>
 
-                    {filteredUsers.length === 0 && (
+                    {users.length === 0 && (
                         <EmptyState
                             icon={Users}
-                            title={users.length === 0 ? 'No users yet' : 'No users match your search'}
+                            title={search ? 'No users match your search' : 'No users yet'}
                             description={
                                 search
                                     ? 'Try a different search term.'
@@ -651,6 +641,15 @@ export default function AdminDashboard() {
                             }
                         />
                     )}
+                    <div className="px-4 sm:px-6 pb-4">
+                        <PaginationBar
+                            page={pagination.page}
+                            totalPages={pagination.totalPages}
+                            total={pagination.total}
+                            onPageChange={setPage}
+                            disabled={loading}
+                        />
+                    </div>
                 </div>
             </div>
         </>

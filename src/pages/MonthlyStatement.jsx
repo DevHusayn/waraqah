@@ -20,17 +20,25 @@ import { format } from 'date-fns';
 const STATUS_COLS = ['paid', 'pending', 'overdue', 'cancelled'];
 
 export default function MonthlyStatement() {
-    const { invoices, clients, fetchInvoices, invoicesLoading } = useInvoice();
+    const { clients, fetchInvoices, invoicesLoading } = useInvoice();
     const { businessInfo, loading: settingsLoading } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const [monthValue, setMonthValue] = useState(getDefaultStatementMonth);
     const [exporting, setExporting] = useState(false);
-
-    useEffect(() => {
-        fetchInvoices();
-    }, [fetchInvoices]);
+    const [invoices, setInvoices] = useState([]);
 
     const { year, month } = parseStatementMonth(monthValue);
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            const list = await fetchInvoices({ force: true, year, month, limit: 100 });
+            if (!cancelled) setInvoices(list);
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [fetchInvoices, year, month]);
 
     const statement = useMemo(
         () => buildMonthlyStatement({ invoices, clients, year, month }),
@@ -107,7 +115,7 @@ export default function MonthlyStatement() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mb-6">
                 {STATUS_COLS.map((status) => (
                     <div key={status} className="card !p-4 min-w-0">
                         <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
@@ -118,7 +126,7 @@ export default function MonthlyStatement() {
                         </p>
                     </div>
                 ))}
-                <div className="card !p-4 min-w-0 sm:col-span-2 lg:col-span-3 xl:col-span-1 border-2 border-amber-300/80 bg-amber-50">
+                <div className="card !p-4 min-w-0 col-span-2 sm:col-span-2 lg:col-span-3 xl:col-span-1 border-2 border-amber-300/80 bg-amber-50">
                     <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide">
                         Total billed
                     </p>

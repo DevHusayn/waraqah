@@ -789,10 +789,13 @@ const InvoiceDetails = () => {
                                         <div className="mt-2 flex items-center justify-between gap-3 text-sm">
                                             <span className="text-zinc-500">
                                                 {normalizeInvoiceUnit(item.unit)} {item.quantity} ·{' '}
-                                                {formatCurrency(item.rate)}
+                                                {formatCurrency(item.rate, invoice.currency)}
                                             </span>
                                             <span className="font-semibold text-zinc-900 shrink-0">
-                                                {formatCurrency(Number(item.quantity) * Number(item.rate))}
+                                                {formatCurrency(
+                                                    Number(item.quantity) * Number(item.rate),
+                                                    invoice.currency
+                                                )}
                                             </span>
                                         </div>
                                     </div>
@@ -816,10 +819,13 @@ const InvoiceDetails = () => {
                                             <td className="px-6 py-4 text-zinc-900">{item.description}</td>
                                             <td className="px-4 py-4 text-center text-zinc-600">{item.quantity}</td>
                                             <td className="px-4 py-4 text-right text-zinc-600 whitespace-nowrap">
-                                                {formatCurrency(item.rate)}
+                                                {formatCurrency(item.rate, invoice.currency)}
                                             </td>
                                             <td className="px-6 py-4 text-right font-medium text-zinc-900 whitespace-nowrap">
-                                                {formatCurrency(Number(item.quantity) * Number(item.rate))}
+                                                {formatCurrency(
+                                                    Number(item.quantity) * Number(item.rate),
+                                                    invoice.currency
+                                                )}
                                             </td>
                                         </tr>
                                     ))}
@@ -877,7 +883,7 @@ const InvoiceDetails = () => {
                                 ) : null}
                                 <SummaryRow
                                     label="Subtotal"
-                                    value={formatCurrency(invoice.subtotal)}
+                                    value={formatCurrency(invoice.subtotal, invoice.currency)}
                                 />
                                 {Number(invoice.discount) > 0 && (
                                     <SummaryRow
@@ -886,17 +892,17 @@ const InvoiceDetails = () => {
                                                 ? `Discount (${invoice.discountValue}%)`
                                                 : 'Discount'
                                         }
-                                        value={`−${formatCurrency(invoice.discount)}`}
+                                        value={`−${formatCurrency(invoice.discount, invoice.currency)}`}
                                     />
                                 )}
                                 <SummaryRow
                                     label={`Tax (${invoice.taxRate}%)`}
-                                    value={formatCurrency(invoice.tax)}
+                                    value={formatCurrency(invoice.tax, invoice.currency)}
                                 />
                                 <div className="pt-3 border-t border-zinc-200 flex justify-between items-center">
                                     <dt className="text-base font-semibold text-zinc-900">Total</dt>
                                     <dd className="text-2xl font-bold text-brand">
-                                        {formatCurrency(invoice.total)}
+                                        {formatCurrency(invoice.total, invoice.currency)}
                                     </dd>
                                 </div>
                             </dl>

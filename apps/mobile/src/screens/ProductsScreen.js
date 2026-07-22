@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Package } from 'lucide-react-native';
@@ -6,6 +6,7 @@ import { formatCurrency } from '@waraqah/shared';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
 import { ConfirmModal } from '../components/Modal';
+import { PaginationBar } from '../components/PaginationBar';
 import {
     BottomSheet,
     Button,
@@ -18,22 +19,17 @@ import {
     PageLoader,
     SearchBar,
 } from '../components/ui';
+import { usePagedList } from '../hooks/usePagedList';
+import { apiFetch } from '../api/client';
+import { buildListQuery } from '../utils/pagination';
 import { colors, fontFamily, fontSize, spacing } from '../theme';
 
 const EMPTY = { name: '', description: '', price: '' };
-
-function filterProducts(products, query) {
-    const q = query.trim().toLowerCase();
-    if (!q) return products;
-    return products.filter(
-        (p) => p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q)
-    );
-}
+const mapProduct = (p) => ({ ...p, id: p._id || p.id });
 
 export function ProductsScreen() {
-    const { products, addProduct, updateProduct, deleteProduct, productsLoading, fetchProducts } = useInvoice();
+    const { addProduct, updateProduct, deleteProduct } = useInvoice();
     const { showToast } = useToast();
-    const [search, setSearch] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const [form, setForm] = useState(EMPTY);
     const [editing, setEditing] = useState(null);
@@ -42,11 +38,24 @@ export function ProductsScreen() {
     const [deleting, setDeleting] = useState(false);
     const sheetRef = useRef(null);
 
-    useEffect(() => {
-        fetchProducts().catch(() => {});
-    }, [fetchProducts]);
+    const fetcher = useCallback(
+        ({ page, limit, search }) =>
+            apiFetch(`/products?${buildListQuery({ page, limit, search })}`),
+        []
+    );
 
-    const filtered = useMemo(() => filterProducts(products, search), [products, search]);
+    const {
+        page,
+        setPage,
+        search,
+        setSearch,
+        data,
+        pagination,
+        loading,
+        refresh,
+    } = usePagedList({ fetcher });
+
+    const products = data.map(mapProduct);
 
     const openAdd = () => {
         setEditing(null);
@@ -87,6 +96,7 @@ export function ProductsScreen() {
                 showToast('Product added', 'success');
             }
             closeSheet();
+            await refresh();
         } catch (err) {
             showToast(err.message, 'error');
         } finally {
@@ -101,6 +111,7 @@ export function ProductsScreen() {
             await deleteProduct(deleteId);
             setDeleteId(null);
             showToast('Product deleted', 'success');
+            await refresh();
         } catch (err) {
             showToast(err.message, 'error');
         } finally {
@@ -110,19 +121,21 @@ export function ProductsScreen() {
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await fetchProducts({ force: true });
+        await refresh();
         setRefreshing(false);
     };
 
-    if (productsLoading && products.length === 0 && !refreshing) return <PageLoader />;
+    if (loading && products.length === 0 && !refreshing && !search) return <PageLoader />;
 
     return (
         <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
             <FlatList
-                data={filtered}
+                data={products}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.list}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />
+                }
                 ListHeaderComponent={
                     <View>
                         <PageHeader title="Products" subtitle="Reusable line items" />
@@ -135,11 +148,26 @@ export function ProductsScreen() {
                 ListEmptyComponent={
                     <EmptyState
                         icon={Package}
-                        title="No products yet"
-                        message="Add products to fill invoice line items faster."
-                        actionLabel="Add product"
-                        onAction={openAdd}
+                        title={search ? 'No matches' : 'No products yet'}
+                        message={
+                            search
+                                ? 'Try a different search term.'
+                                : 'Add products to fill invoice line items faster.'
+                        }
+                        actionLabel={search ? undefined : 'Add product'}
+                        onAction={search ? undefined : openAdd}
                     />
+                }
+                ListFooterComponent={
+                    <View style={styles.padX}>
+                        <PaginationBar
+                            page={pagination.page}
+                            totalPages={pagination.totalPages}
+                            total={pagination.total}
+                            onPageChange={setPage}
+                            disabled={loading}
+                        />
+                    </View>
                 }
                 renderItem={({ item, index }) => (
                     <ListRow
@@ -152,7 +180,7 @@ export function ProductsScreen() {
                                 {formatCurrency(item.price ?? item.unitPrice ?? 0)}
                             </Text>
                         }
-                        last={index === filtered.length - 1}
+                        last={index === products.length - 1}
                     />
                 )}
             />

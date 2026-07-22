@@ -26,7 +26,9 @@ import {
     formatCurrency,
     getClientBusiness,
     isDraft,
+    normalizeCurrency,
     normalizeInvoiceUnit,
+    SUPPORTED_CURRENCIES,
 } from '@waraqah/shared';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
@@ -70,7 +72,7 @@ function buildPayload(form, status) {
         items,
         notes: form.notes || '',
         status,
-        currency: form.currency || APP_CURRENCY,
+        currency: normalizeCurrency(form.currency || APP_CURRENCY),
         taxRate: Number(form.taxRate) || 0,
         discountType: 'percent',
         discountValue: Number(form.discountValue) || 0,
@@ -102,6 +104,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
     const clientSheetRef = useRef(null);
     const productSheetRef = useRef(null);
     const unitSheetRef = useRef(null);
+    const currencySheetRef = useRef(null);
     const [unitSheetIndex, setUnitSheetIndex] = useState(null);
     const [customUnitIndex, setCustomUnitIndex] = useState(null);
     const [customUnitName, setCustomUnitName] = useState('');
@@ -161,7 +164,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
                       }))
                     : [emptyItem()],
             notes: existing.notes || '',
-            currency: existing.currency || APP_CURRENCY,
+            currency: normalizeCurrency(existing.currency || APP_CURRENCY),
             taxRate: String(existing.taxRate ?? 10),
             discountValue:
                 existing.discountValue != null && existing.discountValue !== ''
@@ -330,6 +333,15 @@ export function CreateInvoiceScreen({ route, navigation }) {
     const openUnitSheet = (index) => {
         setUnitSheetIndex(index);
         unitSheetRef.current?.expand();
+    };
+
+    const openCurrencySheet = () => {
+        currencySheetRef.current?.expand();
+    };
+
+    const handleCurrencySelect = (code) => {
+        setField('currency', normalizeCurrency(code));
+        currencySheetRef.current?.close();
     };
 
     const handleUnitOptionSelect = (value) => {
@@ -570,17 +582,33 @@ export function CreateInvoiceScreen({ route, navigation }) {
                             </View>
                             <View style={{ flex: 1 }}>
                                 <Label required>Rate</Label>
+                                <Pressable
+                                    onPress={openCurrencySheet}
+                                    style={styles.selectTrigger}
+                                    accessibilityRole="button"
+                                    accessibilityLabel="Rate currency"
+                                >
+                                    <Text style={styles.selectText} numberOfLines={1}>
+                                        {normalizeCurrency(form.currency || APP_CURRENCY)}
+                                    </Text>
+                                    <ChevronDown size={18} color={colors.slate400} strokeWidth={2} />
+                                </Pressable>
                                 <Input
                                     value={item.rate}
                                     onChangeText={(v) => setItem(index, 'rate', v)}
                                     keyboardType="decimal-pad"
                                     error={Boolean(fieldErrors[`item-${index}-rate`])}
+                                    style={{ marginTop: spacing.sm }}
                                 />
                                 <FieldError message={fieldErrors[`item-${index}-rate`]} />
                             </View>
                         </View>
                         <Text style={styles.lineAmount}>
-                            Amount {formatCurrency(Number(item.quantity || 0) * Number(item.rate || 0))}
+                            Amount{' '}
+                            {formatCurrency(
+                                Number(item.quantity || 0) * Number(item.rate || 0),
+                                form.currency
+                            )}
                         </Text>
                     </View>
                 ))}
@@ -603,12 +631,19 @@ export function CreateInvoiceScreen({ route, navigation }) {
                     {form.clientName ? (
                         <Text style={styles.billTo}>Bill to {form.clientName}</Text>
                     ) : null}
-                    <SummaryRow label="Subtotal" value={formatCurrency(totals.subtotal)} />
+                    <SummaryRow label="Subtotal" value={formatCurrency(totals.subtotal, form.currency)} />
                     {totals.discount > 0 ? (
-                        <SummaryRow label="Discount" value={`−${formatCurrency(totals.discount)}`} />
+                        <SummaryRow
+                            label="Discount"
+                            value={`−${formatCurrency(totals.discount, form.currency)}`}
+                        />
                     ) : null}
-                    <SummaryRow label="Tax" value={formatCurrency(totals.tax)} />
-                    <SummaryRow label="Total" value={formatCurrency(totals.total)} bold />
+                    <SummaryRow label="Tax" value={formatCurrency(totals.tax, form.currency)} />
+                    <SummaryRow
+                        label="Total"
+                        value={formatCurrency(totals.total, form.currency)}
+                        bold
+                    />
                 </View>
             </ScrollView>
 
@@ -653,7 +688,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
                         <ListRow
                             key={p.id}
                             title={p.name}
-                            subtitle={formatCurrency(p.unitPrice ?? p.price ?? 0)}
+                            subtitle={formatCurrency(p.unitPrice ?? p.price ?? 0, form.currency)}
                             onPress={() => addProductAsItem(p)}
                             last={i === products.length - 1}
                             dense
@@ -675,6 +710,22 @@ export function CreateInvoiceScreen({ route, navigation }) {
                             title={opt.label}
                             onPress={() => handleUnitOptionSelect(opt.value)}
                             last={i === unitSheetOptions.length - 1}
+                            dense
+                        />
+                    ))}
+                </ScrollView>
+            </BottomSheet>
+
+            <BottomSheet ref={currencySheetRef} snapPoints={['45%']}>
+                <Text style={styles.sheetTitle}>Select currency</Text>
+                <ScrollView>
+                    {SUPPORTED_CURRENCIES.map((c, i, arr) => (
+                        <ListRow
+                            key={c.code}
+                            title={`${c.code} (${c.symbol})`}
+                            subtitle={c.name}
+                            onPress={() => handleCurrencySelect(c.code)}
+                            last={i === arr.length - 1}
                             dense
                         />
                     ))}

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Edit, Trash2, Package, Search } from 'lucide-react';
 import AlertModal from '../components/AlertModal';
@@ -12,16 +12,10 @@ import { PageSpinner } from '../components/Spinner';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 import Toolbar, { ToolbarSearch } from '../components/Toolbar';
-
-function filterProducts(products, query) {
-    const q = query.trim().toLowerCase();
-    if (!q) return products;
-    return products.filter(
-        (p) =>
-            p.name?.toLowerCase().includes(q) ||
-            p.description?.toLowerCase().includes(q)
-    );
-}
+import PaginationBar from '../components/PaginationBar';
+import { usePagedList } from '../hooks/usePagedList';
+import { apiFetch } from '../utils/api';
+import { buildListQuery } from '../utils/pagination';
 
 const COLUMNS = [
     { key: 'name', label: 'Product' },
@@ -30,10 +24,11 @@ const COLUMNS = [
     { key: 'actions', label: '', className: 'text-right w-24' },
 ];
 
+const mapProduct = (p) => ({ ...p, id: p._id || p.id });
+
 export default function Products() {
-    const { products, addProduct, updateProduct, deleteProduct, loading, productsLoading, fetchProducts } = useInvoice();
+    const { addProduct, updateProduct, deleteProduct } = useInvoice();
     const { showToast } = useToast();
-    const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
     const [modalInitialData, setModalInitialData] = useState(EMPTY_PRODUCT);
@@ -41,14 +36,25 @@ export default function Products() {
     const [confirm, setConfirm] = useState({ open: false, productId: null });
     const [deleting, setDeleting] = useState(false);
 
-    useEffect(() => {
-        fetchProducts().catch(() => {});
-    }, [fetchProducts]);
-
-    const filteredProducts = useMemo(
-        () => filterProducts(products, search),
-        [products, search]
+    const fetcher = useCallback(
+        ({ page, limit, search }) =>
+            apiFetch(`/products?${buildListQuery({ page, limit, search })}`),
+        []
     );
+
+    const {
+        page,
+        setPage,
+        search,
+        setSearch,
+        data,
+        pagination,
+        loading,
+        refresh,
+    } = usePagedList({ fetcher });
+
+    const products = data.map(mapProduct);
+    const hasNoProductsAtAll = !loading && pagination.total === 0 && !search;
 
     const openModal = (product = null) => {
         if (product) {
@@ -81,6 +87,7 @@ export default function Products() {
                 showToast('Product added successfully', 'success');
             }
             closeModal();
+            await refresh();
         } catch (err) {
             setAlert({
                 open: true,
@@ -100,6 +107,7 @@ export default function Products() {
             await deleteProduct(id);
             showToast('Product deleted successfully', 'success');
             setConfirm({ open: false, productId: null });
+            await refresh();
         } catch (err) {
             setAlert({
                 open: true,
@@ -144,9 +152,9 @@ export default function Products() {
                 </button>
             </PageHeader>
 
-            {productsLoading && products.length === 0 ? (
+            {loading && products.length === 0 && !search ? (
                 <PageSpinner label="Loading products…" />
-            ) : products.length === 0 ? (
+            ) : hasNoProductsAtAll ? (
                 <div className="data-table-wrap">
                     <EmptyState
                         icon={Package}
@@ -172,50 +180,61 @@ export default function Products() {
                         />
                     </Toolbar>
 
-                    {filteredProducts.length === 0 ? (
+                    {products.length === 0 ? (
                         <div className="data-table-wrap">
                             <EmptyState title="No matches" description="Try a different search term." />
                         </div>
                     ) : (
-                        <DataTable columns={COLUMNS}>
-                            {filteredProducts.map((product) => (
-                                <DataTableRow key={product.id}>
-                                    <DataTableCell>
-                                        <span className="font-medium text-zinc-950">{product.name}</span>
-                                    </DataTableCell>
-                                    <DataTableCell className="text-right">
-                                        <span className="font-medium tabular-nums">
-                                            {formatCurrency(product.unitPrice || 0)}
-                                        </span>
-                                    </DataTableCell>
-                                    <DataTableCell>
-                                        <span className="text-zinc-500 truncate max-w-[280px] block">
-                                            {product.description || '—'}
-                                        </span>
-                                    </DataTableCell>
-                                    <DataTableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-1">
-                                            <button
-                                                type="button"
-                                                onClick={() => openModal(product)}
-                                                className="btn-ghost text-xs py-1 px-2"
-                                                aria-label="Edit product"
-                                            >
-                                                <Edit size={14} />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDelete(product.id)}
-                                                className="btn-ghost text-xs py-1 px-2 text-red-600 hover:bg-red-50"
-                                                aria-label="Delete product"
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </div>
-                                    </DataTableCell>
-                                </DataTableRow>
-                            ))}
-                        </DataTable>
+                        <>
+                            <DataTable columns={COLUMNS}>
+                                {products.map((product) => (
+                                    <DataTableRow key={product.id}>
+                                        <DataTableCell>
+                                            <span className="font-medium text-zinc-950">
+                                                {product.name}
+                                            </span>
+                                        </DataTableCell>
+                                        <DataTableCell className="text-right">
+                                            <span className="font-medium tabular-nums">
+                                                {formatCurrency(product.unitPrice || 0)}
+                                            </span>
+                                        </DataTableCell>
+                                        <DataTableCell>
+                                            <span className="text-zinc-500 truncate max-w-[280px] block">
+                                                {product.description || '—'}
+                                            </span>
+                                        </DataTableCell>
+                                        <DataTableCell className="text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openModal(product)}
+                                                    className="btn-ghost text-xs py-1 px-2"
+                                                    aria-label="Edit product"
+                                                >
+                                                    <Edit size={14} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDelete(product.id)}
+                                                    className="btn-ghost text-xs py-1 px-2 text-red-600 hover:bg-red-50"
+                                                    aria-label="Delete product"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </DataTableCell>
+                                    </DataTableRow>
+                                ))}
+                            </DataTable>
+                            <PaginationBar
+                                page={pagination.page}
+                                totalPages={pagination.totalPages}
+                                total={pagination.total}
+                                onPageChange={setPage}
+                                disabled={loading}
+                            />
+                        </>
                     )}
                 </>
             )}

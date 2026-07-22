@@ -202,7 +202,7 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                     <table className="w-full min-w-[520px] text-xs sm:text-sm border-collapse">
                         <thead>
                             <tr style={{ backgroundColor: lightBrand, color: brandColor }}>
-                                <th className="px-2 py-2.5 font-bold text-center w-10">#</th>
+                                <th className="px-2 py-2.5 font-bold text-center w-12 whitespace-nowrap">#</th>
                                 <th className="px-2 py-2.5 font-bold text-left">DESCRIPTION</th>
                                 <th className="px-2 py-2.5 font-bold text-center w-20">{quantityColumnLabel}</th>
                                 <th className="px-2 py-2.5 font-bold text-right w-24">RATE</th>
@@ -216,14 +216,17 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                                     className={index % 2 === 1 ? 'bg-zinc-50/80' : 'bg-white'}
                                     style={{ borderBottom: '1px solid rgb(229 231 235)' }}
                                 >
-                                    <td className="px-2 py-2.5 text-center text-zinc-500">{index + 1}</td>
+                                    <td className="px-2 py-2.5 text-center text-zinc-500 whitespace-nowrap">{index + 1}</td>
                                     <td className="px-2 py-2.5 text-zinc-800">{item.description}</td>
                                     <td className="px-2 py-2.5 text-center text-zinc-500">{item.quantity}</td>
                                     <td className="px-2 py-2.5 text-right text-zinc-500 whitespace-nowrap">
-                                        {formatCurrency(item.rate)}
+                                        {formatCurrency(item.rate, invoice.currency)}
                                     </td>
                                     <td className="px-2 py-2.5 text-right font-bold text-zinc-800 whitespace-nowrap">
-                                        {formatCurrency(Number(item.quantity) * Number(item.rate))}
+                                        {formatCurrency(
+                                            Number(item.quantity) * Number(item.rate),
+                                            invoice.currency
+                                        )}
                                     </td>
                                 </tr>
                             ))}
@@ -235,7 +238,9 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                     <dl className="w-full max-w-xs space-y-2 text-sm">
                         <div className="flex justify-between gap-4">
                             <dt className="text-zinc-500">Subtotal</dt>
-                            <dd className="font-bold text-zinc-800">{formatCurrency(invoice.subtotal)}</dd>
+                            <dd className="font-bold text-zinc-800">
+                                {formatCurrency(invoice.subtotal, invoice.currency)}
+                            </dd>
                         </div>
                         {Number(invoice.discount) > 0 && (
                             <div className="flex justify-between gap-4">
@@ -245,20 +250,22 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                                         : 'Discount'}
                                 </dt>
                                 <dd className="font-bold text-red-600">
-                                    −{formatCurrency(invoice.discount)}
+                                    −{formatCurrency(invoice.discount, invoice.currency)}
                                 </dd>
                             </div>
                         )}
                         <div className="flex justify-between gap-4">
                             <dt className="text-zinc-500">Tax ({invoice.taxRate ?? 0}%)</dt>
-                            <dd className="font-bold text-zinc-800">{formatCurrency(invoice.tax)}</dd>
+                            <dd className="font-bold text-zinc-800">
+                                {formatCurrency(invoice.tax, invoice.currency)}
+                            </dd>
                         </div>
                         <div className="flex justify-between gap-4 pt-2 border-t border-zinc-200">
                             <dt className="font-bold text-zinc-800">
                                 {isReceipt ? 'TOTAL PAID' : 'TOTAL DUE'}
                             </dt>
                             <dd className="text-lg font-bold" style={{ color: brandColor }}>
-                                {formatCurrency(invoice.total)}
+                                {formatCurrency(invoice.total, invoice.currency)}
                             </dd>
                         </div>
                     </dl>

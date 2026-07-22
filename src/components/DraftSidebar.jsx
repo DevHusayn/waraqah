@@ -84,7 +84,7 @@ export default function DraftSidebar({
                                             {updated
                                                 ? `Edited ${formatDistanceToNow(new Date(updated), { addSuffix: true })}`
                                                 : 'Draft'}
-                                            {draft.total > 0 ? ` · ${formatCurrency(draft.total)}` : ''}
+                                            {draft.total > 0 ? ` · ${formatCurrency(draft.total, draft.currency)}` : ''}
                                         </p>
                                     </div>
                                     <div className="grid grid-cols-2 gap-2">

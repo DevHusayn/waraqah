@@ -3,6 +3,7 @@ import { apiFetch } from '../utils/api';
 import { useAuth } from './AuthContext';
 import { shouldPrefetchUserData } from '../utils/authHint';
 import { isDraft } from '../utils/invoiceHelpers';
+import { buildListQuery, PICKER_PAGE_SIZE, unwrapListResponse } from '../utils/pagination';
 
 const InvoiceContext = createContext();
 
@@ -45,29 +46,40 @@ export const InvoiceProvider = ({ children }) => {
     }, []);
 
     const refreshInvoices = useCallback(async () => {
-        const [inv, usage] = await Promise.all([
-            apiFetch('/invoices'),
+        const [invPayload, usage] = await Promise.all([
+            apiFetch(`/invoices?${buildListQuery({ page: 1, limit: PICKER_PAGE_SIZE })}`),
             apiFetch('/invoices/usage').catch(() => null),
         ]);
-        setInvoices(inv.map(mapInvoice));
+        const { data } = unwrapListResponse(invPayload);
+        setInvoices(data.map(mapInvoice));
         invoicesFetchedRef.current = true;
         if (usage) setInvoiceUsage(usage);
         await refreshMeta();
     }, [refreshMeta]);
 
-    const fetchInvoices = useCallback(async ({ force = false } = {}) => {
+    const fetchInvoices = useCallback(async ({ force = false, year, month, limit = PICKER_PAGE_SIZE } = {}) => {
         if (!shouldFetch && !isAuthenticated) return [];
-        if (invoicesFetchedRef.current && !force) return invoices;
+        const forMonth = year != null && month != null;
+        if (!forMonth && invoicesFetchedRef.current && !force) return invoices;
 
         setInvoicesLoading(true);
         try {
-            const inv = await apiFetch('/invoices');
-            const mapped = inv.map(mapInvoice);
-            setInvoices(mapped);
-            invoicesFetchedRef.current = true;
+            const query = buildListQuery({
+                page: 1,
+                limit,
+                year: forMonth ? year : undefined,
+                month: forMonth ? month : undefined,
+            });
+            const payload = await apiFetch(`/invoices?${query}`);
+            const { data } = unwrapListResponse(payload);
+            const mapped = data.map(mapInvoice);
+            if (!forMonth) {
+                setInvoices(mapped);
+                invoicesFetchedRef.current = true;
+            }
             return mapped;
         } catch {
-            setInvoices([]);
+            if (!forMonth) setInvoices([]);
             return [];
         } finally {
             setInvoicesLoading(false);
@@ -80,10 +92,13 @@ export const InvoiceProvider = ({ children }) => {
 
         setDraftsLoading(true);
         try {
-            const draftList = await apiFetch('/invoices/drafts');
-            const mapped = draftList.map(mapInvoice);
+            const payload = await apiFetch(
+                `/invoices/drafts?${buildListQuery({ page: 1, limit: PICKER_PAGE_SIZE })}`
+            );
+            const { data, pagination } = unwrapListResponse(payload);
+            const mapped = data.map(mapInvoice);
             setDrafts(mapped);
-            setDraftCount(mapped.length);
+            setDraftCount(pagination?.total ?? mapped.length);
             draftsFetchedRef.current = true;
             return mapped;
         } catch {
@@ -96,12 +111,15 @@ export const InvoiceProvider = ({ children }) => {
 
     const fetchProducts = useCallback(async ({ force = false } = {}) => {
         if (!shouldFetch && !isAuthenticated) return [];
-        if (productsFetchedRef.current && !force) return [];
+        if (productsFetchedRef.current && !force) return products;
 
         setProductsLoading(true);
         try {
-            const pro = await apiFetch('/products');
-            const mapped = pro.map(mapProduct);
+            const payload = await apiFetch(
+                `/products?${buildListQuery({ page: 1, limit: PICKER_PAGE_SIZE })}`
+            );
+            const { data } = unwrapListResponse(payload);
+            const mapped = data.map(mapProduct);
             setProducts(mapped);
             productsFetchedRef.current = true;
             return mapped;
@@ -111,7 +129,7 @@ export const InvoiceProvider = ({ children }) => {
         } finally {
             setProductsLoading(false);
         }
-    }, [shouldFetch, isAuthenticated]);
+    }, [shouldFetch, isAuthenticated, products]);
 
     const fetchUserData = useCallback(async () => {
         if (!shouldFetch) {
@@ -131,13 +149,14 @@ export const InvoiceProvider = ({ children }) => {
         }
         setLoading(true);
         try {
-            const [cli, usage, meta] = await Promise.all([
-                apiFetch('/clients'),
+            const [cliPayload, usage, meta] = await Promise.all([
+                apiFetch(`/clients?${buildListQuery({ page: 1, limit: PICKER_PAGE_SIZE })}`),
                 apiFetch('/invoices/usage').catch(() => null),
                 apiFetch('/invoices/meta').catch(() => ({ draftCount: 0 })),
             ]);
+            const { data } = unwrapListResponse(cliPayload);
             setInvoiceUsage(usage);
-            setClients(cli.map(mapClient));
+            setClients(data.map(mapClient));
             setDraftCount(meta?.draftCount ?? 0);
         } catch {
             setClients([]);
