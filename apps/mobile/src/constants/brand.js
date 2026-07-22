@@ -1,4 +1,4 @@
-import { BRAND_COLORS, DEFAULT_BRAND_COLOR, getAppDomain } from '@waraqah/shared';
+import { APP_SOCIAL_LINKS, BRAND_COLORS, DEFAULT_BRAND_COLOR, getAppDomain } from '@waraqah/shared';
 
 export const APP_NAME = 'Waraqah';
 export const APP_WEBSITE_URL = (process.env.EXPO_PUBLIC_APP_URL || 'https://mywaraqah.com')
@@ -11,4 +11,4 @@ export const APP_SUPPORT_EMAIL = 'support@mywaraqah.com';
 export const APP_DESCRIPTION =
     'Waraqah helps freelancers and businesses create invoices in seconds, manage clients and products, mark payments, and export professional PDFs in NGN.';
 
-export { BRAND_COLORS, DEFAULT_BRAND_COLOR };
+export { APP_SOCIAL_LINKS, BRAND_COLORS, DEFAULT_BRAND_COLOR };

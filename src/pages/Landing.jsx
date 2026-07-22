@@ -12,11 +12,13 @@ import {
     TrendingUp,
     Smartphone,
     Mail,
+    Instagram,
+    Facebook,
 } from 'lucide-react';
 import LandingNav from '../components/LandingNav';
 import LandingInvoicePreview from '../components/LandingInvoicePreview';
 import WaraqahLogo from '../components/WaraqahLogo';
-import { APP_NAME, APP_TAGLINE } from '../constants/brand';
+import { APP_NAME, APP_SOCIAL_LINKS, APP_TAGLINE } from '../constants/brand';
 import { AUTH_LOGIN_PATH, AUTH_REGISTER_PATH } from '../constants/authRoutes';
 import { TERMS_PATH, PRIVACY_PATH } from '../constants/legalRoutes';
 import { FREE_MONTHLY_INVOICE_LIMIT } from '../utils/invoiceLimits';
@@ -24,6 +26,25 @@ import { FREE_PLAN_FEATURES, PREMIUM_PLAN_FEATURES } from '../constants/planFeat
 import { PREMIUM_PRICE_NGN, formatPremiumPrice } from '../constants/pricing';
 import PremiumPrice from '../components/PremiumPrice';
 import { useRevealOnScroll, revealClass } from '../hooks/useRevealOnScroll';
+
+function XIcon({ className }) {
+    return (
+        <svg
+            viewBox="0 0 24 24"
+            className={className}
+            fill="currentColor"
+            aria-hidden
+        >
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.227-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z" />
+        </svg>
+    );
+}
+
+const SOCIAL_ICONS = {
+    instagram: Instagram,
+    facebook: Facebook,
+    x: XIcon,
+};
 
 const PREMIUM_PRICE = PREMIUM_PRICE_NGN;
 
@@ -384,6 +405,23 @@ export default function Landing() {
                 <div className="mx-auto max-w-6xl px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-zinc-500">
                     <WaraqahLogo size="sm" iconStyle="solid" />
                     <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
+                        <nav className="flex items-center gap-4" aria-label="Social">
+                            {APP_SOCIAL_LINKS.map(({ id, label, url }) => {
+                                const Icon = SOCIAL_ICONS[id];
+                                return (
+                                    <a
+                                        key={id}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 hover:text-zinc-800 transition-colors"
+                                    >
+                                        {Icon ? <Icon className="h-4 w-4" aria-hidden /> : null}
+                                        {label}
+                                    </a>
+                                );
+                            })}
+                        </nav>
                         <nav className="flex items-center gap-4" aria-label="Legal">
                             <Link to={TERMS_PATH} className="hover:text-zinc-800 transition-colors">
                                 Terms

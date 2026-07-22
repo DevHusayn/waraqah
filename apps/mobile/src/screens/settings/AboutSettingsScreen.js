@@ -1,6 +1,13 @@
-import { Linking, ScrollView, StyleSheet, Text } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Card } from '../../components/ui';
-import { APP_DESCRIPTION, APP_NAME, APP_SUPPORT_EMAIL, APP_TAGLINE, APP_VERSION } from '../../constants/brand';
+import {
+    APP_DESCRIPTION,
+    APP_NAME,
+    APP_SOCIAL_LINKS,
+    APP_SUPPORT_EMAIL,
+    APP_TAGLINE,
+    APP_VERSION,
+} from '../../constants/brand';
 import { colors, fontFamily, fontSize, spacing } from '../../theme';
 
 export function AboutSettingsScreen() {
@@ -15,6 +22,18 @@ export function AboutSettingsScreen() {
                 <Text style={styles.link} onPress={() => Linking.openURL(`mailto:${APP_SUPPORT_EMAIL}`)}>
                     {APP_SUPPORT_EMAIL}
                 </Text>
+                <Text style={styles.label}>Follow us</Text>
+                <View style={styles.socialRow}>
+                    {APP_SOCIAL_LINKS.map(({ id, label, url }) => (
+                        <Text
+                            key={id}
+                            style={styles.link}
+                            onPress={() => Linking.openURL(url)}
+                        >
+                            {label}
+                        </Text>
+                    ))}
+                </View>
             </Card>
         </ScrollView>
     );
@@ -29,4 +48,5 @@ const styles = StyleSheet.create({
     body: { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.slate600, lineHeight: 22, marginTop: spacing.lg },
     label: { fontFamily: fontFamily.semibold, fontSize: fontSize.xs, color: colors.muted, textTransform: 'uppercase', marginTop: spacing.lg },
     link: { fontFamily: fontFamily.medium, fontSize: fontSize.sm, color: colors.brand, marginTop: 4 },
+    socialRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: 0 },
 });
