@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.xl,
     },
     name: {
-        fontFamily: fontFamily.boldItalic,
+        fontFamily: fontFamily.brand,
         fontSize: 36,
         color: colors.brandDark,
         letterSpacing: -0.6,

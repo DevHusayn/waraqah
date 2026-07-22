@@ -8,7 +8,7 @@ const SIZES = {
 };
 
 /**
- * Brand wordmark — italic “Waraqah”, matching transactional email headers.
+ * Brand wordmark — “Waraqah” in Bodoni Moda.
  */
 export function WaraqahLogo({ size = 'md', inverted = false }) {
     const fontSize = SIZES[size] || SIZES.md;
@@ -29,7 +29,7 @@ export function WaraqahLogo({ size = 'md', inverted = false }) {
 
 const styles = StyleSheet.create({
     wordmark: {
-        fontFamily: fontFamily.boldItalic,
+        fontFamily: fontFamily.brand,
         letterSpacing: -0.3,
     },
 });

@@ -14,7 +14,7 @@ const SIZES = {
 };
 
 /**
- * Brand wordmark — italic “Waraqah”, matching transactional email headers.
+ * Brand wordmark — “Waraqah” in Bodoni Moda.
  */
 export function WaraqahWordmark({
     size = 'md',
@@ -26,7 +26,7 @@ export function WaraqahWordmark({
 
     return (
         <span
-            className={`inline-block font-sans font-bold italic tracking-tight leading-none ${s.text} ${color} ${className}`}
+            className={`inline-block font-brand font-semibold tracking-tight leading-none ${s.text} ${color} ${className}`}
             aria-label="Waraqah"
         >
             Waraqah
@@ -35,7 +35,7 @@ export function WaraqahWordmark({
 }
 
 /**
- * Brand lockup: italic wordmark (optionally with subtitle).
+ * Brand lockup: Bodoni Moda wordmark (optionally with subtitle).
  * Extra props (showIcon, showAccent, iconStyle) are accepted by callers and ignored.
  */
 export default function WaraqahLogo({
@@ -51,7 +51,7 @@ export default function WaraqahLogo({
             <WaraqahWordmark size={size} inverted={inverted} />
             {subtitle?.trim() ? (
                 <span
-                    className={`mt-1 block w-full truncate leading-tight ${s.subtitle} ${
+                    className={`mt-1 block w-full truncate font-sans leading-tight ${s.subtitle} ${
                         inverted ? 'text-zinc-300' : 'text-zinc-500'
                     }`}
                     title={subtitle}

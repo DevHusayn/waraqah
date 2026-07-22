@@ -43,7 +43,7 @@ export default function AboutSettings() {
         >
             <div className="card space-y-6">
                 <div>
-                    <h2 className="text-lg font-bold italic text-brand-hover tracking-tight">{APP_NAME}</h2>
+                    <h2 className="text-lg font-brand font-semibold text-brand-hover tracking-tight">{APP_NAME}</h2>
                     <p className="text-sm text-zinc-500 mt-1">{APP_TAGLINE}</p>
                     <p className="text-xs text-zinc-400 mt-2">Version {APP_VERSION}</p>
                 </div>

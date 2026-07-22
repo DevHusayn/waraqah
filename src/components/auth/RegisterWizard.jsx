@@ -315,8 +315,6 @@ export default function RegisterWizard({
                 ) : null}
             </div>
 
-            <StepIndicator currentStep={step} />
-
             {step === 1 && onSocialSuccess ? (
                 <SocialAuthButtons
                     variant="register"
@@ -325,6 +323,8 @@ export default function RegisterWizard({
                     onError={(message) => setError(message)}
                 />
             ) : null}
+
+            <StepIndicator currentStep={step} />
 
             <div className="space-y-4">
                 {step === 1 && (

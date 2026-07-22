@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.surfaceMuted },
     content: { padding: spacing.lg, paddingBottom: spacing.xxl },
     title: {
-        fontFamily: fontFamily.boldItalic,
+        fontFamily: fontFamily.brand,
         fontSize: fontSize.lg,
         color: colors.brandDark,
     },

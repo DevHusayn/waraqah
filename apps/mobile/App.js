@@ -1,11 +1,11 @@
 import {
-    useFonts,
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
-    Inter_700Bold_Italic,
 } from '@expo-google-fonts/inter';
+import { BodoniModa_600SemiBold } from '@expo-google-fonts/bodoni-moda';
+import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import { AppProviders } from './src/providers/AppProviders';
@@ -19,7 +19,7 @@ export default function App() {
         Inter_500Medium,
         Inter_600SemiBold,
         Inter_700Bold,
-        Inter_700Bold_Italic,
+        BodoniModa_600SemiBold,
     });
 
     if (!fontsLoaded) {

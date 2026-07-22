@@ -77,7 +77,9 @@ export function SpinnerOverlay({ label = 'Loading…' }) {
 /** Centered spinner for full-width page sections (detail views, lists). */
 export function PageSpinner({ label = 'Loading…', className = '' }) {
     return (
-        <div className={`flex items-center justify-center py-20 ${className}`.trim()}>
+        <div
+            className={`flex min-h-[calc(100dvh-8rem)] items-center justify-center ${className}`.trim()}
+        >
             <Spinner size="lg" label={label} centered />
         </div>
     );
