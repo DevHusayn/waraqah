@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ExternalLink, Facebook, Instagram } from 'lucide-react';
+import { ExternalLink, Facebook, Instagram, Linkedin } from 'lucide-react';
 import SettingsPageShell from '../../components/settings/SettingsPageShell';
 import {
     APP_NAME,
@@ -13,6 +13,7 @@ import {
 const SOCIAL_ICONS = {
     instagram: Instagram,
     facebook: Facebook,
+    linkedin: Linkedin,
 };
 
 function XIcon({ className }) {
@@ -90,10 +91,10 @@ export default function AboutSettings() {
                                         href={url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1.5 text-brand hover:underline font-medium"
+                                        aria-label={label}
+                                        className="inline-flex items-center text-brand hover:opacity-80 transition-opacity"
                                     >
-                                        {Icon ? <Icon className="h-4 w-4" aria-hidden /> : null}
-                                        {label}
+                                        {Icon ? <Icon className="h-5 w-5" aria-hidden /> : null}
                                     </a>
                                 );
                             })}

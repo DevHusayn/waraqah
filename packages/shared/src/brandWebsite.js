@@ -6,6 +6,7 @@ export const APP_SOCIAL_LINKS = [
     { id: 'instagram', label: 'Instagram', url: 'https://www.instagram.com/my.waraqah' },
     { id: 'x', label: 'X', url: 'https://x.com/mywaraqah' },
     { id: 'facebook', label: 'Facebook', url: 'https://www.facebook.com/share/1DNt634787/' },
+    { id: 'linkedin', label: 'LinkedIn', url: 'https://www.linkedin.com/in/waraqah-invoice-23b942423' },
 ];
 
 /** Hostname label for display, e.g. mywaraqah.com */

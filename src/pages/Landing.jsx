@@ -14,6 +14,7 @@ import {
     Mail,
     Instagram,
     Facebook,
+    Linkedin,
 } from 'lucide-react';
 import LandingNav from '../components/LandingNav';
 import LandingInvoicePreview from '../components/LandingInvoicePreview';
@@ -43,6 +44,7 @@ function XIcon({ className }) {
 const SOCIAL_ICONS = {
     instagram: Instagram,
     facebook: Facebook,
+    linkedin: Linkedin,
     x: XIcon,
 };
 
@@ -414,10 +416,10 @@ export default function Landing() {
                                         href={url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1.5 hover:text-zinc-800 transition-colors"
+                                        aria-label={label}
+                                        className="inline-flex items-center hover:text-zinc-800 transition-colors"
                                     >
-                                        {Icon ? <Icon className="h-4 w-4" aria-hidden /> : null}
-                                        {label}
+                                        {Icon ? <Icon className="h-5 w-5" aria-hidden /> : null}
                                     </a>
                                 );
                             })}
