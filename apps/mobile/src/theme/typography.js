@@ -3,6 +3,7 @@ export const fontFamily = {
     medium: 'Inter_500Medium',
     semibold: 'Inter_600SemiBold',
     bold: 'Inter_700Bold',
+    boldItalic: 'Inter_700Bold_Italic',
 };
 
 export function textStyle(weight = 'regular', size = 15, color) {

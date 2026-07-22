@@ -10,7 +10,7 @@ import Animated, {
     withTiming,
 } from 'react-native-reanimated';
 import { APP_NAME, APP_TAGLINE } from '../constants/brand';
-import { colors, fontFamily, fontSize, radii, spacing } from '../theme';
+import { colors, fontFamily, fontSize, spacing } from '../theme';
 
 export function SplashScreen({ onFinish }) {
     const scale = useSharedValue(0.88);
@@ -47,9 +47,6 @@ export function SplashScreen({ onFinish }) {
             <View style={styles.atmosphere} />
             <Animated.View style={[styles.glow, glowStyle]} />
             <Animated.View style={[styles.center, logoStyle]}>
-                <View style={styles.mark}>
-                    <Text style={styles.markText}>W</Text>
-                </View>
                 <Text style={styles.name}>{APP_NAME}</Text>
                 <Animated.Text entering={FadeIn.delay(400).duration(500)} style={styles.tagline}>
                     {APP_TAGLINE}
@@ -82,30 +79,10 @@ const styles = StyleSheet.create({
         gap: spacing.md,
         paddingHorizontal: spacing.xl,
     },
-    mark: {
-        width: 72,
-        height: 72,
-        borderRadius: radii.xl,
-        backgroundColor: colors.brand,
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: colors.brand,
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.28,
-        shadowRadius: 20,
-        elevation: 8,
-    },
-    markText: {
-        color: colors.white,
-        fontFamily: fontFamily.bold,
-        fontWeight: '800',
-        fontSize: 34,
-    },
     name: {
-        fontFamily: fontFamily.bold,
-        fontWeight: '800',
-        fontSize: 34,
-        color: colors.foreground,
+        fontFamily: fontFamily.boldItalic,
+        fontSize: 36,
+        color: colors.brandDark,
         letterSpacing: -0.6,
     },
     tagline: {

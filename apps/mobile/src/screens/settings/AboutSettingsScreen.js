@@ -68,7 +68,11 @@ export function AboutSettingsScreen() {
 const styles = StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.surfaceMuted },
     content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-    title: { fontFamily: fontFamily.bold, fontSize: fontSize.lg, color: colors.foreground },
+    title: {
+        fontFamily: fontFamily.boldItalic,
+        fontSize: fontSize.lg,
+        color: colors.brandDark,
+    },
     tagline: { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.muted, marginTop: 4 },
     version: { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.slate400, marginTop: spacing.sm },
     body: { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.slate600, lineHeight: 22, marginTop: spacing.lg },
