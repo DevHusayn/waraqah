@@ -197,19 +197,19 @@
     }
 
     .stat-card {
-        @apply card flex items-start gap-3 min-w-0 transition-shadow duration-200 hover:shadow-card;
+        @apply card flex flex-col gap-2.5 min-w-0 !p-4 transition-shadow duration-200 hover:shadow-card;
     }
 
     .stat-card-icon {
-        @apply shrink-0 p-2.5 rounded-xl flex items-center justify-center;
+        @apply shrink-0 p-2 rounded-lg flex items-center justify-center;
     }
 
     .stat-card-body {
-        @apply min-w-0 flex-1;
+        @apply min-w-0 w-full;
     }
 
     .stat-card-value {
-        @apply text-xl font-semibold text-zinc-950 mt-0.5 tabular-nums tracking-[-0.02em] leading-none break-words;
+        @apply text-lg font-semibold text-zinc-950 tabular-nums tracking-[-0.02em] leading-tight whitespace-nowrap overflow-hidden text-ellipsis;
     }
 
     .filter-tab {

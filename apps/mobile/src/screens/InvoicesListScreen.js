@@ -21,7 +21,7 @@ import { apiFetch } from '../api/client';
 import { buildListQuery } from '../utils/pagination';
 import { colors, fontFamily, fontSize, shadows, spacing } from '../theme';
 
-const FILTER_VALUES = ['all', 'pending', 'paid', 'overdue', 'cancelled'];
+const FILTER_VALUES = ['all', 'pending', 'partial', 'paid', 'overdue', 'cancelled'];
 
 const mapInvoice = (i) => ({ ...i, id: i._id || i.id });
 

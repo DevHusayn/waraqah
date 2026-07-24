@@ -43,8 +43,13 @@ import {
 import { getPublicInvoiceUrl } from '../utils/publicApi';
 import { apiFetch } from '../utils/api';
 import {
+    canRecordInvoicePayment,
     canSendPaymentReminderNow,
+    getInvoiceAmountPaid,
+    getInvoiceBalanceDue,
+    getInvoicePayments,
     getNextPaymentReminderDate,
+    hasRecordedPayments,
     isAutoPaymentRemindersEnabled,
     normalizeInvoiceUnit,
     resolveQuantityColumnLabel,
@@ -283,7 +288,7 @@ function InvoiceActionsPanel({
             }
           : canMarkPaid
             ? {
-                  label: 'Mark as Paid',
+                  label: 'Record payment',
                   icon: CheckCircle,
                   onClick: onMarkPaid,
               }
@@ -345,7 +350,19 @@ const InvoiceDetails = () => {
     const [searchParams] = useSearchParams();
     const initialView = searchParams.get('view');
     const navigate = useNavigate();
-    const { invoices, clients, updateInvoice, deleteInvoice, loading, upsertInvoice, sendInvoiceEmailToClient, sendPaymentReminderToClient, markInvoiceReminderSent, sendReceiptEmailToClient } = useInvoice();
+    const {
+        invoices,
+        clients,
+        updateInvoice,
+        recordInvoicePayment,
+        deleteInvoice,
+        loading,
+        upsertInvoice,
+        sendInvoiceEmailToClient,
+        sendPaymentReminderToClient,
+        markInvoiceReminderSent,
+        sendReceiptEmailToClient,
+    } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
 
@@ -375,12 +392,16 @@ const InvoiceDetails = () => {
 
     const paid = invoice ? isReceipt(invoice) : false;
     const cancelled = invoice?.status === 'cancelled';
-    const canMarkPaid = invoice && ['pending', 'overdue'].includes(invoice.status);
-    const canCancel = invoice && ['pending', 'overdue'].includes(invoice.status);
-    const canEdit = invoice && !paid && !cancelled;
+    const canMarkPaid = invoice && canRecordInvoicePayment(invoice);
+    const canCancel = invoice && ['pending', 'partial', 'overdue'].includes(invoice.status);
+    const canEdit = invoice && !paid && !cancelled && !hasRecordedPayments(invoice);
     const clientHasEmail = Boolean(client?.email?.trim());
     const canEmailClient = invoice && !cancelled && invoice.status !== 'draft' && clientHasEmail;
-    const canSendReminder = invoice && ['pending', 'overdue'].includes(invoice.status) && clientHasEmail;
+    const canSendReminder =
+        invoice && ['pending', 'partial', 'overdue'].includes(invoice.status) && clientHasEmail;
+    const amountPaid = invoice ? getInvoiceAmountPaid(invoice) : 0;
+    const balanceDue = invoice ? getInvoiceBalanceDue(invoice) : 0;
+    const paymentHistory = invoice ? getInvoicePayments(invoice) : [];
     const canSendReminderNow = canSendReminder && canSendPaymentReminderNow(invoice?.lastPaymentReminderAt);
     const canResendReceipt = paid && clientHasEmail;
     const autoRemindersOn = isAutoPaymentRemindersEnabled(businessInfo);
@@ -537,14 +558,18 @@ const InvoiceDetails = () => {
         }
     };
 
-    const handleMarkPaid = async ({ paymentMethod, datePaid }) => {
+    const handleMarkPaid = async ({ amount, paymentMethod, datePaid }) => {
         setSaving(true);
         try {
-            await updateInvoice(id, { ...invoice, status: 'paid', paymentMethod, datePaid });
-            showToast('Invoice marked as paid', 'success');
+            const updated = await recordInvoicePayment(id, { amount, paymentMethod, datePaid });
+            setFetchedInvoice(updated);
+            showToast(
+                updated.status === 'paid' ? 'Invoice marked as paid' : 'Payment recorded',
+                'success'
+            );
             setMarkPaidOpen(false);
         } catch (err) {
-            setAlert({ open: true, message: err.message || 'Failed to update invoice.' });
+            setAlert({ open: true, message: err.message || 'Failed to record payment.' });
         } finally {
             setSaving(false);
         }
@@ -687,7 +712,7 @@ const InvoiceDetails = () => {
             <ConfirmModal
                 open={confirmCancel}
                 title="Cancel invoice?"
-                description="The invoice will stay on record but can no longer be edited or marked as paid."
+                description="The invoice will stay on record but can no longer be edited or receive payments."
                 confirmLabel="Cancel invoice"
                 cancelLabel="Go back"
                 onConfirm={handleCancelInvoice}
@@ -710,6 +735,7 @@ const InvoiceDetails = () => {
             />
             <MarkAsPaidModal
                 open={markPaidOpen}
+                invoice={invoice}
                 onConfirm={handleMarkPaid}
                 onCancel={() => setMarkPaidOpen(false)}
                 saving={saving}
@@ -905,8 +931,56 @@ const InvoiceDetails = () => {
                                         {formatCurrency(invoice.total, invoice.currency)}
                                     </dd>
                                 </div>
+                                {(amountPaid > 0 || paid) && (
+                                    <>
+                                        <SummaryRow
+                                            label="Amount paid"
+                                            value={formatCurrency(amountPaid, invoice.currency)}
+                                        />
+                                        {!paid && (
+                                            <SummaryRow
+                                                label="Balance due"
+                                                value={formatCurrency(balanceDue, invoice.currency)}
+                                            />
+                                        )}
+                                    </>
+                                )}
                             </dl>
                         </div>
+
+                        {paymentHistory.length > 0 ? (
+                            <div className="card">
+                                <h3 className="text-sm font-semibold text-zinc-900 mb-4">
+                                    Payment history
+                                </h3>
+                                <ul className="space-y-3">
+                                    {paymentHistory.map((payment, index) => (
+                                        <li
+                                            key={`${payment.date || 'p'}-${index}`}
+                                            className="flex items-start justify-between gap-3 text-sm"
+                                        >
+                                            <div className="min-w-0">
+                                                <p className="font-medium text-zinc-900">
+                                                    {formatCurrency(payment.amount, invoice.currency)}
+                                                </p>
+                                                <p className="text-xs text-zinc-500 mt-0.5">
+                                                    {payment.date
+                                                        ? format(new Date(payment.date), 'MMM dd, yyyy')
+                                                        : '—'}
+                                                    {' · '}
+                                                    {getPaymentMethodLabel(payment.method)}
+                                                </p>
+                                                {payment.note ? (
+                                                    <p className="text-xs text-zinc-500 mt-1">
+                                                        {payment.note}
+                                                    </p>
+                                                ) : null}
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ) : null}
 
                         <div className="hidden xl:block">
                             <InvoiceActionsPanel {...actionPanelProps} />

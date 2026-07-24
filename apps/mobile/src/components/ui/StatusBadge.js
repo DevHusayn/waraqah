@@ -4,6 +4,7 @@ import { colors, fontFamily } from '../../theme';
 export function StatusBadge({ status }) {
     const map = {
         pending: { bg: '#FEF3C7', text: '#92400E', label: 'Pending' },
+        partial: { bg: '#E0F2FE', text: '#075985', label: 'Partial' },
         paid: { bg: colors.brandLight, text: colors.brandDark, label: 'Paid' },
         overdue: { bg: '#FEE2E2', text: '#991B1B', label: 'Overdue' },
         cancelled: { bg: colors.slate100, text: colors.slate600, label: 'Cancelled' },

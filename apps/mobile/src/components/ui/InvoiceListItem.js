@@ -1,13 +1,20 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { CheckCircle2, ChevronRight, Clock, XCircle } from 'lucide-react-native';
 import { format } from 'date-fns';
-import { formatCurrency, getDisplayNumber, isQuotationDocument } from '@waraqah/shared';
+import {
+    formatCurrency,
+    getDisplayNumber,
+    getInvoiceAmountPaid,
+    hasRecordedPayments,
+    isQuotationDocument,
+} from '@waraqah/shared';
 import { colors, fontFamily, fontSize, lineHeight, radii, spacing } from '../../theme';
 import { hapticSelection } from '../../utils/haptics';
 
 const STATUS_META = {
     paid: { label: 'Paid', bg: colors.brandLight, color: colors.brand, Icon: CheckCircle2 },
     pending: { label: 'Pending', bg: '#FFEDD5', color: '#EA580C', Icon: Clock },
+    partial: { label: 'Partial', bg: '#E0F2FE', color: '#0284C7', Icon: Clock },
     overdue: { label: 'Overdue', bg: '#FEE2E2', color: colors.red600, Icon: Clock },
     draft: { label: 'Draft', bg: colors.slate100, color: colors.slate500, Icon: Clock },
     cancelled: { label: 'Cancelled', bg: colors.slate100, color: colors.slate500, Icon: Clock },
@@ -66,7 +73,16 @@ export function InvoiceListItem({ invoice, clientName, onPress, last = false, sh
             </View>
 
             <View style={styles.right}>
-                <Text style={styles.amount}>{formatCurrency(invoice.total || 0, invoice.currency)}</Text>
+                <View style={styles.amountCol}>
+                    <Text style={styles.amount}>
+                        {formatCurrency(invoice.total || 0, invoice.currency)}
+                    </Text>
+                    {hasRecordedPayments(invoice) && invoice.status !== 'paid' ? (
+                        <Text style={styles.paidHint}>
+                            Paid {formatCurrency(getInvoiceAmountPaid(invoice), invoice.currency)}
+                        </Text>
+                    ) : null}
+                </View>
                 <ChevronRight size={18} color={colors.slate300} strokeWidth={2} />
             </View>
         </Pressable>
@@ -154,10 +170,19 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: 2,
     },
+    amountCol: {
+        alignItems: 'flex-end',
+    },
     amount: {
         fontFamily: fontFamily.semibold,
         fontSize: fontSize.sm,
         color: colors.foreground,
         letterSpacing: -0.2,
+    },
+    paidHint: {
+        marginTop: 2,
+        fontFamily: fontFamily.regular,
+        fontSize: 10,
+        color: colors.slate400,
     },
 });

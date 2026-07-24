@@ -96,11 +96,11 @@ export function StatsCardsSkeleton({ count = 3, className = 'grid grid-cols-1 sm
         <div className={className}>
             {Array.from({ length: count }).map((_, i) => (
                 <div key={i} className="stat-card">
-                    <Skeleton className="h-12 w-12 rounded-xl shrink-0" />
-                    <div className="stat-card-body space-y-2 flex-1">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                        <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
                         <Skeleton className="h-3 w-20" />
-                        <Skeleton className="h-7 w-12" />
                     </div>
+                    <Skeleton className="h-6 w-24" />
                 </div>
             ))}
         </div>
@@ -239,14 +239,15 @@ export function DashboardSkeleton() {
     return (
         <LoadingStatus label="Loading dashboard">
             <StatsCardsSkeleton
-                count={4}
-                className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-3 mb-6"
+                count={5}
+                className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6"
             />
             <div className="card mb-6 space-y-3">
                 <Skeleton className="h-4 w-24" />
-                <div className="flex flex-wrap gap-2">
+                <Skeleton className="h-10 w-full rounded-lg" />
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {Array.from({ length: 4 }).map((_, i) => (
-                        <Skeleton key={i} className="h-9 w-32 rounded-lg" />
+                        <Skeleton key={i} className="h-9 w-full rounded-lg" />
                     ))}
                 </div>
             </div>

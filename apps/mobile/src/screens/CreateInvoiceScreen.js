@@ -143,6 +143,14 @@ export function CreateInvoiceScreen({ route, navigation }) {
 
     useEffect(() => {
         if (!editId || !existing) return;
+        if (
+            existing.status === 'paid' ||
+            existing.status === 'cancelled' ||
+            Number(existing.amountPaid) > 0
+        ) {
+            navigation.replace('InvoiceDetail', { id: editId });
+            return;
+        }
         const linked = clients.find((c) => c.id === existing.clientId);
         setForm({
             invoiceNumber: existing.invoiceNumber || '',
@@ -171,7 +179,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
                     ? String(existing.discountValue)
                     : '',
         });
-    }, [editId, existing, clients]);
+    }, [editId, existing, clients, navigation]);
 
     const clearError = (key) => {
         setFieldErrors((prev) => {

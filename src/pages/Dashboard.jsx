@@ -136,18 +136,22 @@ const Dashboard = () => {
                 <InvoiceUsageBanner label={usageLabel} className="mb-4" />
             ) : null}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-3 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
                 {statCards.map((stat) => {
                     const Icon = stat.icon;
                     return (
                         <div key={stat.name} className="stat-card">
-                            <div className={`stat-card-icon ${stat.iconBg}`}>
-                                <Icon className={`h-5 w-5 ${stat.iconColor}`} />
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <div className={`stat-card-icon ${stat.iconBg}`}>
+                                    <Icon className={`h-4 w-4 ${stat.iconColor}`} />
+                                </div>
+                                <p className="text-xs text-zinc-500 font-medium leading-snug truncate">
+                                    {stat.name}
+                                </p>
                             </div>
-                            <div className="stat-card-body">
-                                <p className="text-xs text-zinc-500 font-medium">{stat.name}</p>
-                                <p className="stat-card-value">{stat.value}</p>
-                            </div>
+                            <p className="stat-card-value" title={String(stat.value)}>
+                                {stat.value}
+                            </p>
                         </div>
                     );
                 })}
@@ -164,24 +168,24 @@ const Dashboard = () => {
                         <Plus size={16} />
                         Create
                     </button>
-                    <div className="flex flex-wrap gap-2">
-                        <button type="button" onClick={() => navigate('/clients')} className="btn-secondary">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button type="button" onClick={() => navigate('/clients')} className="btn-secondary w-full justify-center">
                             <Users size={16} />
                             Clients
                         </button>
-                        <button type="button" onClick={() => navigate('/invoices')} className="btn-secondary">
+                        <button type="button" onClick={() => navigate('/invoices')} className="btn-secondary w-full justify-center">
                             <TrendingUp size={16} />
                             Invoices
                         </button>
                         <button
                             type="button"
                             onClick={() => navigate('/quotations')}
-                            className="btn-secondary"
+                            className="btn-secondary w-full justify-center"
                         >
                             <ClipboardList size={16} />
                             Quotations
                         </button>
-                        <button type="button" onClick={() => navigate('/statements')} className="btn-secondary">
+                        <button type="button" onClick={() => navigate('/statements')} className="btn-secondary w-full justify-center">
                             <FileBarChart size={16} />
                             Statements
                             {!premium ? <Crown className="h-3.5 w-3.5 text-amber-500" aria-hidden /> : null}

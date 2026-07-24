@@ -5,6 +5,7 @@ import { useSettings } from '../context/SettingsContext';
 import { Plus, FileText, Search, ArrowUpDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatCurrency } from '../utils/currency';
+import { getInvoiceAmountPaid, hasRecordedPayments } from '@waraqah/shared';
 import { getClientBusiness } from '../utils/clientHelpers';
 import { getDisplayNumber } from '../utils/receiptHelpers';
 import PageHeader from '../components/PageHeader';
@@ -87,7 +88,7 @@ const Invoices = () => {
 
     const filterTabs = useMemo(() => {
         const counts = statusCounts || {};
-        return ['all', 'pending', 'paid', 'overdue', 'cancelled'].map((status) => ({
+        return ['all', 'pending', 'partial', 'paid', 'overdue', 'cancelled'].map((status) => ({
             value: status,
             label: status,
             count: counts[status] ?? 0,
@@ -220,6 +221,16 @@ const Invoices = () => {
                                             <span className="font-medium text-zinc-950 tabular-nums">
                                                 {formatCurrency(invoice.total, invoice.currency)}
                                             </span>
+                                            {hasRecordedPayments(invoice) &&
+                                            invoice.status !== 'paid' ? (
+                                                <p className="text-xs text-zinc-500 mt-0.5 tabular-nums">
+                                                    Paid{' '}
+                                                    {formatCurrency(
+                                                        getInvoiceAmountPaid(invoice),
+                                                        invoice.currency
+                                                    )}
+                                                </p>
+                                            ) : null}
                                         </DataTableCell>
                                         <DataTableCell>
                                             <StatusBadge status={invoice.status} />

@@ -484,31 +484,37 @@ export default function AdminDashboard() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                     <div className="stat-card">
-                        <div className="stat-card-icon bg-brand-light">
-                            <Users className="h-6 w-6 text-brand" aria-hidden />
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="stat-card-icon bg-brand-light">
+                                <Users className="h-4 w-4 text-brand" aria-hidden />
+                            </div>
+                            <p className="text-xs text-zinc-500 font-medium leading-snug truncate">
+                                Total users
+                            </p>
                         </div>
-                        <div className="stat-card-body">
-                            <p className="text-sm text-zinc-500">Total users</p>
-                            <p className="stat-card-value">{stats.total}</p>
-                        </div>
+                        <p className="stat-card-value">{stats.total}</p>
                     </div>
                     <div className="stat-card">
-                        <div className="stat-card-icon bg-amber-50">
-                            <Crown className="h-6 w-6 text-amber-600" aria-hidden />
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="stat-card-icon bg-amber-50">
+                                <Crown className="h-4 w-4 text-amber-600" aria-hidden />
+                            </div>
+                            <p className="text-xs text-zinc-500 font-medium leading-snug truncate">
+                                Premium
+                            </p>
                         </div>
-                        <div className="stat-card-body">
-                            <p className="text-sm text-zinc-500">Premium</p>
-                            <p className="stat-card-value">{stats.premium}</p>
-                        </div>
+                        <p className="stat-card-value">{stats.premium}</p>
                     </div>
                     <div className="stat-card">
-                        <div className="stat-card-icon bg-red-50">
-                            <Ban className="h-6 w-6 text-red-600" aria-hidden />
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="stat-card-icon bg-red-50">
+                                <Ban className="h-4 w-4 text-red-600" aria-hidden />
+                            </div>
+                            <p className="text-xs text-zinc-500 font-medium leading-snug truncate">
+                                Suspended
+                            </p>
                         </div>
-                        <div className="stat-card-body">
-                            <p className="text-sm text-zinc-500">Suspended</p>
-                            <p className="stat-card-value">{stats.suspended}</p>
-                        </div>
+                        <p className="stat-card-value">{stats.suspended}</p>
                     </div>
                 </div>
 

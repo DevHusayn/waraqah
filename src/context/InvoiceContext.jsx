@@ -256,6 +256,27 @@ export const InvoiceProvider = ({ children }) => {
         return mapped;
     };
 
+    const recordInvoicePayment = async (id, payment) => {
+        const updated = await apiFetch(`/invoices/${id}/payments`, {
+            method: 'POST',
+            body: JSON.stringify({
+                amount: payment.amount,
+                method: payment.paymentMethod || payment.method,
+                date: payment.datePaid || payment.date,
+                note: payment.note || '',
+            }),
+        });
+        const mapped = mapInvoice(updated);
+        setDrafts((prev) => prev.filter((inv) => inv.id !== id));
+        setInvoices((prev) => {
+            const exists = prev.some((inv) => inv.id === id);
+            if (!exists) return [mapped, ...prev];
+            return prev.map((inv) => (inv.id === id ? mapped : inv));
+        });
+        await refreshMeta();
+        return mapped;
+    };
+
     const deleteInvoice = async (id) => {
         const wasDraft = drafts.some((inv) => inv.id === id) || invoices.some((inv) => inv.id === id && isDraft(inv));
         await apiFetch(`/invoices/${id}`, { method: 'DELETE' });
@@ -381,6 +402,7 @@ export const InvoiceProvider = ({ children }) => {
         invoiceUsage,
         addInvoice,
         updateInvoice,
+        recordInvoicePayment,
         deleteInvoice,
         sendInvoiceEmailToClient,
         sendPaymentReminderToClient,

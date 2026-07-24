@@ -238,6 +238,27 @@ export function InvoiceProvider({ children }) {
         return mapped;
     };
 
+    const recordInvoicePayment = async (id, payment) => {
+        const updated = await apiFetch(`/invoices/${id}/payments`, {
+            method: 'POST',
+            body: JSON.stringify({
+                amount: payment.amount,
+                method: payment.paymentMethod || payment.method,
+                date: payment.datePaid || payment.date,
+                note: payment.note || '',
+            }),
+        });
+        const mapped = mapInvoice(updated);
+        setDrafts((prev) => prev.filter((inv) => inv.id !== id));
+        setInvoices((prev) => {
+            const exists = prev.some((inv) => inv.id === id);
+            if (!exists) return [mapped, ...prev];
+            return prev.map((inv) => (inv.id === id ? mapped : inv));
+        });
+        if (refreshMeta) await refreshMeta();
+        return mapped;
+    };
+
     const deleteInvoice = async (id) => {
         const wasDraft = drafts.some((inv) => inv.id === id);
         await apiFetch(`/invoices/${id}`, { method: 'DELETE' });
@@ -349,6 +370,7 @@ export function InvoiceProvider({ children }) {
                 productsLoading,
                 addInvoice,
                 updateInvoice,
+                recordInvoicePayment,
                 deleteInvoice,
                 upsertInvoice,
                 addClient,

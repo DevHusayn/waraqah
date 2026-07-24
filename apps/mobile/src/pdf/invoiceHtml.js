@@ -2,7 +2,10 @@ import { format } from 'date-fns';
 import {
     getCurrencySymbol,
     getDocumentNumber,
+    getInvoiceAmountPaid,
+    getInvoiceBalanceDue,
     getPaymentMethodLabel,
+    hasRecordedPayments,
     FREE_PDF_FOOTER_CTA_PREFIX,
     isPremiumUser,
     resolvePdfMode,
@@ -62,6 +65,27 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
         signatureStampHtml = `<div class="sig-stamp-row">${signatureBlock}${stampBlock}</div>`;
     }
 
+    const showPartialPayment =
+        !isReceipt && hasRecordedPayments(invoice) && invoice.status !== 'paid';
+    const amountPaidValue = getInvoiceAmountPaid(invoice);
+    const balanceDueValue = getInvoiceBalanceDue(invoice);
+    const totalsHtml = showPartialPayment
+        ? `<div class="total-row"><span>Subtotal</span><span>${escapeHtml(formatMoney(invoice.subtotal, symbol))}</span></div>
+      <div class="total-row"><span>Tax (${escapeHtml(invoice.taxRate ?? 0)}%)</span><span>${escapeHtml(formatMoney(invoice.tax, symbol))}</span></div>
+      <div class="total-row"><span>Total</span><span>${escapeHtml(formatMoney(invoice.total, symbol))}</span></div>
+      <div class="total-row"><span>Amount paid</span><span>${escapeHtml(formatMoney(amountPaidValue, symbol))}</span></div>
+      <div class="total-row total-bold" style="color:${escapeHtml(brand)}">
+        <span>BALANCE DUE</span>
+        <span>${escapeHtml(formatMoney(balanceDueValue, symbol))}</span>
+      </div>`
+        : `<div class="total-row"><span>Subtotal</span><span>${escapeHtml(formatMoney(invoice.subtotal, symbol))}</span></div>
+      <div class="total-row"><span>Tax (${escapeHtml(invoice.taxRate ?? 0)}%)</span><span>${escapeHtml(formatMoney(invoice.tax, symbol))}</span></div>
+      <div class="total-row total-bold"><span>Total</span><span>${escapeHtml(formatMoney(invoice.total, symbol))}</span></div>
+      <div class="total-row total-bold" style="color:${escapeHtml(brand)}">
+        <span>${isReceipt ? 'TOTAL PAID' : 'TOTAL DUE'}</span>
+        <span>${escapeHtml(formatMoney(invoice.total, symbol))}</span>
+      </div>`;
+
     const body = `
     <div class="brand-bar" style="background:${escapeHtml(brand)}"></div>
     <div class="header">
@@ -109,13 +133,7 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
       <tbody>${itemRows}</tbody>
     </table>
     <div class="totals">
-      <div class="total-row"><span>Subtotal</span><span>${escapeHtml(formatMoney(invoice.subtotal, symbol))}</span></div>
-      <div class="total-row"><span>Tax (${escapeHtml(invoice.taxRate ?? 0)}%)</span><span>${escapeHtml(formatMoney(invoice.tax, symbol))}</span></div>
-      <div class="total-row total-bold"><span>Total</span><span>${escapeHtml(formatMoney(invoice.total, symbol))}</span></div>
-      <div class="total-row total-bold" style="color:${escapeHtml(brand)}">
-        <span>${isReceipt ? 'TOTAL PAID' : 'TOTAL DUE'}</span>
-        <span>${escapeHtml(formatMoney(invoice.total, symbol))}</span>
-      </div>
+      ${totalsHtml}
     </div>
     ${
         invoice?.notes

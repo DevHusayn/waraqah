@@ -2,7 +2,13 @@ import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../../constants/brand';
-import { FREE_PDF_FOOTER_CTA_PREFIX, resolveQuantityColumnLabel } from '@waraqah/shared';
+import {
+    FREE_PDF_FOOTER_CTA_PREFIX,
+    getInvoiceAmountPaid,
+    getInvoiceBalanceDue,
+    hasRecordedPayments,
+    resolveQuantityColumnLabel,
+} from '@waraqah/shared';
 import { getCurrencySymbol } from '../currency';
 import { getClientBusiness } from '../clientHelpers';
 import { isPremiumUser } from '../premium';
@@ -647,7 +653,12 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         margin: { left: pdfContentLeft, right: PAGE_W - pdfContentRight, bottom: FOOTER_ZONE + 4 },
     });
 
-    let currentY = ensureSpace(doc.lastAutoTable.finalY + 10, 48);
+    const mayShowPartialPayment =
+        !isReceiptDoc &&
+        !isQuotationDoc &&
+        hasRecordedPayments(invoice) &&
+        invoice.status !== 'paid';
+    let currentY = ensureSpace(doc.lastAutoTable.finalY + 10, mayShowPartialPayment ? 72 : 48);
     const totalsX = 130;
 
     doc.setFontSize(8);
@@ -684,19 +695,56 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     doc.setLineWidth(0.5);
     doc.line(totalsX, currentY, 195, currentY);
 
-    currentY += 8;
-    doc.setFontSize(9);
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(...textColor);
-    const totalLabel = isReceiptDoc
-        ? 'TOTAL PAID'
-        : isQuotationDoc
-          ? 'ESTIMATED TOTAL'
-          : 'TOTAL DUE';
-    doc.text(totalLabel, totalsX, currentY);
-    doc.setFontSize(12);
-    doc.setTextColor(...primaryColor);
-    doc.text(`${currencySymbol}${formatMoney(invoice.total)}`, 195, currentY, { align: 'right' });
+    const amountPaidValue = getInvoiceAmountPaid(invoice);
+    const balanceDueValue = getInvoiceBalanceDue(invoice);
+
+    if (mayShowPartialPayment) {
+        currentY += 8;
+        doc.setFontSize(8);
+        setPdfBodyFont(doc);
+        doc.setTextColor(...grayColor);
+        doc.text('Total', totalsX, currentY);
+        doc.setTextColor(...textColor);
+        doc.text(`${currencySymbol}${formatMoney(invoice.total)}`, 195, currentY, { align: 'right' });
+
+        currentY += 7;
+        doc.setTextColor(...grayColor);
+        doc.text('Amount paid', totalsX, currentY);
+        doc.setTextColor(...textColor);
+        doc.text(`${currencySymbol}${formatMoney(amountPaidValue)}`, 195, currentY, {
+            align: 'right',
+        });
+
+        currentY += 7;
+        doc.setDrawColor(...lightGray);
+        doc.setLineWidth(0.4);
+        doc.line(totalsX, currentY, 195, currentY);
+
+        currentY += 8;
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(...textColor);
+        doc.text('BALANCE DUE', totalsX, currentY);
+        doc.setFontSize(12);
+        doc.setTextColor(...primaryColor);
+        doc.text(`${currencySymbol}${formatMoney(balanceDueValue)}`, 195, currentY, {
+            align: 'right',
+        });
+    } else {
+        currentY += 8;
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(...textColor);
+        const totalLabel = isReceiptDoc
+            ? 'TOTAL PAID'
+            : isQuotationDoc
+              ? 'ESTIMATED TOTAL'
+              : 'TOTAL DUE';
+        doc.text(totalLabel, totalsX, currentY);
+        doc.setFontSize(12);
+        doc.setTextColor(...primaryColor);
+        doc.text(`${currencySymbol}${formatMoney(invoice.total)}`, 195, currentY, { align: 'right' });
+    }
 
     currentY = drawBottomBoxes(
         doc,

@@ -3,10 +3,15 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
 import {
+    canRecordInvoicePayment,
     formatCurrency,
     getDisplayNumber,
+    getInvoiceAmountPaid,
+    getInvoiceBalanceDue,
+    getInvoicePayments,
     getPaymentMethodLabel,
     getReceiptNumber,
+    hasRecordedPayments,
     isReceipt,
     MARK_PAID_METHODS,
     normalizeInvoiceUnit,
@@ -15,35 +20,60 @@ import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { ConfirmModal } from '../components/Modal';
-import { BottomSheet, Button, PageLoader, StatusBadge } from '../components/ui';
+import { BottomSheet, Button, Input, PageLoader, StatusBadge } from '../components/ui';
 import { colors, fontFamily, fontSize, lineHeight, radii, spacing } from '../theme';
+
+const MONEY_EPS = 0.009;
+
+function amountsMatch(a, b) {
+    return Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) < MONEY_EPS;
+}
 
 export function InvoiceDetailScreen({ route, navigation }) {
     const { id } = route.params;
     const insets = useSafeAreaInsets();
-    const { invoices, clients, updateInvoice, deleteInvoice, loading } = useInvoice();
+    const { invoices, clients, updateInvoice, recordInvoicePayment, deleteInvoice, loading } =
+        useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
     const [pdfLoading, setPdfLoading] = useState(null);
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [confirmCancel, setConfirmCancel] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('bank_transfer');
+    const [paymentAmount, setPaymentAmount] = useState('');
+    const [paidFully, setPaidFully] = useState(true);
     const [saving, setSaving] = useState(false);
     const markPaidSheetRef = useRef(null);
 
     const invoice = useMemo(() => invoices.find((i) => i.id === id), [invoices, id]);
     const client = useMemo(() => clients.find((c) => c.id === invoice?.clientId), [clients, invoice]);
 
+    const balanceDue = invoice ? getInvoiceBalanceDue(invoice) : 0;
+    const amountPaid = invoice ? getInvoiceAmountPaid(invoice) : 0;
+    const paymentHistory = invoice ? getInvoicePayments(invoice) : [];
+
     useEffect(() => {
         if (!loading && !invoice) navigation.goBack();
     }, [loading, invoice, navigation]);
+
+    useEffect(() => {
+        if (invoice) {
+            setPaidFully(true);
+            setPaymentAmount(balanceDue > 0 ? String(balanceDue) : '');
+        }
+    }, [invoice?.id, balanceDue]);
 
     if (loading || !invoice) return <PageLoader />;
 
     const paid = isReceipt(invoice);
     const cancelled = invoice.status === 'cancelled';
-    const canMarkPaid = ['pending', 'overdue'].includes(invoice.status);
-    const canEdit = !paid && !cancelled;
+    const canMarkPaid = canRecordInvoicePayment(invoice);
+    const canEdit = !paid && !cancelled && !hasRecordedPayments(invoice);
+    const canCancel = ['pending', 'partial', 'overdue'].includes(invoice.status);
+
+    const parsedAmount = Number(String(paymentAmount).replace(/,/g, '').trim());
+    const amountNumber = paidFully ? balanceDue : parsedAmount;
+    const isFullPayment = paidFully || amountsMatch(amountNumber, balanceDue);
 
     const handleDownload = async (mode) => {
         if (!client) {
@@ -63,16 +93,26 @@ export function InvoiceDetailScreen({ route, navigation }) {
     };
 
     const handleMarkPaid = async () => {
+        if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
+            showToast('Enter a payment amount greater than zero', 'error');
+            return;
+        }
+        if (amountNumber > balanceDue + 0.009) {
+            showToast(`Amount cannot exceed ${formatCurrency(balanceDue, invoice.currency)}`, 'error');
+            return;
+        }
         setSaving(true);
         try {
-            await updateInvoice(id, {
-                ...invoice,
-                status: 'paid',
+            const updated = await recordInvoicePayment(id, {
+                amount: Math.min(amountNumber, balanceDue),
                 paymentMethod,
-                datePaid: format(new Date(), 'yyyy-MM-dd'),
+                datePaid: new Date().toISOString(),
             });
             markPaidSheetRef.current?.close();
-            showToast('Invoice marked as paid', 'success');
+            showToast(
+                updated.status === 'paid' ? 'Invoice marked as paid' : 'Payment recorded',
+                'success'
+            );
         } catch (err) {
             showToast(err.message, 'error');
         } finally {
@@ -104,6 +144,25 @@ export function InvoiceDetailScreen({ route, navigation }) {
         }
     };
 
+    const openPaymentSheet = () => {
+        setPaidFully(true);
+        setPaymentAmount(balanceDue > 0 ? String(balanceDue) : '');
+        markPaidSheetRef.current?.snapToIndex(0);
+    };
+
+    const handlePaidFullyChange = (on) => {
+        setPaidFully(on);
+        if (on) {
+            setPaymentAmount(balanceDue > 0 ? String(balanceDue) : '');
+        }
+    };
+
+    const handleAmountChange = (value) => {
+        setPaymentAmount(value);
+        const parsed = Number(String(value).replace(/,/g, '').trim());
+        setPaidFully(amountsMatch(parsed, balanceDue));
+    };
+
     return (
         <View style={styles.root}>
             <ScrollView
@@ -120,14 +179,21 @@ export function InvoiceDetailScreen({ route, navigation }) {
                 </View>
 
                 <Text style={styles.amountHero}>
-                    {formatCurrency(invoice.total, invoice.currency)}
+                    {formatCurrency(paid ? invoice.total : balanceDue, invoice.currency)}
                 </Text>
-                <Text style={styles.amountHint}>Total</Text>
+                <Text style={styles.amountHint}>{paid ? 'Total paid' : 'Balance due'}</Text>
 
                 <Text style={styles.section}>Details</Text>
                 <View style={styles.group}>
                     <MetaRow label="Issue date" value={format(new Date(invoice.date), 'MMM d, yyyy')} />
                     <MetaRow label="Due date" value={format(new Date(invoice.dueDate), 'MMM d, yyyy')} />
+                    <MetaRow label="Total" value={formatCurrency(invoice.total, invoice.currency)} />
+                    {amountPaid > 0 || paid ? (
+                        <MetaRow
+                            label="Amount paid"
+                            value={formatCurrency(amountPaid, invoice.currency)}
+                        />
+                    ) : null}
                     {paid ? (
                         <>
                             <MetaRow
@@ -137,10 +203,37 @@ export function InvoiceDetailScreen({ route, navigation }) {
                             <MetaRow label="Payment" value={getPaymentMethodLabel(invoice.paymentMethod)} />
                             <MetaRow label="Receipt #" value={getReceiptNumber(invoice)} last />
                         </>
+                    ) : amountPaid > 0 ? (
+                        <MetaRow
+                            label="Balance due"
+                            value={formatCurrency(balanceDue, invoice.currency)}
+                            bold
+                            last
+                        />
                     ) : (
                         <View style={styles.lastPad} />
                     )}
                 </View>
+
+                {paymentHistory.length > 0 ? (
+                    <>
+                        <Text style={styles.section}>Payment history</Text>
+                        <View style={styles.group}>
+                            {paymentHistory.map((payment, i, arr) => (
+                                <MetaRow
+                                    key={`${payment.date || 'p'}-${i}`}
+                                    label={
+                                        payment.date
+                                            ? `${format(new Date(payment.date), 'MMM d, yyyy')} · ${getPaymentMethodLabel(payment.method)}`
+                                            : getPaymentMethodLabel(payment.method)
+                                    }
+                                    value={formatCurrency(payment.amount, invoice.currency)}
+                                    last={i === arr.length - 1}
+                                />
+                            ))}
+                        </View>
+                    </>
+                ) : null}
 
                 <Text style={styles.section}>Line items</Text>
                 <View style={styles.group}>
@@ -182,22 +275,30 @@ export function InvoiceDetailScreen({ route, navigation }) {
                     </>
                 ) : null}
 
-                {canEdit ? (
+                {canEdit || canCancel ? (
                     <View style={styles.dangerZone}>
-                        <Button title="Cancel invoice" variant="secondary" onPress={() => setConfirmCancel(true)} />
-                        <Button
-                            title="Delete invoice"
-                            variant="danger"
-                            onPress={() => setConfirmDelete(true)}
-                            style={{ marginTop: spacing.sm }}
-                        />
+                        {canCancel ? (
+                            <Button
+                                title="Cancel invoice"
+                                variant="secondary"
+                                onPress={() => setConfirmCancel(true)}
+                            />
+                        ) : null}
+                        {canEdit ? (
+                            <Button
+                                title="Delete invoice"
+                                variant="danger"
+                                onPress={() => setConfirmDelete(true)}
+                                style={{ marginTop: spacing.sm }}
+                            />
+                        ) : null}
                     </View>
                 ) : null}
             </ScrollView>
 
             <View style={[styles.actionBar, { paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
                 {canMarkPaid ? (
-                    <Button title="Mark paid" onPress={() => markPaidSheetRef.current?.snapToIndex(0)} style={styles.actionBtn} />
+                    <Button title="Record payment" onPress={openPaymentSheet} style={styles.actionBtn} />
                 ) : null}
                 <Button
                     title="Share"
@@ -216,8 +317,42 @@ export function InvoiceDetailScreen({ route, navigation }) {
                 ) : null}
             </View>
 
-            <BottomSheet ref={markPaidSheetRef} snapPoints={['48%']}>
-                <Text style={styles.sheetTitle}>Payment method</Text>
+            <BottomSheet ref={markPaidSheetRef} snapPoints={['72%']}>
+                <Text style={styles.sheetTitle}>Record payment</Text>
+                <Text style={styles.sheetHint}>
+                    Balance due {formatCurrency(balanceDue, invoice.currency)}
+                </Text>
+
+                <Text style={styles.fieldLabel}>Amount paid</Text>
+                <Input
+                    value={paidFully ? String(balanceDue) : paymentAmount}
+                    onChangeText={handleAmountChange}
+                    keyboardType="decimal-pad"
+                    placeholder={String(balanceDue)}
+                    editable={!paidFully}
+                    style={{ opacity: paidFully ? 0.7 : 1 }}
+                />
+                <Pressable
+                    onPress={() => handlePaidFullyChange(!paidFully)}
+                    style={styles.checkboxRow}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: paidFully }}
+                    accessibilityLabel="Paid fully"
+                >
+                    <View style={[styles.checkbox, paidFully && styles.checkboxChecked]}>
+                        {paidFully ? <Text style={styles.checkboxMark}>✓</Text> : null}
+                    </View>
+                    <Text style={styles.checkboxLabel}>Paid fully</Text>
+                </Pressable>
+                <Text style={styles.sheetHint}>
+                    {Number.isFinite(amountNumber) && amountNumber > 0
+                        ? `Balance after this payment: ${formatCurrency(
+                              Math.max(0, Math.round((balanceDue - amountNumber) * 100) / 100),
+                              invoice.currency
+                          )}`
+                        : 'Enter the amount paid'}
+                </Text>
+                <Text style={[styles.fieldLabel, { marginTop: spacing.md }]}>Payment method</Text>
                 {MARK_PAID_METHODS.map((m) => (
                     <Pressable
                         key={m.value}
@@ -227,7 +362,12 @@ export function InvoiceDetailScreen({ route, navigation }) {
                         <Text style={styles.methodText}>{m.label}</Text>
                     </Pressable>
                 ))}
-                <Button title="Confirm payment" onPress={handleMarkPaid} loading={saving} style={{ marginTop: spacing.lg }} />
+                <Button
+                    title={isFullPayment ? 'Record full payment' : 'Record payment'}
+                    onPress={handleMarkPaid}
+                    loading={saving}
+                    style={{ marginTop: spacing.lg }}
+                />
             </BottomSheet>
 
             <ConfirmModal
@@ -328,6 +468,8 @@ const styles = StyleSheet.create({
         fontFamily: fontFamily.regular,
         fontSize: fontSize.md,
         color: colors.muted,
+        flex: 1,
+        paddingRight: spacing.sm,
     },
     metaValue: {
         fontFamily: fontFamily.medium,
@@ -396,7 +538,52 @@ const styles = StyleSheet.create({
         fontFamily: fontFamily.semibold,
         fontSize: fontSize.lg,
         color: colors.foreground,
-        marginBottom: spacing.lg,
+        marginBottom: spacing.xs,
+    },
+    sheetHint: {
+        fontFamily: fontFamily.regular,
+        fontSize: fontSize.sm,
+        color: colors.muted,
+        marginBottom: spacing.md,
+    },
+    checkboxRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        marginTop: spacing.md,
+        marginBottom: spacing.sm,
+        alignSelf: 'flex-start',
+    },
+    checkbox: {
+        width: 20,
+        height: 20,
+        borderRadius: 4,
+        borderWidth: 1.5,
+        borderColor: colors.slate300,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.surface,
+    },
+    checkboxChecked: {
+        borderColor: colors.brand,
+        backgroundColor: colors.brand,
+    },
+    checkboxMark: {
+        color: '#fff',
+        fontSize: 12,
+        fontFamily: fontFamily.bold,
+        lineHeight: 14,
+    },
+    checkboxLabel: {
+        fontFamily: fontFamily.medium,
+        fontSize: fontSize.sm,
+        color: colors.foreground,
+    },
+    fieldLabel: {
+        fontFamily: fontFamily.medium,
+        fontSize: fontSize.sm,
+        color: colors.foreground,
+        marginBottom: spacing.sm,
     },
     method: {
         paddingVertical: spacing.lg,

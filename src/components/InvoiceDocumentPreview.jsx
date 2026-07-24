@@ -1,5 +1,11 @@
 import { format } from 'date-fns';
-import { FREE_PDF_FOOTER_CTA_PREFIX, resolveQuantityColumnLabel } from '@waraqah/shared';
+import {
+    FREE_PDF_FOOTER_CTA_PREFIX,
+    getInvoiceAmountPaid,
+    getInvoiceBalanceDue,
+    hasRecordedPayments,
+    resolveQuantityColumnLabel,
+} from '@waraqah/shared';
 import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../constants/brand';
 import { formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
@@ -22,6 +28,7 @@ function lightenHex(hex, amount = 0.88) {
 const STATUS_STYLES = {
     paid: 'bg-green-500',
     pending: 'bg-yellow-500',
+    partial: 'bg-sky-500',
     overdue: 'bg-red-500',
     cancelled: 'bg-zinc-400',
     draft: 'bg-zinc-400',
@@ -87,7 +94,18 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
     const termsText = isQuotation ? invoice?.terms?.trim() || '' : '';
     const quantityColumnLabel = resolveQuantityColumnLabel(invoice?.items).toUpperCase();
     const docTitle = isReceipt ? 'RECEIPT' : isQuotation ? 'QUOTATION' : 'INVOICE';
-    const totalLabel = isReceipt ? 'TOTAL PAID' : isQuotation ? 'ESTIMATED TOTAL' : 'TOTAL DUE';
+    const showPartialPayment =
+        !isReceipt && !isQuotation && hasRecordedPayments(invoice) && invoice?.status !== 'paid';
+    const amountPaidValue = getInvoiceAmountPaid(invoice);
+    const balanceDueValue = getInvoiceBalanceDue(invoice);
+    const totalLabel = isReceipt
+        ? 'TOTAL PAID'
+        : isQuotation
+          ? 'ESTIMATED TOTAL'
+          : showPartialPayment
+            ? 'BALANCE DUE'
+            : 'TOTAL DUE';
+    const emphasizedTotal = showPartialPayment ? balanceDueValue : invoice.total;
 
     const paymentLines = [];
     if (showPaymentBox) {
@@ -283,12 +301,35 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                                 {formatCurrency(invoice.tax, invoice.currency)}
                             </dd>
                         </div>
-                        <div className="flex justify-between gap-4 pt-2 border-t border-zinc-200">
-                            <dt className="font-bold text-zinc-800">{totalLabel}</dt>
-                            <dd className="text-lg font-bold" style={{ color: brandColor }}>
-                                {formatCurrency(invoice.total, invoice.currency)}
-                            </dd>
-                        </div>
+                        {showPartialPayment ? (
+                            <>
+                                <div className="flex justify-between gap-4 pt-2 border-t border-zinc-200">
+                                    <dt className="text-zinc-500">Total</dt>
+                                    <dd className="font-bold text-zinc-800">
+                                        {formatCurrency(invoice.total, invoice.currency)}
+                                    </dd>
+                                </div>
+                                <div className="flex justify-between gap-4">
+                                    <dt className="text-zinc-500">Amount paid</dt>
+                                    <dd className="font-bold text-zinc-800">
+                                        {formatCurrency(amountPaidValue, invoice.currency)}
+                                    </dd>
+                                </div>
+                                <div className="flex justify-between gap-4 pt-2 border-t border-zinc-200">
+                                    <dt className="font-bold text-zinc-800">{totalLabel}</dt>
+                                    <dd className="text-lg font-bold" style={{ color: brandColor }}>
+                                        {formatCurrency(emphasizedTotal, invoice.currency)}
+                                    </dd>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="flex justify-between gap-4 pt-2 border-t border-zinc-200">
+                                <dt className="font-bold text-zinc-800">{totalLabel}</dt>
+                                <dd className="text-lg font-bold" style={{ color: brandColor }}>
+                                    {formatCurrency(emphasizedTotal, invoice.currency)}
+                                </dd>
+                            </div>
+                        )}
                     </dl>
                 </div>
 

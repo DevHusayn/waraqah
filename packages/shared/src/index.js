@@ -13,6 +13,7 @@ export * from './invoiceTotals.js';
 export * from './invoiceHelpers.js';
 export * from './invoiceUnits.js';
 export * from './receiptHelpers.js';
+export * from './invoicePayments.js';
 export * from './documentHelpers.js';
 export * from './monthlyStatement.js';
 export * from './pricing.js';

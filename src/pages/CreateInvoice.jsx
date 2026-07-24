@@ -152,7 +152,11 @@ const CreateInvoice = () => {
         let cancelled = false;
 
         const applyInvoiceToForm = (invoice) => {
-            if (invoice.status === 'paid' || invoice.status === 'cancelled') {
+            if (
+                invoice.status === 'paid' ||
+                invoice.status === 'cancelled' ||
+                Number(invoice.amountPaid) > 0
+            ) {
                 navigate(`/invoices/${id}`, { replace: true });
                 return;
             }
