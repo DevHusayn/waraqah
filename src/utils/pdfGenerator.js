@@ -5,3 +5,11 @@ export const generatePDF = generatePdfWithTemplate;
 export async function generateInvoicePdfBlob(invoice, client, businessInfo, options = {}) {
     return generatePdfWithTemplate(invoice, client, businessInfo, { ...options, output: 'blob' });
 }
+
+export async function generateQuotationPdfBlob(quotation, client, businessInfo, options = {}) {
+    return generatePdfWithTemplate(quotation, client, businessInfo, {
+        ...options,
+        mode: options.mode || 'quotation',
+        output: 'blob',
+    });
+}

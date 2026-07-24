@@ -1,6 +1,6 @@
 # Waraqah
 
-Professional invoicing for freelancers and businesses in Nigeria — create invoices, manage clients and products, export PDFs, and track payments. Includes free and premium tiers with Paystack subscriptions.
+Professional quotations and invoicing for freelancers and businesses in Nigeria — create estimates and invoices, convert accepted quotes, manage clients and products, export PDFs, and track payments. Includes free and premium tiers with Paystack subscriptions.
 
 **Stack:** React 18 + Vite (web), Express + MongoDB (API), Expo (mobile app in `apps/mobile`).
 
@@ -9,10 +9,11 @@ Professional invoicing for freelancers and businesses in Nigeria — create invo
 ## Features
 
 - **Auth** — Register, login, forgot/reset password (JWT)
+- **Quotations** — Create, send, accept/reject, public share links, convert to invoice
 - **Invoices** — Create, edit, drafts, statuses (pending / paid / overdue / cancelled), receipts
 - **Clients & products** — CRUD with validation
-- **Dashboard** — Revenue, pending amounts, recent invoices, overdue alerts
-- **PDF export** — Branded invoices and receipts (premium: logo, stamp, signature)
+- **Dashboard** — Revenue, pending amounts, recent documents, overdue alerts
+- **PDF export** — Branded quotations, invoices, and receipts (premium: logo, stamp, signature)
 - **Settings** — Company profile, bank details, branding, plan & billing history
 - **Premium** — Paystack subscription (launch price **₦2,000/month**; list price ₦5,000)
 - **Admin** — User management (suspend, plan override)

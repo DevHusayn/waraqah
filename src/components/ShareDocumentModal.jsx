@@ -34,23 +34,24 @@ export default function ShareDocumentModal({
                         <Share2 size={18} aria-hidden />
                     </div>
                     <h2 id="share-doc-modal-title" className="text-base font-semibold text-zinc-900">
-                        Invoice ready to share
+                        {docLabel.charAt(0).toUpperCase() + docLabel.slice(1)} ready to share
                     </h2>
                     <p id="share-doc-modal-message" className="mt-1.5 text-sm text-zinc-600 leading-relaxed">
                         {docNumber ? (
                             <span className="font-medium text-zinc-900">{docNumber}</span>
                         ) : (
-                            'Your invoice'
+                            `Your ${docLabel}`
                         )}
                         {clientName ? ` for ${clientName}` : ''} has been saved.
                     </p>
                     {!canEmail ? (
                         <p className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                            Add a client email to send this invoice by email.
+                            Add a client email to send this {docLabel} by email.
                         </p>
                     ) : clientAlreadyEmailed ? (
                         <p className="mt-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-                            Invoice already emailed to {clientEmail}.
+                            {docLabel.charAt(0).toUpperCase() + docLabel.slice(1)} already emailed to{' '}
+                            {clientEmail}.
                         </p>
                     ) : null}
                 </div>

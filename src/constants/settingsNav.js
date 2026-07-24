@@ -17,7 +17,7 @@ export const SETTINGS_INDEX = [
         title: 'Plan and Billing',
         to: '/settings/plan-billing',
         icon: Crown,
-        description: 'Subscription, invoice limits, and billing history',
+        description: 'Subscription, document limits, and billing history',
     },
     {
         title: 'Terms and Conditions',
@@ -58,18 +58,4 @@ export const BUSINESS_SETTINGS_INDEX = [
         icon: Palette,
         description: 'Brand color, logo, and PDF appearance',
     },
-];
-
-export const SETTINGS_SIDEBAR = [
-    { type: 'link', title: 'Overview', to: '/settings' },
-    { type: 'group', title: 'Business Settings', to: '/settings/business', icon: Building2 },
-    ...BUSINESS_SETTINGS_INDEX.map((item) => ({
-        type: 'sublink',
-        ...item,
-        parent: '/settings/business',
-    })),
-    ...SETTINGS_INDEX.filter((item) => item.to !== '/settings/business').map((item) => ({
-        type: 'link',
-        ...item,
-    })),
 ];

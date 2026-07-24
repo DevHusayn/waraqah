@@ -15,7 +15,7 @@ export function WelcomeScreen({ navigation }) {
                     <WaraqahLogo size="lg" />
                     <Text style={styles.tagline}>{APP_TAGLINE}</Text>
                     <Text style={styles.subtitle}>
-                        Create invoices, track payments, and grow your business — designed for how you work on mobile.
+                        Create quotations and invoices, track payments, and grow your business — designed for how you work on mobile.
                     </Text>
                 </Animated.View>
             </View>

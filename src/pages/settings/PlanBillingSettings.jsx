@@ -22,7 +22,7 @@ export default function PlanBillingSettings() {
     return (
         <SettingsPageShell
             title="Plan and Billing"
-            subtitle="Subscription status, invoice limits, and billing history"
+            subtitle="Subscription status, document limits, and billing history"
             backTo="/settings"
             backLabel="Settings"
             breadcrumbs={[

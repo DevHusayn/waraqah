@@ -216,8 +216,25 @@ export function InvoiceProvider({ children }) {
             body: JSON.stringify(updatedInvoice),
         });
         const mapped = mapInvoice(updated);
-        setInvoices((prev) => prev.map((inv) => (inv.id === id ? mapped : inv)));
-        setDrafts((prev) => prev.map((inv) => (inv.id === id ? mapped : inv)));
+        const stillDraft = isDraft(mapped);
+
+        if (stillDraft) {
+            setDrafts((prev) => {
+                const exists = prev.some((inv) => inv.id === id);
+                if (!exists) return [mapped, ...prev];
+                return prev.map((inv) => (inv.id === id ? mapped : inv));
+            });
+            setInvoices((prev) => prev.filter((inv) => inv.id !== id));
+        } else {
+            setDrafts((prev) => prev.filter((inv) => inv.id !== id));
+            setInvoices((prev) => {
+                const exists = prev.some((inv) => inv.id === id);
+                if (!exists) return [mapped, ...prev];
+                return prev.map((inv) => (inv.id === id ? mapped : inv));
+            });
+        }
+
+        if (refreshMeta) await refreshMeta();
         return mapped;
     };
 
@@ -231,6 +248,17 @@ export function InvoiceProvider({ children }) {
             await refreshMeta();
         }
     };
+
+    const upsertInvoice = useCallback((record) => {
+        if (!record) return;
+        const mapped = mapInvoice(record);
+        setInvoices((prev) => {
+            const exists = prev.some((inv) => inv.id === mapped.id);
+            if (!exists) return [mapped, ...prev];
+            return prev.map((inv) => (inv.id === mapped.id ? mapped : inv));
+        });
+        invoicesFetchedRef.current = true;
+    }, []);
 
     const addClient = async (client) => {
         const created = await apiFetch('/clients', {
@@ -322,6 +350,7 @@ export function InvoiceProvider({ children }) {
                 addInvoice,
                 updateInvoice,
                 deleteInvoice,
+                upsertInvoice,
                 addClient,
                 updateClient,
                 deleteClient,

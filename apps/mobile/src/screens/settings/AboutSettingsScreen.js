@@ -4,11 +4,13 @@ import Svg, { Path } from 'react-native-svg';
 import { Card } from '../../components/ui';
 import {
     APP_DESCRIPTION,
+    APP_DOMAIN,
     APP_NAME,
     APP_SOCIAL_LINKS,
     APP_SUPPORT_EMAIL,
     APP_TAGLINE,
     APP_VERSION,
+    APP_WEBSITE_URL,
 } from '../../constants/brand';
 import { colors, fontFamily, fontSize, spacing } from '../../theme';
 
@@ -42,8 +44,11 @@ export function AboutSettingsScreen() {
                 <Text style={styles.link} onPress={() => Linking.openURL(`mailto:${APP_SUPPORT_EMAIL}`)}>
                     {APP_SUPPORT_EMAIL}
                 </Text>
-                <Text style={styles.label}>Follow us</Text>
-                <View style={styles.socialRow}>
+                <Text style={styles.label}>Website</Text>
+                <Text style={styles.link} onPress={() => Linking.openURL(APP_WEBSITE_URL)}>
+                    {APP_DOMAIN}
+                </Text>
+                <Text style={styles.label}>Follow us</Text>                <View style={styles.socialRow}>
                     {APP_SOCIAL_LINKS.map(({ id, label, url }) => {
                         const Icon = SOCIAL_ICONS[id];
                         return (

@@ -5,7 +5,12 @@ import {
 
 export function buildInvoiceShareMessage(invoice, client, businessInfo, mode = 'auto') {
     const resolvedMode = resolvePdfMode(invoice, mode);
-    const docKind = resolvedMode === 'receipt' ? 'receipt' : 'invoice';
+    const docKind =
+        resolvedMode === 'receipt'
+            ? 'receipt'
+            : resolvedMode === 'quotation'
+              ? 'quotation'
+              : 'invoice';
     const docNumber = getDocumentNumber(invoice, resolvedMode);
     const businessName = businessInfo?.name?.trim() || 'Our business';
     const clientName = client?.name?.trim() || 'there';

@@ -9,7 +9,7 @@ export const TERMS_SECTIONS = [
     },
     {
         title: 'Service description',
-        body: `${APP_NAME} provides invoicing, client management, and related business tools. Features may change as the product evolves. We strive to maintain reliable service but do not guarantee uninterrupted availability.`,
+        body: `${APP_NAME} provides quotations, invoicing, client management, and related business tools. Features may change as the product evolves. We strive to maintain reliable service but do not guarantee uninterrupted availability.`,
     },
     {
         title: 'Accounts and security',
@@ -44,11 +44,11 @@ export const PRIVACY_SECTIONS = [
     },
     {
         title: 'Information we collect',
-        body: 'We collect information you provide directly, including your name, email address, business details, bank account information for invoices, client and product records, invoice data, and payment-related information when you subscribe to Premium. If you sign in with Google, we receive basic profile information from that provider. We also collect technical data such as IP address, browser type, and usage logs needed to operate and secure the service.',
+        body: 'We collect information you provide directly, including your name, email address, business details, bank account information for invoices, client and product records, quotation and invoice data, and payment-related information when you subscribe to Premium. If you sign in with Google, we receive basic profile information from that provider. We also collect technical data such as IP address, browser type, and usage logs needed to operate and secure the service.',
     },
     {
         title: 'How we use your information',
-        body: 'We use your information to create and manage your account, generate and deliver invoices and receipts, process subscriptions, send transactional emails (verification, password reset, invoice delivery), provide customer support, improve the product, and comply with legal obligations.',
+        body: 'We use your information to create and manage your account, generate and deliver quotations, invoices, and receipts, process subscriptions, send transactional emails (verification, password reset, quotation and invoice delivery), provide customer support, improve the product, and comply with legal obligations.',
     },
     {
         title: 'Legal basis and your rights',

@@ -59,22 +59,31 @@ function drawStatusBadge(doc, status, x, y, primaryColor) {
         pending: [234, 179, 8],
         overdue: [239, 68, 68],
         cancelled: [156, 163, 175],
+        draft: [156, 163, 175],
+        sent: [14, 165, 233],
+        accepted: [34, 197, 94],
+        rejected: [239, 68, 68],
+        expired: [249, 115, 22],
+        converted: [139, 92, 246],
     };
     const label = (status || 'pending').toUpperCase();
     const color = statusColors[status] || statusColors.pending;
-    doc.setFillColor(...color);
-    doc.roundedRect(x - 22, y - 4, 24, 7, 1.5, 1.5, 'F');
     doc.setFontSize(6.5);
     doc.setFont(undefined, 'bold');
+    const badgeW = Math.max(24, doc.getTextWidth(label) + 8);
+    doc.setFillColor(...color);
+    doc.roundedRect(x - badgeW + 2, y - 4, badgeW, 7, 1.5, 1.5, 'F');
     doc.setTextColor(255, 255, 255);
-    doc.text(label, x - 10, y + 0.5, { align: 'center' });
+    doc.text(label, x - badgeW / 2 + 2, y + 0.5, { align: 'center' });
 }
 
-function drawInvoiceTitleBlock(doc, docNumber, isReceiptDoc, primaryColor, lightPrimary, textColor) {
+function drawInvoiceTitleBlock(doc, docNumber, mode, primaryColor, lightPrimary, textColor) {
+    const title =
+        mode === 'receipt' ? 'RECEIPT' : mode === 'quotation' ? 'QUOTATION' : 'INVOICE';
     doc.setFontSize(26);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(...textColor);
-    doc.text(isReceiptDoc ? 'RECEIPT' : 'INVOICE', 195, 20, { align: 'right' });
+    doc.text(title, 195, 20, { align: 'right' });
 
     const numberText = `#${String(docNumber)}`;
     doc.setFontSize(11);
@@ -92,15 +101,19 @@ function drawBillToAndDetails(
     doc,
     client,
     invoice,
-    isReceiptDoc,
+    mode,
     y,
     primaryColor,
     textColor,
     grayColor,
     lightPrimary
 ) {
+    const isReceiptDoc = mode === 'receipt';
+    const isQuotationDoc = mode === 'quotation';
+    const hasValidUntil = Boolean(invoice.validUntil);
     const hasDueDate = Boolean(invoice.dueDate);
-    const detailsHeight = isReceiptDoc ? 46 : hasDueDate ? 38 : 28;
+    const hasSecondaryDate = isQuotationDoc ? hasValidUntil : hasDueDate;
+    const detailsHeight = isReceiptDoc ? 46 : hasSecondaryDate ? 38 : 28;
     const boxH = Math.max(36, detailsHeight);
 
     doc.setFillColor(...lightPrimary);
@@ -173,7 +186,17 @@ function drawBillToAndDetails(
         doc.setFont(undefined, 'bold');
         doc.setTextColor(...textColor);
         doc.text(getPaymentMethodLabel(invoice.paymentMethod), 190, y + 38, { align: 'right' });
-    } else if (hasDueDate) {
+    } else if (isQuotationDoc && hasValidUntil) {
+        const validUntil = format(new Date(invoice.validUntil), 'MMM dd, yyyy');
+        doc.setFontSize(7);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(...grayColor);
+        doc.text('VALID UNTIL', 111, y + 28);
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(...textColor);
+        doc.text(validUntil, 190, y + 28, { align: 'right' });
+    } else if (!isQuotationDoc && hasDueDate) {
         const dueDate = format(new Date(invoice.dueDate), 'MMM dd, yyyy');
         doc.setFontSize(7);
         doc.setFont(undefined, 'bold');
@@ -243,85 +266,117 @@ function drawBottomBoxes(
     textColor,
     lightGray,
     ensureSpace,
-    isReceiptDoc
+    mode
 ) {
-    const hasPayment = !isReceiptDoc && hasPaymentDetails(businessInfo);
+    const isReceiptDoc = mode === 'receipt';
+    const isQuotationDoc = mode === 'quotation';
+    const hasPayment = !isReceiptDoc && !isQuotationDoc && hasPaymentDetails(businessInfo);
     const notesText = invoice.notes?.trim() || '';
     const hasNotes = Boolean(notesText);
+    const termsText = isQuotationDoc ? invoice.terms?.trim() || '' : '';
+    const hasTerms = Boolean(termsText);
 
-    if (!hasPayment && !hasNotes) {
-        return startY;
+    let y = startY;
+
+    if (hasPayment || hasNotes) {
+        const notesLines = hasNotes ? doc.splitTextToSize(notesText, hasPayment ? 78 : 168) : [];
+        const paymentLines = [];
+        if (hasPayment) {
+            if (businessInfo.paymentBankName?.trim()) {
+                paymentLines.push(`Bank Name: ${businessInfo.paymentBankName.trim()}`);
+            }
+            if (businessInfo.paymentAccountName?.trim()) {
+                paymentLines.push(`Account Name: ${businessInfo.paymentAccountName.trim()}`);
+            }
+            if (businessInfo.paymentAccountNumber?.trim()) {
+                paymentLines.push(`Account Number: ${businessInfo.paymentAccountNumber.trim()}`);
+            }
+            if (businessInfo.paymentInstructions?.trim()) {
+                paymentLines.push(businessInfo.paymentInstructions.trim());
+            }
+        }
+
+        const boxH = Math.max(
+            28,
+            hasPayment ? 16 + paymentLines.length * 4 : 0,
+            hasNotes ? 16 + notesLines.length * 3.8 : 0
+        );
+        y = ensureSpace(y, boxH + 8);
+
+        if (hasPayment) {
+            doc.setDrawColor(...lightGray);
+            doc.setLineWidth(0.4);
+            doc.roundedRect(15, y, 88, boxH, 2, 2, 'S');
+
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(...primaryColor);
+            doc.text('PAYMENT INFORMATION', 19, y + 7);
+
+            doc.setFontSize(7.5);
+            setPdfBodyFont(doc);
+            doc.setTextColor(...grayColor);
+            let py = y + 13;
+            for (const line of paymentLines) {
+                doc.text(line, 19, py);
+                py += 4;
+            }
+        }
+
+        if (hasNotes) {
+            const notesX = hasPayment ? 107 : 15;
+            const notesW = hasPayment ? 88 : 180;
+            doc.setDrawColor(...lightGray);
+            doc.roundedRect(notesX, y, notesW, boxH, 2, 2, 'S');
+
+            doc.setFontSize(8);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(...primaryColor);
+            doc.text('NOTES', notesX + 4, y + 7);
+
+            doc.setFontSize(7.5);
+            setPdfBodyFont(doc);
+            doc.setTextColor(...grayColor);
+            let ny = y + 13;
+            for (const line of notesLines) {
+                doc.text(line, notesX + 4, ny);
+                ny += 3.8;
+            }
+        }
+
+        y += boxH + 6;
     }
 
-    const notesLines = hasNotes ? doc.splitTextToSize(notesText, hasPayment ? 78 : 168) : [];
-    const paymentLines = [];
-    if (hasPayment) {
-        if (businessInfo.paymentBankName?.trim()) {
-            paymentLines.push(`Bank Name: ${businessInfo.paymentBankName.trim()}`);
-        }
-        if (businessInfo.paymentAccountName?.trim()) {
-            paymentLines.push(`Account Name: ${businessInfo.paymentAccountName.trim()}`);
-        }
-        if (businessInfo.paymentAccountNumber?.trim()) {
-            paymentLines.push(`Account Number: ${businessInfo.paymentAccountNumber.trim()}`);
-        }
-        if (businessInfo.paymentInstructions?.trim()) {
-            paymentLines.push(businessInfo.paymentInstructions.trim());
-        }
-    }
+    if (hasTerms) {
+        const termsLines = doc.splitTextToSize(termsText, 168);
+        const termsBoxH = Math.max(28, 16 + termsLines.length * 3.8);
+        y = ensureSpace(y, termsBoxH + 8);
 
-    const boxH = Math.max(
-        28,
-        hasPayment ? 16 + paymentLines.length * 4 : 0,
-        hasNotes ? 16 + notesLines.length * 3.8 : 0
-    );
-    let y = ensureSpace(startY, boxH + 8);
-
-    if (hasPayment) {
         doc.setDrawColor(...lightGray);
         doc.setLineWidth(0.4);
-        doc.roundedRect(15, y, 88, boxH, 2, 2, 'S');
+        doc.roundedRect(15, y, 180, termsBoxH, 2, 2, 'S');
 
         doc.setFontSize(8);
         doc.setFont(undefined, 'bold');
         doc.setTextColor(...primaryColor);
-        doc.text('PAYMENT INFORMATION', 19, y + 7);
+        doc.text('TERMS & CONDITIONS', 19, y + 7);
 
         doc.setFontSize(7.5);
         setPdfBodyFont(doc);
         doc.setTextColor(...grayColor);
-        let py = y + 13;
-        for (const line of paymentLines) {
-            doc.text(line, 19, py);
-            py += 4;
+        let ty = y + 13;
+        for (const line of termsLines) {
+            doc.text(line, 19, ty);
+            ty += 3.8;
         }
+
+        y += termsBoxH + 6;
     }
 
-    if (hasNotes) {
-        const notesX = hasPayment ? 107 : 15;
-        const notesW = hasPayment ? 88 : 180;
-        doc.setDrawColor(...lightGray);
-        doc.roundedRect(notesX, y, notesW, boxH, 2, 2, 'S');
-
-        doc.setFontSize(8);
-        doc.setFont(undefined, 'bold');
-        doc.setTextColor(...primaryColor);
-        doc.text('NOTES', notesX + 4, y + 7);
-
-        doc.setFontSize(7.5);
-        setPdfBodyFont(doc);
-        doc.setTextColor(...grayColor);
-        let ny = y + 13;
-        for (const line of notesLines) {
-            doc.text(line, notesX + 4, ny);
-            ny += 3.8;
-        }
-    }
-
-    return y + boxH + 6;
+    return y;
 }
 
-function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayColor) {
+function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayColor, mode = 'invoice') {
     doc.setDrawColor(229, 231, 235);
     doc.setLineWidth(0.5);
     doc.line(15, footerY - 4, 195, footerY - 4);
@@ -331,12 +386,13 @@ function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayC
 
     if (premium) {
         doc.setTextColor(...grayColor);
-        doc.text(
-            `Thank you for doing business with ${String(businessInfo.name || 'us')}.`,
-            105,
-            footerY + 2,
-            { align: 'center' }
-        );
+        const businessName = String(businessInfo.name || 'us');
+        const thankYou =
+            mode === 'quotation'
+                ? `Thank you for considering ${businessName}. We look forward to doing business with you.`
+                : `Thank you for doing business with ${businessName}.`;
+        const thankYouLines = doc.splitTextToSize(thankYou, 170);
+        doc.text(thankYouLines, 105, footerY + 2, { align: 'center' });
         return null;
     }
 
@@ -442,6 +498,7 @@ async function drawSignatureStampBlock(
 export async function generateStandardPdf(invoice, client, businessInfo, options = {}) {
     const mode = resolvePdfMode(invoice, options.mode);
     const isReceiptDoc = mode === 'receipt';
+    const isQuotationDoc = mode === 'quotation';
 
     if (!invoice || !client || !businessInfo) {
         throw new Error('Missing required data for PDF generation');
@@ -468,8 +525,10 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
             maximumFractionDigits: 2,
         });
 
-    const docNumber = getDocumentNumber(invoice, mode) || (isReceiptDoc ? 'RCP' : 'INV');
-    const footerReserve = 22;
+    const docNumber =
+        getDocumentNumber(invoice, mode) ||
+        (isReceiptDoc ? 'RCP' : isQuotationDoc ? 'QTN' : 'INV');
+    const footerReserve = isQuotationDoc && premium ? 28 : 22;
     const hasSignatureAsset = Boolean(signatureUrl);
     const hasStampAsset = isReceiptDoc && Boolean(stampUrl);
     // Signature block: rule + image + name + label; stamp sits beside it with breathing room
@@ -506,14 +565,14 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         grayColor
     );
 
-    drawInvoiceTitleBlock(doc, docNumber, isReceiptDoc, primaryColor, lightPrimary, textColor);
+    drawInvoiceTitleBlock(doc, docNumber, mode, primaryColor, lightPrimary, textColor);
 
     const partyY = headerBottom + 8;
     const tableStartY = drawBillToAndDetails(
         doc,
         client,
         invoice,
-        isReceiptDoc,
+        mode,
         partyY,
         primaryColor,
         textColor,
@@ -522,7 +581,11 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     );
 
     if (!invoice.items?.length) {
-        throw new Error('Invoice must have at least one item');
+        throw new Error(
+            isQuotationDoc
+                ? 'Quotation must have at least one item'
+                : 'Invoice must have at least one item'
+        );
     }
 
     const tableData = invoice.items.map((item, index) => [
@@ -625,7 +688,12 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     doc.setFontSize(9);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(...textColor);
-    doc.text(isReceiptDoc ? 'TOTAL PAID' : 'TOTAL DUE', totalsX, currentY);
+    const totalLabel = isReceiptDoc
+        ? 'TOTAL PAID'
+        : isQuotationDoc
+          ? 'ESTIMATED TOTAL'
+          : 'TOTAL DUE';
+    doc.text(totalLabel, totalsX, currentY);
     doc.setFontSize(12);
     doc.setTextColor(...primaryColor);
     doc.text(`${currencySymbol}${formatMoney(invoice.total)}`, 195, currentY, { align: 'right' });
@@ -640,7 +708,7 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         textColor,
         lightGray,
         ensureSpace,
-        isReceiptDoc
+        mode
     );
 
     const footerLineY = PAGE_H - footerReserve;
@@ -661,7 +729,15 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     }
 
     doc.setPage(doc.getNumberOfPages());
-    const footerLinkBounds = drawPageFooter(doc, businessInfo, premium, footerLineY, primaryColor, grayColor);
+    const footerLinkBounds = drawPageFooter(
+        doc,
+        businessInfo,
+        premium,
+        footerLineY,
+        primaryColor,
+        grayColor,
+        mode
+    );
 
     const filename = getPdfFileName(invoice, mode);
     let blob = doc.output('blob');

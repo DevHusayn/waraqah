@@ -59,7 +59,7 @@ export default function Upgrade() {
                 </div>
                 <h1 className="page-title">Upgrade to Premium</h1>
                 <p className="page-subtitle mt-1">
-                    Unlimited invoices, your logo on PDFs, monthly statements, and profile branding.
+                    Unlimited invoices and quotations, your logo on PDFs, monthly statements, and profile branding.
                 </p>
             </div>
 

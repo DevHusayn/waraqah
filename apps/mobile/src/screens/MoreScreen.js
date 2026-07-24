@@ -8,6 +8,7 @@ import {
     LogOut,
     Shield,
     UserRound,
+    ClipboardList,
 } from 'lucide-react-native';
 import { getBusinessInitials, isPremiumUser } from '@waraqah/shared';
 import { useAuth } from '../context/AuthContext';
@@ -25,6 +26,7 @@ export function MoreScreen({ navigation }) {
     const links = [
         { label: 'Profile', subtitle: 'Account overview', screen: 'ProfileHome', icon: UserRound },
         { label: 'Settings', subtitle: 'Business, branding, billing', screen: 'Settings', icon: Settings },
+        { label: 'Quotations', subtitle: 'Estimates and proposals', screen: 'Quotations', icon: ClipboardList },
         { label: 'Products', subtitle: 'Product catalog', screen: 'Products', icon: Package },
         { label: 'Statements', subtitle: 'Monthly income & trends', screen: 'MonthlyStatement', icon: FileBarChart },
         { label: 'Upgrade to Premium', subtitle: 'Unlimited invoices & branding', screen: 'Upgrade', icon: Crown },

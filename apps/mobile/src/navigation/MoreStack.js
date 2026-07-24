@@ -6,6 +6,7 @@ import { MonthlyStatementScreen } from '../screens/MonthlyStatementScreen';
 import { AdminDashboardScreen } from '../screens/AdminDashboardScreen';
 import { ProductsScreen } from '../screens/ProductsScreen';
 import { SettingsStack } from './SettingsStack';
+import { QuotationsStack } from './QuotationsStack';
 import { stackScreenOptions } from './headerOptions';
 
 const Stack = createNativeStackNavigator();
@@ -16,6 +17,7 @@ export function MoreStack() {
             <Stack.Screen name="MoreMenu" component={MoreScreen} options={{ headerShown: false }} />
             <Stack.Screen name="ProfileHome" component={ProfileScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Settings" component={SettingsStack} options={{ headerShown: false }} />
+            <Stack.Screen name="Quotations" component={QuotationsStack} options={{ headerShown: false }} />
             <Stack.Screen name="Products" component={ProductsScreen} options={{ title: 'Products' }} />
             <Stack.Screen name="Upgrade" component={UpgradeScreen} options={{ title: 'Upgrade' }} />
             <Stack.Screen name="MonthlyStatement" component={MonthlyStatementScreen} options={{ title: 'Statements' }} />

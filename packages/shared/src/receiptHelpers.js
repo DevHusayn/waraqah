@@ -1,10 +1,13 @@
-const INV_PREFIX = 'INV';
-const RCP_PREFIX = 'RCP';
+import {
+    INV_PREFIX,
+    RCP_PREFIX,
+    QTN_PREFIX,
+    extractDocumentSequence,
+    isQuotationDocument,
+    getQuotationDisplayNumber,
+} from './documentHelpers.js';
 
-export function extractDocumentSequence(raw) {
-    const match = String(raw || '').match(/^(?:INV|RCP)-(\d+)$/i);
-    return match ? parseInt(match[1], 10) : 0;
-}
+export { INV_PREFIX, RCP_PREFIX, QTN_PREFIX, extractDocumentSequence };
 
 export function receiptFromInvoiceNumber(invoiceNumber) {
     if (!invoiceNumber) return '';
@@ -42,36 +45,45 @@ export function getReceiptNumber(invoice) {
     return invoice.receiptNumber || receiptFromInvoiceNumber(invoice.invoiceNumber);
 }
 
-export function getDisplayNumber(invoice) {
-    if (!invoice) return '';
-    return invoice.invoiceNumber || '';
+export function getDisplayNumber(doc) {
+    if (!doc) return '';
+    if (isQuotationDocument(doc)) return getQuotationDisplayNumber(doc);
+    return doc.invoiceNumber || '';
 }
 
-export function getDocumentNumber(invoice, mode = 'auto') {
-    if (!invoice) return '';
-    const useReceipt = mode === 'receipt' || (mode === 'auto' && isReceipt(invoice));
-    if (useReceipt) {
-        return getReceiptNumber(invoice) || invoice.invoiceNumber || '';
+export function getDocumentNumber(doc, mode = 'auto') {
+    if (!doc) return '';
+    const resolved = resolvePdfMode(doc, mode);
+    if (resolved === 'quotation') {
+        return getQuotationDisplayNumber(doc) || '';
     }
-    return invoice.invoiceNumber || '';
+    if (resolved === 'receipt') {
+        return getReceiptNumber(doc) || doc.invoiceNumber || '';
+    }
+    return doc.invoiceNumber || '';
 }
 
-export function getDocumentTypeLabel(invoice) {
-    return isReceipt(invoice) ? 'Receipt' : 'Invoice';
+export function getDocumentTypeLabel(doc, mode = 'auto') {
+    const resolved = resolvePdfMode(doc, mode);
+    if (resolved === 'quotation') return 'Quotation';
+    if (resolved === 'receipt') return 'Receipt';
+    return 'Invoice';
 }
 
-export function getPdfFileName(invoice, mode = 'auto') {
-    const num = getDocumentNumber(invoice, mode) || 'document';
+export function getPdfFileName(doc, mode = 'auto') {
+    const num = getDocumentNumber(doc, mode) || 'document';
     return `${num}.pdf`;
 }
 
-export function resolvePdfMode(invoice, mode = 'auto') {
-    if (mode === 'invoice' || mode === 'receipt') return mode;
-    return isReceipt(invoice) ? 'receipt' : 'invoice';
+export function resolvePdfMode(doc, mode = 'auto') {
+    if (mode === 'invoice' || mode === 'receipt' || mode === 'quotation') return mode;
+    if (isQuotationDocument(doc)) return 'quotation';
+    return isReceipt(doc) ? 'receipt' : 'invoice';
 }
 
-export function getDownloadLabel(invoice, mode = 'auto') {
-    return resolvePdfMode(invoice, mode) === 'receipt' ? 'Download receipt' : 'Download invoice';
+export function getDownloadLabel(doc, mode = 'auto') {
+    const resolved = resolvePdfMode(doc, mode);
+    if (resolved === 'quotation') return 'Download quotation';
+    if (resolved === 'receipt') return 'Download receipt';
+    return 'Download invoice';
 }
-
-export { INV_PREFIX, RCP_PREFIX };

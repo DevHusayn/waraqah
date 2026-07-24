@@ -14,4 +14,5 @@ export {
     resolvePdfMode,
     INV_PREFIX,
     RCP_PREFIX,
+    QTN_PREFIX,
 } from '@waraqah/shared';

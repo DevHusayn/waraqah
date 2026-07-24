@@ -84,7 +84,7 @@ export function BrandingSettingsScreen({ navigation }) {
                         </Text>
                         <AssetRow
                             label="Company logo"
-                            hint="Appears on PDF invoices and receipts"
+                            hint="Appears on PDF quotations, invoices, and receipts"
                             uri={form.companyLogoUrl}
                             loading={uploading === 'companyLogoUrl'}
                             onUpload={() => uploadAsset('companyLogoUrl')}
@@ -98,7 +98,7 @@ export function BrandingSettingsScreen({ navigation }) {
                         />
                         <AssetRow
                             label="Authorized signature"
-                            hint="Under totals on PDF invoices and receipts"
+                            hint="Under totals on PDF quotations, invoices, and receipts"
                             uri={form.authorizedSignatureUrl}
                             loading={uploading === 'authorizedSignatureUrl'}
                             onUpload={() => uploadAsset('authorizedSignatureUrl')}

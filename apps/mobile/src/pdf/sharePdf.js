@@ -3,6 +3,7 @@ import * as Sharing from 'expo-sharing';
 import { getPdfFileName, isPremiumUser } from '@waraqah/shared';
 import { APP_DOMAIN, APP_WEBSITE_URL } from '../constants/brand';
 import { buildInvoiceHtml } from './invoiceHtml';
+import { buildQuotationHtml } from './quotationHtml';
 import { buildStatementHtml } from './statementHtml';
 import { addFooterLinkToPdfFile } from './addFooterLink';
 
@@ -30,6 +31,13 @@ async function shareHtmlAsPdf(html, filename, { includeFooterLink = false } = {}
 export async function shareInvoicePdf(invoice, client, businessInfo, mode = 'auto') {
     const filename = getPdfFileName(invoice, mode);
     const html = buildInvoiceHtml(invoice, client, businessInfo, mode);
+    const premium = isPremiumUser(businessInfo);
+    return shareHtmlAsPdf(html, filename, { includeFooterLink: !premium });
+}
+
+export async function shareQuotationPdf(quotation, client, businessInfo) {
+    const filename = getPdfFileName(quotation, 'quotation');
+    const html = buildQuotationHtml(quotation, client, businessInfo);
     const premium = isPremiumUser(businessInfo);
     return shareHtmlAsPdf(html, filename, { includeFooterLink: !premium });
 }

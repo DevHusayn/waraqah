@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FileText, TrendingUp, Wallet } from 'lucide-react-native';
+import { ClipboardList, TrendingUp, Wallet } from 'lucide-react-native';
 import { useAppStore } from '../stores/appStore';
 import { Button } from '../components/ui';
 import { colors, fontFamily, fontSize, lineHeight, radii, spacing } from '../theme';
@@ -20,9 +20,9 @@ const { width } = Dimensions.get('window');
 const SLIDES = [
     {
         id: '1',
-        title: 'Create professional invoices',
-        description: 'Brand, taxes, and payment details — ready in seconds.',
-        Icon: FileText,
+        title: 'Quote and invoice like a pro',
+        description: 'Send estimates, convert to invoices, and brand your PDFs in seconds.',
+        Icon: ClipboardList,
         tint: colors.brandSubtle,
         icon: colors.brand,
     },
@@ -37,7 +37,7 @@ const SLIDES = [
     {
         id: '3',
         title: 'Grow your business',
-        description: 'Clients, products, and statements in one calm workspace.',
+        description: 'Clients, products, quotations, and invoices in one calm workspace.',
         Icon: TrendingUp,
         tint: '#EFF6FF',
         icon: '#2563EB',

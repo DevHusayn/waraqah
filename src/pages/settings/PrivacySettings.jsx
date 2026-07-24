@@ -1,5 +1,6 @@
 import SettingsPageShell from '../../components/settings/SettingsPageShell';
 import LegalDocument from '../../components/legal/LegalDocument';
+import { APP_DOMAIN } from '../../constants/brand';
 import { PRIVACY_SECTIONS, LEGAL_LAST_UPDATED } from '../../constants/legalContent';
 import { PRIVACY_PATH } from '../../constants/legalRoutes';
 
@@ -19,7 +20,7 @@ export default function PrivacySettings() {
                 <p className="text-sm text-zinc-500">
                     Public version also available at{' '}
                     <a href={PRIVACY_PATH} target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">
-                        mywaraqah.com{PRIVACY_PATH}
+                        {APP_DOMAIN}{PRIVACY_PATH}
                     </a>
                 </p>
                 <LegalDocument sections={PRIVACY_SECTIONS} lastUpdated={LEGAL_LAST_UPDATED} />

@@ -4,6 +4,11 @@ const STYLES = {
     paid: 'bg-green-50/80 text-green-800 border-green-200/60',
     overdue: 'bg-red-50/80 text-red-800 border-red-200/60',
     cancelled: 'bg-zinc-50 text-zinc-500 border-zinc-200/80',
+    sent: 'bg-sky-50/80 text-sky-800 border-sky-200/60',
+    accepted: 'bg-green-50/80 text-green-800 border-green-200/60',
+    rejected: 'bg-red-50/80 text-red-800 border-red-200/60',
+    expired: 'bg-orange-50/80 text-orange-800 border-orange-200/60',
+    converted: 'bg-violet-50/80 text-violet-800 border-violet-200/60',
 };
 
 const DOT_COLORS = {
@@ -12,6 +17,11 @@ const DOT_COLORS = {
     paid: 'bg-green-600',
     overdue: 'bg-red-500',
     cancelled: 'bg-zinc-400',
+    sent: 'bg-sky-500',
+    accepted: 'bg-green-600',
+    rejected: 'bg-red-500',
+    expired: 'bg-orange-500',
+    converted: 'bg-violet-500',
 };
 
 export default function StatusBadge({ status, className = '' }) {

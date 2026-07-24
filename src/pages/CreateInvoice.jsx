@@ -80,6 +80,7 @@ const CreateInvoice = () => {
         addInvoice,
         updateInvoice,
         invoices,
+        draftInvoices,
         loading: invoicesLoading,
         refreshInvoices,
         fetchProducts,
@@ -101,10 +102,16 @@ const CreateInvoice = () => {
     const isDirtyRef = useRef(false);
     const formDataRef = useRef(null);
     const sharePdfRef = useRef(null);
+    const [resolvedStatus, setResolvedStatus] = useState(id ? null : 'draft');
 
-    const existingInvoice = id ? invoices.find((inv) => inv.id === id) : null;
-    const isDraftEdit = Boolean(existingInvoice && existingInvoice.status === 'draft');
-    const isDraftFlow = !id || isDraftEdit;
+    const existingInvoice = id
+        ? invoices.find((inv) => inv.id === id) ||
+          draftInvoices.find((inv) => inv.id === id) ||
+          null
+        : null;
+    const status = resolvedStatus || existingInvoice?.status || (!id ? 'draft' : null);
+    const isDraftEdit = Boolean(id && status === 'draft');
+    const isDraftFlow = !id || status === 'draft';
 
     const [formData, setFormData] = useState({
         invoiceNumber: '',
@@ -152,6 +159,7 @@ const CreateInvoice = () => {
             const client = invoice.clientId
                 ? clients.find((c) => c.id === invoice.clientId)
                 : null;
+            setResolvedStatus(invoice.status || 'draft');
             setFormData({
                 ...invoice,
                 clientName: client?.name || '',
@@ -472,6 +480,7 @@ const CreateInvoice = () => {
             }
 
             isDirtyRef.current = false;
+            setResolvedStatus(saved.status || 'pending');
             draftIdRef.current = saved.id;
             const savedClient = clients.find((c) => c.id === saved.clientId);
             const client = {
@@ -792,7 +801,7 @@ const CreateInvoice = () => {
                             usageLabel +
                             (invoiceUsage.remaining > 0
                                 ? ` — ${invoiceUsage.remaining} remaining this month`
-                                : ' — upgrade for unlimited invoices')
+                                : ' — upgrade for unlimited invoices & quotations')
                         }
                     />
                 ) : null}
@@ -1013,8 +1022,8 @@ const CreateInvoice = () => {
                                                 </button>
                                             )}
                                         </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
-                                            <div className="sm:col-span-12 md:col-span-4">
+                                        <div className="space-y-4">
+                                            <div>
                                                 <RequiredLabel htmlFor={`invoice-item-${index}-description`}>
                                                     Description
                                                 </RequiredLabel>
@@ -1037,88 +1046,90 @@ const CreateInvoice = () => {
                                                     message={fieldErrors[`item-${index}-description`]}
                                                 />
                                             </div>
-                                            <div className="sm:col-span-4 md:col-span-3">
-                                                <RequiredLabel htmlFor={`invoice-item-${index}-unit`}>
-                                                    Unit
-                                                </RequiredLabel>
-                                                <div className="flex gap-2">
-                                                    <CustomSelect
-                                                        id={`invoice-item-${index}-unit`}
-                                                        value={normalizeInvoiceUnit(item.unit)}
-                                                        onChange={(value) => handleUnitChange(index, value)}
-                                                        options={buildUnitSelectOptions(item.unit)}
-                                                        aria-label={`Unit for item ${index + 1}`}
-                                                        className="min-w-0 flex-1"
-                                                    />
-                                                    <input
-                                                        id={`invoice-item-${index}-quantity`}
-                                                        type="number"
-                                                        value={item.quantity}
-                                                        onChange={(e) =>
-                                                            handleItemChange(
-                                                                index,
-                                                                'quantity',
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        className={`${inputClass(
-                                                            Boolean(fieldErrors[`item-${index}-quantity`])
-                                                        )} w-[4.75rem] shrink-0`}
-                                                        min="1"
-                                                        aria-label={`${normalizeInvoiceUnit(item.unit)} for item ${index + 1}`}
-                                                        aria-invalid={Boolean(
-                                                            fieldErrors[`item-${index}-quantity`]
-                                                        )}
-                                                    />
-                                                </div>
-                                                <FieldValidationMessage
-                                                    message={fieldErrors[`item-${index}-quantity`]}
-                                                />
-                                            </div>
-                                            <div className="sm:col-span-4 md:col-span-3">
-                                                <RequiredLabel htmlFor={`invoice-item-${index}-rate`}>
-                                                    Rate
-                                                </RequiredLabel>
-                                                <div className="flex gap-2">
-                                                    <CustomSelect
-                                                        id={`invoice-item-${index}-currency`}
-                                                        value={normalizeCurrency(
-                                                            formData.currency || APP_CURRENCY
-                                                        )}
-                                                        onChange={handleCurrencyChange}
-                                                        options={getCurrencySelectOptions()}
-                                                        aria-label={`Currency for rate on item ${index + 1}`}
-                                                        className="w-[5.75rem] shrink-0"
-                                                    />
-                                                    <input
-                                                        id={`invoice-item-${index}-rate`}
-                                                        type="number"
-                                                        value={item.rate}
-                                                        onChange={(e) =>
-                                                            handleItemChange(index, 'rate', e.target.value)
-                                                        }
-                                                        className={`${inputClass(
-                                                            Boolean(fieldErrors[`item-${index}-rate`])
-                                                        )} min-w-0 flex-1`}
-                                                        min="0"
-                                                        step="0.01"
-                                                        aria-invalid={Boolean(
-                                                            fieldErrors[`item-${index}-rate`]
-                                                        )}
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                                <div>
+                                                    <RequiredLabel htmlFor={`invoice-item-${index}-unit`}>
+                                                        Unit
+                                                    </RequiredLabel>
+                                                    <div className="flex gap-2">
+                                                        <CustomSelect
+                                                            id={`invoice-item-${index}-unit`}
+                                                            value={normalizeInvoiceUnit(item.unit)}
+                                                            onChange={(value) => handleUnitChange(index, value)}
+                                                            options={buildUnitSelectOptions(item.unit)}
+                                                            aria-label={`Unit for item ${index + 1}`}
+                                                            className="min-w-0 flex-1"
+                                                        />
+                                                        <input
+                                                            id={`invoice-item-${index}-quantity`}
+                                                            type="number"
+                                                            value={item.quantity}
+                                                            onChange={(e) =>
+                                                                handleItemChange(
+                                                                    index,
+                                                                    'quantity',
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                            className={`${inputClass(
+                                                                Boolean(fieldErrors[`item-${index}-quantity`])
+                                                            )} w-[4.75rem] shrink-0`}
+                                                            min="1"
+                                                            aria-label={`${normalizeInvoiceUnit(item.unit)} for item ${index + 1}`}
+                                                            aria-invalid={Boolean(
+                                                                fieldErrors[`item-${index}-quantity`]
+                                                            )}
+                                                        />
+                                                    </div>
+                                                    <FieldValidationMessage
+                                                        message={fieldErrors[`item-${index}-quantity`]}
                                                     />
                                                 </div>
-                                                <FieldValidationMessage
-                                                    message={fieldErrors[`item-${index}-rate`]}
-                                                />
-                                            </div>
-                                            <div className="sm:col-span-4 md:col-span-2 flex flex-col justify-end">
-                                                <span className="label">Amount</span>
-                                                <p className="text-base font-semibold text-zinc-900 py-2.5">
-                                                    {formatCurrency(
-                                                        item.quantity * item.rate,
-                                                        formData.currency
-                                                    )}
-                                                </p>
+                                                <div>
+                                                    <RequiredLabel htmlFor={`invoice-item-${index}-rate`}>
+                                                        Rate
+                                                    </RequiredLabel>
+                                                    <div className="flex gap-2">
+                                                        <CustomSelect
+                                                            id={`invoice-item-${index}-currency`}
+                                                            value={normalizeCurrency(
+                                                                formData.currency || APP_CURRENCY
+                                                            )}
+                                                            onChange={handleCurrencyChange}
+                                                            options={getCurrencySelectOptions()}
+                                                            aria-label={`Currency for rate on item ${index + 1}`}
+                                                            className="w-[5.75rem] shrink-0"
+                                                        />
+                                                        <input
+                                                            id={`invoice-item-${index}-rate`}
+                                                            type="number"
+                                                            value={item.rate}
+                                                            onChange={(e) =>
+                                                                handleItemChange(index, 'rate', e.target.value)
+                                                            }
+                                                            className={`${inputClass(
+                                                                Boolean(fieldErrors[`item-${index}-rate`])
+                                                            )} min-w-0 flex-1`}
+                                                            min="0"
+                                                            step="0.01"
+                                                            aria-invalid={Boolean(
+                                                                fieldErrors[`item-${index}-rate`]
+                                                            )}
+                                                        />
+                                                    </div>
+                                                    <FieldValidationMessage
+                                                        message={fieldErrors[`item-${index}-rate`]}
+                                                    />
+                                                </div>
+                                                <div className="flex flex-col justify-end min-w-0">
+                                                    <span className="label">Amount</span>
+                                                    <p className="text-base font-semibold text-zinc-900 py-2.5 tabular-nums break-all">
+                                                        {formatCurrency(
+                                                            item.quantity * item.rate,
+                                                            formData.currency
+                                                        )}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

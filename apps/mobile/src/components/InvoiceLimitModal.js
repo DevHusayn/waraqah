@@ -25,10 +25,10 @@ export const InvoiceLimitModal = forwardRef(function InvoiceLimitModal(
             <View style={styles.iconWrap}>
                 <Crown size={28} color={colors.amber600} />
             </View>
-            <Text style={styles.title}>Monthly invoice limit reached</Text>
+            <Text style={styles.title}>Monthly document limit reached</Text>
             <Text style={styles.message}>
-                You have used all {limit} free invoices for this month ({used}/{limit}). Upgrade to
-                Premium for unlimited invoices, custom logos, and more.
+                You have used all {limit} free invoices and quotations for this month ({used}/{limit}).
+                Upgrade to Premium for unlimited documents, custom logos, and more.
             </Text>
             <Button title="Upgrade to Premium" onPress={onUpgrade} style={{ marginBottom: spacing.sm }} />
             <Button title="Not now" variant="secondary" onPress={() => sheetRef.current?.close()} />

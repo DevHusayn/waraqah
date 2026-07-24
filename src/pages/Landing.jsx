@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     FileText,
-    Users,
+    ClipboardList,
     Clock,
-    Shield,
     Crown,
     Check,
     ChevronDown,
@@ -56,45 +55,49 @@ function formatPrice(amount) {
 
 const WHY_ITEMS = [
     {
+        icon: ClipboardList,
+        title: 'Win work with clear quotations',
+        text: 'Send professional estimates with valid-until dates and terms, then convert accepted quotations into invoices in one click.',
+    },
+    {
         icon: Clock,
-        title: 'Stop rebuilding invoices from scratch',
-        text: 'Save clients and products once, reuse their details, and send polished PDFs in seconds — not hours.',
+        title: 'Stop rebuilding documents from scratch',
+        text: 'Save clients and products once, reuse their details, and send polished quotation and invoice PDFs in seconds — not hours.',
     },
     {
         icon: TrendingUp,
         title: 'Look professional, get paid faster',
-        text: 'Clear totals, due dates, branded PDFs, and client emails help you look established and stay top of mind until payment lands.',
+        text: 'Clear totals, branded PDFs, and client emails help you look established from the first estimate through to the final receipt.',
     },
     {
         icon: Smartphone,
         title: 'Work from anywhere',
-        text: 'Create invoices, track payments, and download PDFs on your phone or laptop. Your workspace travels with you.',
-    },
-    {
-        icon: Shield,
-        title: 'Stay organised as you grow',
-        text: 'Dashboard overview, client records, and pending, overdue, and paid status keep every invoice easy to find.',
+        text: 'Create quotations and invoices, track payments, and download PDFs on your phone or laptop. Your workspace travels with you.',
     },
 ];
 
 const STEPS = [
     { step: '01', title: 'Add your business', text: 'Set your profile, bank account details, and brand color. Premium adds your logo, stamp, and signature on PDFs.' },
-    { step: '02', title: 'Save clients & products', text: 'Store contacts and catalog items once, then pick them on every new invoice.' },
-    { step: '03', title: 'Send and track', text: 'Email the invoice to your client, share a PDF, or enable automatic delivery. Mark it paid to send a receipt.' },
+    { step: '02', title: 'Quote or invoice', text: 'Build a quotation for new work, or create an invoice when you are ready to bill. Reuse clients and products either way.' },
+    { step: '03', title: 'Send, convert, and get paid', text: 'Email the document, convert accepted quotations to invoices, then mark payments and send receipts automatically.' },
 ];
 
 const FAQ_ITEMS = [
     {
         q: 'Who is Waraqah for?',
-        a: 'Freelancers and businesses in Nigeria who want polished PDF invoices, client records, payment tracking, and a simple dashboard — without spreadsheets.',
+        a: 'Freelancers and businesses in Nigeria who want polished PDF quotations and invoices, client records, payment tracking, and a simple dashboard — without spreadsheets.',
+    },
+    {
+        q: 'What is the difference between a quotation and an invoice?',
+        a: 'A quotation is an estimate you send before work is agreed — it is not a demand for payment. Once accepted, you can convert it into an invoice. Payment and receipts happen on the invoice.',
     },
     {
         q: 'What happens on the Free plan?',
-        a: `You can create up to ${FREE_MONTHLY_INVOICE_LIMIT} invoices per calendar month, manage clients and products, add bank details to invoices, mark invoices paid, and download PDF receipts. Deleting an invoice does not reset your monthly allowance.`,
+        a: `You can create up to ${FREE_MONTHLY_INVOICE_LIMIT} invoices and quotations combined per calendar month, manage clients and products, add bank details to invoices, mark invoices paid, and download PDFs. Deleting a document does not reset your monthly allowance.`,
     },
     {
         q: 'What does Premium include?',
-        a: 'Unlimited invoices, your logo on PDF invoices, a company stamp on paid receipts, an authorized signature, and monthly billing statements you can print or export.',
+        a: 'Unlimited invoices and quotations, your logo on PDFs, a company stamp on paid receipts, an authorized signature, and monthly billing statements you can print or export.',
     },
     {
         q: 'How does Premium billing work?',
@@ -102,11 +105,11 @@ const FAQ_ITEMS = [
     },
     {
         q: 'Can Waraqah email my clients?',
-        a: 'Yes. Email finalized invoices from the share dialog or invoice page, send payment reminders for outstanding balances, and deliver receipt emails when you mark an invoice paid. You can enable automatic invoice emails and automatic payment reminders in Settings → Notifications.',
+        a: 'Yes. Email finalized quotations and invoices from the share dialog, send payment reminders for outstanding balances, and deliver receipt emails when you mark an invoice paid. You can enable automatic delivery in Settings → Notifications.',
     },
     {
         q: 'Can I use Waraqah on my phone?',
-        a: 'Yes. Waraqah works in your mobile browser. Create invoices, manage clients, mark payments, and download PDFs on the go.',
+        a: 'Yes. Waraqah works in your mobile browser and native app. Create quotations and invoices, manage clients, mark payments, and download PDFs on the go.',
     },
 ];
 
@@ -174,12 +177,12 @@ export default function Landing() {
                                 {APP_TAGLINE}
                             </p>
                             <h1 className="mt-6 text-3xl sm:text-4xl lg:text-[3.25rem] font-bold tracking-tight text-zinc-950 leading-[1.1]">
-                                Create a professional invoice in{' '}
+                                Quote and invoice like a pro in{' '}
                                 <span className="landing-text-shimmer">seconds</span>
                             </h1>
                             <p className="mt-6 text-lg text-zinc-600 max-w-xl leading-relaxed">
-                                {APP_NAME} helps freelancers and businesses send polished invoices,
-                                email clients with reminders and receipts, and track payments without spreadsheets or design stress.
+                                {APP_NAME} helps freelancers and businesses send polished quotations and invoices,
+                                email clients with estimates, reminders, and receipts, and track payments without spreadsheets or design stress.
                             </p>
                             <div className="mt-8 flex flex-col sm:flex-row gap-3">
                                 <CtaButton className="py-3.5 px-8 text-base shadow-soft shadow-brand/20 hover:shadow-card hover:shadow-brand/25" />
@@ -188,7 +191,7 @@ export default function Landing() {
                                 </a>
                             </div>
                             <p className="mt-4 text-sm text-zinc-500">
-                                Free to start · No card required · {FREE_MONTHLY_INVOICE_LIMIT} invoices/month
+                                Free to start · No card required · {FREE_MONTHLY_INVOICE_LIMIT} invoices & quotations/month
                             </p>
                         </div>
 
@@ -218,7 +221,7 @@ export default function Landing() {
                             Why you need {APP_NAME}
                         </h2>
                         <p className="mt-4 text-zinc-600 text-lg">
-                            Invoicing should not slow down your work. Here is what changes when billing lives in one place.
+                            Estimating and invoicing should not slow down your work. Here is what changes when both live in one place.
                         </p>
                     </SectionReveal>
                     <div className="mt-14 grid sm:grid-cols-2 gap-6 lg:gap-8">
@@ -248,7 +251,7 @@ export default function Landing() {
                 <div className="mx-auto max-w-6xl px-4 sm:px-6">
                     <SectionReveal className="text-center max-w-2xl mx-auto">
                         <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900 tracking-tight">
-                            Three steps to your first invoice
+                            Three steps from quote to payment
                         </h2>
                     </SectionReveal>
                     <div className="mt-14 grid md:grid-cols-3 gap-8">
@@ -281,7 +284,7 @@ export default function Landing() {
                             Free to start. Premium when you scale.
                         </h2>
                         <p className="mt-4 text-zinc-600 text-lg">
-                            Try {APP_NAME} at no cost, then upgrade for unlimited invoices, your logo on PDFs, and monthly billing statements.
+                            Try {APP_NAME} at no cost, then upgrade for unlimited invoices and quotations, your logo on PDFs, and monthly billing statements.
                         </p>
                     </SectionReveal>
                     <div className="mt-14 grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -339,9 +342,9 @@ export default function Landing() {
                 <div className="mx-auto max-w-6xl px-4 sm:px-6">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
                         {[
+                            { icon: ClipboardList, label: 'Quotations' },
                             { icon: FileText, label: 'Invoices & receipts' },
                             { icon: Mail, label: 'Client emails' },
-                            { icon: Users, label: 'Clients & products' },
                             { icon: Crown, label: 'Premium branding' },
                         ].map(({ icon: Icon, label }) => (
                             <div key={label} className="flex flex-col items-center gap-3">
@@ -379,10 +382,10 @@ export default function Landing() {
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center">
                     <SectionReveal>
                         <h2 className="text-3xl sm:text-4xl font-bold text-zinc-950 tracking-tight">
-                            Ready to invoice like a pro?
+                            Ready to quote and get paid?
                         </h2>
                         <p className="mt-4 text-lg text-zinc-600">
-                            Join {APP_NAME} today and send your next invoice in seconds.
+                            Join {APP_NAME} today and send your next quotation or invoice in seconds.
                         </p>
                         <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
                             <Link

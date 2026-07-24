@@ -15,22 +15,25 @@ import {
     Bell,
     Building2,
     ChevronDown,
+    ClipboardList,
     Clock,
     CreditCard,
     FileText,
     LogOut,
-    Users,
+    Plus,
 } from 'lucide-react-native';
 import {
     formatCurrency,
     formatInvoiceUsageLabel,
     getBusinessInitials,
     isPremiumUser,
+    isQuotationDocument,
 } from '@waraqah/shared';
 import { apiFetch } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { InvoiceLimitModal } from '../components/InvoiceLimitModal';
+import { CreateActionSheet } from '../components/CreateActionSheet';
 import { Sparkline } from '../components/Sparkline';
 import {
     AvatarInitials,
@@ -42,6 +45,7 @@ import {
     UsageBanner,
 } from '../components/ui';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
+import { useQuotationCreateGuard } from '../hooks/useQuotationCreateGuard';
 import { colors, fontFamily, fontSize, lineHeight, radii, shadows, spacing } from '../theme';
 import { hapticSelection } from '../utils/haptics';
 
@@ -77,7 +81,9 @@ export function DashboardScreen({ navigation }) {
     const [cardIndex, setCardIndex] = useState(0);
     const limitModalRef = useRef(null);
     const menuRef = useRef(null);
+    const createSheetRef = useRef(null);
     const { invoiceUsage, tryCreate, goUpgrade } = useInvoiceCreateGuard(limitModalRef, navigation);
+    const { tryCreate: tryCreateQuotation } = useQuotationCreateGuard(limitModalRef, navigation);
 
     const loadDashboard = useCallback(async () => {
         try {
@@ -103,7 +109,7 @@ export function DashboardScreen({ navigation }) {
     };
 
     const stats = data?.stats;
-    const recent = data?.recentInvoices || [];
+    const recent = data?.recentDocuments || data?.recentInvoices || [];
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
     const premium = isPremiumUser(businessInfo);
     const firstName = (user?.name || businessInfo?.name || 'there').split(/\s+/)[0];
@@ -118,10 +124,54 @@ export function DashboardScreen({ navigation }) {
         menuRef.current?.snapToIndex(0);
     };
 
+    const openCreateSheet = () => {
+        hapticSelection();
+        createSheetRef.current?.snapToIndex(0);
+    };
+
     const go = (tab, screen) => {
         menuRef.current?.close();
         if (screen) navigation.navigate(tab, { screen });
         else navigation.navigate(tab);
+    };
+
+    const openDocument = (doc) => {
+        const id = doc.id || doc._id;
+        if (isQuotationDocument(doc) || doc.documentType === 'quotation') {
+            navigation.navigate('More', {
+                screen: 'Quotations',
+                params: { screen: 'QuotationDetail', params: { id } },
+            });
+            return;
+        }
+        navigation.navigate('Invoices', {
+            screen: 'InvoiceDetail',
+            params: { id },
+        });
+    };
+
+    const handleCreateSelect = (id) => {
+        createSheetRef.current?.close();
+        if (id === 'invoice') {
+            tryCreate(() => navigation.navigate('Invoices', { screen: 'CreateInvoice' }));
+            return;
+        }
+        if (id === 'quotation') {
+            tryCreateQuotation(() =>
+                navigation.navigate('More', {
+                    screen: 'Quotations',
+                    params: { screen: 'CreateQuotation' },
+                })
+            );
+            return;
+        }
+        if (id === 'client') {
+            navigation.navigate('Clients');
+            return;
+        }
+        if (id === 'product') {
+            navigation.navigate('More', { screen: 'Products' });
+        }
     };
 
     if (loading && !refreshing && !data) return <PageLoader />;
@@ -158,17 +208,27 @@ export function DashboardScreen({ navigation }) {
                             {greeting} {greetingEmoji}
                         </Text>
                         <Text style={styles.name}>{firstName}</Text>
-                        <Text style={styles.subtitle}>Manage your invoices in one place</Text>
+                        <Text style={styles.subtitle}>Manage invoices & quotations</Text>
                     </View>
-                    <Pressable
-                        onPress={openMenu}
-                        style={styles.avatarBtn}
-                        accessibilityRole="button"
-                        accessibilityLabel="Account menu"
-                    >
-                        <AvatarInitials initials={initials} size={48} />
-                        <ChevronDown size={16} color={colors.slate400} strokeWidth={2.5} style={styles.chevron} />
-                    </Pressable>
+                    <View style={styles.headerActions}>
+                        <Pressable
+                            onPress={openCreateSheet}
+                            style={styles.createBtn}
+                            accessibilityRole="button"
+                            accessibilityLabel="Create"
+                        >
+                            <Plus size={20} color={colors.brand} strokeWidth={2.5} />
+                        </Pressable>
+                        <Pressable
+                            onPress={openMenu}
+                            style={styles.avatarBtn}
+                            accessibilityRole="button"
+                            accessibilityLabel="Account menu"
+                        >
+                            <AvatarInitials initials={initials} size={48} />
+                            <ChevronDown size={16} color={colors.slate400} strokeWidth={2.5} style={styles.chevron} />
+                        </Pressable>
+                    </View>
                 </View>
 
                 {!premium && usageLabel ? (
@@ -243,11 +303,11 @@ export function DashboardScreen({ navigation }) {
                                     iconColor={colors.violet600}
                                 />
                                 <StatCell
-                                    icon={Users}
-                                    label="Clients"
-                                    value={String(stats?.totalClients ?? 0)}
-                                    iconBg="#DBEAFE"
-                                    iconColor="#2563EB"
+                                    icon={ClipboardList}
+                                    label="Quotations"
+                                    value={String(stats?.totalQuotations ?? 0)}
+                                    iconBg="#E0F2FE"
+                                    iconColor="#0284C7"
                                 />
                             </View>
                         </View>
@@ -260,9 +320,9 @@ export function DashboardScreen({ navigation }) {
                     ))}
                 </View>
 
-                {/* Recent invoices */}
+                {/* Recent documents */}
                 <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Recent invoices</Text>
+                    <Text style={styles.sectionTitle}>Recent documents</Text>
                     <Pressable onPress={() => navigation.navigate('Invoices')} hitSlop={12}>
                         <Text style={styles.seeAll}>See all ›</Text>
                     </Pressable>
@@ -271,28 +331,25 @@ export function DashboardScreen({ navigation }) {
                 <View style={[styles.listCard, shadows.soft]}>
                     {recent.length === 0 ? (
                         <EmptyState
-                            title="No invoices yet"
-                            message="Create your first invoice to get paid."
+                            title="No documents yet"
+                            message="Create an invoice or quotation to get started."
                             icon={FileText}
-                            actionLabel="Create invoice"
-                            onAction={() =>
-                                tryCreate(() => navigation.navigate('Invoices', { screen: 'CreateInvoice' }))
-                            }
+                            actionLabel="Create"
+                            onAction={openCreateSheet}
                         />
                     ) : (
-                        recent.map((inv, index) => (
-                            <InvoiceListItem
-                                key={inv.id}
-                                invoice={inv}
-                                last={index === recent.length - 1}
-                                onPress={() =>
-                                    navigation.navigate('Invoices', {
-                                        screen: 'InvoiceDetail',
-                                        params: { id: inv.id },
-                                    })
-                                }
-                            />
-                        ))
+                        recent.map((doc, index) => {
+                            const docId = doc.id || doc._id;
+                            return (
+                                <InvoiceListItem
+                                    key={`${doc.documentType || 'invoice'}-${docId}`}
+                                    invoice={{ ...doc, id: docId }}
+                                    last={index === recent.length - 1}
+                                    showTypeBadge
+                                    onPress={() => openDocument(doc)}
+                                />
+                            );
+                        })
                     )}
                 </View>
             </ScrollView>
@@ -337,6 +394,7 @@ export function DashboardScreen({ navigation }) {
                 />
             </BottomSheet>
 
+            <CreateActionSheet sheetRef={createSheetRef} onSelect={handleCreateSelect} />
             <InvoiceLimitModal ref={limitModalRef} usage={invoiceUsage} onUpgrade={goUpgrade} />
         </SafeAreaView>
     );
@@ -376,11 +434,24 @@ const styles = StyleSheet.create({
         color: colors.muted,
         lineHeight: lineHeight.sm,
     },
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        marginTop: 4,
+    },
+    createBtn: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.brandSubtle,
+    },
     avatarBtn: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 2,
-        marginTop: 4,
     },
     chevron: { marginLeft: -2 },
     bannerWrap: {

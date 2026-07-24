@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import PrivateRoute from './utils/PrivateRoute';
 import AdminRoute from './utils/AdminRoute';
 import { InvoiceProvider } from './context/InvoiceContext';
+import { QuotationProvider } from './context/QuotationContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
@@ -17,6 +18,7 @@ const CheckEmailPage = lazy(() => import('./pages/CheckEmail'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const PublicInvoice = lazy(() => import('./pages/PublicInvoice'));
+const PublicQuotation = lazy(() => import('./pages/PublicQuotation'));
 const TermsPage = lazy(() => import('./pages/legal/TermsPage'));
 const PrivacyPage = lazy(() => import('./pages/legal/PrivacyPage'));
 
@@ -24,6 +26,9 @@ const Invoices = lazy(() => import('./pages/Invoices'));
 const Drafts = lazy(() => import('./pages/Drafts'));
 const CreateInvoice = lazy(() => import('./pages/CreateInvoice'));
 const InvoiceDetails = lazy(() => import('./pages/InvoiceDetails'));
+const Quotations = lazy(() => import('./pages/Quotations'));
+const CreateQuotation = lazy(() => import('./pages/CreateQuotation'));
+const QuotationDetails = lazy(() => import('./pages/QuotationDetails'));
 const Clients = lazy(() => import('./pages/Clients'));
 const Products = lazy(() => import('./pages/Products'));
 const SettingsLayout = lazy(() => import('./pages/settings/SettingsLayout'));
@@ -73,6 +78,7 @@ function App() {
                 <SettingsProvider>
                     <BrandTheme />
                     <InvoiceProvider>
+                        <QuotationProvider>
                         <AppProviders>
                         <Router>
                         <Routes>
@@ -82,6 +88,7 @@ function App() {
                             <Route path="/reset-password/:token" element={<PublicPage><ResetPassword /></PublicPage>} />
                             <Route path="/verify-email/:token" element={<PublicPage><VerifyEmail /></PublicPage>} />
                             <Route path="/i/:token" element={<PublicPage><PublicInvoice /></PublicPage>} />
+                            <Route path="/q/:token" element={<PublicPage><PublicQuotation /></PublicPage>} />
                             <Route path="/terms" element={<PublicPage><TermsPage /></PublicPage>} />
                             <Route path="/privacy" element={<PublicPage><PrivacyPage /></PublicPage>} />
 
@@ -107,6 +114,10 @@ function App() {
                                             <Route path="/invoices/create" element={<PrivateRoute><CreateInvoice /></PrivateRoute>} />
                                             <Route path="/invoices/edit/:id" element={<PrivateRoute><CreateInvoice /></PrivateRoute>} />
                                             <Route path="/invoices/:id" element={<PrivateRoute><InvoiceDetails /></PrivateRoute>} />
+                                            <Route path="/quotations" element={<PrivateRoute><Quotations /></PrivateRoute>} />
+                                            <Route path="/quotations/create" element={<PrivateRoute><CreateQuotation /></PrivateRoute>} />
+                                            <Route path="/quotations/edit/:id" element={<PrivateRoute><CreateQuotation /></PrivateRoute>} />
+                                            <Route path="/quotations/:id" element={<PrivateRoute><QuotationDetails /></PrivateRoute>} />
                                             <Route path="/clients" element={<PrivateRoute><Clients /></PrivateRoute>} />
                                             <Route path="/products" element={<PrivateRoute><Products /></PrivateRoute>} />
                                             <Route path="/settings" element={<PrivateRoute><SettingsLayout /></PrivateRoute>}>
@@ -133,6 +144,7 @@ function App() {
                         </Routes>
                         </Router>
                         </AppProviders>
+                        </QuotationProvider>
                     </InvoiceProvider>
                 </SettingsProvider>
             </AuthProvider>

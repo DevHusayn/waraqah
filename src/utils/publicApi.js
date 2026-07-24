@@ -38,3 +38,15 @@ export function getPublicInvoiceUrl(publicToken) {
     }
     return getPublicInvoicePath(publicToken);
 }
+
+export function getPublicQuotationPath(publicToken) {
+    return `/q/${publicToken}`;
+}
+
+export function getPublicQuotationUrl(publicToken) {
+    if (!publicToken) return '';
+    if (typeof window !== 'undefined' && window.location?.origin) {
+        return `${window.location.origin}${getPublicQuotationPath(publicToken)}`;
+    }
+    return getPublicQuotationPath(publicToken);
+}

@@ -7,6 +7,7 @@ import FieldValidationMessage from '../FieldValidationMessage';
 import ProfileFormFields from '../settings/ProfileFormFields';
 import AccountFormFields from '../settings/AccountFormFields';
 import { useInvoice } from '../../context/InvoiceContext';
+import { useQuotation } from '../../context/QuotationContext';
 import { APP_CURRENCY } from '../../utils/currency';
 import { getNetworkErrorMessage } from '../../utils/apiConfig';
 import { authFetch } from '../../utils/api';
@@ -121,6 +122,7 @@ export default function RegisterWizard({
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { resetAll } = useInvoice();
+    const { resetAll: resetQuotations } = useQuotation();
 
     const step = clampRegisterStep(searchParams.get('step') || 1);
     const currentStepMeta = REGISTER_STEPS[step - 1];
@@ -277,6 +279,7 @@ export default function RegisterWizard({
 
             clearRegisterDraft();
             resetAll();
+            resetQuotations();
             navigate(
                 `/auth/check-email?email=${encodeURIComponent(form.email.trim().toLowerCase())}&message=${encodeURIComponent(data.message || '')}`,
                 { replace: true },
@@ -284,6 +287,7 @@ export default function RegisterWizard({
         } catch (err) {
             setError(err.message === 'Failed to fetch' ? getNetworkErrorMessage() : err.message);
             resetAll();
+            resetQuotations();
         } finally {
             setSubmitLoading(false);
         }

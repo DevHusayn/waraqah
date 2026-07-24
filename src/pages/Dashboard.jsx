@@ -1,10 +1,24 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Users, Wallet, Clock, TrendingUp, CheckCircle, FileBarChart, Crown } from 'lucide-react';
+import {
+    FileText,
+    Users,
+    Wallet,
+    Clock,
+    TrendingUp,
+    CheckCircle,
+    FileBarChart,
+    Crown,
+    ClipboardList,
+    Plus,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { formatCurrency } from '../utils/currency';
 import { getDisplayNumber } from '../utils/receiptHelpers';
+import { isQuotationDocument } from '../utils/documentHelpers';
 import PageHeader from '../components/PageHeader';
 import InvoiceLimitModal from '../components/InvoiceLimitModal';
+import CreateDocumentModal from '../components/CreateDocumentModal';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { useDashboardStats } from '../hooks/useDashboardStats';
 import { formatInvoiceUsageLabel } from '../utils/invoiceLimits';
@@ -17,33 +31,89 @@ import InvoiceUsageBanner from '../components/InvoiceUsageBanner';
 import { DashboardSkeleton } from '../components/Skeleton';
 
 const RECENT_COLUMNS = [
-    { key: 'number', label: 'Invoice' },
+    { key: 'number', label: 'Document' },
     { key: 'client', label: 'Client' },
     { key: 'amount', label: 'Amount', className: 'text-right' },
     { key: 'status', label: 'Status' },
 ];
 
+function DocumentTypeBadge({ doc }) {
+    const isQuotation = isQuotationDocument(doc) || doc.documentType === 'quotation';
+    return (
+        <span
+            className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide border ${
+                isQuotation
+                    ? 'bg-sky-50 text-sky-700 border-sky-200/70'
+                    : 'bg-zinc-50 text-zinc-600 border-zinc-200/70'
+            }`}
+        >
+            {isQuotation ? 'QTN' : 'INV'}
+        </span>
+    );
+}
+
 const Dashboard = () => {
     const { businessInfo } = useSettings();
     const navigate = useNavigate();
-    const { invoiceUsage, limitModalOpen, setLimitModalOpen, tryNavigateToCreate } = useInvoiceCreateGuard();
+    const { invoiceUsage, limitModalOpen, setLimitModalOpen } = useInvoiceCreateGuard();
     const { data, loading } = useDashboardStats();
+    const [createModalOpen, setCreateModalOpen] = useState(false);
 
     const stats = data?.stats;
-    const recentInvoices = data?.recentInvoices || [];
+    const recentDocuments = data?.recentDocuments || data?.recentInvoices || [];
     const overdueInvoices = data?.overdueInvoices || [];
 
     const statCards = stats
         ? [
-              { name: 'Total Invoices', value: stats.totalInvoices, icon: FileText, iconBg: 'bg-brand-light', iconColor: 'text-brand' },
-              { name: 'Total Clients', value: stats.totalClients, icon: Users, iconBg: 'bg-violet-50', iconColor: 'text-violet-600' },
-              { name: 'Revenue (Paid)', value: formatCurrency(stats.paidRevenue), icon: Wallet, iconBg: 'bg-green-50', iconColor: 'text-green-600' },
-              { name: 'Pending Revenue', value: formatCurrency(stats.pendingRevenue), icon: Clock, iconBg: 'bg-amber-50', iconColor: 'text-amber-600' },
+              {
+                  name: 'Total Invoices',
+                  value: stats.totalInvoices,
+                  icon: FileText,
+                  iconBg: 'bg-brand-light',
+                  iconColor: 'text-brand',
+              },
+              {
+                  name: 'Total Quotations',
+                  value: stats.totalQuotations ?? 0,
+                  icon: ClipboardList,
+                  iconBg: 'bg-sky-50',
+                  iconColor: 'text-sky-600',
+              },
+              {
+                  name: 'Total Clients',
+                  value: stats.totalClients,
+                  icon: Users,
+                  iconBg: 'bg-violet-50',
+                  iconColor: 'text-violet-600',
+              },
+              {
+                  name: 'Revenue (Paid)',
+                  value: formatCurrency(stats.paidRevenue),
+                  icon: Wallet,
+                  iconBg: 'bg-green-50',
+                  iconColor: 'text-green-600',
+              },
+              {
+                  name: 'Pending Revenue',
+                  value: formatCurrency(stats.pendingRevenue),
+                  icon: Clock,
+                  iconBg: 'bg-amber-50',
+                  iconColor: 'text-amber-600',
+              },
           ]
         : [];
 
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
     const premium = isPremiumUser(businessInfo);
+
+    const openDocument = (doc) => {
+        const id = doc.id || doc._id;
+        if (isQuotationDocument(doc) || doc.documentType === 'quotation') {
+            navigate(`/quotations/${id}`);
+            return;
+        }
+        navigate(`/invoices/${id}`);
+    };
 
     if (loading && !data) {
         return <DashboardSkeleton />;
@@ -56,12 +126,17 @@ const Dashboard = () => {
                 onClose={() => setLimitModalOpen(false)}
                 usage={invoiceUsage}
             />
-            <PageHeader title="Dashboard" subtitle="Your invoicing overview" />
+            <CreateDocumentModal
+                open={createModalOpen}
+                onClose={() => setCreateModalOpen(false)}
+                navigate={navigate}
+            />
+            <PageHeader title="Dashboard" subtitle="Your business overview" />
             {!premium && usageLabel ? (
                 <InvoiceUsageBanner label={usageLabel} className="mb-4" />
             ) : null}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-3 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-3 mb-6">
                 {statCards.map((stat) => {
                     const Icon = stat.icon;
                     return (
@@ -81,9 +156,13 @@ const Dashboard = () => {
             <div className="card mb-6">
                 <h2 className="text-sm font-semibold text-zinc-950 mb-3">Quick actions</h2>
                 <div className="flex flex-col gap-2">
-                    <button type="button" onClick={tryNavigateToCreate} className="btn-primary w-full">
-                        <FileText size={16} />
-                        Create invoice
+                    <button
+                        type="button"
+                        onClick={() => setCreateModalOpen(true)}
+                        className="btn-primary w-full"
+                    >
+                        <Plus size={16} />
+                        Create
                     </button>
                     <div className="flex flex-wrap gap-2">
                         <button type="button" onClick={() => navigate('/clients')} className="btn-secondary">
@@ -92,7 +171,15 @@ const Dashboard = () => {
                         </button>
                         <button type="button" onClick={() => navigate('/invoices')} className="btn-secondary">
                             <TrendingUp size={16} />
-                            All invoices
+                            Invoices
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => navigate('/quotations')}
+                            className="btn-secondary"
+                        >
+                            <ClipboardList size={16} />
+                            Quotations
                         </button>
                         <button type="button" onClick={() => navigate('/statements')} className="btn-secondary">
                             <FileBarChart size={16} />
@@ -105,43 +192,50 @@ const Dashboard = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div>
-                    <h2 className="text-sm font-semibold text-zinc-950 mb-3">Recent invoices</h2>
-                    {recentInvoices.length === 0 ? (
+                    <h2 className="text-sm font-semibold text-zinc-950 mb-3">Recent documents</h2>
+                    {recentDocuments.length === 0 ? (
                         <div className="data-table-wrap">
                             <EmptyState
                                 icon={FileText}
-                                title="No invoices yet"
+                                title="No documents yet"
                                 action={
-                                    <button type="button" onClick={tryNavigateToCreate} className="btn-primary">
-                                        Create invoice
+                                    <button
+                                        type="button"
+                                        onClick={() => setCreateModalOpen(true)}
+                                        className="btn-primary"
+                                    >
+                                        Create
                                     </button>
                                 }
                             />
                         </div>
                     ) : (
                         <DataTable columns={RECENT_COLUMNS}>
-                            {recentInvoices.map((invoice) => (
+                            {recentDocuments.map((doc) => (
                                 <DataTableRow
-                                    key={invoice.id}
-                                    onClick={() => navigate(`/invoices/${invoice.id}`)}
+                                    key={`${doc.documentType || 'invoice'}-${doc.id || doc._id}`}
+                                    onClick={() => openDocument(doc)}
                                 >
                                     <DataTableCell>
-                                        <span className="font-medium text-zinc-950">
-                                            {getDisplayNumber(invoice)}
-                                        </span>
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <DocumentTypeBadge doc={doc} />
+                                            <span className="font-medium text-zinc-950 truncate">
+                                                {doc.displayNumber || getDisplayNumber(doc)}
+                                            </span>
+                                        </div>
                                     </DataTableCell>
                                     <DataTableCell>
                                         <span className="truncate max-w-[160px] block">
-                                            {invoice.clientName || 'Unknown Client'}
+                                            {doc.clientName || 'Unknown Client'}
                                         </span>
                                     </DataTableCell>
                                     <DataTableCell className="text-right">
                                         <span className="font-medium tabular-nums">
-                                            {formatCurrency(invoice.total, invoice.currency)}
+                                            {formatCurrency(doc.total, doc.currency)}
                                         </span>
                                     </DataTableCell>
                                     <DataTableCell>
-                                        <StatusBadge status={invoice.status} />
+                                        <StatusBadge status={doc.status} />
                                     </DataTableCell>
                                 </DataTableRow>
                             ))}
@@ -172,8 +266,10 @@ const Dashboard = () => {
                                 <tbody>
                                     {overdueInvoices.map((invoice) => (
                                         <DataTableRow
-                                            key={invoice.id}
-                                            onClick={() => navigate(`/invoices/${invoice.id}`)}
+                                            key={invoice.id || invoice._id}
+                                            onClick={() =>
+                                                navigate(`/invoices/${invoice.id || invoice._id}`)
+                                            }
                                         >
                                             <DataTableCell>
                                                 <p className="font-medium text-zinc-950">
@@ -208,4 +304,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

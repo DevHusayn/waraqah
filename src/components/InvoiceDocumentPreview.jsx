@@ -9,7 +9,7 @@ import {
     getAuthorizedSignatureUrl,
 } from '../utils/brandAssets';
 import { isPremiumUser } from '../utils/premium';
-import { getDocumentNumber, getPaymentMethodLabel } from '../utils/receiptHelpers';
+import { getDocumentNumber, getPaymentMethodLabel, resolvePdfMode } from '../utils/receiptHelpers';
 
 function lightenHex(hex, amount = 0.88) {
     const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '');
@@ -24,6 +24,12 @@ const STATUS_STYLES = {
     pending: 'bg-yellow-500',
     overdue: 'bg-red-500',
     cancelled: 'bg-zinc-400',
+    draft: 'bg-zinc-400',
+    sent: 'bg-sky-500',
+    accepted: 'bg-green-500',
+    rejected: 'bg-red-500',
+    expired: 'bg-orange-500',
+    converted: 'bg-violet-500',
 };
 
 function StatusBadge({ status }) {
@@ -53,17 +59,22 @@ function DetailBox({ label, children, brandColor, lightBrand, className = '' }) 
     );
 }
 
-export default function InvoiceDocumentPreview({ invoice, client, businessInfo, mode = 'invoice' }) {
-    const isReceipt = mode === 'receipt';
+export default function InvoiceDocumentPreview({ invoice, client, businessInfo, mode = 'auto' }) {
+    const resolvedMode = resolvePdfMode(invoice, mode);
+    const isReceipt = resolvedMode === 'receipt';
+    const isQuotation = resolvedMode === 'quotation';
     const premium = isPremiumUser(businessInfo);
     const brandColor = businessInfo?.brandColor || '#16A34A';
     const lightBrand = lightenHex(brandColor);
-    const docNumber = getDocumentNumber(invoice, mode) || (isReceipt ? 'RCP' : 'INV');
+    const docNumber =
+        getDocumentNumber(invoice, resolvedMode) ||
+        (isReceipt ? 'RCP' : isQuotation ? 'QTN' : 'INV');
     const logoUrl = premium ? getCompanyLogoUrl(businessInfo) : '';
     const stampUrl = premium && isReceipt ? getCompanyStampUrl(businessInfo) : '';
     const signatureUrl = premium ? getAuthorizedSignatureUrl(businessInfo) : '';
     const badgeStatus = isReceipt ? 'paid' : invoice?.status;
     const issueDate = invoice?.date ? format(new Date(invoice.date), 'MMM dd, yyyy') : 'N/A';
+    const hasValidUntil = Boolean(invoice?.validUntil);
     const hasDueDate = Boolean(invoice?.dueDate);
     const hasPaymentDetails = Boolean(
         businessInfo?.paymentAccountName?.trim()
@@ -71,9 +82,12 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
         || businessInfo?.paymentAccountNumber?.trim()
         || businessInfo?.paymentInstructions?.trim()
     );
-    const showPaymentBox = !isReceipt && hasPaymentDetails;
+    const showPaymentBox = !isReceipt && !isQuotation && hasPaymentDetails;
     const notesText = invoice?.notes?.trim() || '';
+    const termsText = isQuotation ? invoice?.terms?.trim() || '' : '';
     const quantityColumnLabel = resolveQuantityColumnLabel(invoice?.items).toUpperCase();
+    const docTitle = isReceipt ? 'RECEIPT' : isQuotation ? 'QUOTATION' : 'INVOICE';
+    const totalLabel = isReceipt ? 'TOTAL PAID' : isQuotation ? 'ESTIMATED TOTAL' : 'TOTAL DUE';
 
     const paymentLines = [];
     if (showPaymentBox) {
@@ -121,7 +135,7 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
 
                     <div className="text-left sm:text-right shrink-0">
                         <p className="text-2xl sm:text-[26px] font-bold text-zinc-800 tracking-tight">
-                            {isReceipt ? 'RECEIPT' : 'INVOICE'}
+                            {docTitle}
                         </p>
                         <div
                             className="inline-flex mt-2 rounded-lg px-3 py-1.5 text-sm font-bold"
@@ -186,7 +200,16 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                                         </p>
                                     </div>
                                 </>
-                            ) : hasDueDate ? (
+                            ) : isQuotation && hasValidUntil ? (
+                                <div>
+                                    <p className="text-[10px] font-bold tracking-[0.12em] text-zinc-500">
+                                        VALID UNTIL
+                                    </p>
+                                    <p className="text-sm font-bold text-zinc-800 text-right">
+                                        {format(new Date(invoice.validUntil), 'MMM dd, yyyy')}
+                                    </p>
+                                </div>
+                            ) : !isQuotation && hasDueDate ? (
                                 <div>
                                     <p className="text-[10px] font-bold tracking-[0.12em] text-zinc-500">DUE DATE</p>
                                     <p className="text-sm font-bold text-zinc-800 text-right">
@@ -261,9 +284,7 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                             </dd>
                         </div>
                         <div className="flex justify-between gap-4 pt-2 border-t border-zinc-200">
-                            <dt className="font-bold text-zinc-800">
-                                {isReceipt ? 'TOTAL PAID' : 'TOTAL DUE'}
-                            </dt>
+                            <dt className="font-bold text-zinc-800">{totalLabel}</dt>
                             <dd className="text-lg font-bold" style={{ color: brandColor }}>
                                 {formatCurrency(invoice.total, invoice.currency)}
                             </dd>
@@ -271,34 +292,53 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                     </dl>
                 </div>
 
-                {(showPaymentBox || notesText) && (
-                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {showPaymentBox ? (
+                {(showPaymentBox || notesText || termsText) && (
+                    <div className="mt-8 space-y-3">
+                        {(showPaymentBox || notesText) && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {showPaymentBox ? (
+                                    <div className="rounded-lg border border-zinc-200 px-4 py-3">
+                                        <p
+                                            className="text-xs font-bold tracking-[0.08em] mb-2"
+                                            style={{ color: brandColor }}
+                                        >
+                                            PAYMENT INFORMATION
+                                        </p>
+                                        <div className="space-y-1 text-xs sm:text-sm text-zinc-500 whitespace-pre-wrap">
+                                            {paymentLines.map((line) => (
+                                                <p key={line}>{line}</p>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : null}
+                                {notesText ? (
+                                    <div
+                                        className={`rounded-lg border border-zinc-200 px-4 py-3 ${showPaymentBox ? '' : 'sm:col-span-2'}`}
+                                    >
+                                        <p
+                                            className="text-xs font-bold tracking-[0.08em] mb-2"
+                                            style={{ color: brandColor }}
+                                        >
+                                            NOTES
+                                        </p>
+                                        <p className="text-xs sm:text-sm text-zinc-500 whitespace-pre-wrap">
+                                            {notesText}
+                                        </p>
+                                    </div>
+                                ) : null}
+                            </div>
+                        )}
+                        {termsText ? (
                             <div className="rounded-lg border border-zinc-200 px-4 py-3">
                                 <p
                                     className="text-xs font-bold tracking-[0.08em] mb-2"
                                     style={{ color: brandColor }}
                                 >
-                                    PAYMENT INFORMATION
+                                    TERMS & CONDITIONS
                                 </p>
-                                <div className="space-y-1 text-xs sm:text-sm text-zinc-500 whitespace-pre-wrap">
-                                    {paymentLines.map((line) => (
-                                        <p key={line}>{line}</p>
-                                    ))}
-                                </div>
-                            </div>
-                        ) : null}
-                        {notesText ? (
-                            <div
-                                className={`rounded-lg border border-zinc-200 px-4 py-3 ${showPaymentBox ? '' : 'sm:col-span-2'}`}
-                            >
-                                <p
-                                    className="text-xs font-bold tracking-[0.08em] mb-2"
-                                    style={{ color: brandColor }}
-                                >
-                                    NOTES
+                                <p className="text-xs sm:text-sm text-zinc-500 whitespace-pre-wrap">
+                                    {termsText}
                                 </p>
-                                <p className="text-xs sm:text-sm text-zinc-500 whitespace-pre-wrap">{notesText}</p>
                             </div>
                         ) : null}
                     </div>
@@ -341,7 +381,9 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                 <div className="mt-8 pt-4 border-t border-zinc-200 text-center text-xs text-zinc-500">
                     {premium ? (
                         <p>
-                            Thank you for doing business with {businessInfo?.name || 'us'}.
+                            {isQuotation
+                                ? `Thank you for considering ${businessInfo?.name || 'us'}. We look forward to doing business with you.`
+                                : `Thank you for doing business with ${businessInfo?.name || 'us'}.`}
                         </p>
                     ) : (
                         <>

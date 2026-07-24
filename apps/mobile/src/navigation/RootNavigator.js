@@ -39,6 +39,14 @@ const linking = {
                         path: 'more',
                         screens: {
                             Upgrade: 'upgrade/callback',
+                            Quotations: {
+                                path: 'quotations',
+                                screens: {
+                                    QuotationsList: '',
+                                    QuotationDetail: ':id',
+                                    CreateQuotation: 'create',
+                                },
+                            },
                         },
                     },
                 },

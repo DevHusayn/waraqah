@@ -6,6 +6,7 @@ import ForgotPasswordModal from '../components/ForgotPasswordModal';
 import RegisterWizard, { clearRegisterDraft } from '../components/auth/RegisterWizard';
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
+import { useQuotation } from '../context/QuotationContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import WaraqahLogo from '../components/WaraqahLogo';
@@ -26,8 +27,8 @@ import FieldValidationMessage from '../components/FieldValidationMessage';
 const LOGIN_FIELD_ORDER = ['email', 'password'];
 
 const FEATURES = [
-    { id: 'pdf', icon: FileText, text: 'Professional PDF invoices & receipts' },
-    { id: 'track', icon: Zap, text: 'Mark paid and track revenue instantly' },
+    { id: 'pdf', icon: FileText, text: 'Professional PDF quotations, invoices & receipts' },
+    { id: 'track', icon: Zap, text: 'Convert quotes, mark paid, track revenue' },
     { id: 'storage', icon: Shield, text: 'Secure cloud storage for your records' },
 ];
 
@@ -58,6 +59,7 @@ function PasswordToggle({ visible, onToggle, label }) {
 function Auth() {
     const { setBusinessInfo } = useSettings();
     const { fetchUserData, resetAll } = useInvoice();
+    const { resetAll: resetQuotations } = useQuotation();
     const { isAuthenticated, setSession } = useAuth();
     const [searchParams] = useSearchParams();
     const [isLogin, setIsLogin] = useState(searchParams.get('mode') !== 'register');
@@ -141,6 +143,7 @@ function Auth() {
 
     const handleSocialSuccess = async (data) => {
         resetAll();
+        resetQuotations();
         applyLoginResponse(data);
         setSession(data.user);
         if (data.needsBusinessSetup) {
@@ -179,6 +182,7 @@ function Auth() {
         try {
             await prepareForLogin();
             resetAll();
+            resetQuotations();
             const email = form.email.trim().toLowerCase();
             const data = await authFetch('/auth/login', {
                 method: 'POST',
@@ -208,6 +212,7 @@ function Auth() {
                 setError(err.message === 'Failed to fetch' ? getNetworkErrorMessage() : err.message);
             }
             resetAll();
+            resetQuotations();
         } finally {
             setSubmitLoading(false);
         }
@@ -258,11 +263,11 @@ function Auth() {
                 <div>
                     <WaraqahLogo size="lg" inverted iconStyle="solid" />
                     <h2 className="mt-10 text-3xl font-semibold leading-tight max-w-sm">
-                        Invoice professionally. Get paid faster.
+                        Quote professionally. Get paid faster.
                     </h2>
                     <p className="mt-4 text-white/80 text-base leading-relaxed max-w-md">
-                        Create branded invoices, track payments, and manage clients — all in one
-                        place.
+                        Create branded quotations and invoices, track payments, and manage clients —
+                        all in one place.
                     </p>
                     <ul className="mt-10 space-y-4">
                         {FEATURES.map(({ id, icon: Icon, text }) => (
@@ -290,7 +295,7 @@ function Auth() {
                                 <>
                                     <div className="mb-6">
                                         <h1 className="page-title">Welcome back</h1>
-                                        <p className="page-subtitle">Sign in to manage your invoices</p>
+                                        <p className="page-subtitle">Sign in to manage your quotations and invoices</p>
                                     </div>
 
                                     <div className="flex rounded-md border border-zinc-200/80 bg-zinc-50/50 p-1 mb-6">

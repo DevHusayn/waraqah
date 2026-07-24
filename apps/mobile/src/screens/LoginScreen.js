@@ -87,7 +87,7 @@ export function LoginScreen({ navigation }) {
 
                     <WaraqahLogo />
                     <Text style={styles.heading}>Welcome back</Text>
-                    <Text style={styles.sub}>Sign in to manage invoices and get paid.</Text>
+                    <Text style={styles.sub}>Sign in to manage quotations and invoices.</Text>
 
                     {!showForgot ? (
                         <View style={styles.form}>

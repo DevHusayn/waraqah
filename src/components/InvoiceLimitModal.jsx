@@ -25,11 +25,11 @@ export default function InvoiceLimitModal({ open, onClose, usage }) {
                     </div>
                 </div>
                 <h2 className="text-xl font-semibold text-zinc-900 text-center mb-2">
-                    Monthly invoice limit reached
+                    Monthly document limit reached
                 </h2>
                 <p className="text-zinc-600 text-center text-sm mb-6">
-                    You have used all <strong>{limit}</strong> free invoices for this month
-                    ({used}/{limit}). Upgrade to Premium for unlimited invoices, custom logos, and more.
+                    You have used all <strong>{limit}</strong> free invoices and quotations for this month
+                    ({used}/{limit}). Upgrade to Premium for unlimited documents, custom logos, and more.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                     <Link to="/upgrade" className="premium-upgrade-btn mx-auto text-sm py-2 px-4" onClick={onClose}>

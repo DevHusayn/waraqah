@@ -6,6 +6,7 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '../context/AuthContext';
 import { InvoiceProvider } from '../context/InvoiceContext';
+import { QuotationProvider } from '../context/QuotationContext';
 import { SettingsProvider } from '../context/SettingsContext';
 import { ToastProvider } from '../context/ToastContext';
 import { useAppStore } from '../stores/appStore';
@@ -44,12 +45,14 @@ export function AppProviders({ children }) {
                         <AuthProvider>
                             <SettingsProvider>
                                 <InvoiceProvider>
-                                    <ToastProvider>
-                                        <NetworkWatcher>
-                                            {children}
-                                            <OfflineBanner />
-                                        </NetworkWatcher>
-                                    </ToastProvider>
+                                    <QuotationProvider>
+                                        <ToastProvider>
+                                            <NetworkWatcher>
+                                                {children}
+                                                <OfflineBanner />
+                                            </NetworkWatcher>
+                                        </ToastProvider>
+                                    </QuotationProvider>
                                 </InvoiceProvider>
                             </SettingsProvider>
                         </AuthProvider>

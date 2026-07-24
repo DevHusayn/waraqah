@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
     FileText,
+    ClipboardList,
     PenLine,
     Users,
     Menu,
@@ -33,6 +34,7 @@ import useAppLogout from '../hooks/useAppLogout';
 const NAV_ITEMS = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Invoices', href: '/invoices', icon: FileText },
+    { name: 'Quotations', href: '/quotations', icon: ClipboardList },
     { name: 'Drafts', href: '/invoices/drafts', icon: PenLine, badgeKey: 'drafts' },
     { name: 'Statements', href: '/statements', icon: FileBarChart, premiumFeature: true },
     { name: 'Clients', href: '/clients', icon: Users },

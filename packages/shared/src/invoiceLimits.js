@@ -8,5 +8,5 @@ export function canCreateInvoice(usage) {
 
 export function formatInvoiceUsageLabel(usage) {
     if (!usage || usage.unlimited) return null;
-    return `${usage.used} of ${usage.limit} free invoices used this month`;
+    return `${usage.used} of ${usage.limit} free invoices & quotations used this month`;
 }

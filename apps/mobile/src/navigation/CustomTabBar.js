@@ -6,7 +6,9 @@ import { FilePlus2 } from 'lucide-react-native';
 import { colors, fontFamily, shadows, spacing, touchTarget } from '../theme';
 import { hapticLight, hapticSelection } from '../utils/haptics';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
+import { useQuotationCreateGuard } from '../hooks/useQuotationCreateGuard';
 import { InvoiceLimitModal } from '../components/InvoiceLimitModal';
+import { CreateActionSheet } from '../components/CreateActionSheet';
 
 function TabItem({ isFocused, options, label, badge, onPress, onLongPress }) {
     const color = isFocused ? colors.brand : colors.slate400;
@@ -58,7 +60,7 @@ function CreateTab({ onPress }) {
                 }}
                 style={({ pressed }) => [styles.createFab, shadows.fab, pressed && styles.createPressed]}
                 accessibilityRole="button"
-                accessibilityLabel="Create invoice"
+                accessibilityLabel="Create"
             >
                 <FilePlus2 size={26} color={colors.white} strokeWidth={2.25} />
             </Pressable>
@@ -70,12 +72,38 @@ function CreateTab({ onPress }) {
 export function CustomTabBar({ state, descriptors, navigation }) {
     const insets = useSafeAreaInsets();
     const limitModalRef = useRef(null);
+    const createSheetRef = useRef(null);
     const { invoiceUsage, tryCreate, goUpgrade } = useInvoiceCreateGuard(limitModalRef, navigation);
+    const { tryCreate: tryCreateQuotation } = useQuotationCreateGuard(limitModalRef, navigation);
 
-    const handleCreate = () => {
-        tryCreate(() => {
-            navigation.navigate('Invoices', { screen: 'CreateInvoice' });
-        });
+    const openCreateSheet = () => {
+        createSheetRef.current?.snapToIndex(0);
+    };
+
+    const handleCreateSelect = (id) => {
+        createSheetRef.current?.close();
+        if (id === 'invoice') {
+            tryCreate(() => {
+                navigation.navigate('Invoices', { screen: 'CreateInvoice' });
+            });
+            return;
+        }
+        if (id === 'quotation') {
+            tryCreateQuotation(() => {
+                navigation.navigate('More', {
+                    screen: 'Quotations',
+                    params: { screen: 'CreateQuotation' },
+                });
+            });
+            return;
+        }
+        if (id === 'client') {
+            navigation.navigate('Clients');
+            return;
+        }
+        if (id === 'product') {
+            navigation.navigate('More', { screen: 'Products' });
+        }
     };
 
     // Insert Create FAB after Invoices (index 1) → visual: Home, Invoices, Create, Clients, More
@@ -127,9 +155,10 @@ export function CustomTabBar({ state, descriptors, navigation }) {
                 ]}
             >
                 {leftRoutes.map(renderTab)}
-                <CreateTab onPress={handleCreate} />
+                <CreateTab onPress={openCreateSheet} />
                 {rightRoutes.map(renderTab)}
             </View>
+            <CreateActionSheet sheetRef={createSheetRef} onSelect={handleCreateSelect} />
             <InvoiceLimitModal ref={limitModalRef} usage={invoiceUsage} onUpgrade={goUpgrade} />
         </>
     );

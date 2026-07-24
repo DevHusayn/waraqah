@@ -15,15 +15,13 @@ export default function SettingsPageShell({
             {backTo ? (
                 <Link
                     to={backTo}
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-brand mb-4 transition-colors lg:hidden"
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-brand mb-4 transition-colors"
                 >
                     <ChevronLeft className="h-4 w-4" aria-hidden />
                     {backLabel}
                 </Link>
-            ) : null}
-
-            {breadcrumbs.length > 0 ? (
-                <nav aria-label="Breadcrumb" className="hidden lg:flex items-center gap-1.5 text-xs text-zinc-400 mb-3">
+            ) : breadcrumbs.length > 0 ? (
+                <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-zinc-400 mb-3">
                     {breadcrumbs.map((crumb, index) => (
                         <span key={crumb.to} className="flex items-center gap-1.5 min-w-0">
                             {index > 0 ? <span aria-hidden>/</span> : null}

@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { ExternalLink, Facebook, Instagram, Linkedin } from 'lucide-react';
 import SettingsPageShell from '../../components/settings/SettingsPageShell';
 import {
@@ -6,7 +5,9 @@ import {
     APP_TAGLINE,
     APP_VERSION,
     APP_DESCRIPTION,
+    APP_DOMAIN,
     APP_SUPPORT_EMAIL,
+    APP_WEBSITE_URL,
     APP_SOCIAL_LINKS,
 } from '../../constants/brand';
 
@@ -69,13 +70,15 @@ export default function AboutSettings() {
                             Website
                         </dt>
                         <dd className="mt-1">
-                            <Link
-                                to="/"
+                            <a
+                                href={APP_WEBSITE_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 text-brand hover:underline font-medium"
                             >
-                                waraqah.com
+                                {APP_DOMAIN}
                                 <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-                            </Link>
+                            </a>
                         </dd>
                     </div>
                     <div>

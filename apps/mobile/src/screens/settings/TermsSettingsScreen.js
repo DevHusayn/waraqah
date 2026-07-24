@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { Card } from '../../components/ui';
-import { APP_NAME } from '../../constants/brand';
+import { APP_NAME, APP_SUPPORT_EMAIL } from '../../constants/brand';
 import { colors, fontFamily, fontSize, spacing } from '../../theme';
 
 export function TermsSettingsScreen() {
@@ -14,7 +14,7 @@ export function TermsSettingsScreen() {
                     of your business data. Premium subscriptions renew monthly until cancelled.
                 </Text>
                 <Text style={[styles.body, { marginTop: spacing.md }]}>
-                    For full terms or questions, contact support@waraqah.com.
+                    For full terms or questions, contact {APP_SUPPORT_EMAIL}.
                 </Text>
             </Card>
         </ScrollView>

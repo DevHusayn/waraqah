@@ -233,15 +233,26 @@ export const InvoiceProvider = ({ children }) => {
             body: JSON.stringify(updatedInvoice),
         });
         const mapped = mapInvoice(updated);
-        setInvoices((prev) => {
-            const exists = prev.some((inv) => inv.id === id);
-            if (!exists) return [mapped, ...prev];
-            return prev.map((inv) => (inv.id === id ? mapped : inv));
-        });
-        setDrafts((prev) => prev.map((inv) => (inv.id === id ? mapped : inv)));
-        if (isDraft(mapped)) {
-            await refreshMeta();
+        const stillDraft = isDraft(mapped);
+
+        if (stillDraft) {
+            setDrafts((prev) => {
+                const exists = prev.some((inv) => inv.id === id);
+                if (!exists) return [mapped, ...prev];
+                return prev.map((inv) => (inv.id === id ? mapped : inv));
+            });
+            setInvoices((prev) => prev.filter((inv) => inv.id !== id));
+        } else {
+            // Finalized (or non-draft) — leave the drafts list entirely.
+            setDrafts((prev) => prev.filter((inv) => inv.id !== id));
+            setInvoices((prev) => {
+                const exists = prev.some((inv) => inv.id === id);
+                if (!exists) return [mapped, ...prev];
+                return prev.map((inv) => (inv.id === id ? mapped : inv));
+            });
         }
+
+        await refreshMeta();
         return mapped;
     };
 
@@ -329,35 +340,36 @@ export const InvoiceProvider = ({ children }) => {
         setProducts((prev) => prev.filter((product) => product.id !== id));
     };
 
-    const draftInvoices = useMemo(
-        () =>
-            drafts.length > 0
-                ? [...drafts].sort(
-                      (a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
-                  )
-                : [...invoices]
-                      .filter(isDraft)
-                      .sort(
-                          (a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
-                      ),
-        [drafts, invoices]
-    );
+    const draftInvoices = useMemo(() => {
+        const source =
+            drafts.length > 0 ? drafts : invoices.filter(isDraft);
+        return [...source]
+            .filter(isDraft)
+            .sort(
+                (a, b) =>
+                    new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt)
+            );
+    }, [drafts, invoices]);
 
     const upsertInvoice = useCallback((record) => {
         if (!record) return;
         const mapped = mapInvoice(record);
-        setInvoices((prev) => {
-            const exists = prev.some((inv) => inv.id === mapped.id);
-            if (!exists) return [mapped, ...prev];
-            return prev.map((inv) => (inv.id === mapped.id ? mapped : inv));
-        });
         if (isDraft(mapped)) {
             setDrafts((prev) => {
                 const exists = prev.some((inv) => inv.id === mapped.id);
                 if (!exists) return [mapped, ...prev];
                 return prev.map((inv) => (inv.id === mapped.id ? mapped : inv));
             });
+            setInvoices((prev) => prev.filter((inv) => inv.id !== mapped.id));
+            return;
         }
+
+        setDrafts((prev) => prev.filter((inv) => inv.id !== mapped.id));
+        setInvoices((prev) => {
+            const exists = prev.some((inv) => inv.id === mapped.id);
+            if (!exists) return [mapped, ...prev];
+            return prev.map((inv) => (inv.id === mapped.id ? mapped : inv));
+        });
     }, []);
 
     const value = {
