@@ -30,6 +30,7 @@ import {
 import { lockBodyScroll } from '../utils/bodyScrollLock';
 import { APP_TAGLINE } from '../constants/brand';
 import useAppLogout from '../hooks/useAppLogout';
+import InstallPrompt from './InstallPrompt';
 
 const NAV_ITEMS = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -285,6 +286,8 @@ const Layout = ({ children }) => {
                     onDismiss={() => setShowSetupCoachmark(false)}
                 />
             ) : null}
+
+            {isAuthenticated ? <InstallPrompt /> : null}
         </div>
     );
 };
