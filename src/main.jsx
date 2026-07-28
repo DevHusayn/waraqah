@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import SplashScreen from './components/SplashScreen.jsx'
 import { initMonitoring } from './monitoring/sentry.js'
+import { hasSeenSplash, markSplashSeen, removeStaticSplash } from './utils/splashSession.js'
 import { registerSW } from 'virtual:pwa-register'
 import './index.css'
 
@@ -12,14 +13,26 @@ initMonitoring()
 registerSW({ immediate: true })
 
 function Root() {
-    const [splashDone, setSplashDone] = useState(false)
+    const [splashDone, setSplashDone] = useState(hasSeenSplash)
+
+    useEffect(() => {
+        if (splashDone) {
+            removeStaticSplash()
+        }
+    }, [splashDone])
+
+    const handleSplashFinish = () => {
+        markSplashSeen()
+        removeStaticSplash()
+        setSplashDone(true)
+    }
 
     return (
         <>
-            <div style={{ visibility: splashDone ? 'visible' : 'hidden' }}>
+            <div style={splashDone ? undefined : { visibility: 'hidden' }}>
                 <App />
             </div>
-            {!splashDone ? <SplashScreen onFinish={() => setSplashDone(true)} /> : null}
+            {!splashDone ? <SplashScreen onFinish={handleSplashFinish} /> : null}
         </>
     )
 }

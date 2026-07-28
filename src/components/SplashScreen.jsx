@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { APP_NAME, APP_TAGLINE } from '../constants/brand';
+import { removeStaticSplash } from '../utils/splashSession';
 
 const SPLASH_DURATION_MS = 2600;
 
@@ -8,10 +9,9 @@ export default function SplashScreen({ onFinish }) {
 
     useEffect(() => {
         document.body.classList.add('splash-active');
-        document.getElementById('pwa-splash')?.remove();
+        removeStaticSplash();
 
         const timer = window.setTimeout(() => {
-            document.body.classList.remove('splash-active');
             onFinish?.();
         }, continuedFromStatic ? SPLASH_DURATION_MS - 500 : SPLASH_DURATION_MS);
 

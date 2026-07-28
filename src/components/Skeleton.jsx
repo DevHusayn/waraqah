@@ -11,10 +11,11 @@ function LoadingStatus({ children, label = 'Loading' }) {
     );
 }
 
-export function PageHeaderSkeleton({ withAction = true }) {
+export function PageHeaderSkeleton({ withAction = true, withEyebrow = false }) {
     return (
         <div className="mb-6 pb-5 border-b border-zinc-200/50 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between min-w-0">
             <div className="space-y-2 min-w-0">
+                {withEyebrow ? <Skeleton className="h-3 w-24" /> : null}
                 <Skeleton className="h-7 w-36 sm:w-44" />
                 <Skeleton className="h-4 w-52 sm:w-64 max-w-full" />
             </div>
@@ -238,6 +239,7 @@ export function UpgradePageSkeleton() {
 export function DashboardSkeleton() {
     return (
         <LoadingStatus label="Loading dashboard">
+            <PageHeaderSkeleton withAction={false} withEyebrow />
             <StatsCardsSkeleton
                 count={5}
                 className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6"

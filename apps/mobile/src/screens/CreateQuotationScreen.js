@@ -579,6 +579,8 @@ export function CreateQuotationScreen({ route, navigation }) {
                             onChangeText={(v) => setItem(index, 'description', v)}
                             error={Boolean(fieldErrors[`item-${index}-description`])}
                             placeholder="Service or product"
+                            multiline
+                            style={{ minHeight: 72, textAlignVertical: 'top' }}
                         />
                         <FieldError message={fieldErrors[`item-${index}-description`]} />
                         <View style={styles.row}>

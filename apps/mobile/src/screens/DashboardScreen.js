@@ -26,6 +26,7 @@ import {
     formatCurrency,
     formatInvoiceUsageLabel,
     getBusinessInitials,
+    getDisplayBusinessName,
     isPremiumUser,
     isQuotationDocument,
 } from '@waraqah/shared';
@@ -46,16 +47,11 @@ import {
 } from '../components/ui';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { useQuotationCreateGuard } from '../hooks/useQuotationCreateGuard';
+import { useDashboardGreeting } from '../hooks/useDashboardGreeting';
 import { colors, fontFamily, fontSize, lineHeight, radii, shadows, spacing } from '../theme';
 import { hapticSelection } from '../utils/haptics';
 
 const CARD_WIDTH = Dimensions.get('window').width - spacing.xl * 2;
-
-function greetingForHour(hour = new Date().getHours()) {
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-}
 
 function StatCell({ icon: Icon, label, value, iconBg, iconColor, valueColor }) {
     return (
@@ -74,6 +70,7 @@ function StatCell({ icon: Icon, label, value, iconBg, iconColor, valueColor }) {
 export function DashboardScreen({ navigation }) {
     const { user, logout } = useAuth();
     const { businessInfo } = useSettings();
+    const greetingPhrase = useDashboardGreeting();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -112,12 +109,9 @@ export function DashboardScreen({ navigation }) {
     const recent = data?.recentDocuments || data?.recentInvoices || [];
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
     const premium = isPremiumUser(businessInfo);
-    const firstName = (user?.name || businessInfo?.name || 'there').split(/\s+/)[0];
-    const initials = getBusinessInitials(user?.name || businessInfo?.name || 'W');
+    const displayBusinessName = getDisplayBusinessName(businessInfo);
+    const initials = getBusinessInitials(displayBusinessName);
     const revenue = stats?.paidRevenue ?? 0;
-    const hour = new Date().getHours();
-    const greeting = greetingForHour(hour);
-    const greetingEmoji = hour < 12 ? '☀️' : hour < 17 ? '🌤' : '🌙';
 
     const openMenu = () => {
         hapticSelection();
@@ -204,10 +198,12 @@ export function DashboardScreen({ navigation }) {
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.headerText}>
-                        <Text style={styles.greeting}>
-                            {greeting} {greetingEmoji}
+                        {greetingPhrase ? (
+                            <Text style={styles.greeting}>{greetingPhrase}</Text>
+                        ) : null}
+                        <Text style={styles.name} numberOfLines={2}>
+                            {displayBusinessName}
                         </Text>
-                        <Text style={styles.name}>{firstName}</Text>
                         <Text style={styles.subtitle}>Manage invoices & quotations</Text>
                     </View>
                     <View style={styles.headerActions}>

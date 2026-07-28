@@ -26,6 +26,10 @@
         body.splash-active {
             overflow: hidden;
         }
+
+        html.splash-skip #pwa-splash {
+            display: none !important;
+        }
     </style>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
@@ -52,6 +56,13 @@
 </head>
 
 <body>
+    <script>
+        try {
+            if (sessionStorage.getItem('waraqah_splash_seen') === '1') {
+                document.documentElement.classList.add('splash-skip');
+            }
+        } catch (_) {}
+    </script>
     <div id="pwa-splash" aria-hidden="true">
         <span id="pwa-splash__w">W</span>
     </div>

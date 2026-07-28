@@ -1061,16 +1061,17 @@ const CreateInvoice = () => {
                                                 <RequiredLabel htmlFor={`invoice-item-${index}-description`}>
                                                     Description
                                                 </RequiredLabel>
-                                                <input
+                                                <textarea
                                                     id={`invoice-item-${index}-description`}
-                                                    type="text"
                                                     value={item.description}
                                                     onChange={(e) =>
                                                         handleItemChange(index, 'description', e.target.value)
                                                     }
                                                     className={inputClass(
-                                                        Boolean(fieldErrors[`item-${index}-description`])
+                                                        Boolean(fieldErrors[`item-${index}-description`]),
+                                                        'resize-none min-h-[72px]'
                                                     )}
+                                                    rows={2}
                                                     placeholder="Service or product"
                                                     aria-invalid={Boolean(
                                                         fieldErrors[`item-${index}-description`]
