@@ -60,8 +60,7 @@ export function markPwaSessionAlive() {
     }
 }
 
-/** Remove the inline HTML cold-start shell once React splash is ready. */
-export function clearPwaColdStartShell() {
+/** Clear the inline cold-start green background once React splash is ready. */
+export function clearPwaColdStartBackground() {
     document.documentElement.classList.remove('pwa-cold-start');
-    document.getElementById('pwa-cold-shell')?.remove();
 }

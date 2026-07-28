@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect } from 'react';
-import { APP_NAME, APP_TAGLINE } from '../constants/brand';
-import { markPwaSessionAlive, clearPwaColdStartShell } from '../utils/splashSession';
+import { APP_NAME } from '../constants/brand';
+import { markPwaSessionAlive, clearPwaColdStartBackground } from '../utils/splashSession';
+
+const TAGLINE_PARTS = ['Quote', 'Invoice', 'Get Paid'];
 
 const SPLASH_DURATION_MS = 2600;
 const OS_HANDOFF_SPLASH_DURATION_MS = 1800;
@@ -9,7 +11,7 @@ export default function SplashScreen({ onFinish, handoffFromOsSplash = false }) 
     const durationMs = handoffFromOsSplash ? OS_HANDOFF_SPLASH_DURATION_MS : SPLASH_DURATION_MS;
 
     useLayoutEffect(() => {
-        clearPwaColdStartShell();
+        clearPwaColdStartBackground();
     }, []);
 
     useEffect(() => {
@@ -41,7 +43,23 @@ export default function SplashScreen({ onFinish, handoffFromOsSplash = false }) 
                         <span className="waraqah-splash__rest-text">araqah</span>
                     </span>
                 </div>
-                <p className="waraqah-splash__tagline">{APP_TAGLINE}</p>
+                <p className="waraqah-splash__tagline" aria-label="Quote. Invoice. Get Paid.">
+                    <span className="waraqah-splash__tagline-track">
+                        {TAGLINE_PARTS.map((part, index) => (
+                            <span
+                                key={part}
+                                className={`waraqah-splash__tagline-word${
+                                    index === TAGLINE_PARTS.length - 1
+                                        ? ' waraqah-splash__tagline-word--final'
+                                        : ''
+                                }`}
+                                style={{ '--i': index }}
+                            >
+                                {part}
+                            </span>
+                        ))}
+                    </span>
+                </p>
             </div>
         </div>
     );

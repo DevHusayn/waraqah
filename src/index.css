@@ -543,12 +543,36 @@ body.splash-active {
 
 .waraqah-splash__tagline {
     margin: 0;
+    min-height: 1.25rem;
     font-family: Inter, system-ui, sans-serif;
     font-size: 0.9375rem;
     font-weight: 500;
     color: rgb(255 255 255 / 0.85);
+}
+
+.waraqah-splash__tagline-track {
+    position: relative;
+    display: inline-block;
+    min-width: 5.5rem;
+    min-height: 1.25em;
+}
+
+.waraqah-splash__tagline-word {
+    --tagline-base-delay: 900ms;
+    --tagline-step: 550ms;
+    position: absolute;
+    left: 50%;
+    top: 0;
+    white-space: nowrap;
     opacity: 0;
-    animation: waraqah-splash-tagline-in 500ms ease 900ms forwards;
+    transform: translateX(-50%) translateY(8px);
+    animation: waraqah-splash-tagline-word 2.1s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+    animation-delay: calc(var(--tagline-base-delay) + var(--i) * var(--tagline-step));
+}
+
+.waraqah-splash__tagline-word--final {
+    animation-name: waraqah-splash-tagline-word-final;
+    animation-duration: 0.55s;
 }
 
 /* After the OS manifest splash (green + W icon), continue the wordmark animation. */
@@ -566,8 +590,9 @@ body.splash-active {
     animation-delay: 0ms;
 }
 
-.waraqah-splash--os-handoff .waraqah-splash__tagline {
-    animation-delay: 450ms;
+.waraqah-splash--os-handoff .waraqah-splash__tagline-word {
+    --tagline-base-delay: 450ms;
+    --tagline-step: 400ms;
 }
 
 @keyframes waraqah-splash-w-in {
@@ -590,8 +615,41 @@ body.splash-active {
     }
 }
 
-@keyframes waraqah-splash-tagline-in {
-    to {
+@keyframes waraqah-splash-tagline-word {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(8px);
+    }
+
+    14% {
         opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    32% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+
+    46% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-6px);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-6px);
+    }
+}
+
+@keyframes waraqah-splash-tagline-word-final {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(8px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
     }
 }
