@@ -1,15 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Download, X } from 'lucide-react';
 import { APP_NAME } from '../constants/brand';
+import { isStandalonePwa } from '../utils/isStandalonePwa';
 
 const DISMISS_KEY = 'waraqah-pwa-install-dismissed';
-
-function isStandalone() {
-    return (
-        window.matchMedia('(display-mode: standalone)').matches
-        || window.navigator.standalone === true
-    );
-}
 
 function isMobileViewport() {
     return window.matchMedia('(max-width: 768px)').matches;
@@ -20,7 +14,7 @@ export default function InstallPrompt() {
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {
-        if (isStandalone() || localStorage.getItem(DISMISS_KEY) === '1') {
+        if (isStandalonePwa() || localStorage.getItem(DISMISS_KEY) === '1') {
             return undefined;
         }
 

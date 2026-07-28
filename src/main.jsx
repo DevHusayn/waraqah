@@ -4,15 +4,24 @@ import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import SplashScreen from './components/SplashScreen.jsx'
 import { initMonitoring } from './monitoring/sentry.js'
-import { hasSeenSplash } from './utils/splashSession.js'
+import {
+    initPwaSessionLifecycle,
+    markPwaSessionAlive,
+    shouldShowPwaSplash,
+} from './utils/splashSession.js'
 import { registerSW } from 'virtual:pwa-register'
 import './index.css'
 
 initMonitoring()
+initPwaSessionLifecycle()
 
 registerSW({ immediate: true })
 
-const showSplash = !hasSeenSplash()
+const showSplash = shouldShowPwaSplash()
+
+if (!showSplash) {
+    markPwaSessionAlive()
+}
 
 function Root() {
     const [splashDone, setSplashDone] = useState(!showSplash)
@@ -20,7 +29,9 @@ function Root() {
     return (
         <>
             <App />
-            {!splashDone ? <SplashScreen onFinish={() => setSplashDone(true)} /> : null}
+            {!splashDone ? (
+                <SplashScreen handoffFromOsSplash onFinish={() => setSplashDone(true)} />
+            ) : null}
         </>
     )
 }

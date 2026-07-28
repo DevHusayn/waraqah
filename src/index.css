@@ -551,6 +551,25 @@ body.splash-active {
     animation: waraqah-splash-tagline-in 500ms ease 900ms forwards;
 }
 
+/* After the OS manifest splash (green + W icon), continue the wordmark animation. */
+.waraqah-splash--os-handoff .waraqah-splash__w {
+    opacity: 1;
+    transform: scale(1);
+    animation: none;
+}
+
+.waraqah-splash--os-handoff .waraqah-splash__rest {
+    animation-delay: 0ms;
+}
+
+.waraqah-splash--os-handoff .waraqah-splash__rest-text {
+    animation-delay: 0ms;
+}
+
+.waraqah-splash--os-handoff .waraqah-splash__tagline {
+    animation-delay: 450ms;
+}
+
 @keyframes waraqah-splash-w-in {
     to {
         opacity: 1;
