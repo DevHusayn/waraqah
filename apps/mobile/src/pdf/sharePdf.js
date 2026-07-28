@@ -1,13 +1,13 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { getPdfFileName, isPremiumUser } from '@waraqah/shared';
-import { APP_DOMAIN, APP_WEBSITE_URL } from '../constants/brand';
+import { getPdfFileName, isPremiumUser, resolvePdfMode } from '@waraqah/shared';
 import { buildInvoiceHtml } from './invoiceHtml';
 import { buildQuotationHtml } from './quotationHtml';
 import { buildStatementHtml } from './statementHtml';
-import { addFooterLinkToPdfFile } from './addFooterLink';
+import { stampLastPageFooter } from './stampLastPageFooter';
+import { buildDocumentFooterConfig, buildStatementFooterConfig } from './footerConfig';
 
-async function shareHtmlAsPdf(html, filename, { includeFooterLink = false } = {}) {
+async function shareHtmlAsPdf(html, filename, { footer, includeFooterLink = false } = {}) {
     const { uri } = await Print.printToFileAsync({
         html,
         base64: false,
@@ -15,9 +15,22 @@ async function shareHtmlAsPdf(html, filename, { includeFooterLink = false } = {}
         height: 1584,
     });
 
-    const pdfUri = includeFooterLink
-        ? await addFooterLinkToPdfFile(uri, APP_WEBSITE_URL, APP_DOMAIN)
-        : uri;
+    return stampLastPageFooter(uri, footer, { includeFooterLink });
+}
+
+export async function shareInvoicePdf(invoice, client, businessInfo, mode = 'auto') {
+    const filename = getPdfFileName(invoice, mode);
+    const html = buildInvoiceHtml(invoice, client, businessInfo, mode);
+    const resolvedMode = resolvePdfMode(invoice, mode);
+    const footer = buildDocumentFooterConfig(
+        businessInfo,
+        resolvedMode === 'receipt' ? 'receipt' : 'invoice'
+    );
+    const premium = isPremiumUser(businessInfo);
+    const pdfUri = await shareHtmlAsPdf(html, filename, {
+        footer,
+        includeFooterLink: !premium,
+    });
 
     if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(pdfUri, {
@@ -30,23 +43,41 @@ async function shareHtmlAsPdf(html, filename, { includeFooterLink = false } = {}
     return pdfUri;
 }
 
-export async function shareInvoicePdf(invoice, client, businessInfo, mode = 'auto') {
-    const filename = getPdfFileName(invoice, mode);
-    const html = buildInvoiceHtml(invoice, client, businessInfo, mode);
-    const premium = isPremiumUser(businessInfo);
-    return shareHtmlAsPdf(html, filename, { includeFooterLink: !premium });
-}
-
 export async function shareQuotationPdf(quotation, client, businessInfo) {
     const filename = getPdfFileName(quotation, 'quotation');
     const html = buildQuotationHtml(quotation, client, businessInfo);
+    const footer = buildDocumentFooterConfig(businessInfo, 'quotation');
     const premium = isPremiumUser(businessInfo);
-    return shareHtmlAsPdf(html, filename, { includeFooterLink: !premium });
+    const pdfUri = await shareHtmlAsPdf(html, filename, {
+        footer,
+        includeFooterLink: !premium,
+    });
+
+    if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(pdfUri, {
+            mimeType: 'application/pdf',
+            dialogTitle: filename,
+            UTI: 'com.adobe.pdf',
+        });
+    }
+
+    return pdfUri;
 }
 
 export async function shareStatementPdf(statement, businessInfo) {
     const slug = statement.periodLabel.replace(/\s+/g, '-').toLowerCase();
     const filename = `monthly-statement-${slug}.pdf`;
     const html = buildStatementHtml(statement, businessInfo);
-    return shareHtmlAsPdf(html, filename);
+    const footer = buildStatementFooterConfig(statement, businessInfo);
+    const pdfUri = await shareHtmlAsPdf(html, filename, { footer });
+
+    if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(pdfUri, {
+            mimeType: 'application/pdf',
+            dialogTitle: filename,
+            UTI: 'com.adobe.pdf',
+        });
+    }
+
+    return pdfUri;
 }

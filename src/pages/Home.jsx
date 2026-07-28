@@ -9,33 +9,33 @@ import { hasLikelyAuthSession } from '../utils/authHint';
 const Landing = lazy(() => import('./Landing'));
 const Dashboard = lazy(() => import('./Dashboard'));
 
+function DashboardHome({ gated = true }) {
+    const content = (
+        <Layout>
+            <Suspense fallback={<DashboardSkeleton />}>
+                <Dashboard />
+            </Suspense>
+        </Layout>
+    );
+
+    return gated ? <PrivateRoute>{content}</PrivateRoute> : content;
+}
+
 /** Guests see marketing landing; signed-in users go straight to the dashboard. */
 export default function Home() {
     const { isAuthenticated, loading, resolving } = useAuth();
     const authPending = loading || resolving;
-    const likelySession = isAuthenticated || hasLikelyAuthSession();
-
-    if (authPending) {
-        if (likelySession) {
-            return (
-                <Layout>
-                    <DashboardSkeleton />
-                </Layout>
-            );
-        }
-        return <PublicPageSpinner />;
-    }
 
     if (isAuthenticated) {
-        return (
-            <PrivateRoute>
-                <Layout>
-                    <Suspense fallback={<DashboardSkeleton />}>
-                        <Dashboard />
-                    </Suspense>
-                </Layout>
-            </PrivateRoute>
-        );
+        return <DashboardHome />;
+    }
+
+    if (authPending && hasLikelyAuthSession()) {
+        return <DashboardHome gated={false} />;
+    }
+
+    if (authPending) {
+        return <PublicPageSpinner />;
     }
 
     return (

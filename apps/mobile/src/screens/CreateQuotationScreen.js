@@ -543,7 +543,7 @@ export function CreateQuotationScreen({ route, navigation }) {
                     style={styles.clientDetailsBtn}
                     accessibilityRole="button"
                     accessibilityLabel={
-                        hasClientDetails(form) ? 'Edit client details' : 'Add client details'
+                        hasClientDetails(form) ? 'Edit client details' : 'Add more details'
                     }
                 >
                     {hasClientDetails(form) ? (
@@ -554,7 +554,7 @@ export function CreateQuotationScreen({ route, navigation }) {
                     ) : (
                         <>
                             <Plus size={16} color={colors.slate600} strokeWidth={2.5} />
-                            <Text style={styles.clientDetailsBtnText}>Add client details</Text>
+                            <Text style={styles.clientDetailsBtnText}>Add more details</Text>
                         </>
                     )}
                 </Pressable>

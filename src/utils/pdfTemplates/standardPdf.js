@@ -84,6 +84,44 @@ function drawStatusBadge(doc, status, x, y, primaryColor) {
     doc.text(label, x - badgeW / 2 + 2, y + 0.5, { align: 'center' });
 }
 
+const BILL_TO_TEXT_X = 19;
+const BILL_TO_MAX_WIDTH = 76;
+const BILL_TO_LINE_HEIGHT = 3.8;
+const PAYMENT_TEXT_MAX_WIDTH = 78;
+
+function countWrappedLines(doc, text, maxWidth) {
+    if (!text) return 0;
+    return doc.splitTextToSize(String(text), maxWidth).length;
+}
+
+function measureBillToBoxHeight(doc, client, business, additionalInfo) {
+    let height = 13;
+    height += countWrappedLines(doc, client?.name || 'Client', BILL_TO_MAX_WIDTH) * BILL_TO_LINE_HEIGHT;
+    if (business) {
+        height += countWrappedLines(doc, business, BILL_TO_MAX_WIDTH) * BILL_TO_LINE_HEIGHT;
+    }
+    if (client?.email) {
+        height += countWrappedLines(doc, client.email, BILL_TO_MAX_WIDTH) * BILL_TO_LINE_HEIGHT;
+    }
+    if (client?.phone) {
+        height += countWrappedLines(doc, client.phone, BILL_TO_MAX_WIDTH) * BILL_TO_LINE_HEIGHT;
+    }
+    if (client?.address) {
+        height += countWrappedLines(doc, client.address, BILL_TO_MAX_WIDTH) * BILL_TO_LINE_HEIGHT;
+    }
+    if (additionalInfo) {
+        height += 2;
+        height += countWrappedLines(doc, additionalInfo, BILL_TO_MAX_WIDTH) * BILL_TO_LINE_HEIGHT;
+    }
+    return Math.max(36, height + 8);
+}
+
+function drawWrappedBillToField(doc, text, x, y, maxWidth = BILL_TO_MAX_WIDTH) {
+    const lines = doc.splitTextToSize(String(text), maxWidth);
+    doc.text(lines, x, y);
+    return y + lines.length * BILL_TO_LINE_HEIGHT;
+}
+
 function drawInvoiceTitleBlock(doc, docNumber, mode, primaryColor, lightPrimary, textColor) {
     const title =
         mode === 'receipt' ? 'RECEIPT' : mode === 'quotation' ? 'QUOTATION' : 'INVOICE';
@@ -124,55 +162,41 @@ function drawBillToAndDetails(
 
     const business = getClientBusiness(client);
     const additionalInfo = String(invoice.clientAdditionalInfo || '').trim();
-    const billToLineCount =
-        1 +
-        (business ? 1 : 0) +
-        (client?.email ? 1 : 0) +
-        (client?.phone ? 1 : 0) +
-        (client?.address ? doc.splitTextToSize(String(client.address), 80).length : 0) +
-        (additionalInfo ? doc.splitTextToSize(additionalInfo, 80).length : 0);
-    const billToContentHeight = 13 + billToLineCount * 3.8 + (additionalInfo ? 2 : 0);
-    const boxH = Math.max(36, detailsHeight, billToContentHeight + 8);
+    const leftBoxH = measureBillToBoxHeight(doc, client, business, additionalInfo);
+    const rightBoxH = Math.max(36, detailsHeight);
 
     doc.setFillColor(...lightPrimary);
-    doc.roundedRect(15, y, 88, boxH, 2, 2, 'F');
-    doc.roundedRect(107, y, 88, boxH, 2, 2, 'F');
+    doc.roundedRect(15, y, 88, leftBoxH, 2, 2, 'F');
+    doc.roundedRect(107, y, 88, rightBoxH, 2, 2, 'F');
 
     doc.setFontSize(7);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(...primaryColor);
-    doc.text(isQuotationDoc ? 'QUOTED TO' : 'BILL TO', 19, y + 6);
+    doc.text(isQuotationDoc ? 'QUOTED TO' : 'BILL TO', BILL_TO_TEXT_X, y + 6);
 
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(...textColor);
-    doc.text(String(client?.name || 'Client'), 19, y + 13);
+    let billY = drawWrappedBillToField(doc, client?.name || 'Client', BILL_TO_TEXT_X, y + 13);
 
     doc.setFontSize(8);
     setPdfBodyFont(doc);
     doc.setTextColor(...grayColor);
-    let billY = y + 18;
     if (business) {
-        doc.text(String(business), 19, billY);
-        billY += 3.8;
+        billY = drawWrappedBillToField(doc, business, BILL_TO_TEXT_X, billY);
     }
     if (client?.email) {
-        doc.text(String(client.email), 19, billY);
-        billY += 3.8;
+        billY = drawWrappedBillToField(doc, client.email, BILL_TO_TEXT_X, billY);
     }
     if (client?.phone) {
-        doc.text(String(client.phone), 19, billY);
-        billY += 3.8;
+        billY = drawWrappedBillToField(doc, client.phone, BILL_TO_TEXT_X, billY);
     }
     if (client?.address) {
-        const addressLines = doc.splitTextToSize(String(client.address), 80);
-        doc.text(addressLines, 19, billY);
-        billY += addressLines.length * 3.8;
+        billY = drawWrappedBillToField(doc, client.address, BILL_TO_TEXT_X, billY);
     }
     if (additionalInfo) {
         billY += 2;
-        const additionalLines = doc.splitTextToSize(additionalInfo, 80);
-        doc.text(additionalLines, 19, billY);
+        drawWrappedBillToField(doc, additionalInfo, BILL_TO_TEXT_X, billY);
     }
 
     const badgeStatus = isReceiptDoc ? 'paid' : invoice.status;
@@ -231,7 +255,7 @@ function drawBillToAndDetails(
         doc.text(dueDate, 190, y + 28, { align: 'right' });
     }
 
-    return y + boxH + 8;
+    return y + Math.max(leftBoxH, rightBoxH) + 8;
 }
 
 async function drawCompanyHeader(doc, businessInfo, premium, logoUrl, pngCache, primaryColor, textColor, grayColor) {
@@ -319,9 +343,13 @@ function drawBottomBoxes(
             }
         }
 
+        const wrappedPaymentLines = hasPayment
+            ? paymentLines.flatMap((line) => doc.splitTextToSize(line, PAYMENT_TEXT_MAX_WIDTH))
+            : [];
+
         const boxH = Math.max(
             28,
-            hasPayment ? 16 + paymentLines.length * 4 : 0,
+            hasPayment ? 16 + wrappedPaymentLines.length * 4 : 0,
             hasNotes ? 16 + notesLines.length * 3.8 : 0
         );
         y = ensureSpace(y, boxH + 8);
@@ -340,7 +368,7 @@ function drawBottomBoxes(
             setPdfBodyFont(doc);
             doc.setTextColor(...grayColor);
             let py = y + 13;
-            for (const line of paymentLines) {
+            for (const line of wrappedPaymentLines) {
                 doc.text(line, 19, py);
                 py += 4;
             }
@@ -776,6 +804,8 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         mode
     );
 
+    const totalPages = doc.getNumberOfPages();
+    doc.setPage(totalPages);
     const footerLineY = PAGE_H - footerReserve;
 
     try {
@@ -792,8 +822,6 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     } catch {
         /* optional assets */
     }
-
-    doc.setPage(doc.getNumberOfPages());
     const footerLinkBounds = drawPageFooter(
         doc,
         businessInfo,

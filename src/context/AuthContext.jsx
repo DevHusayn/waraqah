@@ -9,7 +9,6 @@ import {
     cacheUserProfile,
     getCachedUserProfile,
     clearUserProfileCache,
-    clearLegacyAuthHints,
 } from '../utils/authHint';
 
 const AuthContext = createContext(null);
@@ -72,7 +71,6 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         clearLegacyAuthStorage();
-        clearLegacyAuthHints();
         refreshSession().finally(() => setResolving(false));
     }, [refreshSession]);
 

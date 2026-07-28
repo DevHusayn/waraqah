@@ -1026,7 +1026,7 @@ const CreateQuotation = () => {
                                         ) : (
                                             <>
                                                 <Plus size={16} aria-hidden />
-                                                Add client details
+                                                Add more details
                                             </>
                                         )}
                                     </button>

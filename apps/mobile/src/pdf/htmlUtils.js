@@ -28,7 +28,7 @@ export function wrapHtml(body, title = 'Document') {
     font-size: 11px;
     line-height: 1.45;
     margin: 0;
-    padding: 32px;
+    padding: 32px 32px 88px;
   }
   .brand-bar { height: 4px; margin: -32px -32px 20px; }
   .header { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
@@ -104,19 +104,6 @@ export function wrapHtml(body, title = 'Document') {
     max-width: 88px;
     object-fit: contain;
     opacity: 0.95;
-  }
-  .footer {
-    margin-top: 28px;
-    padding-top: 8px;
-    border-top: 1px solid #e5e7eb;
-    text-align: center;
-    color: #6b7280;
-    font-size: 10px;
-  }
-  .footer a {
-    color: #16A34A;
-    text-decoration: underline;
-    font-weight: 600;
   }
   .section-title { font-weight: 700; font-size: 12px; margin: 16px 0 8px; }
 </style>

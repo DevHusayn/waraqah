@@ -54,11 +54,7 @@ export function buildStatementHtml(statement, businessInfo) {
         </tr>
       </thead>
       <tbody>${clientRows}</tbody>
-    </table>
-
-    <div class="footer">
-      Amounts grouped by invoice status for ${escapeHtml(statement.periodLabel)}.
-    </div>`;
+    </table>`;
 
     return wrapHtml(body, `Statement ${statement.periodLabel}`);
 }

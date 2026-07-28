@@ -2,7 +2,6 @@ import { format } from 'date-fns';
 import {
     getCurrencySymbol,
     getDocumentNumber,
-    FREE_PDF_FOOTER_CTA_PREFIX,
     isPremiumUser,
     getAuthorizedSignatureUrl,
     resolveQuantityColumnLabel,
@@ -10,7 +9,6 @@ import {
     getClientBusiness,
 } from '@waraqah/shared';
 import { escapeHtml, formatMoney, wrapHtml } from './htmlUtils';
-import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../constants/brand';
 
 export function buildQuotationHtml(quotation, client, businessInfo) {
     const premium = isPremiumUser(businessInfo);
@@ -19,7 +17,6 @@ export function buildQuotationHtml(quotation, client, businessInfo) {
     const docNumber = getDocumentNumber(quotation, 'quotation');
     const signatureUrl = premium ? getAuthorizedSignatureUrl(businessInfo) : '';
     const ownerName = String(businessInfo?.name || '').trim();
-    const businessName = String(businessInfo?.name || 'us').trim() || 'us';
     const quantityColumnLabel = escapeHtml(
         resolveQuantityColumnLabel(quotation?.items).toUpperCase()
     );
@@ -37,11 +34,6 @@ export function buildQuotationHtml(quotation, client, businessInfo) {
       </tr>`
         )
         .join('');
-
-    const freeFooter = `
-      <p class="muted" style="margin-top:8px">Powered by ${escapeHtml(APP_NAME)}</p>
-      <p class="muted" style="font-size:9px">${escapeHtml(APP_TAGLINE)}</p>
-      <p style="margin-top:6px">${escapeHtml(FREE_PDF_FOOTER_CTA_PREFIX)}<a href="${escapeHtml(APP_WEBSITE_URL)}">${escapeHtml(APP_DOMAIN)}</a></p>`;
 
     let signatureHtml = '';
     if (signatureUrl) {
@@ -120,12 +112,7 @@ export function buildQuotationHtml(quotation, client, businessInfo) {
             ? `<div class="section-title" style="color:${escapeHtml(brand)}">TERMS &amp; CONDITIONS</div><p class="muted" style="white-space:pre-wrap">${escapeHtml(terms)}</p>`
             : ''
     }
-    ${signatureHtml}
-    <div class="footer">
-      <p>Thank you for considering ${escapeHtml(businessName)}. We look forward to doing business with you.</p>
-      <p style="font-size:8px;margin-top:4px">${escapeHtml(businessInfo?.name)} • ${escapeHtml(businessInfo?.email)} • ${escapeHtml(businessInfo?.phone)}</p>
-      ${premium ? '' : freeFooter}
-    </div>`;
+    ${signatureHtml}`;
 
     return wrapHtml(body, `Quotation ${docNumber}`);
 }

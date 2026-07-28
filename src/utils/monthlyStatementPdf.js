@@ -3,6 +3,9 @@ import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { getCurrencySymbol } from './currency';
 import { drawPdfGeometricBackground } from './pdfBackground';
+import { PAGE_H } from './pdfLogo';
+
+const FOOTER_RESERVE = 22;
 
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -92,7 +95,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
             1: { cellWidth: 125, halign: 'right' },
         },
         didParseCell: (data) => applyColumnAlignment(data, ['left', 'right']),
-        margin: { left: 15, right: 15 },
+        margin: { left: 15, right: 15, bottom: FOOTER_RESERVE + 4 },
     });
 
     let tableY = doc.lastAutoTable.finalY + 12;
@@ -144,6 +147,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
             head: [tableHead],
             body: tableBody,
             foot: [footRow],
+            showFoot: 'lastPage',
             theme: 'striped',
             tableWidth: 180,
             styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
@@ -166,26 +170,29 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
                 5: { cellWidth: 28, halign: 'center' },
             },
             didParseCell: (data) => applyColumnAlignment(data, clientAlign),
-            margin: { left: 15, right: 15 },
+            margin: { left: 15, right: 15, bottom: FOOTER_RESERVE + 4 },
         });
 
         tableY = doc.lastAutoTable.finalY;
     }
 
+    doc.setPage(doc.getNumberOfPages());
+    const footerLineY = PAGE_H - FOOTER_RESERVE;
+
     doc.setDrawColor(229, 231, 235);
-    doc.line(15, 278, 195, 278);
+    doc.line(15, footerLineY - 4, 195, footerLineY - 4);
     doc.setFontSize(7);
     doc.setTextColor(...grayColor);
     doc.text(
         `Amounts grouped by invoice status for ${statement.periodLabel}. Issue dates determine the billing period.`,
         105,
-        285,
+        footerLineY + 2,
         { align: 'center', maxWidth: 170 }
     );
     doc.text(
         `${businessInfo?.name || ''} · ${businessInfo?.email || ''}`,
         105,
-        290,
+        footerLineY + 7,
         { align: 'center' }
     );
 
