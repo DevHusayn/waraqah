@@ -479,3 +479,119 @@
 .shadow-brand\/30 {
     --tw-shadow-color: rgb(var(--brand-ring) / 0.3);
 }
+
+/* PWA splash — green bg, W reveals then araqah, then tagline */
+body.splash-active {
+    overflow: hidden;
+}
+
+#pwa-splash,
+.waraqah-splash {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--brand);
+}
+
+.waraqah-splash__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding-inline: 1.5rem;
+    text-align: center;
+}
+
+.waraqah-splash__wordmark {
+    display: flex;
+    align-items: baseline;
+    overflow: hidden;
+}
+
+.waraqah-splash__w,
+.waraqah-splash__rest-text {
+    font-family: 'Bodoni Moda', Georgia, serif;
+    font-weight: 600;
+    font-size: 2.5rem;
+    line-height: 1;
+    letter-spacing: -0.06em;
+    color: #fff;
+}
+
+.waraqah-splash__w {
+    display: inline-block;
+    opacity: 0;
+    transform: scale(0.92);
+    animation: waraqah-splash-w-in 500ms cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+
+.waraqah-splash__w--ready {
+    opacity: 1;
+    transform: scale(1);
+    animation: none;
+}
+
+.waraqah-splash__rest {
+    display: inline-block;
+    max-width: 0;
+    overflow: hidden;
+    opacity: 0;
+    animation: waraqah-splash-rest-reveal 600ms cubic-bezier(0.33, 1, 0.68, 1) 450ms forwards;
+}
+
+.waraqah-splash__rest--ready {
+    animation-delay: 0ms;
+}
+
+.waraqah-splash__rest-text {
+    display: inline-block;
+    transform: translateX(8px);
+    animation: waraqah-splash-rest-slide 600ms cubic-bezier(0.33, 1, 0.68, 1) 450ms forwards;
+}
+
+.waraqah-splash__rest-text--ready {
+    animation-delay: 0ms;
+}
+
+.waraqah-splash__tagline {
+    margin: 0;
+    font-family: Inter, system-ui, sans-serif;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: rgb(255 255 255 / 0.85);
+    opacity: 0;
+    animation: waraqah-splash-tagline-in 500ms ease 900ms forwards;
+}
+
+.waraqah-splash__content:has(.waraqah-splash__w--ready) .waraqah-splash__tagline {
+    animation-delay: 400ms;
+}
+
+@keyframes waraqah-splash-w-in {
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes waraqah-splash-rest-reveal {
+    to {
+        max-width: 8.25rem;
+        opacity: 1;
+    }
+}
+
+@keyframes waraqah-splash-rest-slide {
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes waraqah-splash-tagline-in {
+    to {
+        opacity: 1;
+    }
+}

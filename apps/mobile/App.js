@@ -24,7 +24,7 @@ export default function App() {
 
     if (!fontsLoaded) {
         return (
-            <View style={{ flex: 1, backgroundColor: colors.brandSubtle, alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ flex: 1, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center' }}>
                 <Spinner />
             </View>
         );

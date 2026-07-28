@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
     Plus,
@@ -95,13 +95,28 @@ const CreateQuotation = () => {
     const isDirtyRef = useRef(false);
     const formDataRef = useRef(null);
     const sharePdfRef = useRef(null);
+    const loadedQuotationIdRef = useRef(null);
     const [resolvedStatus, setResolvedStatus] = useState(id ? null : 'draft');
     const [quotationLoading, setQuotationLoading] = useState(Boolean(id));
 
-    const existingQuotation = id ? quotations.find((q) => q.id === id) : null;
-    const status = resolvedStatus || existingQuotation?.status || (!id ? 'draft' : null);
+    useLayoutEffect(() => {
+        if (!id) {
+            loadedQuotationIdRef.current = null;
+            setResolvedStatus('draft');
+            setQuotationLoading(false);
+            return;
+        }
+        if (loadedQuotationIdRef.current !== id) {
+            loadedQuotationIdRef.current = null;
+            setResolvedStatus(null);
+            setQuotationLoading(true);
+        }
+    }, [id]);
+
+    const status = !id ? 'draft' : resolvedStatus;
     const isDraftEdit = Boolean(id && status === 'draft');
     const isDraftFlow = !id || status === 'draft';
+    const quotationNotReady = Boolean(id && (quotationLoading || resolvedStatus == null));
 
     const [formData, setFormData] = useState({
         quotationNumber: '',
@@ -137,6 +152,7 @@ const CreateQuotation = () => {
 
     useEffect(() => {
         if (!id) return undefined;
+        if (loadedQuotationIdRef.current === id) return undefined;
 
         let cancelled = false;
 
@@ -149,6 +165,7 @@ const CreateQuotation = () => {
             const client = quotation.clientId
                 ? clients.find((c) => c.id === quotation.clientId)
                 : null;
+            loadedQuotationIdRef.current = id;
             setResolvedStatus(quotation.status || 'draft');
             setFormData({
                 ...quotation,
@@ -729,7 +746,7 @@ const CreateQuotation = () => {
         );
     };
 
-    if (quotationLoading) {
+    if (quotationNotReady) {
         return <PageSpinner label="Loading quotation…" centered className="min-h-[40vh]" />;
     }
 

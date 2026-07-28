@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
     Plus,
@@ -102,17 +102,28 @@ const CreateInvoice = () => {
     const isDirtyRef = useRef(false);
     const formDataRef = useRef(null);
     const sharePdfRef = useRef(null);
+    const loadedInvoiceIdRef = useRef(null);
     const [resolvedStatus, setResolvedStatus] = useState(id ? null : 'draft');
     const [invoiceLoading, setInvoiceLoading] = useState(Boolean(id));
 
-    const existingInvoice = id
-        ? invoices.find((inv) => inv.id === id) ||
-          draftInvoices.find((inv) => inv.id === id) ||
-          null
-        : null;
-    const status = resolvedStatus || existingInvoice?.status || (!id ? 'draft' : null);
+    useLayoutEffect(() => {
+        if (!id) {
+            loadedInvoiceIdRef.current = null;
+            setResolvedStatus('draft');
+            setInvoiceLoading(false);
+            return;
+        }
+        if (loadedInvoiceIdRef.current !== id) {
+            loadedInvoiceIdRef.current = null;
+            setResolvedStatus(null);
+            setInvoiceLoading(true);
+        }
+    }, [id]);
+
+    const status = !id ? 'draft' : resolvedStatus;
     const isDraftEdit = Boolean(id && status === 'draft');
     const isDraftFlow = !id || status === 'draft';
+    const invoiceNotReady = Boolean(id && (invoiceLoading || resolvedStatus == null));
 
     const [formData, setFormData] = useState({
         invoiceNumber: '',
@@ -149,6 +160,7 @@ const CreateInvoice = () => {
 
     useEffect(() => {
         if (!id) return undefined;
+        if (loadedInvoiceIdRef.current === id) return undefined;
 
         let cancelled = false;
 
@@ -165,6 +177,7 @@ const CreateInvoice = () => {
             const client = invoice.clientId
                 ? clients.find((c) => c.id === invoice.clientId)
                 : null;
+            loadedInvoiceIdRef.current = id;
             setResolvedStatus(invoice.status || 'draft');
             setFormData({
                 ...invoice,
@@ -763,7 +776,7 @@ const CreateInvoice = () => {
         );
     };
 
-    if (invoiceLoading) {
+    if (invoiceNotReady) {
         return <PageSpinner label="Loading invoice…" centered className="min-h-[40vh]" />;
     }
 

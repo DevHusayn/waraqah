@@ -3,6 +3,30 @@
 
 <head>
     <meta charset="UTF-8" />
+    <style>
+        #pwa-splash {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #16A34A;
+        }
+
+        #pwa-splash__w {
+            font-family: 'Bodoni Moda', Georgia, serif;
+            font-weight: 600;
+            font-size: 2.5rem;
+            line-height: 1;
+            letter-spacing: -0.06em;
+            color: #fff;
+        }
+
+        body.splash-active {
+            overflow: hidden;
+        }
+    </style>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
     <link rel="apple-touch-icon" href="/pwa/apple-touch-icon.png" />
@@ -11,7 +35,7 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Waraqah" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600&display=swap" />
@@ -28,6 +52,9 @@
 </head>
 
 <body>
+    <div id="pwa-splash" aria-hidden="true">
+        <span id="pwa-splash__w">W</span>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
 </body>

@@ -5,8 +5,7 @@ import sharp from 'sharp';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
-const pwaDir = path.join(root, 'public', 'pwa');
-const publicDir = path.join(root, 'public');
+const assetsDir = path.join(root, 'apps', 'mobile', 'assets');
 
 const BRAND_GREEN = '#16A34A';
 const WHITE = '#FFFFFF';
@@ -22,11 +21,15 @@ const fontPath = path.join(
 
 const fontBase64 = fs.readFileSync(fontPath).toString('base64');
 
-function buildSvg(size, { maskable = false } = {}) {
+function buildSvg(size, { maskable = false, monochrome = false } = {}) {
     const padding = maskable ? Math.round(size * 0.1) : 0;
     const inner = size - padding * 2;
     const fontSize = Math.round(inner * 0.48);
     const y = padding + inner / 2 + fontSize * 0.34;
+
+    const background = monochrome
+        ? ''
+        : `<rect width="${size}" height="${size}" fill="${BRAND_GREEN}" />`;
 
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
   <defs>
@@ -46,7 +49,7 @@ function buildSvg(size, { maskable = false } = {}) {
       }
     </style>
   </defs>
-  <rect width="${size}" height="${size}" fill="${BRAND_GREEN}" />
+  ${background}
   <text x="${size / 2}" y="${y}" class="letter" text-anchor="middle">W</text>
 </svg>`;
 }
@@ -58,18 +61,13 @@ async function renderIcon(size, outputPath, options = {}) {
 }
 
 async function main() {
-    fs.mkdirSync(pwaDir, { recursive: true });
+    fs.mkdirSync(assetsDir, { recursive: true });
 
-    const sourceSvg = buildSvg(512);
-    fs.writeFileSync(path.join(pwaDir, 'icon-source.svg'), sourceSvg, 'utf8');
-    console.log('Wrote public/pwa/icon-source.svg');
-
-    await renderIcon(192, path.join(pwaDir, 'icon-192.png'));
-    await renderIcon(512, path.join(pwaDir, 'icon-512.png'));
-    await renderIcon(512, path.join(pwaDir, 'icon-maskable-512.png'), { maskable: true });
-    await renderIcon(180, path.join(pwaDir, 'apple-touch-icon.png'));
-    await renderIcon(32, path.join(publicDir, 'favicon-32.png'));
-    await renderIcon(16, path.join(publicDir, 'favicon-16.png'));
+    await renderIcon(1024, path.join(assetsDir, 'icon.png'));
+    await renderIcon(512, path.join(assetsDir, 'splash-icon.png'));
+    await renderIcon(432, path.join(assetsDir, 'android-icon-foreground.png'), { maskable: true });
+    await renderIcon(432, path.join(assetsDir, 'android-icon-monochrome.png'), { monochrome: true });
+    await renderIcon(48, path.join(assetsDir, 'favicon.png'));
 }
 
 main().catch((error) => {
