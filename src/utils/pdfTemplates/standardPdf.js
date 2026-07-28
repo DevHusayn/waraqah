@@ -146,23 +146,16 @@ function drawWrappedBillToField(doc, text, x, y, maxWidth = BILL_TO_MAX_WIDTH) {
     return y + lines.length * BILL_TO_LINE_HEIGHT;
 }
 
-function resolveFooterLineY(contentEndY, signatureBlockH, footerReserve) {
-    const defaultFooterLineY = PAGE_H - footerReserve;
-    if (!signatureBlockH) return defaultFooterLineY;
-
-    const stackedFooterLineY = contentEndY + signatureBlockH + 8;
-    if (stackedFooterLineY <= defaultFooterLineY - signatureBlockH - 4) {
-        return stackedFooterLineY;
-    }
-    if (stackedFooterLineY <= PAGE_H - 4) {
-        return Math.min(stackedFooterLineY, defaultFooterLineY);
-    }
-    return defaultFooterLineY;
+function resolveFooterLineY(footerReserve) {
+    return PAGE_H - footerReserve;
 }
 
 function ensureBottomSectionSpace(currentY, neededHeight, signatureBlockH, footerReserve, startNewPage) {
-    const stackedEndY = currentY + neededHeight + (signatureBlockH ? signatureBlockH + 8 : 0);
-    if (stackedEndY <= PAGE_H - 4) {
+    const footerLineY = PAGE_H - footerReserve;
+    const signatureTop = signatureBlockH ? footerLineY - signatureBlockH - 4 : footerLineY;
+    const contentEndY = currentY + neededHeight;
+
+    if (contentEndY + 6 <= signatureTop) {
         return currentY;
     }
     return startNewPage();
@@ -858,7 +851,7 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
 
     const totalPages = doc.getNumberOfPages();
     doc.setPage(totalPages);
-    const footerLineY = resolveFooterLineY(currentY, signatureBlockH, footerReserve);
+    const footerLineY = resolveFooterLineY(footerReserve);
 
     try {
         await drawSignatureStampBlock(doc, {
