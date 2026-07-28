@@ -239,7 +239,7 @@ export function UpgradePageSkeleton() {
 export function DashboardSkeleton() {
     return (
         <LoadingStatus label="Loading dashboard">
-            <PageHeaderSkeleton withAction={false} withEyebrow />
+            <PageHeaderSkeleton withAction={false} />
             <StatsCardsSkeleton
                 count={5}
                 className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6"

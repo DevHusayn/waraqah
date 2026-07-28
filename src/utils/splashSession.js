@@ -11,12 +11,8 @@ export function hasSeenSplash() {
 export function markSplashSeen() {
     try {
         sessionStorage.setItem(SPLASH_SEEN_KEY, '1');
+        document.documentElement.classList.add('splash-seen');
     } catch {
         // ignore storage failures
     }
-}
-
-export function removeStaticSplash() {
-    document.getElementById('pwa-splash')?.remove();
-    document.body.classList.remove('splash-active');
 }

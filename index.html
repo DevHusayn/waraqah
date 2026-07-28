@@ -3,34 +3,13 @@
 
 <head>
     <meta charset="UTF-8" />
-    <style>
-        #pwa-splash {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #16A34A;
-        }
-
-        #pwa-splash__w {
-            font-family: 'Bodoni Moda', Georgia, serif;
-            font-weight: 600;
-            font-size: 2.5rem;
-            line-height: 1;
-            letter-spacing: -0.06em;
-            color: #fff;
-        }
-
-        body.splash-active {
-            overflow: hidden;
-        }
-
-        html.splash-skip #pwa-splash {
-            display: none !important;
-        }
-    </style>
+    <script>
+        try {
+            if (sessionStorage.getItem('waraqah_splash_seen') === '1') {
+                document.documentElement.classList.add('splash-seen');
+            }
+        } catch (_) {}
+    </script>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
     <link rel="apple-touch-icon" href="/pwa/apple-touch-icon.png" />
@@ -56,16 +35,6 @@
 </head>
 
 <body>
-    <script>
-        try {
-            if (sessionStorage.getItem('waraqah_splash_seen') === '1') {
-                document.documentElement.classList.add('splash-skip');
-            }
-        } catch (_) {}
-    </script>
-    <div id="pwa-splash" aria-hidden="true">
-        <span id="pwa-splash__w">W</span>
-    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
 </body>

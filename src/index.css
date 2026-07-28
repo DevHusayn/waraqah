@@ -485,7 +485,6 @@ body.splash-active {
     overflow: hidden;
 }
 
-#pwa-splash,
 .waraqah-splash {
     position: fixed;
     inset: 0;
@@ -528,12 +527,6 @@ body.splash-active {
     animation: waraqah-splash-w-in 500ms cubic-bezier(0.33, 1, 0.68, 1) forwards;
 }
 
-.waraqah-splash__w--ready {
-    opacity: 1;
-    transform: scale(1);
-    animation: none;
-}
-
 .waraqah-splash__rest {
     display: inline-block;
     max-width: 0;
@@ -542,18 +535,10 @@ body.splash-active {
     animation: waraqah-splash-rest-reveal 600ms cubic-bezier(0.33, 1, 0.68, 1) 450ms forwards;
 }
 
-.waraqah-splash__rest--ready {
-    animation-delay: 0ms;
-}
-
 .waraqah-splash__rest-text {
     display: inline-block;
     transform: translateX(8px);
     animation: waraqah-splash-rest-slide 600ms cubic-bezier(0.33, 1, 0.68, 1) 450ms forwards;
-}
-
-.waraqah-splash__rest-text--ready {
-    animation-delay: 0ms;
 }
 
 .waraqah-splash__tagline {
@@ -564,10 +549,6 @@ body.splash-active {
     color: rgb(255 255 255 / 0.85);
     opacity: 0;
     animation: waraqah-splash-tagline-in 500ms ease 900ms forwards;
-}
-
-.waraqah-splash__content:has(.waraqah-splash__w--ready) .waraqah-splash__tagline {
-    animation-delay: 400ms;
 }
 
 @keyframes waraqah-splash-w-in {

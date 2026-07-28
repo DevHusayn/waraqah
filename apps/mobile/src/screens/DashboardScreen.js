@@ -27,6 +27,7 @@ import {
     formatInvoiceUsageLabel,
     getBusinessInitials,
     getDisplayBusinessName,
+    DASHBOARD_SUBTITLE,
     isPremiumUser,
     isQuotationDocument,
 } from '@waraqah/shared';
@@ -47,7 +48,6 @@ import {
 } from '../components/ui';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { useQuotationCreateGuard } from '../hooks/useQuotationCreateGuard';
-import { useDashboardGreeting } from '../hooks/useDashboardGreeting';
 import { colors, fontFamily, fontSize, lineHeight, radii, shadows, spacing } from '../theme';
 import { hapticSelection } from '../utils/haptics';
 
@@ -70,7 +70,6 @@ function StatCell({ icon: Icon, label, value, iconBg, iconColor, valueColor }) {
 export function DashboardScreen({ navigation }) {
     const { user, logout } = useAuth();
     const { businessInfo } = useSettings();
-    const greetingPhrase = useDashboardGreeting();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -198,13 +197,10 @@ export function DashboardScreen({ navigation }) {
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.headerText}>
-                        {greetingPhrase ? (
-                            <Text style={styles.greeting}>{greetingPhrase}</Text>
-                        ) : null}
                         <Text style={styles.name} numberOfLines={2}>
                             {displayBusinessName}
                         </Text>
-                        <Text style={styles.subtitle}>Manage invoices & quotations</Text>
+                        <Text style={styles.subtitle}>{DASHBOARD_SUBTITLE}</Text>
                     </View>
                     <View style={styles.headerActions}>
                         <Pressable
@@ -410,11 +406,6 @@ const styles = StyleSheet.create({
         gap: spacing.lg,
     },
     headerText: { flex: 1, minWidth: 0 },
-    greeting: {
-        fontFamily: fontFamily.medium,
-        fontSize: fontSize.md,
-        color: colors.slate600,
-    },
     name: {
         marginTop: 2,
         fontFamily: fontFamily.bold,

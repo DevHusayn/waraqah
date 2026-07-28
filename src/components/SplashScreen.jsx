@@ -1,25 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { APP_NAME, APP_TAGLINE } from '../constants/brand';
-import { removeStaticSplash } from '../utils/splashSession';
+import { markSplashSeen } from '../utils/splashSession';
 
 const SPLASH_DURATION_MS = 2600;
 
 export default function SplashScreen({ onFinish }) {
-    const [continuedFromStatic] = useState(() => !!document.getElementById('pwa-splash'));
-
     useEffect(() => {
+        markSplashSeen();
         document.body.classList.add('splash-active');
-        removeStaticSplash();
 
         const timer = window.setTimeout(() => {
+            document.body.classList.remove('splash-active');
             onFinish?.();
-        }, continuedFromStatic ? SPLASH_DURATION_MS - 500 : SPLASH_DURATION_MS);
+        }, SPLASH_DURATION_MS);
 
         return () => {
             window.clearTimeout(timer);
             document.body.classList.remove('splash-active');
         };
-    }, [continuedFromStatic, onFinish]);
+    }, [onFinish]);
 
     return (
         <div
@@ -30,25 +29,9 @@ export default function SplashScreen({ onFinish }) {
         >
             <div className="waraqah-splash__content">
                 <div className="waraqah-splash__wordmark" aria-hidden>
-                    <span
-                        className={`waraqah-splash__w${
-                            continuedFromStatic ? ' waraqah-splash__w--ready' : ''
-                        }`}
-                    >
-                        W
-                    </span>
-                    <span
-                        className={`waraqah-splash__rest${
-                            continuedFromStatic ? ' waraqah-splash__rest--ready' : ''
-                        }`}
-                    >
-                        <span
-                            className={`waraqah-splash__rest-text${
-                                continuedFromStatic ? ' waraqah-splash__rest-text--ready' : ''
-                            }`}
-                        >
-                            araqah
-                        </span>
+                    <span className="waraqah-splash__w">W</span>
+                    <span className="waraqah-splash__rest">
+                        <span className="waraqah-splash__rest-text">araqah</span>
                     </span>
                 </div>
                 <p className="waraqah-splash__tagline">{APP_TAGLINE}</p>

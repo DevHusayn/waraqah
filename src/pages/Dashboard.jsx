@@ -24,8 +24,7 @@ import { useDashboardStats } from '../hooks/useDashboardStats';
 import { formatInvoiceUsageLabel } from '../utils/invoiceLimits';
 import { isPremiumUser } from '../utils/premium';
 import { useSettings } from '../context/SettingsContext';
-import { getDisplayBusinessName } from '@waraqah/shared';
-import { useDashboardGreeting } from '../hooks/useDashboardGreeting';
+import { getDisplayBusinessName, DASHBOARD_SUBTITLE } from '@waraqah/shared';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import EmptyState from '../components/EmptyState';
@@ -56,7 +55,6 @@ function DocumentTypeBadge({ doc }) {
 
 const Dashboard = () => {
     const { businessInfo } = useSettings();
-    const greetingPhrase = useDashboardGreeting();
     const displayBusinessName = getDisplayBusinessName(businessInfo);
     const navigate = useNavigate();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen } = useInvoiceCreateGuard();
@@ -136,9 +134,8 @@ const Dashboard = () => {
                 navigate={navigate}
             />
             <PageHeader
-                eyebrow={greetingPhrase}
                 title={displayBusinessName}
-                subtitle="Your business overview"
+                subtitle={DASHBOARD_SUBTITLE}
             />
             {!premium && usageLabel ? (
                 <InvoiceUsageBanner label={usageLabel} className="mb-4" />

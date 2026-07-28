@@ -6,7 +6,7 @@ export * from './formFieldValidation.js';
 export * from './clientHelpers.js';
 export * from './brandAssets.js';
 export * from './businessPayload.js';
-export * from './dashboardGreeting.js';
+export * from './businessDisplay.js';
 export * from './premium.js';
 export * from './invoiceLimits.js';
 export * from './invoiceFormValidation.js';
