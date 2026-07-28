@@ -84,19 +84,41 @@ function drawStatusBadge(doc, status, x, y, primaryColor) {
     doc.text(label, x - badgeW / 2 + 2, y + 0.5, { align: 'center' });
 }
 
+const BILL_TO_BOX_X = 15;
+const BILL_TO_BOX_W = 88;
 const BILL_TO_TEXT_X = 19;
-const BILL_TO_MAX_WIDTH = 76;
+const BILL_TO_TEXT_PAD = BILL_TO_TEXT_X - BILL_TO_BOX_X;
+const BILL_TO_MAX_WIDTH = BILL_TO_BOX_W - BILL_TO_TEXT_PAD * 2 - 2;
 const BILL_TO_LINE_HEIGHT = 3.8;
-const PAYMENT_TEXT_MAX_WIDTH = 78;
+const PAYMENT_BOX_X = 15;
+const PAYMENT_BOX_W = 88;
+const PAYMENT_TEXT_X = 19;
+const PAYMENT_TEXT_MAX_WIDTH = PAYMENT_BOX_W - (PAYMENT_TEXT_X - PAYMENT_BOX_X) * 2 - 2;
+
+function splitWrappedParagraphs(doc, text, maxWidth) {
+    return String(text || '')
+        .split(/\r?\n/)
+        .flatMap((paragraph) => {
+            const trimmed = paragraph.trim();
+            if (!trimmed) return [];
+            return doc.splitTextToSize(trimmed, maxWidth);
+        });
+}
 
 function countWrappedLines(doc, text, maxWidth) {
     if (!text) return 0;
-    return doc.splitTextToSize(String(text), maxWidth).length;
+    return splitWrappedParagraphs(doc, text, maxWidth).length;
 }
 
 function measureBillToBoxHeight(doc, client, business, additionalInfo) {
     let height = 13;
+
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
     height += countWrappedLines(doc, client?.name || 'Client', BILL_TO_MAX_WIDTH) * BILL_TO_LINE_HEIGHT;
+
+    doc.setFontSize(8);
+    setPdfBodyFont(doc);
     if (business) {
         height += countWrappedLines(doc, business, BILL_TO_MAX_WIDTH) * BILL_TO_LINE_HEIGHT;
     }
@@ -113,13 +135,37 @@ function measureBillToBoxHeight(doc, client, business, additionalInfo) {
         height += 2;
         height += countWrappedLines(doc, additionalInfo, BILL_TO_MAX_WIDTH) * BILL_TO_LINE_HEIGHT;
     }
-    return Math.max(36, height + 8);
+
+    return Math.max(36, height + 5);
 }
 
 function drawWrappedBillToField(doc, text, x, y, maxWidth = BILL_TO_MAX_WIDTH) {
-    const lines = doc.splitTextToSize(String(text), maxWidth);
+    const lines = splitWrappedParagraphs(doc, text, maxWidth);
+    if (!lines.length) return y;
     doc.text(lines, x, y);
     return y + lines.length * BILL_TO_LINE_HEIGHT;
+}
+
+function resolveFooterLineY(contentEndY, signatureBlockH, footerReserve) {
+    const defaultFooterLineY = PAGE_H - footerReserve;
+    if (!signatureBlockH) return defaultFooterLineY;
+
+    const stackedFooterLineY = contentEndY + signatureBlockH + 8;
+    if (stackedFooterLineY <= defaultFooterLineY - signatureBlockH - 4) {
+        return stackedFooterLineY;
+    }
+    if (stackedFooterLineY <= PAGE_H - 4) {
+        return Math.min(stackedFooterLineY, defaultFooterLineY);
+    }
+    return defaultFooterLineY;
+}
+
+function ensureBottomSectionSpace(currentY, neededHeight, signatureBlockH, footerReserve, startNewPage) {
+    const stackedEndY = currentY + neededHeight + (signatureBlockH ? signatureBlockH + 8 : 0);
+    if (stackedEndY <= PAGE_H - 4) {
+        return currentY;
+    }
+    return startNewPage();
 }
 
 function drawInvoiceTitleBlock(doc, docNumber, mode, primaryColor, lightPrimary, textColor) {
@@ -312,7 +358,9 @@ function drawBottomBoxes(
     grayColor,
     textColor,
     lightGray,
-    ensureSpace,
+    startNewPage,
+    footerReserve,
+    signatureBlockH,
     mode
 ) {
     const isReceiptDoc = mode === 'receipt';
@@ -326,7 +374,6 @@ function drawBottomBoxes(
     let y = startY;
 
     if (hasPayment || hasNotes) {
-        const notesLines = hasNotes ? doc.splitTextToSize(notesText, hasPayment ? 78 : 168) : [];
         const paymentLines = [];
         if (hasPayment) {
             if (businessInfo.paymentBankName?.trim()) {
@@ -343,16 +390,20 @@ function drawBottomBoxes(
             }
         }
 
+        doc.setFontSize(7.5);
+        setPdfBodyFont(doc);
+        const notesMaxWidth = hasPayment ? PAYMENT_TEXT_MAX_WIDTH : 168;
+        const notesLines = hasNotes ? splitWrappedParagraphs(doc, notesText, notesMaxWidth) : [];
         const wrappedPaymentLines = hasPayment
-            ? paymentLines.flatMap((line) => doc.splitTextToSize(line, PAYMENT_TEXT_MAX_WIDTH))
+            ? paymentLines.flatMap((line) => splitWrappedParagraphs(doc, line, PAYMENT_TEXT_MAX_WIDTH))
             : [];
 
         const boxH = Math.max(
-            28,
-            hasPayment ? 16 + wrappedPaymentLines.length * 4 : 0,
-            hasNotes ? 16 + notesLines.length * 3.8 : 0
+            24,
+            hasPayment ? 14 + wrappedPaymentLines.length * 3.5 : 0,
+            hasNotes ? 14 + notesLines.length * 3.5 : 0
         );
-        y = ensureSpace(y, boxH + 8);
+        y = ensureBottomSectionSpace(startY, boxH, signatureBlockH, footerReserve, startNewPage);
 
         if (hasPayment) {
             doc.setDrawColor(...lightGray);
@@ -364,13 +415,11 @@ function drawBottomBoxes(
             doc.setTextColor(...primaryColor);
             doc.text('PAYMENT INFORMATION', 19, y + 7);
 
-            doc.setFontSize(7.5);
-            setPdfBodyFont(doc);
             doc.setTextColor(...grayColor);
-            let py = y + 13;
+            let py = y + 12;
             for (const line of wrappedPaymentLines) {
-                doc.text(line, 19, py);
-                py += 4;
+                doc.text(line, PAYMENT_TEXT_X, py);
+                py += 3.5;
             }
         }
 
@@ -395,13 +444,13 @@ function drawBottomBoxes(
             }
         }
 
-        y += boxH + 6;
+        y += boxH + 4;
     }
 
     if (hasTerms) {
         const termsLines = doc.splitTextToSize(termsText, 168);
-        const termsBoxH = Math.max(28, 16 + termsLines.length * 3.8);
-        y = ensureSpace(y, termsBoxH + 8);
+        const termsBoxH = Math.max(24, 14 + termsLines.length * 3.5);
+        y = ensureBottomSectionSpace(y, termsBoxH, signatureBlockH, footerReserve, startNewPage);
 
         doc.setDrawColor(...lightGray);
         doc.setLineWidth(0.4);
@@ -421,7 +470,7 @@ function drawBottomBoxes(
             ty += 3.8;
         }
 
-        y += termsBoxH + 6;
+        y += termsBoxH + 4;
     }
 
     return y;
@@ -585,6 +634,7 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     // Signature block: rule + image + name + label; stamp sits beside it with breathing room
     const signatureReserve = hasSignatureAsset ? 36 : 0;
     const stampReserve = hasStampAsset ? 32 : 0;
+    const signatureBlockH = hasSignatureAsset ? 36 : hasStampAsset ? 32 : 0;
     const assetZone = Math.max(signatureReserve, stampReserve);
     const FOOTER_ZONE = footerReserve + (assetZone ? assetZone + 6 : 0);
     const CONTENT_BOTTOM = PAGE_H - FOOTER_ZONE;
@@ -795,18 +845,20 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         doc,
         businessInfo,
         invoice,
-        currentY + 12,
+        currentY + 8,
         primaryColor,
         grayColor,
         textColor,
         lightGray,
-        ensureSpace,
+        startNewPage,
+        footerReserve,
+        signatureBlockH,
         mode
     );
 
     const totalPages = doc.getNumberOfPages();
     doc.setPage(totalPages);
-    const footerLineY = PAGE_H - footerReserve;
+    const footerLineY = resolveFooterLineY(currentY, signatureBlockH, footerReserve);
 
     try {
         await drawSignatureStampBlock(doc, {
