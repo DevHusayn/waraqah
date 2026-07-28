@@ -481,8 +481,21 @@
 }
 
 /* PWA splash — green bg, W reveals then araqah, then tagline */
+html.splash-active,
+html.pwa-cold-start,
+body.splash-active,
+html.splash-active body,
+html.pwa-cold-start body {
+    background-color: #16A34A !important;
+}
+
 body.splash-active {
     overflow: hidden;
+}
+
+html.pwa-cold-start #root {
+    background-color: #16A34A !important;
+    visibility: hidden;
 }
 
 .waraqah-splash {
@@ -542,37 +555,34 @@ body.splash-active {
 }
 
 .waraqah-splash__tagline {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
     margin: 0;
-    min-height: 1.25rem;
+    min-height: 1.375rem;
     font-family: Inter, system-ui, sans-serif;
     font-size: 0.9375rem;
     font-weight: 500;
     color: rgb(255 255 255 / 0.85);
 }
 
-.waraqah-splash__tagline-track {
-    position: relative;
-    display: inline-block;
-    min-width: 5.5rem;
-    min-height: 1.25em;
-}
-
 .waraqah-splash__tagline-word {
     --tagline-base-delay: 900ms;
-    --tagline-step: 550ms;
-    position: absolute;
-    left: 50%;
-    top: 0;
-    white-space: nowrap;
+    --tagline-step: 480ms;
+    display: inline-block;
+    overflow: hidden;
+    max-width: 0;
     opacity: 0;
-    transform: translateX(-50%) translateY(8px);
-    animation: waraqah-splash-tagline-word 2.1s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+    white-space: nowrap;
+    vertical-align: bottom;
+    transform: translateY(6px);
+    animation: waraqah-splash-tagline-spread 0.52s cubic-bezier(0.33, 1, 0.68, 1) forwards;
     animation-delay: calc(var(--tagline-base-delay) + var(--i) * var(--tagline-step));
 }
 
-.waraqah-splash__tagline-word--final {
-    animation-name: waraqah-splash-tagline-word-final;
-    animation-duration: 0.55s;
+.waraqah-splash__tagline-word:not(:first-child) {
+    animation-name: waraqah-splash-tagline-spread-gap;
 }
 
 /* After the OS manifest splash (green + W icon), continue the wordmark animation. */
@@ -591,8 +601,8 @@ body.splash-active {
 }
 
 .waraqah-splash--os-handoff .waraqah-splash__tagline-word {
-    --tagline-base-delay: 450ms;
-    --tagline-step: 400ms;
+    --tagline-base-delay: 480ms;
+    --tagline-step: 420ms;
 }
 
 @keyframes waraqah-splash-w-in {
@@ -615,41 +625,19 @@ body.splash-active {
     }
 }
 
-@keyframes waraqah-splash-tagline-word {
-    0% {
-        opacity: 0;
-        transform: translateX(-50%) translateY(8px);
-    }
-
-    14% {
+@keyframes waraqah-splash-tagline-spread {
+    to {
+        max-width: 7rem;
         opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-
-    32% {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-
-    46% {
-        opacity: 0;
-        transform: translateX(-50%) translateY(-6px);
-    }
-
-    100% {
-        opacity: 0;
-        transform: translateX(-50%) translateY(-6px);
+        transform: translateY(0);
     }
 }
 
-@keyframes waraqah-splash-tagline-word-final {
-    0% {
-        opacity: 0;
-        transform: translateX(-50%) translateY(8px);
-    }
-
-    100% {
+@keyframes waraqah-splash-tagline-spread-gap {
+    to {
+        max-width: 7rem;
         opacity: 1;
-        transform: translateX(-50%) translateY(0);
+        transform: translateY(0);
+        margin-left: 0.625rem;
     }
 }

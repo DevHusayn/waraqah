@@ -1,24 +1,23 @@
-import { useEffect, useLayoutEffect } from 'react';
+import { useEffect } from 'react';
 import { APP_NAME } from '../constants/brand';
 import { markPwaSessionAlive, clearPwaColdStartBackground } from '../utils/splashSession';
 
 const TAGLINE_PARTS = ['Quote', 'Invoice', 'Get Paid'];
 
-const SPLASH_DURATION_MS = 2600;
-const OS_HANDOFF_SPLASH_DURATION_MS = 1800;
+const SPLASH_DURATION_MS = 2800;
+const OS_HANDOFF_SPLASH_DURATION_MS = 2200;
 
 export default function SplashScreen({ onFinish, handoffFromOsSplash = false }) {
     const durationMs = handoffFromOsSplash ? OS_HANDOFF_SPLASH_DURATION_MS : SPLASH_DURATION_MS;
 
-    useLayoutEffect(() => {
-        clearPwaColdStartBackground();
-    }, []);
-
     useEffect(() => {
+        document.documentElement.classList.add('splash-active');
         document.body.classList.add('splash-active');
 
         const timer = window.setTimeout(() => {
             document.body.classList.remove('splash-active');
+            document.documentElement.classList.remove('splash-active');
+            clearPwaColdStartBackground();
             markPwaSessionAlive();
             onFinish?.();
         }, durationMs);
@@ -26,6 +25,7 @@ export default function SplashScreen({ onFinish, handoffFromOsSplash = false }) 
         return () => {
             window.clearTimeout(timer);
             document.body.classList.remove('splash-active');
+            document.documentElement.classList.remove('splash-active');
         };
     }, [durationMs, onFinish]);
 
@@ -44,21 +44,15 @@ export default function SplashScreen({ onFinish, handoffFromOsSplash = false }) 
                     </span>
                 </div>
                 <p className="waraqah-splash__tagline" aria-label="Quote. Invoice. Get Paid.">
-                    <span className="waraqah-splash__tagline-track">
-                        {TAGLINE_PARTS.map((part, index) => (
-                            <span
-                                key={part}
-                                className={`waraqah-splash__tagline-word${
-                                    index === TAGLINE_PARTS.length - 1
-                                        ? ' waraqah-splash__tagline-word--final'
-                                        : ''
-                                }`}
-                                style={{ '--i': index }}
-                            >
-                                {part}
-                            </span>
-                        ))}
-                    </span>
+                    {TAGLINE_PARTS.map((part, index) => (
+                        <span
+                            key={part}
+                            className="waraqah-splash__tagline-word"
+                            style={{ '--i': index }}
+                        >
+                            {part}
+                        </span>
+                    ))}
                 </p>
             </div>
         </div>
