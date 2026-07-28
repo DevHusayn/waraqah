@@ -33,6 +33,7 @@ import {
 } from '../receiptHelpers';
 import { drawCenteredPdfFooterCta } from '../pdfLink';
 import { addFooterLinkToPdfBlob } from '../pdfFooterLink';
+import { addPdfPreviewThumbnail } from '../pdfPageThumbnail';
 
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -795,6 +796,7 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
             linkBounds: footerLinkBounds,
         });
     }
+    blob = await addPdfPreviewThumbnail(blob, invoice, client, businessInfo, mode);
     if (options.output === 'blob') {
         return { blob, filename };
     }

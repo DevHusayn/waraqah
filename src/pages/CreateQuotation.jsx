@@ -13,7 +13,7 @@ import {
     Package,
     ScrollText,
 } from 'lucide-react';
-import Spinner from '../components/Spinner';
+import Spinner, { PageSpinner } from '../components/Spinner';
 import { format } from 'date-fns';
 import { useQuotation } from '../context/QuotationContext';
 import { useInvoice } from '../context/InvoiceContext';
@@ -96,6 +96,7 @@ const CreateQuotation = () => {
     const formDataRef = useRef(null);
     const sharePdfRef = useRef(null);
     const [resolvedStatus, setResolvedStatus] = useState(id ? null : 'draft');
+    const [quotationLoading, setQuotationLoading] = useState(Boolean(id));
 
     const existingQuotation = id ? quotations.find((q) => q.id === id) : null;
     const status = resolvedStatus || existingQuotation?.status || (!id ? 'draft' : null);
@@ -141,6 +142,7 @@ const CreateQuotation = () => {
 
         const applyQuotationToForm = (quotation) => {
             if (['converted', 'expired'].includes(quotation.status)) {
+                setQuotationLoading(false);
                 navigate(`/quotations/${id}`, { replace: true });
                 return;
             }
@@ -163,9 +165,11 @@ const CreateQuotation = () => {
                 })),
             });
             isDirtyRef.current = false;
+            setQuotationLoading(false);
         };
 
         const loadQuotation = async () => {
+            setQuotationLoading(true);
             let quotation = quotations.find((q) => q.id === id);
 
             if (!quotation) {
@@ -174,7 +178,10 @@ const CreateQuotation = () => {
                     const data = await apiFetch(`/quotations/${id}`);
                     quotation = { ...data, id: data._id || data.id };
                 } catch {
-                    if (!cancelled) navigate('/quotations', { replace: true });
+                    if (!cancelled) {
+                        setQuotationLoading(false);
+                        navigate('/quotations', { replace: true });
+                    }
                     return;
                 }
             } else if (!Array.isArray(quotation.items)) {
@@ -182,7 +189,10 @@ const CreateQuotation = () => {
                     const data = await apiFetch(`/quotations/${id}`);
                     quotation = { ...data, id: data._id || data.id };
                 } catch {
-                    if (!cancelled) navigate('/quotations', { replace: true });
+                    if (!cancelled) {
+                        setQuotationLoading(false);
+                        navigate('/quotations', { replace: true });
+                    }
                     return;
                 }
             }
@@ -718,6 +728,10 @@ const CreateQuotation = () => {
             </button>
         );
     };
+
+    if (quotationLoading) {
+        return <PageSpinner label="Loading quotation…" centered className="min-h-[40vh]" />;
+    }
 
     return (
         <div className="max-w-6xl mx-auto pb-24 xl:pb-8">

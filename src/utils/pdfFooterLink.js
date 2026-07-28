@@ -45,7 +45,7 @@ async function injectFooterLink(bytes, url, options = {}) {
         page.node.set(annotsKey, pdfDoc.context.obj([linkRef]));
     }
 
-    return pdfDoc.save();
+    return pdfDoc.save({ useObjectStreams: false });
 }
 
 /**

@@ -12,7 +12,7 @@ import {
     X,
     Package,
 } from 'lucide-react';
-import Spinner from '../components/Spinner';
+import Spinner, { PageSpinner } from '../components/Spinner';
 import { format } from 'date-fns';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
@@ -103,6 +103,7 @@ const CreateInvoice = () => {
     const formDataRef = useRef(null);
     const sharePdfRef = useRef(null);
     const [resolvedStatus, setResolvedStatus] = useState(id ? null : 'draft');
+    const [invoiceLoading, setInvoiceLoading] = useState(Boolean(id));
 
     const existingInvoice = id
         ? invoices.find((inv) => inv.id === id) ||
@@ -157,6 +158,7 @@ const CreateInvoice = () => {
                 invoice.status === 'cancelled' ||
                 Number(invoice.amountPaid) > 0
             ) {
+                setInvoiceLoading(false);
                 navigate(`/invoices/${id}`, { replace: true });
                 return;
             }
@@ -178,10 +180,15 @@ const CreateInvoice = () => {
                 })),
             });
             isDirtyRef.current = false;
+            setInvoiceLoading(false);
         };
 
         const loadInvoice = async () => {
-            let invoice = invoices.find((inv) => inv.id === id);
+            setInvoiceLoading(true);
+            let invoice =
+                invoices.find((inv) => inv.id === id) ||
+                draftInvoices.find((inv) => inv.id === id) ||
+                null;
 
             if (!invoice) {
                 if (invoicesLoading) return;
@@ -189,7 +196,10 @@ const CreateInvoice = () => {
                     const data = await apiFetch(`/invoices/${id}`);
                     invoice = { ...data, id: data._id || data.id };
                 } catch {
-                    if (!cancelled) navigate('/invoices/drafts', { replace: true });
+                    if (!cancelled) {
+                        setInvoiceLoading(false);
+                        navigate('/invoices/drafts', { replace: true });
+                    }
                     return;
                 }
             } else if (!Array.isArray(invoice.items)) {
@@ -197,7 +207,10 @@ const CreateInvoice = () => {
                     const data = await apiFetch(`/invoices/${id}`);
                     invoice = { ...data, id: data._id || data.id };
                 } catch {
-                    if (!cancelled) navigate('/invoices/drafts', { replace: true });
+                    if (!cancelled) {
+                        setInvoiceLoading(false);
+                        navigate('/invoices/drafts', { replace: true });
+                    }
                     return;
                 }
             }
@@ -211,7 +224,7 @@ const CreateInvoice = () => {
         return () => {
             cancelled = true;
         };
-    }, [id, invoices, clients, navigate, invoicesLoading]);
+    }, [id, invoices, draftInvoices, clients, navigate, invoicesLoading]);
 
     const getTotals = () =>
         calculateInvoiceTotals(formData.items, {
@@ -749,6 +762,10 @@ const CreateInvoice = () => {
             </button>
         );
     };
+
+    if (invoiceLoading) {
+        return <PageSpinner label="Loading invoice…" centered className="min-h-[40vh]" />;
+    }
 
     return (
         <div className="max-w-6xl mx-auto pb-24 xl:pb-8">

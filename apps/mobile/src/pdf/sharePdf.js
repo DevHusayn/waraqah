@@ -11,6 +11,8 @@ async function shareHtmlAsPdf(html, filename, { includeFooterLink = false } = {}
     const { uri } = await Print.printToFileAsync({
         html,
         base64: false,
+        width: 1224,
+        height: 1584,
     });
 
     const pdfUri = includeFooterLink

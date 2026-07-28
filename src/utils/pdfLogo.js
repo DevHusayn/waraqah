@@ -29,11 +29,11 @@ function addPngWithOpacity(doc, pngDataUrl, x, y, w, h, opacity, rotation = 0) {
     if (typeof doc.setGState === 'function' && doc.GState && opacity < 1) {
         doc.saveGraphicsState();
         doc.setGState(new doc.GState({ opacity }));
-        doc.addImage(pngDataUrl, 'PNG', x, y, w, h, undefined, 'FAST', rotation);
+        doc.addImage(pngDataUrl, 'PNG', x, y, w, h, undefined, 'NONE', rotation);
         doc.restoreGraphicsState();
         return;
     }
-    doc.addImage(pngDataUrl, 'PNG', x, y, w, h, undefined, 'FAST', rotation);
+    doc.addImage(pngDataUrl, 'PNG', x, y, w, h, undefined, 'NONE', rotation);
 }
 
 async function resolvePdfPng(dataUrl, cache) {
