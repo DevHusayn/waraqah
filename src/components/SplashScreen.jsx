@@ -1,12 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { APP_NAME, APP_TAGLINE } from '../constants/brand';
-import { markPwaSessionAlive } from '../utils/splashSession';
+import { markPwaSessionAlive, clearPwaColdStartShell } from '../utils/splashSession';
 
 const SPLASH_DURATION_MS = 2600;
 const OS_HANDOFF_SPLASH_DURATION_MS = 1800;
 
 export default function SplashScreen({ onFinish, handoffFromOsSplash = false }) {
     const durationMs = handoffFromOsSplash ? OS_HANDOFF_SPLASH_DURATION_MS : SPLASH_DURATION_MS;
+
+    useLayoutEffect(() => {
+        clearPwaColdStartShell();
+    }, []);
 
     useEffect(() => {
         document.body.classList.add('splash-active');

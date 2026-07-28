@@ -3,9 +3,68 @@
 
 <head>
     <meta charset="UTF-8" />
+    <meta name="color-scheme" content="light" />
+    <style id="pwa-cold-start-styles">
+        html.pwa-cold-start,
+        html.pwa-cold-start body {
+            background-color: #16A34A !important;
+        }
+
+        #pwa-cold-shell {
+            display: none;
+        }
+
+        html.pwa-cold-start #pwa-cold-shell {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #16A34A;
+        }
+
+        html.pwa-cold-start #pwa-cold-shell img {
+            width: 5rem;
+            height: 5rem;
+        }
+
+        html.pwa-cold-start #root {
+            visibility: hidden;
+        }
+    </style>
+    <script>
+        (function () {
+            try {
+                var standalone =
+                    window.navigator.standalone === true ||
+                    window.matchMedia('(display-mode: standalone)').matches ||
+                    window.matchMedia('(display-mode: fullscreen)').matches ||
+                    window.matchMedia('(display-mode: minimal-ui)').matches;
+
+                if (!standalone) {
+                    return;
+                }
+
+                var nav = performance.getEntriesByType('navigation')[0];
+                var navType = nav && nav.type ? nav.type : 'navigate';
+                var warm =
+                    navType === 'reload' ||
+                    navType === 'back_forward' ||
+                    sessionStorage.getItem('waraqah_pwa_session_alive') === '1';
+
+                if (warm) {
+                    return;
+                }
+
+                document.documentElement.classList.add('pwa-cold-start');
+            } catch (_) {}
+        })();
+    </script>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
     <link rel="apple-touch-icon" href="/pwa/apple-touch-icon.png" />
+    <link rel="preload" as="image" href="/pwa/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#16A34A" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -28,6 +87,9 @@
 </head>
 
 <body>
+    <div id="pwa-cold-shell" aria-hidden="true">
+        <img src="/pwa/apple-touch-icon.png" alt="" width="80" height="80" decoding="sync" fetchpriority="high" />
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
 </body>

@@ -59,3 +59,9 @@ export function markPwaSessionAlive() {
         // ignore storage failures
     }
 }
+
+/** Remove the inline HTML cold-start shell once React splash is ready. */
+export function clearPwaColdStartShell() {
+    document.documentElement.classList.remove('pwa-cold-start');
+    document.getElementById('pwa-cold-shell')?.remove();
+}
