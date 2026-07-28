@@ -121,7 +121,18 @@ function drawBillToAndDetails(
     const hasDueDate = Boolean(invoice.dueDate);
     const hasSecondaryDate = isQuotationDoc ? hasValidUntil : hasDueDate;
     const detailsHeight = isReceiptDoc ? 46 : hasSecondaryDate ? 38 : 28;
-    const boxH = Math.max(36, detailsHeight);
+
+    const business = getClientBusiness(client);
+    const additionalInfo = String(invoice.clientAdditionalInfo || '').trim();
+    const billToLineCount =
+        1 +
+        (business ? 1 : 0) +
+        (client?.email ? 1 : 0) +
+        (client?.phone ? 1 : 0) +
+        (client?.address ? doc.splitTextToSize(String(client.address), 80).length : 0) +
+        (additionalInfo ? doc.splitTextToSize(additionalInfo, 80).length : 0);
+    const billToContentHeight = 13 + billToLineCount * 3.8 + (additionalInfo ? 2 : 0);
+    const boxH = Math.max(36, detailsHeight, billToContentHeight + 8);
 
     doc.setFillColor(...lightPrimary);
     doc.roundedRect(15, y, 88, boxH, 2, 2, 'F');
@@ -130,33 +141,38 @@ function drawBillToAndDetails(
     doc.setFontSize(7);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(...primaryColor);
-    doc.text('BILL TO', 19, y + 6);
+    doc.text(isQuotationDoc ? 'QUOTED TO' : 'BILL TO', 19, y + 6);
 
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(...textColor);
-    doc.text(String(client.name || 'Client'), 19, y + 13);
+    doc.text(String(client?.name || 'Client'), 19, y + 13);
 
     doc.setFontSize(8);
     setPdfBodyFont(doc);
     doc.setTextColor(...grayColor);
     let billY = y + 18;
-    const business = getClientBusiness(client);
     if (business) {
         doc.text(String(business), 19, billY);
         billY += 3.8;
     }
-    if (client.email) {
+    if (client?.email) {
         doc.text(String(client.email), 19, billY);
         billY += 3.8;
     }
-    if (client.phone) {
+    if (client?.phone) {
         doc.text(String(client.phone), 19, billY);
         billY += 3.8;
     }
-    if (client.address) {
+    if (client?.address) {
         const addressLines = doc.splitTextToSize(String(client.address), 80);
         doc.text(addressLines, 19, billY);
+        billY += addressLines.length * 3.8;
+    }
+    if (additionalInfo) {
+        billY += 2;
+        const additionalLines = doc.splitTextToSize(additionalInfo, 80);
+        doc.text(additionalLines, 19, billY);
     }
 
     const badgeStatus = isReceiptDoc ? 'paid' : invoice.status;

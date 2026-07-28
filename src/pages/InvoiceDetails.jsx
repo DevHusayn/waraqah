@@ -788,6 +788,16 @@ const InvoiceDetails = () => {
                                             {client.phone}
                                         </p>
                                     )}
+                                    {client.address && (
+                                        <p className="text-sm text-zinc-600 whitespace-pre-wrap">
+                                            {client.address}
+                                        </p>
+                                    )}
+                                    {invoice.clientAdditionalInfo && (
+                                        <p className="text-sm text-zinc-600 whitespace-pre-wrap">
+                                            {invoice.clientAdditionalInfo}
+                                        </p>
+                                    )}
                                 </div>
                             ) : (
                                 <p className="text-zinc-500 text-sm">Client not found</p>

@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
-import { ChevronDown, Trash2 } from 'lucide-react-native';
+import { ChevronDown, Plus, Check, Trash2 } from 'lucide-react-native';
 import {
     APP_CURRENCY,
     buildInvoiceFieldErrors,
@@ -33,6 +33,7 @@ import {
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
 import { InvoiceLimitModal } from '../components/InvoiceLimitModal';
+import { ClientDetailsModal } from '../components/ClientDetailsModal';
 import {
     BottomSheet,
     Button,
@@ -42,7 +43,7 @@ import {
     ListRow,
 } from '../components/ui';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
-import { ensureInvoiceClient } from '../utils/ensureInvoiceClient';
+import { ensureInvoiceClient, clientDetailsFromRecord } from '../utils/ensureInvoiceClient';
 import { colors, fontFamily, fontSize, lineHeight, radii, spacing, touchTarget } from '../theme';
 
 const emptyItem = () => ({
@@ -51,6 +52,15 @@ const emptyItem = () => ({
     rate: '0',
     unit: DEFAULT_INVOICE_UNIT,
 });
+
+function hasClientDetails(form) {
+    return Boolean(
+        String(form.clientBusiness || '').trim() ||
+            String(form.clientPhone || '').trim() ||
+            String(form.clientAddress || '').trim() ||
+            String(form.clientAdditionalInfo || '').trim()
+    );
+}
 
 function buildPayload(form, status) {
     const items = form.items.map((it) => ({
@@ -71,6 +81,7 @@ function buildPayload(form, status) {
         dueDate: form.hasDueDate ? form.dueDate : null,
         items,
         notes: form.notes || '',
+        clientAdditionalInfo: form.clientAdditionalInfo || '',
         status,
         currency: normalizeCurrency(form.currency || APP_CURRENCY),
         taxRate: Number(form.taxRate) || 0,
@@ -108,6 +119,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
     const [unitSheetIndex, setUnitSheetIndex] = useState(null);
     const [customUnitIndex, setCustomUnitIndex] = useState(null);
     const [customUnitName, setCustomUnitName] = useState('');
+    const [clientDetailsOpen, setClientDetailsOpen] = useState(false);
     const { invoiceUsage, tryCreate, goUpgrade } = useInvoiceCreateGuard(limitModalRef, navigation);
 
     const existing = useMemo(() => {
@@ -127,6 +139,10 @@ export function CreateInvoiceScreen({ route, navigation }) {
         clientId: '',
         clientName: '',
         clientEmail: '',
+        clientBusiness: '',
+        clientPhone: '',
+        clientAddress: '',
+        clientAdditionalInfo: '',
         date: format(new Date(), 'yyyy-MM-dd'),
         dueDate: format(new Date(Date.now() + 30 * 86400000), 'yyyy-MM-dd'),
         hasDueDate: true,
@@ -157,6 +173,8 @@ export function CreateInvoiceScreen({ route, navigation }) {
             clientId: existing.clientId || '',
             clientName: linked?.name || '',
             clientEmail: linked?.email || '',
+            ...clientDetailsFromRecord(linked),
+            clientAdditionalInfo: existing.clientAdditionalInfo || '',
             date: existing.date ? format(new Date(existing.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
             dueDate: existing.dueDate
                 ? format(new Date(existing.dueDate), 'yyyy-MM-dd')
@@ -217,6 +235,8 @@ export function CreateInvoiceScreen({ route, navigation }) {
             clientId: client.id,
             clientName: client.name || '',
             clientEmail: client.email || '',
+            ...clientDetailsFromRecord(client),
+            clientAdditionalInfo: '',
         }));
         clearError('clientName');
         clearError('clientId');
@@ -292,6 +312,9 @@ export function CreateInvoiceScreen({ route, navigation }) {
                         clientId: form.clientId,
                         clientName: form.clientName,
                         clientEmail: form.clientEmail,
+                        clientBusiness: form.clientBusiness,
+                        clientPhone: form.clientPhone,
+                        clientAddress: form.clientAddress,
                     },
                     clients,
                     { addClient, updateClient }
@@ -497,6 +520,26 @@ export function CreateInvoiceScreen({ route, navigation }) {
                     <FieldError message={fieldErrors.clientEmail} />
                     <Text style={styles.hint}>Add an email to send this invoice directly to your client.</Text>
                 </View>
+                <Pressable
+                    onPress={() => setClientDetailsOpen(true)}
+                    style={styles.clientDetailsBtn}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                        hasClientDetails(form) ? 'Edit client details' : 'Add client details'
+                    }
+                >
+                    {hasClientDetails(form) ? (
+                        <>
+                            <Check size={16} color={colors.brand} strokeWidth={2.5} />
+                            <Text style={styles.clientDetailsBtnTextActive}>Client details added</Text>
+                        </>
+                    ) : (
+                        <>
+                            <Plus size={16} color={colors.slate600} strokeWidth={2.5} />
+                            <Text style={styles.clientDetailsBtnText}>Add client details</Text>
+                        </>
+                    )}
+                </Pressable>
                 {clients.length > 0 ? (
                     <View style={styles.fieldBlock}>
                         <Label>Fill from saved client</Label>
@@ -778,6 +821,26 @@ export function CreateInvoiceScreen({ route, navigation }) {
                 </View>
             </Modal>
 
+            <ClientDetailsModal
+                visible={clientDetailsOpen}
+                onClose={() => setClientDetailsOpen(false)}
+                initialData={{
+                    business: form.clientBusiness,
+                    phone: form.clientPhone,
+                    address: form.clientAddress,
+                    additionalInfo: form.clientAdditionalInfo,
+                }}
+                onSave={(details) =>
+                    setForm((prev) => ({
+                        ...prev,
+                        clientBusiness: details.business,
+                        clientPhone: details.phone,
+                        clientAddress: details.address,
+                        clientAdditionalInfo: details.additionalInfo,
+                    }))
+                }
+            />
+
             <InvoiceLimitModal ref={limitModalRef} usage={invoiceUsage} onUpgrade={goUpgrade} />
         </KeyboardAvoidingView>
     );
@@ -837,6 +900,23 @@ const styles = StyleSheet.create({
         fontSize: fontSize.xs,
         color: colors.slate400,
         lineHeight: lineHeight.xs,
+    },
+    clientDetailsBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        marginBottom: spacing.lg,
+        minHeight: touchTarget,
+    },
+    clientDetailsBtnText: {
+        fontFamily: fontFamily.medium,
+        fontSize: fontSize.sm,
+        color: colors.slate600,
+    },
+    clientDetailsBtnTextActive: {
+        fontFamily: fontFamily.medium,
+        fontSize: fontSize.sm,
+        color: colors.brand,
     },
     selectTrigger: {
         flexDirection: 'row',

@@ -30,6 +30,9 @@ export function buildQuotationPayload(formData, status) {
     delete payload.hasValidUntil;
     delete payload.clientName;
     delete payload.clientEmail;
+    delete payload.clientBusiness;
+    delete payload.clientPhone;
+    delete payload.clientAddress;
     delete payload.dueDate;
     delete payload.hasDueDate;
     delete payload.invoiceNumber;

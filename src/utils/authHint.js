@@ -83,8 +83,12 @@ export function shouldPrefetchUserData(isAuthenticated) {
     return isAuthenticated || Boolean(getAccessToken());
 }
 
-/** Remove stale cross-tab auth artifacts from older builds. */
+/** Remove stale cross-tab auth artifacts from older builds (localStorage only). */
 export function clearLegacyAuthHints() {
-    clearAuthSessionHint();
-    clearUserProfileCache();
+    try {
+        localStorage.removeItem(HINT_KEY);
+        localStorage.removeItem(USER_CACHE_KEY);
+    } catch {
+        /* ignore */
+    }
 }

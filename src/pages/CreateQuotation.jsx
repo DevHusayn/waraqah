@@ -12,6 +12,7 @@ import {
     X,
     Package,
     ScrollText,
+    Check,
 } from 'lucide-react';
 import Spinner, { PageSpinner } from '../components/Spinner';
 import { format } from 'date-fns';
@@ -48,7 +49,8 @@ import {
 } from '../utils/quotationFormValidation';
 import { calculateInvoiceTotals } from '../utils/invoiceTotals';
 import { buildQuotationPayload, prepareQuotationPdf } from '../utils/sendQuotationFlow';
-import { ensureInvoiceClient } from '../utils/ensureInvoiceClient';
+import { ensureInvoiceClient, clientDetailsFromRecord } from '../utils/ensureInvoiceClient';
+import ClientDetailsModal from '../components/ClientDetailsModal';
 import { shareInvoicePdf, getShareFallbackHint } from '../utils/shareInvoicePdf';
 import ShareDocumentModal from '../components/ShareDocumentModal';
 import { getDisplayNumber } from '../utils/receiptHelpers';
@@ -62,6 +64,15 @@ import {
     buildUnitSelectOptions,
     normalizeInvoiceUnit,
 } from '@waraqah/shared';
+
+function hasClientDetails(data) {
+    return Boolean(
+        String(data.clientBusiness || '').trim() ||
+            String(data.clientPhone || '').trim() ||
+            String(data.clientAddress || '').trim() ||
+            String(data.clientAdditionalInfo || '').trim()
+    );
+}
 
 function hasDraftContent(data) {
     if (String(data.clientName || '').trim()) return true;
@@ -89,6 +100,7 @@ const CreateQuotation = () => {
     const [shareModal, setShareModal] = useState(null);
     const [fieldErrors, setFieldErrors] = useState({});
     const [customUnitModal, setCustomUnitModal] = useState(null);
+    const [clientDetailsModalOpen, setClientDetailsModalOpen] = useState(false);
 
     const draftIdRef = useRef(null);
     const saveInFlightRef = useRef(false);
@@ -123,6 +135,10 @@ const CreateQuotation = () => {
         clientId: '',
         clientName: '',
         clientEmail: '',
+        clientBusiness: '',
+        clientPhone: '',
+        clientAddress: '',
+        clientAdditionalInfo: '',
         date: format(new Date(), 'yyyy-MM-dd'),
         hasValidUntil: true,
         validUntil: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
@@ -171,6 +187,8 @@ const CreateQuotation = () => {
                 ...quotation,
                 clientName: client?.name || '',
                 clientEmail: client?.email || '',
+                ...clientDetailsFromRecord(client),
+                clientAdditionalInfo: quotation.clientAdditionalInfo || '',
                 hasValidUntil: Boolean(quotation.validUntil),
                 terms: quotation.terms || DEFAULT_QUOTATION_TERMS,
                 discountType: quotation.discountType || 'percent',
@@ -240,6 +258,8 @@ const CreateQuotation = () => {
             clientId,
             clientName: client.name || '',
             clientEmail: client.email || '',
+            ...clientDetailsFromRecord(client),
+            clientAdditionalInfo: '',
         }));
         const next = new URLSearchParams(searchParams);
         next.delete('clientId');
@@ -282,10 +302,23 @@ const CreateQuotation = () => {
             clientId,
             clientName: client.name || '',
             clientEmail: client.email || '',
+            ...clientDetailsFromRecord(client),
+            clientAdditionalInfo: '',
         }));
         clearFieldError(setFieldErrors, 'clientName');
         clearFieldError(setFieldErrors, 'clientId');
         clearFieldError(setFieldErrors, 'clientEmail');
+    };
+
+    const handleSaveClientDetails = (details) => {
+        markDirty();
+        setFormData((prev) => ({
+            ...prev,
+            clientBusiness: details.business,
+            clientPhone: details.phone,
+            clientAddress: details.address,
+            clientAdditionalInfo: details.additionalInfo,
+        }));
     };
 
     const handleChange = (e) => {
@@ -975,6 +1008,29 @@ const CreateQuotation = () => {
                                         Add an email to send this quotation directly to your client.
                                     </p>
                                 </div>
+                                <div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setClientDetailsModalOpen(true)}
+                                        className={
+                                            hasClientDetails(formData)
+                                                ? 'inline-flex items-center gap-2 text-sm font-medium text-brand hover:text-brand-dark transition-colors'
+                                                : 'inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors'
+                                        }
+                                    >
+                                        {hasClientDetails(formData) ? (
+                                            <>
+                                                <Check size={16} aria-hidden />
+                                                Client details added
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Plus size={16} aria-hidden />
+                                                Add client details
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                                 {clients.length > 0 && (
                                     <div>
                                         <label htmlFor="quotation-saved-client" className="label">
@@ -1258,6 +1314,18 @@ const CreateQuotation = () => {
                     </div>
                 </div>
             </form>
+
+            <ClientDetailsModal
+                open={clientDetailsModalOpen}
+                onClose={() => setClientDetailsModalOpen(false)}
+                initialData={{
+                    business: formData.clientBusiness,
+                    phone: formData.clientPhone,
+                    address: formData.clientAddress,
+                    additionalInfo: formData.clientAdditionalInfo,
+                }}
+                onSave={handleSaveClientDetails}
+            />
 
             <div className="fixed bottom-0 left-0 right-0 md:left-[15.5rem] z-30 xl:hidden border-t border-zinc-200 bg-white/95 backdrop-blur-sm shadow-[0_-4px_16px_rgba(15,23,42,0.06)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
                 <div className="max-w-6xl mx-auto w-full">{actionButtons()}</div>

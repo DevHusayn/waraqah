@@ -7,6 +7,7 @@ import {
     getAuthorizedSignatureUrl,
     resolveQuantityColumnLabel,
     DEFAULT_QUOTATION_TERMS,
+    getClientBusiness,
 } from '@waraqah/shared';
 import { escapeHtml, formatMoney, wrapHtml } from './htmlUtils';
 import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../constants/brand';
@@ -23,6 +24,7 @@ export function buildQuotationHtml(quotation, client, businessInfo) {
         resolveQuantityColumnLabel(quotation?.items).toUpperCase()
     );
     const terms = String(quotation?.terms || DEFAULT_QUOTATION_TERMS).trim();
+    const clientBusiness = getClientBusiness(client);
 
     const itemRows = (quotation?.items || [])
         .map(
@@ -70,9 +72,12 @@ export function buildQuotationHtml(quotation, client, businessInfo) {
     <div class="info-row">
       <div class="info-box">
         <div class="info-label" style="color:${escapeHtml(brand)}">QUOTED TO</div>
-        <strong>${escapeHtml(client?.name)}</strong>
-        <p class="muted">${escapeHtml(client?.email)}</p>
+        <strong>${escapeHtml(client?.name || 'Client')}</strong>
+        ${clientBusiness ? `<p class="muted">${escapeHtml(clientBusiness)}</p>` : ''}
+        ${client?.email ? `<p class="muted">${escapeHtml(client.email)}</p>` : ''}
         ${client?.phone ? `<p class="muted">${escapeHtml(client.phone)}</p>` : ''}
+        ${client?.address ? `<p class="muted" style="white-space:pre-wrap">${escapeHtml(client.address)}</p>` : ''}
+        ${quotation?.clientAdditionalInfo ? `<p class="muted" style="white-space:pre-wrap">${escapeHtml(quotation.clientAdditionalInfo)}</p>` : ''}
       </div>
       <div class="info-box">
         <div class="info-label" style="color:${escapeHtml(brand)}">ISSUE DATE</div>

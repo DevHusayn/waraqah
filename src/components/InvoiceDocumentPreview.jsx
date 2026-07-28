@@ -181,6 +181,11 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                                 {client.address}
                             </p>
                         ) : null}
+                        {invoice?.clientAdditionalInfo ? (
+                            <p className="mt-1 text-xs sm:text-sm text-zinc-500 whitespace-pre-wrap">
+                                {invoice.clientAdditionalInfo}
+                            </p>
+                        ) : null}
                     </DetailBox>
 
                     <DetailBox
