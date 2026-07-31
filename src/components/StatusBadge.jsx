@@ -33,7 +33,7 @@ export default function StatusBadge({ status, className = '' }) {
 
     return (
         <span
-            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium border capitalize ${style} ${className}`.trim()}
+            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium border capitalize print-color-exact ${style} ${className}`.trim()}
         >
             <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotColor}`} aria-hidden />
             {status || 'pending'}

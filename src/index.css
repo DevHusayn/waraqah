@@ -641,3 +641,12 @@ html.pwa-cold-start #root {
         margin-left: 0.625rem;
     }
 }
+
+@media print {
+    .print-color-exact,
+    .invoice-document-preview,
+    .invoice-document-preview * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}

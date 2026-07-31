@@ -25,25 +25,29 @@ function lightenHex(hex, amount = 0.88) {
     return `rgb(${light.join(', ')})`;
 }
 
-const STATUS_STYLES = {
-    paid: 'bg-green-500',
-    pending: 'bg-yellow-500',
-    partial: 'bg-sky-500',
-    overdue: 'bg-red-500',
-    cancelled: 'bg-zinc-400',
-    draft: 'bg-zinc-400',
-    sent: 'bg-sky-500',
-    accepted: 'bg-green-500',
-    rejected: 'bg-red-500',
-    expired: 'bg-orange-500',
-    converted: 'bg-violet-500',
+const STATUS_COLORS = {
+    paid: '#16a34a',
+    pending: '#ca8a04',
+    partial: '#0284c7',
+    overdue: '#dc2626',
+    cancelled: '#71717a',
+    draft: '#71717a',
+    sent: '#0284c7',
+    accepted: '#16a34a',
+    rejected: '#dc2626',
+    expired: '#ea580c',
+    converted: '#7c3aed',
 };
 
 function StatusBadge({ status }) {
-    const label = (status || 'pending').toUpperCase();
-    const tone = STATUS_STYLES[status] || STATUS_STYLES.pending;
+    const key = (status || 'pending').toLowerCase();
+    const label = key.toUpperCase();
+    const backgroundColor = STATUS_COLORS[key] || STATUS_COLORS.pending;
     return (
-        <span className={`inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold tracking-wide text-white ${tone}`}>
+        <span
+            className="inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold tracking-wide text-white print-color-exact"
+            style={{ backgroundColor }}
+        >
             {label}
         </span>
     );
@@ -124,7 +128,7 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
     }
 
     return (
-        <div className="bg-white text-zinc-800">
+        <div className="invoice-document-preview bg-white text-zinc-800 print-color-exact">
             <div className="px-4 py-6 sm:px-8 sm:py-8">
                 <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">

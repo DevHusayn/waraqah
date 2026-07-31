@@ -63,25 +63,27 @@ function setPdfBodyFont(doc) {
     doc.setFont(undefined, 'bold');
 }
 
-function drawStatusBadge(doc, status, x, y, primaryColor) {
+function drawStatusBadge(doc, status, x, y) {
     const statusColors = {
-        paid: [34, 197, 94],
-        pending: [234, 179, 8],
-        overdue: [239, 68, 68],
-        cancelled: [156, 163, 175],
-        draft: [156, 163, 175],
-        sent: [14, 165, 233],
-        accepted: [34, 197, 94],
-        rejected: [239, 68, 68],
-        expired: [249, 115, 22],
-        converted: [139, 92, 246],
+        paid: [22, 163, 74],
+        pending: [202, 138, 4],
+        partial: [2, 132, 199],
+        overdue: [220, 38, 38],
+        cancelled: [113, 113, 122],
+        draft: [113, 113, 122],
+        sent: [2, 132, 199],
+        accepted: [22, 163, 74],
+        rejected: [220, 38, 38],
+        expired: [234, 88, 12],
+        converted: [124, 58, 237],
     };
-    const label = (status || 'pending').toUpperCase();
-    const color = statusColors[status] || statusColors.pending;
+    const key = (status || 'pending').toLowerCase();
+    const label = key.toUpperCase();
+    const color = statusColors[key] || statusColors.pending;
     doc.setFontSize(6.5);
     doc.setFont(undefined, 'bold');
     const badgeW = Math.max(24, doc.getTextWidth(label) + 8);
-    doc.setFillColor(...color);
+    doc.setFillColor(color[0], color[1], color[2]);
     doc.roundedRect(x - badgeW + 2, y - 4, badgeW, 7, 1.5, 1.5, 'F');
     doc.setTextColor(255, 255, 255);
     doc.text(label, x - badgeW / 2 + 2, y + 0.5, { align: 'center' });
@@ -241,7 +243,7 @@ function drawBillToAndDetails(
     }
 
     const badgeStatus = isReceiptDoc ? 'paid' : invoice.status;
-    drawStatusBadge(doc, badgeStatus, 188, y + 8, primaryColor);
+    drawStatusBadge(doc, badgeStatus, 188, y + 8);
 
     const issueDate = invoice.date ? format(new Date(invoice.date), 'MMM dd, yyyy') : 'N/A';
     doc.setFontSize(7);

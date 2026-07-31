@@ -37,62 +37,36 @@ export function downloadPdfBlob(blob, filename) {
     URL.revokeObjectURL(url);
 }
 
-/** Open PDF and trigger the browser print dialog. Uses a hidden iframe when possible. */
+/** Open PDF in a new tab and trigger the browser print dialog. */
 export function printPdfBlob(blob) {
     const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, '_blank');
 
+    if (!printWindow) {
+        URL.revokeObjectURL(url);
+        return Promise.reject(new Error('Allow pop-ups to print this document.'));
+    }
+
+    let printed = false;
     const cleanup = () => {
         window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
     };
 
-    let printed = false;
-    const runPrint = (targetWindow) => {
-        if (printed || !targetWindow) return;
+    const runPrint = () => {
+        if (printed) return;
         printed = true;
         try {
-            targetWindow.focus();
-            targetWindow.print();
+            printWindow.focus();
+            printWindow.print();
         } catch {
-            // PDF opened — user can print from the browser viewer.
+            // PDF opened in a new tab — user can print from the browser viewer.
         } finally {
             cleanup();
         }
     };
 
-    const iframe = document.createElement('iframe');
-    iframe.setAttribute('title', 'Print document');
-    iframe.style.cssText =
-        'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
-    iframe.src = url;
-    document.body.appendChild(iframe);
-
-    const removeIframe = () => {
-        window.setTimeout(() => iframe.remove(), 2_000);
-    };
-
-    iframe.addEventListener(
-        'load',
-        () => {
-            runPrint(iframe.contentWindow);
-            removeIframe();
-        },
-        { once: true }
-    );
-
-    window.setTimeout(() => {
-        if (printed) return;
-
-        const printWindow = window.open(url, '_blank');
-        if (!printWindow) {
-            URL.revokeObjectURL(url);
-            iframe.remove();
-            return Promise.reject(new Error('Allow pop-ups to print this document.'));
-        }
-
-        printWindow.addEventListener('load', () => runPrint(printWindow), { once: true });
-        window.setTimeout(() => runPrint(printWindow), 1_500);
-        iframe.remove();
-    }, 1_500);
+    printWindow.addEventListener('load', runPrint, { once: true });
+    window.setTimeout(runPrint, 1000);
 
     return Promise.resolve();
 }
