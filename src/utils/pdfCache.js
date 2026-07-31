@@ -1,7 +1,9 @@
 const cache = new Map();
 
+const CACHE_VERSION = 'v2';
+
 function cacheKey(invoiceId, mode) {
-    return `${invoiceId}:${mode}`;
+    return `${invoiceId}:${mode}:${CACHE_VERSION}`;
 }
 
 export function getCachedPdf(invoiceId, mode) {

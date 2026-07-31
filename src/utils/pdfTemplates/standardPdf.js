@@ -4,7 +4,6 @@ import {
     getInvoiceBalanceDue,
     hasRecordedPayments,
     resolveQuantityColumnLabel,
-    getFooterBlockHeight,
     resolveFooterLineY,
     getFooterZoneHeight,
     contentFitsAboveFooter,
@@ -155,11 +154,10 @@ function ensureBottomSectionSpace(
     currentY,
     neededHeight,
     signatureBlockH,
-    footerBlockH,
     pageHeight,
     startNewPage
 ) {
-    if (contentFitsAboveFooter(currentY, neededHeight, signatureBlockH, footerBlockH, pageHeight)) {
+    if (contentFitsAboveFooter(currentY, neededHeight, signatureBlockH, pageHeight)) {
         return currentY;
     }
     return startNewPage();
@@ -356,7 +354,6 @@ function drawBottomBoxes(
     textColor,
     lightGray,
     startNewPage,
-    footerBlockH,
     signatureBlockH,
     pageHeight,
     mode
@@ -401,14 +398,7 @@ function drawBottomBoxes(
             hasPayment ? 14 + wrappedPaymentLines.length * 3.5 : 0,
             hasNotes ? 14 + notesLines.length * 3.5 : 0
         );
-        y = ensureBottomSectionSpace(
-            startY,
-            boxH,
-            signatureBlockH,
-            footerBlockH,
-            pageHeight,
-            startNewPage
-        );
+        y = ensureBottomSectionSpace(startY, boxH, signatureBlockH, pageHeight, startNewPage);
 
         if (hasPayment) {
             doc.setDrawColor(...lightGray);
@@ -455,14 +445,7 @@ function drawBottomBoxes(
     if (hasTerms) {
         const termsLines = doc.splitTextToSize(termsText, 168);
         const termsBoxH = Math.max(24, 14 + termsLines.length * 3.5);
-        y = ensureBottomSectionSpace(
-            y,
-            termsBoxH,
-            signatureBlockH,
-            footerBlockH,
-            pageHeight,
-            startNewPage
-        );
+        y = ensureBottomSectionSpace(y, termsBoxH, signatureBlockH, pageHeight, startNewPage);
 
         doc.setDrawColor(...lightGray);
         doc.setLineWidth(0.4);
@@ -642,11 +625,10 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     const docNumber =
         getDocumentNumber(invoice, mode) ||
         (isReceiptDoc ? 'RCP' : isQuotationDoc ? 'QTN' : 'INV');
-    const footerBlockH = getFooterBlockHeight(premium, mode);
     const hasSignatureAsset = Boolean(signatureUrl);
     const hasStampAsset = isReceiptDoc && Boolean(stampUrl);
     const signatureBlockH = hasSignatureAsset ? 36 : hasStampAsset ? 32 : 0;
-    const FOOTER_ZONE = getFooterZoneHeight(footerBlockH, signatureBlockH);
+    const FOOTER_ZONE = getFooterZoneHeight(signatureBlockH);
     const CONTENT_BOTTOM = pageHeight - FOOTER_ZONE;
 
     const pdfContentLeft = 15;
@@ -861,7 +843,6 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         textColor,
         lightGray,
         startNewPage,
-        footerBlockH,
         signatureBlockH,
         pageHeight,
         mode
@@ -869,12 +850,7 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
 
     const totalPages = doc.getNumberOfPages();
     doc.setPage(totalPages);
-    const footerLineY = resolveFooterLineY({
-        contentEndY: currentY,
-        signatureBlockH,
-        footerBlockH,
-        pageHeight,
-    });
+    const footerLineY = resolveFooterLineY({ pageHeight });
 
     try {
         await drawSignatureStampBlock(doc, {

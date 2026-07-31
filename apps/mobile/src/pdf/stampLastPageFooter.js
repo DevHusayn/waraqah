@@ -2,8 +2,8 @@ import { PDFDocument, PDFName, PDFString, PDFArray, StandardFonts, rgb } from 'p
 import * as FileSystem from 'expo-file-system';
 import {
     FREE_PDF_FOOTER_CTA_PREFIX,
-    getFooterBlockHeight,
     PDF_PRINT_BOTTOM_MARGIN,
+    PDF_FOOTER_CTA_BOTTOM_OFFSET,
 } from '@waraqah/shared';
 import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../constants/brand';
 
@@ -79,9 +79,10 @@ async function drawFooterOnLastPage(pdfDoc, footer) {
     const pageHeightMm = pointsToMm(height);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const footerBlockH =
-        footer.type === 'statement' ? 22 : getFooterBlockHeight(footer.premium, footer.mode);
-    const footerLineY = pageHeightMm - footerBlockH - PDF_PRINT_BOTTOM_MARGIN;
+    const footerLineY =
+        footer.type === 'statement'
+            ? pageHeightMm - 22 - PDF_PRINT_BOTTOM_MARGIN
+            : pageHeightMm - PDF_PRINT_BOTTOM_MARGIN - PDF_FOOTER_CTA_BOTTOM_OFFSET;
     const gray = rgb(0.42, 0.45, 0.5);
     const brand = hexToRgb(footer.brandColor);
 
