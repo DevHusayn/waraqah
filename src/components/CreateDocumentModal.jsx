@@ -4,7 +4,7 @@ import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { useQuotationCreateGuard } from '../hooks/useQuotationCreateGuard';
 import InvoiceLimitModal from './InvoiceLimitModal';
 
-const OPTIONS = [
+const DOCUMENT_OPTIONS = [
     {
         id: 'invoice',
         label: 'Invoice',
@@ -19,6 +19,10 @@ const OPTIONS = [
         icon: ClipboardList,
         tone: 'bg-sky-50 text-sky-700',
     },
+];
+
+const ALL_OPTIONS = [
+    ...DOCUMENT_OPTIONS,
     {
         id: 'client',
         label: 'Client',
@@ -37,7 +41,7 @@ const OPTIONS = [
     },
 ];
 
-export default function CreateDocumentModal({ open, onClose, navigate }) {
+export default function CreateDocumentModal({ open, onClose, navigate, documentsOnly = false }) {
     const {
         invoiceUsage,
         limitModalOpen: invoiceLimitOpen,
@@ -49,6 +53,8 @@ export default function CreateDocumentModal({ open, onClose, navigate }) {
         setLimitModalOpen: setQuotationLimitOpen,
         tryNavigateToCreate: tryCreateQuotation,
     } = useQuotationCreateGuard();
+
+    const options = documentsOnly ? DOCUMENT_OPTIONS : ALL_OPTIONS;
 
     const handleSelect = (option) => {
         onClose?.();
@@ -90,7 +96,7 @@ export default function CreateDocumentModal({ open, onClose, navigate }) {
                         Choose what you want to create
                     </p>
                     <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {OPTIONS.map((option) => {
+                        {options.map((option) => {
                             const Icon = option.icon;
                             return (
                                 <button

@@ -106,6 +106,7 @@ const Drafts = () => {
                 open={createOpen}
                 onClose={() => setCreateOpen(false)}
                 navigate={navigate}
+                documentsOnly
             />
 
             <PageHeader title="Drafts" subtitle="Resume unfinished invoices and quotations">
