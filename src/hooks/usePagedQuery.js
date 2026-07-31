@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { clampPage, DEFAULT_PAGE_SIZE, unwrapListResponse } from '../utils/pagination';
 import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Paginated list backed by TanStack Query — caches pages and avoids refetch on back-navigation.
@@ -15,6 +16,8 @@ export function usePagedQuery({
     enabled = true,
 }) {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
+    const userId = user?.id;
     const [page, setPage] = useState(1);
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -31,8 +34,8 @@ export function usePagedQuery({
 
     const queryParams = { page, limit, search: debouncedSearch, ...extraParams };
     const queryKey = queryKeys[queryKeyBase]
-        ? queryKeys[queryKeyBase](queryParams)
-        : [queryKeyBase, queryParams];
+        ? queryKeys[queryKeyBase](userId, queryParams)
+        : [queryKeyBase, userId, queryParams];
 
     const { data, isLoading, isFetching, error, refetch } = useQuery({
         queryKey,
@@ -50,9 +53,10 @@ export function usePagedQuery({
             }
             return unwrapped;
         },
-        enabled,
+        enabled: enabled && Boolean(userId),
         staleTime: STALE_TIMES.lists,
-        placeholderData: (prev) => prev,
+        placeholderData: (prev, previousQuery) =>
+            previousQuery?.queryKey?.[1] === userId ? prev : undefined,
     });
 
     const goToPage = useCallback((next) => {
@@ -71,8 +75,9 @@ export function usePagedQuery({
     }, []);
 
     const invalidateList = useCallback(() => {
-        queryClient.invalidateQueries({ queryKey: [queryKeyBase] });
-    }, [queryClient, queryKeyBase]);
+        if (!userId) return;
+        queryClient.invalidateQueries({ queryKey: [queryKeyBase, userId] });
+    }, [queryClient, queryKeyBase, userId]);
 
     return {
         page,

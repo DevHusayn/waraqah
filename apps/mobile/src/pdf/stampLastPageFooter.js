@@ -1,17 +1,17 @@
 import { PDFDocument, PDFName, PDFString, PDFArray, StandardFonts, rgb } from 'pdf-lib';
 import * as FileSystem from 'expo-file-system';
-import { FREE_PDF_FOOTER_CTA_PREFIX } from '@waraqah/shared';
+import {
+    FREE_PDF_FOOTER_CTA_PREFIX,
+    getFooterBlockHeight,
+    PDF_PRINT_BOTTOM_MARGIN,
+} from '@waraqah/shared';
 import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../constants/brand';
 
-const PAGE_H_MM = 297;
 const PAGE_W_MM = 210;
-const FOOTER_RESERVE_MM = 22;
-const FOOTER_RESERVE_QUOTATION_PREMIUM_MM = 28;
+const PT_TO_MM = 25.4 / 72;
 
-function getFooterReserve(footer) {
-    if (footer.type === 'statement') return FOOTER_RESERVE_MM;
-    if (footer.premium && footer.mode === 'quotation') return FOOTER_RESERVE_QUOTATION_PREMIUM_MM;
-    return FOOTER_RESERVE_MM;
+function pointsToMm(pageHeightPt) {
+    return pageHeightPt * PT_TO_MM;
 }
 
 function hexToRgb(hex) {
@@ -28,16 +28,18 @@ function mmX(mm, pageWidth) {
     return (mm / PAGE_W_MM) * pageWidth;
 }
 
-function mmYFromTop(mmFromTop, pageHeight) {
-    return pageHeight - (mmFromTop / PAGE_H_MM) * pageHeight;
+function mmYFromTop(mmFromTop, pageHeightPt) {
+    const pageHeight = pageHeightPt * PT_TO_MM;
+    return pageHeightPt - (mmFromTop / pageHeight) * pageHeightPt;
 }
 
-function footerDomainLinkRect(pageWidth, pageHeight, prefix, domain) {
+function footerDomainLinkRect(pageWidth, pageHeightPt, prefix, domain, footerLineY) {
     const prefixWidthPt = prefix.length * 4.8;
     const domainWidthPt = Math.max(72, domain.length * 5.2);
     const domainX = (pageWidth - prefixWidthPt - domainWidthPt) / 2 + prefixWidthPt;
-    const mmToPt = pageHeight / PAGE_H_MM;
-    const lowerY = 12 * mmToPt - 4;
+    const pageHeightMm = pageHeightPt * PT_TO_MM;
+    const mmToPt = pageHeightPt / pageHeightMm;
+    const lowerY = (footerLineY + 10) * mmToPt - 4;
     return [domainX, lowerY, domainX + domainWidthPt, lowerY + 18];
 }
 
@@ -59,11 +61,11 @@ function wrapText(text, maxChars) {
     return lines;
 }
 
-function drawCenteredLine(page, font, text, yFromTopMm, size, color, pageWidth, pageHeight) {
+function drawCenteredLine(page, font, text, yFromTopMm, size, color, pageWidth, pageHeightPt) {
     const textWidth = font.widthOfTextAtSize(text, size);
     page.drawText(text, {
         x: (pageWidth - textWidth) / 2,
-        y: mmYFromTop(yFromTopMm, pageHeight),
+        y: mmYFromTop(yFromTopMm, pageHeightPt),
         size,
         font,
         color,
@@ -74,9 +76,12 @@ async function drawFooterOnLastPage(pdfDoc, footer) {
     const pages = pdfDoc.getPages();
     const page = pages[pages.length - 1];
     const { width, height } = page.getSize();
+    const pageHeightMm = pointsToMm(height);
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const footerLineY = PAGE_H_MM - getFooterReserve(footer);
+    const footerBlockH =
+        footer.type === 'statement' ? 22 : getFooterBlockHeight(footer.premium, footer.mode);
+    const footerLineY = pageHeightMm - footerBlockH - PDF_PRINT_BOTTOM_MARGIN;
     const gray = rgb(0.42, 0.45, 0.5);
     const brand = hexToRgb(footer.brandColor);
 
@@ -145,7 +150,7 @@ async function drawFooterOnLastPage(pdfDoc, footer) {
         color: brand,
     });
 
-    return footerDomainLinkRect(width, height, prefix, domain);
+    return footerDomainLinkRect(width, height, prefix, domain, footerLineY);
 }
 
 function addLinkAnnotation(pdfDoc, page, rect, url) {

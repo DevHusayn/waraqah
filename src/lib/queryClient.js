@@ -1,5 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
-import { STALE_TIMES } from './queryKeys';
+import { STALE_TIMES, queryKeys } from './queryKeys';
+import { mergeBusinessInfoSummary } from '../utils/brandAssets';
+import { resetPrefetchState } from '../utils/prefetchRoutes';
 
 export const queryClient = new QueryClient({
     defaultOptions: {
@@ -13,22 +15,36 @@ export const queryClient = new QueryClient({
 });
 
 /** Seed related query caches from aggregated dashboard response. */
-export function seedDashboardCache(data) {
-    if (!data) return;
+export function seedDashboardCache(userId, data) {
+    if (!data || !userId) return;
 
-    queryClient.setQueryData(['dashboard'], data);
+    queryClient.setQueryData(queryKeys.dashboard(userId), data);
 
     if (data.businessInfo) {
-        queryClient.setQueryData(['businessInfo'], data.businessInfo);
+        queryClient.setQueryData(queryKeys.businessInfo(userId), (prev) =>
+            mergeBusinessInfoSummary(prev, data.businessInfo)
+        );
     }
     if (data.invoiceUsage) {
-        queryClient.setQueryData(['invoiceUsage'], data.invoiceUsage);
+        queryClient.setQueryData(queryKeys.invoiceUsage(userId), data.invoiceUsage);
     }
     if (data.stats?.draftCount != null) {
-        queryClient.setQueryData(['invoiceMeta'], { draftCount: data.stats.draftCount });
+        queryClient.setQueryData(queryKeys.invoiceMeta(userId), {
+            draftCount: data.stats.draftCount,
+        });
     }
 }
 
-export function invalidateDashboardQueries() {
-    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+export function invalidateDashboardQueries(userId) {
+    if (userId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.dashboard(userId) });
+    } else {
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    }
+}
+
+/** Wipe all cached server state — call on logout / account switch. */
+export function clearUserQueryCache() {
+    queryClient.clear();
+    resetPrefetchState();
 }

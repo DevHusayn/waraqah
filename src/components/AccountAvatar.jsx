@@ -47,10 +47,12 @@ function AvatarSkeleton({ size }) {
 }
 
 export default function AccountAvatar({ size = 'sm' }) {
-    const { businessInfo, loading } = useSettings();
+    const { businessInfo, loading, assetsReady } = useSettings();
     const premium = isPremiumUser(businessInfo);
+    const logo = getCompanyLogoAvatarUrl(businessInfo);
+    const waitingForPremiumAssets = premium && !logo && !assetsReady;
 
-    if (loading) {
+    if (loading || waitingForPremiumAssets) {
         return <AvatarSkeleton size={size} />;
     }
 

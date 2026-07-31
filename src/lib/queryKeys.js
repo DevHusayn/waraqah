@@ -1,14 +1,15 @@
+/** TanStack Query keys — scoped by userId to prevent cross-account cache bleed. */
 export const queryKeys = {
-    dashboard: ['dashboard'],
-    businessInfo: ['businessInfo'],
-    businessAssets: ['businessAssets'],
-    invoiceUsage: ['invoiceUsage'],
-    invoiceMeta: ['invoiceMeta'],
-    invoices: (params) => ['invoices', params],
-    quotations: (params) => ['quotations', params],
-    clients: (params) => ['clients', params],
-    products: (params) => ['products', params],
-    drafts: (params) => ['drafts', params],
+    dashboard: (userId) => ['dashboard', userId],
+    businessInfo: (userId) => ['businessInfo', userId],
+    businessAssets: (userId) => ['businessAssets', userId],
+    invoiceUsage: (userId) => ['invoiceUsage', userId],
+    invoiceMeta: (userId) => ['invoiceMeta', userId],
+    invoices: (userId, params) => ['invoices', userId, params],
+    quotations: (userId, params) => ['quotations', userId, params],
+    clients: (userId, params) => ['clients', userId, params],
+    products: (userId, params) => ['products', userId, params],
+    drafts: (userId, params) => ['drafts', userId, params],
 };
 
 export const STALE_TIMES = {

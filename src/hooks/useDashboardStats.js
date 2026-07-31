@@ -4,24 +4,22 @@ import { useAuth } from '../context/AuthContext';
 import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
 import { seedDashboardCache } from '../lib/queryClient';
 
-async function fetchDashboard() {
-    const data = await apiFetch('/dashboard');
-    seedDashboardCache(data);
-    return data;
-}
-
 /**
  * Aggregated dashboard query — stats, recent docs, alerts, subscription, business info.
  */
 export function useDashboardQuery() {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, user } = useAuth();
+    const userId = user?.id;
 
     return useQuery({
-        queryKey: queryKeys.dashboard,
-        queryFn: fetchDashboard,
-        enabled: isAuthenticated,
+        queryKey: queryKeys.dashboard(userId),
+        queryFn: async () => {
+            const data = await apiFetch('/dashboard');
+            seedDashboardCache(userId, data);
+            return data;
+        },
+        enabled: isAuthenticated && Boolean(userId),
         staleTime: STALE_TIMES.dashboard,
-        placeholderData: (prev) => prev,
     });
 }
 

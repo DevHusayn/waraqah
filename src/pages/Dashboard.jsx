@@ -58,7 +58,7 @@ const Dashboard = () => {
     const { businessInfo: settingsBusinessInfo, setBusinessInfo } = useSettings();
     const navigate = useNavigate();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen } = useInvoiceCreateGuard();
-    const { data, isLoading } = useDashboardQuery();
+    const { data, isLoading, isFetching } = useDashboardQuery();
     const [createModalOpen, setCreateModalOpen] = useState(false);
 
     const businessInfo = data?.businessInfo || settingsBusinessInfo;
@@ -141,7 +141,7 @@ const Dashboard = () => {
         [navigate]
     );
 
-    if (isLoading && !data) {
+    if (isLoading || (isFetching && !data)) {
         return <DashboardSkeleton />;
     }
 

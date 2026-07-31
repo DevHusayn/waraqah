@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { getCurrencySymbol } from './currency';
 import { drawPdfGeometricBackground } from './pdfBackground';
 import { PAGE_H } from './pdfLogo';
+import { printPdfBlob } from './shareInvoicePdf';
 
 const FOOTER_RESERVE = 22;
 
@@ -204,12 +205,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
     const blob = doc.output('blob');
 
     if (print) {
-        const url = URL.createObjectURL(blob);
-        const printWindow = window.open(url, '_blank');
-        printWindow?.addEventListener('load', () => {
-            printWindow.print();
-            window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-        });
+        await printPdfBlob(blob);
     } else {
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement('a');

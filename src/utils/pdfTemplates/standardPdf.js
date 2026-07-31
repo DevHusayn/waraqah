@@ -1,14 +1,18 @@
-import { format } from 'date-fns';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../../constants/brand';
 import {
     FREE_PDF_FOOTER_CTA_PREFIX,
     getInvoiceAmountPaid,
     getInvoiceBalanceDue,
     hasRecordedPayments,
     resolveQuantityColumnLabel,
+    getFooterBlockHeight,
+    resolveFooterLineY,
+    getFooterZoneHeight,
+    contentFitsAboveFooter,
 } from '@waraqah/shared';
+import { format } from 'date-fns';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../../constants/brand';
 import { getCurrencySymbol } from '../currency';
 import { getClientBusiness } from '../clientHelpers';
 import { isPremiumUser } from '../premium';
@@ -16,8 +20,6 @@ import {
     drawAuthorizedSignature,
     drawCompanyStamp,
     drawHeaderLogo,
-    PAGE_H,
-    PAGE_W,
 } from '../pdfLogo';
 import { drawPdfGeometricBackground } from '../pdfBackground';
 import {
@@ -34,6 +36,7 @@ import {
 import { drawCenteredPdfFooterCta } from '../pdfLink';
 import { addFooterLinkToPdfBlob } from '../pdfFooterLink';
 import { addPdfPreviewThumbnail } from '../pdfPageThumbnail';
+import { resolvePdfPaperFormat } from '../pdfPageFormat';
 
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -146,16 +149,15 @@ function drawWrappedBillToField(doc, text, x, y, maxWidth = BILL_TO_MAX_WIDTH) {
     return y + lines.length * BILL_TO_LINE_HEIGHT;
 }
 
-function resolveFooterLineY(footerReserve) {
-    return PAGE_H - footerReserve;
-}
-
-function ensureBottomSectionSpace(currentY, neededHeight, signatureBlockH, footerReserve, startNewPage) {
-    const footerLineY = PAGE_H - footerReserve;
-    const signatureTop = signatureBlockH ? footerLineY - signatureBlockH - 4 : footerLineY;
-    const contentEndY = currentY + neededHeight;
-
-    if (contentEndY + 6 <= signatureTop) {
+function ensureBottomSectionSpace(
+    currentY,
+    neededHeight,
+    signatureBlockH,
+    footerBlockH,
+    pageHeight,
+    startNewPage
+) {
+    if (contentFitsAboveFooter(currentY, neededHeight, signatureBlockH, footerBlockH, pageHeight)) {
         return currentY;
     }
     return startNewPage();
@@ -352,8 +354,9 @@ function drawBottomBoxes(
     textColor,
     lightGray,
     startNewPage,
-    footerReserve,
+    footerBlockH,
     signatureBlockH,
+    pageHeight,
     mode
 ) {
     const isReceiptDoc = mode === 'receipt';
@@ -396,7 +399,14 @@ function drawBottomBoxes(
             hasPayment ? 14 + wrappedPaymentLines.length * 3.5 : 0,
             hasNotes ? 14 + notesLines.length * 3.5 : 0
         );
-        y = ensureBottomSectionSpace(startY, boxH, signatureBlockH, footerReserve, startNewPage);
+        y = ensureBottomSectionSpace(
+            startY,
+            boxH,
+            signatureBlockH,
+            footerBlockH,
+            pageHeight,
+            startNewPage
+        );
 
         if (hasPayment) {
             doc.setDrawColor(...lightGray);
@@ -443,7 +453,14 @@ function drawBottomBoxes(
     if (hasTerms) {
         const termsLines = doc.splitTextToSize(termsText, 168);
         const termsBoxH = Math.max(24, 14 + termsLines.length * 3.5);
-        y = ensureBottomSectionSpace(y, termsBoxH, signatureBlockH, footerReserve, startNewPage);
+        y = ensureBottomSectionSpace(
+            y,
+            termsBoxH,
+            signatureBlockH,
+            footerBlockH,
+            pageHeight,
+            startNewPage
+        );
 
         doc.setDrawColor(...lightGray);
         doc.setLineWidth(0.4);
@@ -597,7 +614,10 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         throw new Error('Missing required data for PDF generation');
     }
 
-    const doc = new jsPDF();
+    const paperFormat = resolvePdfPaperFormat(options);
+    const doc = new jsPDF({ unit: 'mm', format: paperFormat });
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const pageWidth = doc.internal.pageSize.getWidth();
     const premium = isPremiumUser(businessInfo);
     const logoUrl = premium ? getCompanyLogoUrl(businessInfo) : '';
     const stampUrl = premium ? getCompanyStampUrl(businessInfo) : '';
@@ -605,11 +625,10 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     const pngCache = new Map();
 
     const primaryColor = hexToRgb(businessInfo.brandColor || '#16A34A');
-    const lightPrimary = lightenColor(primaryColor, 0.88);
+    const lightPrimary = lightenColor(primaryColor, 0.7);
     const textColor = [31, 41, 55];
     const grayColor = [107, 114, 128];
     const lightGray = [229, 231, 235];
-    const whiteColor = [255, 255, 255];
     const currencySymbol = getCurrencySymbol(invoice.currency || 'NGN', false);
 
     const formatMoney = (value) =>
@@ -621,17 +640,16 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     const docNumber =
         getDocumentNumber(invoice, mode) ||
         (isReceiptDoc ? 'RCP' : isQuotationDoc ? 'QTN' : 'INV');
-    const footerReserve = isQuotationDoc && premium ? 28 : 22;
+    const footerBlockH = getFooterBlockHeight(premium, mode);
     const hasSignatureAsset = Boolean(signatureUrl);
     const hasStampAsset = isReceiptDoc && Boolean(stampUrl);
-    // Signature block: rule + image + name + label; stamp sits beside it with breathing room
-    const signatureReserve = hasSignatureAsset ? 36 : 0;
-    const stampReserve = hasStampAsset ? 32 : 0;
     const signatureBlockH = hasSignatureAsset ? 36 : hasStampAsset ? 32 : 0;
-    const assetZone = Math.max(signatureReserve, stampReserve);
-    const FOOTER_ZONE = footerReserve + (assetZone ? assetZone + 6 : 0);
-    const CONTENT_BOTTOM = PAGE_H - FOOTER_ZONE;
-    const LINE_HEIGHT = 3.8;
+    const FOOTER_ZONE = getFooterZoneHeight(footerBlockH, signatureBlockH);
+    const CONTENT_BOTTOM = pageHeight - FOOTER_ZONE;
+
+    const pdfContentLeft = 15;
+    const pdfContentWidth = 180;
+    const pdfContentRight = pdfContentLeft + pdfContentWidth;
 
     const startNewPage = () => {
         doc.addPage();
@@ -697,9 +715,6 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         3: 39,
         4: 39,
     };
-    const pdfContentLeft = 15;
-    const pdfContentWidth = 180;
-    const pdfContentRight = pdfContentLeft + pdfContentWidth;
     const quantityColumnLabel = resolveQuantityColumnLabel(invoice.items).toUpperCase();
 
     doc.autoTable({
@@ -738,7 +753,7 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
             }
         },
         alternateRowStyles: { fillColor: [252, 252, 253] },
-        margin: { left: pdfContentLeft, right: PAGE_W - pdfContentRight, bottom: FOOTER_ZONE + 4 },
+        margin: { left: pdfContentLeft, right: pageWidth - pdfContentRight, bottom: FOOTER_ZONE + 4 },
     });
 
     const mayShowPartialPayment =
@@ -844,14 +859,20 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         textColor,
         lightGray,
         startNewPage,
-        footerReserve,
+        footerBlockH,
         signatureBlockH,
+        pageHeight,
         mode
     );
 
     const totalPages = doc.getNumberOfPages();
     doc.setPage(totalPages);
-    const footerLineY = resolveFooterLineY(footerReserve);
+    const footerLineY = resolveFooterLineY({
+        contentEndY: currentY,
+        signatureBlockH,
+        footerBlockH,
+        pageHeight,
+    });
 
     try {
         await drawSignatureStampBlock(doc, {

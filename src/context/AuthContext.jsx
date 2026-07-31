@@ -10,6 +10,7 @@ import {
     getCachedUserProfile,
     clearUserProfileCache,
 } from '../utils/authHint';
+import { clearUserQueryCache } from '../lib/queryClient';
 
 const AuthContext = createContext(null);
 const AUTH_PROBE_TIMEOUT_MS = 8000;
@@ -34,6 +35,7 @@ export function AuthProvider({ children }) {
         clearAccessToken();
         clearAuthSessionHint();
         clearUserProfileCache();
+        clearUserQueryCache();
         setUser(null);
         likelySessionRef.current = false;
     }, []);
