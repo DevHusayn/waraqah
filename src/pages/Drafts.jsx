@@ -13,7 +13,7 @@ import { PageSpinner } from '../components/Spinner';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 import PaginationBar from '../components/PaginationBar';
-import { usePagedList } from '../hooks/usePagedList';
+import { usePagedQuery } from '../hooks/usePagedQuery';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 
@@ -60,7 +60,10 @@ const Drafts = () => {
         []
     );
 
-    const { page, setPage, data, pagination, loading, refresh } = usePagedList({ fetcher });
+    const { page, setPage, data, pagination, loading, refresh } = usePagedQuery({
+        queryKeyBase: 'drafts',
+        fetcher,
+    });
 
     const drafts = data.map(mapDraft);
 

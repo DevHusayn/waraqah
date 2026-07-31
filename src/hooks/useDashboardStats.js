@@ -1,38 +1,38 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
+import { seedDashboardCache } from '../lib/queryClient';
+
+async function fetchDashboard() {
+    const data = await apiFetch('/dashboard');
+    seedDashboardCache(data);
+    return data;
+}
 
 /**
- * Loads aggregated dashboard data without fetching the full invoice list.
+ * Aggregated dashboard query — stats, recent docs, alerts, subscription, business info.
  */
-export function useDashboardStats() {
+export function useDashboardQuery() {
     const { isAuthenticated } = useAuth();
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(true);
 
-    const refresh = useCallback(async () => {
-        if (!isAuthenticated) {
-            setData(null);
-            setLoading(false);
-            return null;
-        }
+    return useQuery({
+        queryKey: queryKeys.dashboard,
+        queryFn: fetchDashboard,
+        enabled: isAuthenticated,
+        staleTime: STALE_TIMES.dashboard,
+        placeholderData: (prev) => prev,
+    });
+}
 
-        setLoading(true);
-        try {
-            const dashboard = await apiFetch('/invoices/dashboard');
-            setData(dashboard);
-            return dashboard;
-        } catch {
-            setData(null);
-            return null;
-        } finally {
-            setLoading(false);
-        }
-    }, [isAuthenticated]);
+/** @deprecated Use useDashboardQuery — kept for backward compatibility. */
+export function useDashboardStats() {
+    const { data, isLoading, isFetching, refetch } = useDashboardQuery();
 
-    useEffect(() => {
-        refresh();
-    }, [refresh]);
-
-    return { data, loading, refresh };
+    return {
+        data,
+        loading: isLoading,
+        fetching: isFetching,
+        refresh: refetch,
+    };
 }

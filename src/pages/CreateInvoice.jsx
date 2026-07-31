@@ -132,9 +132,9 @@ const CreateInvoice = () => {
         }
     }, [id]);
 
-    const status = !id ? 'draft' : resolvedStatus;
+    const status = resolvedStatus ?? (id ? null : 'draft');
     const isDraftEdit = Boolean(id && status === 'draft');
-    const isDraftFlow = !id || status === 'draft';
+    const isDraftFlow = status === 'draft';
     const invoiceNotReady = Boolean(id && (invoiceLoading || resolvedStatus == null));
 
     const [formData, setFormData] = useState({
@@ -437,6 +437,7 @@ const CreateInvoice = () => {
     const persistDraft = useCallback(
         async ({ silent = true, redirectAfterCreate = true } = {}) => {
             if (!isDraftFlow) return null;
+            if (saveInFlightRef.current) return null;
 
             const current = formDataRef.current;
             if (!hasDraftContent(current)) return null;
@@ -529,6 +530,10 @@ const CreateInvoice = () => {
             return;
         }
 
+        if (saveInFlightRef.current) return;
+
+        saveInFlightRef.current = true;
+        isDirtyRef.current = false;
         setSending(true);
         try {
             const clientId = await resolveClientId(formData);
@@ -542,9 +547,14 @@ const CreateInvoice = () => {
                 saved = await addInvoice(payload, { skipRefresh: true });
             }
 
-            isDirtyRef.current = false;
-            setResolvedStatus(saved.status || 'pending');
+            const nextStatus = saved.status || 'pending';
+            setResolvedStatus(nextStatus);
             draftIdRef.current = saved.id;
+            setFormData((prev) => ({
+                ...prev,
+                status: nextStatus,
+                invoiceNumber: saved.invoiceNumber || prev.invoiceNumber,
+            }));
             const savedClient = clients.find((c) => c.id === saved.clientId);
             const client = {
                 id: saved.clientId,
@@ -554,7 +564,6 @@ const CreateInvoice = () => {
             };
             const clientAlreadyEmailed = Boolean(saved.clientInvoiceEmailedAt);
 
-            setSending(false);
             sharePdfRef.current = null;
             setSharePdfReady(false);
             setShareModal({
@@ -574,6 +583,8 @@ const CreateInvoice = () => {
             }
             setShareModal(null);
             sharePdfRef.current = null;
+        } finally {
+            saveInFlightRef.current = false;
             setSending(false);
         }
     };

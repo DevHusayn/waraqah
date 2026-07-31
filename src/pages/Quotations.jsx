@@ -20,7 +20,7 @@ import Toolbar, { ToolbarSearch, ToolbarActions } from '../components/Toolbar';
 import StatusBadge from '../components/StatusBadge';
 import { ListPageSkeleton } from '../components/Skeleton';
 import PaginationBar from '../components/PaginationBar';
-import { usePagedList } from '../hooks/usePagedList';
+import { usePagedQuery } from '../hooks/usePagedQuery';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 
@@ -74,7 +74,8 @@ const Quotations = () => {
         pagination,
         statusCounts,
         loading,
-    } = usePagedList({
+    } = usePagedQuery({
+        queryKeyBase: 'quotations',
         fetcher,
         extraDeps: [filter, sortBy],
     });

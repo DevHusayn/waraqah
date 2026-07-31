@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, memo } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import Layout from './components/Layout';
 import Home from './pages/Home';
@@ -11,7 +11,14 @@ import { SettingsProvider } from './context/SettingsContext';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
 import BrandTheme from './components/BrandTheme';
-import { PageLoader, PublicPageSpinner } from './components/Spinner';
+import { PublicPageSpinner } from './components/Spinner';
+import {
+    ListPageSkeleton,
+    DetailPageSkeleton,
+    StatementPageSkeleton,
+    UpgradePageSkeleton,
+    AdminPageSkeleton,
+} from './components/Skeleton';
 
 const Auth = lazy(() => import('./pages/Auth'));
 const CheckEmailPage = lazy(() => import('./pages/CheckEmail'));
@@ -47,12 +54,12 @@ const Upgrade = lazy(() => import('./pages/Upgrade'));
 const UpgradeCallback = lazy(() => import('./pages/UpgradeCallback'));
 const MonthlyStatement = lazy(() => import('./pages/MonthlyStatement'));
 
-function AppLayout({ children }) {
+const AppLayout = memo(function AppLayout({ children }) {
     return <Layout>{children}</Layout>;
-}
+});
 
-function LazyPage({ children }) {
-    return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
+function RouteSuspense({ fallback, children }) {
+    return <Suspense fallback={fallback}>{children}</Suspense>;
 }
 
 function AuthPage({ children }) {
@@ -61,6 +68,14 @@ function AuthPage({ children }) {
 
 function PublicPage({ children }) {
     return <Suspense fallback={<PublicPageSpinner />}>{children}</Suspense>;
+}
+
+function ListRoute({ children }) {
+    return (
+        <RouteSuspense fallback={<ListPageSkeleton rows={8} columns={5} withAction={false} />}>
+            {children}
+        </RouteSuspense>
+    );
 }
 
 function AppProviders({ children }) {
@@ -96,9 +111,9 @@ function App() {
                                 path="/upgrade/callback"
                                 element={
                                     <AppLayout>
-                                        <LazyPage>
+                                        <RouteSuspense fallback={<UpgradePageSkeleton />}>
                                             <UpgradeCallback />
-                                        </LazyPage>
+                                        </RouteSuspense>
                                     </AppLayout>
                                 }
                             />
@@ -107,20 +122,19 @@ function App() {
                                 path="/*"
                                 element={
                                     <AppLayout>
-                                        <LazyPage>
                                         <Routes>
-                                            <Route path="/invoices" element={<PrivateRoute><Invoices /></PrivateRoute>} />
-                                            <Route path="/invoices/drafts" element={<PrivateRoute><Drafts /></PrivateRoute>} />
-                                            <Route path="/invoices/create" element={<PrivateRoute><CreateInvoice /></PrivateRoute>} />
-                                            <Route path="/invoices/edit/:id" element={<PrivateRoute><CreateInvoice /></PrivateRoute>} />
-                                            <Route path="/invoices/:id" element={<PrivateRoute><InvoiceDetails /></PrivateRoute>} />
-                                            <Route path="/quotations" element={<PrivateRoute><Quotations /></PrivateRoute>} />
-                                            <Route path="/quotations/create" element={<PrivateRoute><CreateQuotation /></PrivateRoute>} />
-                                            <Route path="/quotations/edit/:id" element={<PrivateRoute><CreateQuotation /></PrivateRoute>} />
-                                            <Route path="/quotations/:id" element={<PrivateRoute><QuotationDetails /></PrivateRoute>} />
-                                            <Route path="/clients" element={<PrivateRoute><Clients /></PrivateRoute>} />
-                                            <Route path="/products" element={<PrivateRoute><Products /></PrivateRoute>} />
-                                            <Route path="/settings" element={<PrivateRoute><SettingsLayout /></PrivateRoute>}>
+                                            <Route path="/invoices" element={<PrivateRoute><ListRoute><Invoices /></ListRoute></PrivateRoute>} />
+                                            <Route path="/invoices/drafts" element={<PrivateRoute><ListRoute><Drafts /></ListRoute></PrivateRoute>} />
+                                            <Route path="/invoices/create" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><CreateInvoice /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/invoices/edit/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><CreateInvoice /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/invoices/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><InvoiceDetails /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/quotations" element={<PrivateRoute><ListRoute><Quotations /></ListRoute></PrivateRoute>} />
+                                            <Route path="/quotations/create" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><CreateQuotation /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/quotations/edit/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><CreateQuotation /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/quotations/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><QuotationDetails /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/clients" element={<PrivateRoute><ListRoute><Clients /></ListRoute></PrivateRoute>} />
+                                            <Route path="/products" element={<PrivateRoute><ListRoute><Products /></ListRoute></PrivateRoute>} />
+                                            <Route path="/settings" element={<PrivateRoute><RouteSuspense fallback={null}><SettingsLayout /></RouteSuspense></PrivateRoute>}>
                                                 <Route index element={<SettingsIndex />} />
                                                 <Route path="business" element={<BusinessSettingsIndex />} />
                                                 <Route path="business/company-profile" element={<CompanyProfileSettings />} />
@@ -133,11 +147,10 @@ function App() {
                                                 <Route path="about" element={<AboutSettings />} />
                                                 <Route path="profile" element={<Navigate to="/settings/business/company-profile" replace />} />
                                             </Route>
-                                            <Route path="/statements" element={<PrivateRoute><MonthlyStatement /></PrivateRoute>} />
-                                            <Route path="/upgrade" element={<PrivateRoute><Upgrade /></PrivateRoute>} />
-                                            <Route path="/admin" element={<PrivateRoute><AdminRoute><AdminDashboard /></AdminRoute></PrivateRoute>} />
+                                            <Route path="/statements" element={<PrivateRoute><RouteSuspense fallback={<StatementPageSkeleton />}><MonthlyStatement /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/upgrade" element={<PrivateRoute><RouteSuspense fallback={<UpgradePageSkeleton />}><Upgrade /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/admin" element={<PrivateRoute><AdminRoute><RouteSuspense fallback={<AdminPageSkeleton />}><AdminDashboard /></RouteSuspense></AdminRoute></PrivateRoute>} />
                                         </Routes>
-                                        </LazyPage>
                                     </AppLayout>
                                 }
                             />

@@ -125,9 +125,9 @@ const CreateQuotation = () => {
         }
     }, [id]);
 
-    const status = !id ? 'draft' : resolvedStatus;
+    const status = resolvedStatus ?? (id ? null : 'draft');
     const isDraftEdit = Boolean(id && status === 'draft');
-    const isDraftFlow = !id || status === 'draft';
+    const isDraftFlow = status === 'draft';
     const quotationNotReady = Boolean(id && (quotationLoading || resolvedStatus == null));
 
     const [formData, setFormData] = useState({
@@ -415,6 +415,7 @@ const CreateQuotation = () => {
     const persistDraft = useCallback(
         async ({ silent = true, redirectAfterCreate = true } = {}) => {
             if (!isDraftFlow) return null;
+            if (saveInFlightRef.current) return null;
 
             const current = formDataRef.current;
             if (!hasDraftContent(current)) return null;
@@ -499,6 +500,10 @@ const CreateQuotation = () => {
             return;
         }
 
+        if (saveInFlightRef.current) return;
+
+        saveInFlightRef.current = true;
+        isDirtyRef.current = false;
         setSending(true);
         try {
             const clientId = await resolveClientId(formData);
@@ -512,9 +517,14 @@ const CreateQuotation = () => {
                 saved = await addQuotation(payload, { skipRefresh: true });
             }
 
-            isDirtyRef.current = false;
-            setResolvedStatus(saved.status || 'sent');
+            const nextStatus = saved.status || 'sent';
+            setResolvedStatus(nextStatus);
             draftIdRef.current = saved.id;
+            setFormData((prev) => ({
+                ...prev,
+                status: nextStatus,
+                quotationNumber: saved.quotationNumber || prev.quotationNumber,
+            }));
             const savedClient = clients.find((c) => c.id === saved.clientId);
             const client = {
                 id: saved.clientId,
@@ -524,7 +534,6 @@ const CreateQuotation = () => {
             };
             const clientAlreadyEmailed = Boolean(saved.clientQuotationEmailedAt);
 
-            setSending(false);
             sharePdfRef.current = null;
             setSharePdfReady(false);
             setShareModal({
@@ -544,6 +553,8 @@ const CreateQuotation = () => {
             }
             setShareModal(null);
             sharePdfRef.current = null;
+        } finally {
+            saveInFlightRef.current = false;
             setSending(false);
         }
     };

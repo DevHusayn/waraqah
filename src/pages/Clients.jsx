@@ -7,12 +7,12 @@ import ClientFormModal, { EMPTY_CLIENT } from '../components/ClientFormModal';
 import PageHeader from '../components/PageHeader';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
-import { PageSpinner } from '../components/Spinner';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 import Toolbar, { ToolbarSearch } from '../components/Toolbar';
 import PaginationBar from '../components/PaginationBar';
-import { usePagedList } from '../hooks/usePagedList';
+import { usePagedQuery } from '../hooks/usePagedQuery';
+import { ListPageSkeleton } from '../components/Skeleton';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 import { getClientBusiness } from '../utils/clientHelpers';
@@ -62,7 +62,7 @@ const Clients = () => {
         pagination,
         loading,
         refresh,
-    } = usePagedList({ fetcher });
+    } = usePagedQuery({ queryKeyBase: 'clients', fetcher });
 
     const clients = data.map(mapClient);
 
@@ -184,7 +184,7 @@ const Clients = () => {
             </PageHeader>
 
             {loading && clients.length === 0 && !search ? (
-                <PageSpinner label="Loading clients…" />
+                <ListPageSkeleton rows={8} columns={5} />
             ) : hasNoClientsAtAll ? (
                 <div className="data-table-wrap">
                     <EmptyState

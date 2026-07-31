@@ -79,7 +79,7 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 manualChunks(id) {
-                    if (id.includes('node_modules/jspdf') || id.includes('node_modules/pdf-lib')) {
+                    if (id.includes('node_modules/jspdf') || id.includes('node_modules/pdf-lib') || id.includes('node_modules/html2canvas')) {
                         return 'pdf';
                     }
                     if (id.includes('node_modules/@sentry')) {
@@ -88,9 +88,19 @@ export default defineConfig({
                     if (id.includes('node_modules/date-fns')) {
                         return 'date-fns';
                     }
+                    if (id.includes('node_modules/@tanstack/react-query')) {
+                        return 'query';
+                    }
+                    if (id.includes('node_modules/lucide-react')) {
+                        return 'icons';
+                    }
+                    if (id.includes('node_modules/react-router')) {
+                        return 'router';
+                    }
                 },
             },
         },
+        chunkSizeWarningLimit: 600,
     },
     server: {
         port: 5173,

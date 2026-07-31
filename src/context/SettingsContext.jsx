@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, useContext, useCallback, useRef, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../utils/api';
 import { useAuth } from './AuthContext';
 import { shouldPrefetchUserData } from '../utils/authHint';
@@ -6,6 +7,8 @@ import { buildBusinessInfoPayload } from '../utils/businessPayload';
 import { BRAND_ASSET_FIELDS } from '../utils/brandAssets';
 import { isPremiumUser } from '../utils/premium';
 import { DEFAULT_BRAND_COLOR } from '@waraqah/shared';
+import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
+import { invalidateDashboardQueries } from '../lib/queryClient';
 
 const SettingsContext = createContext();
 
@@ -33,7 +36,6 @@ const EMPTY_BUSINESS = {
     autoPaymentReminders: true,
 };
 
-/** Summary responses intentionally send empty asset placeholders — keep loaded branding in memory. */
 const SUMMARY_ASSET_FIELDS = ['businessLogo', ...BRAND_ASSET_FIELDS];
 
 function mergeSummaryBusinessInfo(prev, info) {
@@ -60,69 +62,69 @@ export const useSettings = () => {
 };
 
 export const SettingsProvider = ({ children }) => {
-    const [businessInfo, setBusinessInfo] = useState(EMPTY_BUSINESS);
-    const [loading, setLoading] = useState(false);
+    const queryClient = useQueryClient();
     const assetsLoadedRef = useRef(false);
-    const hasHydratedRef = useRef(false);
     const { isAuthenticated, loading: authLoading } = useAuth();
     const shouldFetch = shouldPrefetchUserData(isAuthenticated);
-    const authLoadingRef = useRef(authLoading);
-    const isAuthenticatedRef = useRef(isAuthenticated);
-    authLoadingRef.current = authLoading;
-    isAuthenticatedRef.current = isAuthenticated;
+
+    const {
+        data: businessInfo = EMPTY_BUSINESS,
+        isLoading,
+        isFetching,
+        refetch: refetchBusinessInfo,
+    } = useQuery({
+        queryKey: queryKeys.businessInfo,
+        queryFn: async () => {
+            const info = await apiFetch('/business-info?summary=1');
+            return info;
+        },
+        enabled: shouldFetch,
+        staleTime: STALE_TIMES.businessInfo,
+        placeholderData: (prev) => prev ?? EMPTY_BUSINESS,
+    });
+
+    const setBusinessInfo = useCallback(
+        (updater) => {
+            queryClient.setQueryData(queryKeys.businessInfo, (prev) => {
+                const current = prev ?? EMPTY_BUSINESS;
+                return typeof updater === 'function' ? updater(current) : updater;
+            });
+        },
+        [queryClient]
+    );
 
     const fetchBusinessInfo = useCallback(async () => {
         if (!shouldFetch) {
-            if (!authLoadingRef.current && !isAuthenticatedRef.current) {
-                setBusinessInfo(EMPTY_BUSINESS);
+            if (!authLoading && !isAuthenticated) {
+                queryClient.setQueryData(queryKeys.businessInfo, EMPTY_BUSINESS);
                 assetsLoadedRef.current = false;
-                hasHydratedRef.current = false;
             }
-            setLoading(false);
             return;
         }
-        // Avoid avatar/skeleton flicker on auth settle or billing refresh.
-        if (!hasHydratedRef.current) {
-            setLoading(true);
-        }
-        try {
-            const info = await apiFetch('/business-info?summary=1');
-            setBusinessInfo((prev) => mergeSummaryBusinessInfo(prev, info));
-            hasHydratedRef.current = true;
-        } catch {
-            if (!authLoadingRef.current && !isAuthenticatedRef.current) {
-                setBusinessInfo(EMPTY_BUSINESS);
-                hasHydratedRef.current = false;
-            }
-        } finally {
-            setLoading(false);
-        }
-    }, [shouldFetch]);
+        const result = await refetchBusinessInfo();
+        return result.data;
+    }, [shouldFetch, authLoading, isAuthenticated, refetchBusinessInfo, queryClient]);
 
     const fetchBusinessAssets = useCallback(async () => {
         if (!shouldFetch || assetsLoadedRef.current) return;
         try {
             const assets = await apiFetch('/business-info/assets');
             assetsLoadedRef.current = true;
-            setBusinessInfo((prev) => ({ ...prev, ...assets }));
+            setBusinessInfo((prev) => mergeSummaryBusinessInfo(prev, { ...prev, ...assets }));
         } catch {
             /* branding assets are optional for initial render */
         }
-    }, [shouldFetch]);
+    }, [shouldFetch, setBusinessInfo]);
 
     useEffect(() => {
-        fetchBusinessInfo();
         const onLogin = () => {
             assetsLoadedRef.current = false;
-            fetchBusinessInfo().then(() => {
-                fetchBusinessAssets();
-            });
+            fetchBusinessInfo().then(() => fetchBusinessAssets());
         };
         const onLogout = () => {
-            setBusinessInfo(EMPTY_BUSINESS);
-            setLoading(false);
+            queryClient.setQueryData(queryKeys.businessInfo, EMPTY_BUSINESS);
+            queryClient.removeQueries({ queryKey: queryKeys.businessInfo });
             assetsLoadedRef.current = false;
-            hasHydratedRef.current = false;
         };
         window.addEventListener('app-login', onLogin);
         window.addEventListener('app-logout', onLogout);
@@ -130,28 +132,27 @@ export const SettingsProvider = ({ children }) => {
             window.removeEventListener('app-login', onLogin);
             window.removeEventListener('app-logout', onLogout);
         };
-    }, [fetchBusinessInfo, fetchBusinessAssets]);
+    }, [fetchBusinessInfo, fetchBusinessAssets, queryClient]);
 
-    const updateBusinessInfo = async (info) => {
-        const payload = buildBusinessInfoPayload(info, businessInfo);
+    const persistBusinessInfo = async (payload) => {
         const updated = await apiFetch('/business-info', {
             method: 'PUT',
             body: JSON.stringify(payload),
         });
         assetsLoadedRef.current = true;
         setBusinessInfo(updated);
+        invalidateDashboardQueries();
         return updated;
+    };
+
+    const updateBusinessInfo = async (info) => {
+        const payload = buildBusinessInfoPayload(info, businessInfo);
+        return persistBusinessInfo(payload);
     };
 
     const saveBusinessAsset = async (field, dataUrl) => {
         const payload = buildBusinessInfoPayload({ [field]: dataUrl }, businessInfo);
-        const updated = await apiFetch('/business-info', {
-            method: 'PUT',
-            body: JSON.stringify(payload),
-        });
-        assetsLoadedRef.current = true;
-        setBusinessInfo(updated);
-        return updated;
+        return persistBusinessInfo(payload);
     };
 
     const saveCompanyLogo = async ({ companyLogoUrl, companyLogoAvatarUrl }) => {
@@ -163,24 +164,16 @@ export const SettingsProvider = ({ children }) => {
             },
             businessInfo
         );
-        const updated = await apiFetch('/business-info', {
-            method: 'PUT',
-            body: JSON.stringify(payload),
-        });
-        assetsLoadedRef.current = true;
-        setBusinessInfo(updated);
-        return updated;
+        return persistBusinessInfo(payload);
     };
 
-    const saveBusinessLogo = async (logoDataUrl) => {
-        return saveBusinessAsset('companyLogoUrl', logoDataUrl);
-    };
+    const saveBusinessLogo = async (logoDataUrl) => saveBusinessAsset('companyLogoUrl', logoDataUrl);
 
     const value = {
         businessInfo,
         updateBusinessInfo,
         setBusinessInfo,
-        loading,
+        loading: isLoading || (isFetching && businessInfo === EMPTY_BUSINESS),
         refreshBusinessInfo: fetchBusinessInfo,
         fetchBusinessAssets,
         saveBusinessLogo,

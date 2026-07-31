@@ -1,9 +1,12 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../utils/api';
 import { useAuth } from './AuthContext';
 import { shouldPrefetchUserData } from '../utils/authHint';
 import { isDraft } from '../utils/invoiceHelpers';
 import { buildListQuery, PICKER_PAGE_SIZE, unwrapListResponse } from '../utils/pagination';
+import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
+import { invalidateDashboardQueries } from '../lib/queryClient';
 
 const InvoiceContext = createContext();
 
@@ -16,12 +19,11 @@ export const useInvoice = () => {
 };
 
 export const InvoiceProvider = ({ children }) => {
+    const queryClient = useQueryClient();
     const [invoices, setInvoices] = useState([]);
     const [drafts, setDrafts] = useState([]);
     const [clients, setClients] = useState([]);
     const [products, setProducts] = useState([]);
-    const [invoiceUsage, setInvoiceUsage] = useState(null);
-    const [draftCount, setDraftCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const [invoicesLoading, setInvoicesLoading] = useState(false);
     const [draftsLoading, setDraftsLoading] = useState(false);
@@ -32,30 +34,43 @@ export const InvoiceProvider = ({ children }) => {
     const { isAuthenticated, loading: authLoading } = useAuth();
     const shouldFetch = shouldPrefetchUserData(isAuthenticated);
 
+    const { data: invoiceUsage = null } = useQuery({
+        queryKey: queryKeys.invoiceUsage,
+        queryFn: () => apiFetch('/invoices/usage'),
+        enabled: shouldFetch,
+        staleTime: STALE_TIMES.meta,
+        placeholderData: (prev) => prev ?? null,
+    });
+
+    const { data: invoiceMeta } = useQuery({
+        queryKey: queryKeys.invoiceMeta,
+        queryFn: () => apiFetch('/invoices/meta'),
+        enabled: shouldFetch,
+        staleTime: STALE_TIMES.meta,
+        placeholderData: (prev) => prev ?? { draftCount: 0 },
+    });
+
+    const draftCount = invoiceMeta?.draftCount ?? 0;
+
     const mapInvoice = (i) => ({ ...i, id: i._id || i.id });
     const mapClient = (c) => ({ ...c, id: c._id || c.id });
     const mapProduct = (p) => ({ ...p, id: p._id || p.id });
 
     const refreshMeta = useCallback(async () => {
-        try {
-            const meta = await apiFetch('/invoices/meta');
-            setDraftCount(meta?.draftCount ?? 0);
-        } catch {
-            setDraftCount(0);
-        }
-    }, []);
+        await queryClient.invalidateQueries({ queryKey: queryKeys.invoiceMeta });
+        invalidateDashboardQueries();
+    }, [queryClient]);
 
     const refreshInvoices = useCallback(async () => {
-        const [invPayload, usage] = await Promise.all([
+        const [invPayload] = await Promise.all([
             apiFetch(`/invoices?${buildListQuery({ page: 1, limit: PICKER_PAGE_SIZE })}`),
-            apiFetch('/invoices/usage').catch(() => null),
+            queryClient.invalidateQueries({ queryKey: queryKeys.invoiceUsage }),
         ]);
         const { data } = unwrapListResponse(invPayload);
         setInvoices(data.map(mapInvoice));
         invoicesFetchedRef.current = true;
-        if (usage) setInvoiceUsage(usage);
         await refreshMeta();
-    }, [refreshMeta]);
+    }, [refreshMeta, queryClient]);
 
     const fetchInvoices = useCallback(async ({ force = false, year, month, limit = PICKER_PAGE_SIZE } = {}) => {
         if (!shouldFetch && !isAuthenticated) return [];
@@ -98,8 +113,8 @@ export const InvoiceProvider = ({ children }) => {
             const { data, pagination } = unwrapListResponse(payload);
             const mapped = data.map(mapInvoice);
             setDrafts(mapped);
-            setDraftCount(pagination?.total ?? mapped.length);
             draftsFetchedRef.current = true;
+            await refreshMeta();
             return mapped;
         } catch {
             setDrafts([]);
@@ -138,30 +153,22 @@ export const InvoiceProvider = ({ children }) => {
                 setDrafts([]);
                 setClients([]);
                 setProducts([]);
-                setInvoiceUsage(null);
-                setDraftCount(0);
                 productsFetchedRef.current = false;
                 invoicesFetchedRef.current = false;
                 draftsFetchedRef.current = false;
+                queryClient.removeQueries({ queryKey: queryKeys.invoiceUsage });
+                queryClient.removeQueries({ queryKey: queryKeys.invoiceMeta });
             }
             setLoading(false);
             return;
         }
         setLoading(true);
         try {
-            const [cliPayload, usage, meta] = await Promise.all([
-                apiFetch(`/clients?${buildListQuery({ page: 1, limit: PICKER_PAGE_SIZE })}`),
-                apiFetch('/invoices/usage').catch(() => null),
-                apiFetch('/invoices/meta').catch(() => ({ draftCount: 0 })),
-            ]);
+            const cliPayload = await apiFetch(`/clients?${buildListQuery({ page: 1, limit: PICKER_PAGE_SIZE })}`);
             const { data } = unwrapListResponse(cliPayload);
-            setInvoiceUsage(usage);
             setClients(data.map(mapClient));
-            setDraftCount(meta?.draftCount ?? 0);
         } catch {
             setClients([]);
-            setInvoiceUsage(null);
-            setDraftCount(0);
         } finally {
             setLoading(false);
         }
@@ -175,8 +182,6 @@ export const InvoiceProvider = ({ children }) => {
             setDrafts([]);
             setClients([]);
             setProducts([]);
-            setInvoiceUsage(null);
-            setDraftCount(0);
             setLoading(false);
             setInvoicesLoading(false);
             setDraftsLoading(false);
@@ -184,6 +189,8 @@ export const InvoiceProvider = ({ children }) => {
             productsFetchedRef.current = false;
             invoicesFetchedRef.current = false;
             draftsFetchedRef.current = false;
+            queryClient.removeQueries({ queryKey: queryKeys.invoiceUsage });
+            queryClient.removeQueries({ queryKey: queryKeys.invoiceMeta });
         };
         window.addEventListener('app-login', onLogin);
         window.addEventListener('app-logout', onLogout);
@@ -198,11 +205,11 @@ export const InvoiceProvider = ({ children }) => {
         setDrafts([]);
         setClients([]);
         setProducts([]);
-        setInvoiceUsage(null);
-        setDraftCount(0);
         productsFetchedRef.current = false;
         invoicesFetchedRef.current = false;
         draftsFetchedRef.current = false;
+        queryClient.removeQueries({ queryKey: queryKeys.invoiceUsage });
+        queryClient.removeQueries({ queryKey: queryKeys.invoiceMeta });
     };
 
     const addInvoice = async (invoice, options = {}) => {
@@ -214,7 +221,6 @@ export const InvoiceProvider = ({ children }) => {
         if (options.skipRefresh) {
             if (isDraft(mapped)) {
                 setDrafts((prev) => [mapped, ...prev.filter((inv) => inv.id !== mapped.id)]);
-                setDraftCount((count) => count + 1);
             } else {
                 setInvoices((prev) => [mapped, ...prev.filter((inv) => inv.id !== mapped.id)]);
                 invoicesFetchedRef.current = true;
@@ -283,7 +289,6 @@ export const InvoiceProvider = ({ children }) => {
         setInvoices((prev) => prev.filter((inv) => inv.id !== id));
         setDrafts((prev) => prev.filter((inv) => inv.id !== id));
         if (wasDraft) {
-            setDraftCount((count) => Math.max(0, count - 1));
             await refreshMeta();
         }
     };

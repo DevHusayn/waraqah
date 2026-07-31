@@ -8,12 +8,12 @@ import PageHeader from '../components/PageHeader';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
 import { formatCurrency } from '../utils/currency';
-import { PageSpinner } from '../components/Spinner';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 import Toolbar, { ToolbarSearch } from '../components/Toolbar';
 import PaginationBar from '../components/PaginationBar';
-import { usePagedList } from '../hooks/usePagedList';
+import { usePagedQuery } from '../hooks/usePagedQuery';
+import { ListPageSkeleton } from '../components/Skeleton';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 
@@ -51,7 +51,7 @@ export default function Products() {
         pagination,
         loading,
         refresh,
-    } = usePagedList({ fetcher });
+    } = usePagedQuery({ queryKeyBase: 'products', fetcher });
 
     const products = data.map(mapProduct);
     const hasNoProductsAtAll = !loading && pagination.total === 0 && !search;
@@ -153,7 +153,7 @@ export default function Products() {
             </PageHeader>
 
             {loading && products.length === 0 && !search ? (
-                <PageSpinner label="Loading products…" />
+                <ListPageSkeleton rows={8} columns={5} />
             ) : hasNoProductsAtAll ? (
                 <div className="data-table-wrap">
                     <EmptyState

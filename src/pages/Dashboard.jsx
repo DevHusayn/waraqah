@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     FileText,
@@ -20,7 +20,8 @@ import PageHeader from '../components/PageHeader';
 import InvoiceLimitModal from '../components/InvoiceLimitModal';
 import CreateDocumentModal from '../components/CreateDocumentModal';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
-import { useDashboardStats } from '../hooks/useDashboardStats';
+import { useDashboardQuery } from '../hooks/useDashboardStats';
+import { prefetchFrequentRoutes } from '../utils/prefetchRoutes';
 import { formatInvoiceUsageLabel } from '../utils/invoiceLimits';
 import { isPremiumUser } from '../utils/premium';
 import { useSettings } from '../context/SettingsContext';
@@ -54,70 +55,93 @@ function DocumentTypeBadge({ doc }) {
 }
 
 const Dashboard = () => {
-    const { businessInfo } = useSettings();
-    const displayBusinessName = getDisplayBusinessName(businessInfo);
+    const { businessInfo: settingsBusinessInfo, setBusinessInfo } = useSettings();
     const navigate = useNavigate();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen } = useInvoiceCreateGuard();
-    const { data, loading } = useDashboardStats();
+    const { data, isLoading } = useDashboardQuery();
     const [createModalOpen, setCreateModalOpen] = useState(false);
+
+    const businessInfo = data?.businessInfo || settingsBusinessInfo;
+    const displayBusinessName = getDisplayBusinessName(businessInfo);
+    const usageFromDashboard = data?.invoiceUsage;
+    const effectiveUsage = usageFromDashboard || invoiceUsage;
+
+    useEffect(() => {
+        if (data?.businessInfo) {
+            setBusinessInfo((prev) => ({ ...prev, ...data.businessInfo }));
+        }
+    }, [data?.businessInfo, setBusinessInfo]);
+
+    useEffect(() => {
+        if (data) {
+            prefetchFrequentRoutes();
+        }
+    }, [data]);
 
     const stats = data?.stats;
     const recentDocuments = data?.recentDocuments || data?.recentInvoices || [];
     const overdueInvoices = data?.overdueInvoices || [];
 
-    const statCards = stats
-        ? [
-              {
-                  name: 'Total Invoices',
-                  value: stats.totalInvoices,
-                  icon: FileText,
-                  iconBg: 'bg-brand-light',
-                  iconColor: 'text-brand',
-              },
-              {
-                  name: 'Total Quotations',
-                  value: stats.totalQuotations ?? 0,
-                  icon: ClipboardList,
-                  iconBg: 'bg-sky-50',
-                  iconColor: 'text-sky-600',
-              },
-              {
-                  name: 'Total Clients',
-                  value: stats.totalClients,
-                  icon: Users,
-                  iconBg: 'bg-violet-50',
-                  iconColor: 'text-violet-600',
-              },
-              {
-                  name: 'Revenue (Paid)',
-                  value: formatCurrency(stats.paidRevenue),
-                  icon: Wallet,
-                  iconBg: 'bg-green-50',
-                  iconColor: 'text-green-600',
-              },
-              {
-                  name: 'Pending Revenue',
-                  value: formatCurrency(stats.pendingRevenue),
-                  icon: Clock,
-                  iconBg: 'bg-amber-50',
-                  iconColor: 'text-amber-600',
-              },
-          ]
-        : [];
+    const statCards = useMemo(
+        () =>
+            stats
+                ? [
+                      {
+                          name: 'Total Invoices',
+                          value: stats.totalInvoices,
+                          icon: FileText,
+                          iconBg: 'bg-brand-light',
+                          iconColor: 'text-brand',
+                      },
+                      {
+                          name: 'Total Quotations',
+                          value: stats.totalQuotations ?? 0,
+                          icon: ClipboardList,
+                          iconBg: 'bg-sky-50',
+                          iconColor: 'text-sky-600',
+                      },
+                      {
+                          name: 'Total Clients',
+                          value: stats.totalClients,
+                          icon: Users,
+                          iconBg: 'bg-violet-50',
+                          iconColor: 'text-violet-600',
+                      },
+                      {
+                          name: 'Revenue (Paid)',
+                          value: formatCurrency(stats.paidRevenue),
+                          icon: Wallet,
+                          iconBg: 'bg-green-50',
+                          iconColor: 'text-green-600',
+                      },
+                      {
+                          name: 'Pending Revenue',
+                          value: formatCurrency(stats.pendingRevenue),
+                          icon: Clock,
+                          iconBg: 'bg-amber-50',
+                          iconColor: 'text-amber-600',
+                      },
+                  ]
+                : [],
+        [stats]
+    );
 
-    const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
+    const usageLabel = formatInvoiceUsageLabel(effectiveUsage);
     const premium = isPremiumUser(businessInfo);
 
-    const openDocument = (doc) => {
-        const id = doc.id || doc._id;
-        if (isQuotationDocument(doc) || doc.documentType === 'quotation') {
-            navigate(`/quotations/${id}`);
-            return;
-        }
-        navigate(`/invoices/${id}`);
-    };
+    const openDocument = useCallback(
+        (doc) => {
+            const id = doc.id || doc._id;
+            if (isQuotationDocument(doc) || doc.documentType === 'quotation') {
+                navigate(`/quotations/${id}`);
+                return;
+            }
+            navigate(`/invoices/${id}`);
+        },
+        [navigate]
+    );
 
-    if (loading && !data) {
+    if (isLoading && !data) {
         return <DashboardSkeleton />;
     }
 
