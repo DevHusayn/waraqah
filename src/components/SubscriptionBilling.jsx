@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { usePaystackReturnSync } from '../hooks/usePaystackReturnSync';
+import { setPendingPaymentReference } from '../utils/pendingPayment';
 import { Link } from 'react-router-dom';
 import { Calendar, Sparkles, XCircle } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
@@ -17,6 +19,8 @@ export default function SubscriptionBilling() {
     const { showToast } = useToast();
     const [cancelling, setCancelling] = useState(false);
     const [switching, setSwitching] = useState(false);
+
+    usePaystackReturnSync(() => setSwitching(false));
 
     const premium = isPremiumUser(businessInfo);
     const hasSubscription = Boolean(businessInfo.paystackSubscriptionCode);
@@ -44,7 +48,7 @@ export default function SubscriptionBilling() {
     const handleSwitchToYearly = async () => {
         setSwitching(true);
         try {
-            const { authorization_url } = await apiFetch('/payments/initialize', {
+            const { authorization_url, reference } = await apiFetch('/payments/initialize', {
                 method: 'POST',
                 body: JSON.stringify({
                     callbackOrigin: window.location.origin,
@@ -52,6 +56,7 @@ export default function SubscriptionBilling() {
                     switchFromMonthly: true,
                 }),
             });
+            setPendingPaymentReference(reference);
             window.location.assign(authorization_url);
         } catch (err) {
             showToast(err.message, 'error');

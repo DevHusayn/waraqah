@@ -5,6 +5,7 @@ import Spinner from '../components/Spinner';
 import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
+import { clearPendingPaymentReference } from '../utils/pendingPayment';
 
 export default function UpgradeCallback() {
     const [searchParams] = useSearchParams();
@@ -42,11 +43,13 @@ export default function UpgradeCallback() {
                 return refreshBusinessInfo();
             })
             .then(() => {
+                clearPendingPaymentReference();
                 window.dispatchEvent(new Event('app-login'));
                 setStatus('success');
                 setMessage('Payment successful. Premium is now active.');
             })
             .catch((err) => {
+                clearPendingPaymentReference();
                 setStatus('error');
                 setMessage(err.message || 'Payment verification failed.');
             });

@@ -22,7 +22,7 @@ export function seedDashboardCache(userId, data) {
     queryClient.setQueryData(queryKeys.dashboard(userId), data);
 
     if (data.businessInfo) {
-        cacheBusinessSummary(data.businessInfo);
+        cacheBusinessSummary(data.businessInfo, userId);
         queryClient.setQueryData(queryKeys.businessInfo(userId), (prev) =>
             mergeBusinessInfoSummary(prev, data.businessInfo)
         );

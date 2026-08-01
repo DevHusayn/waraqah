@@ -18,6 +18,8 @@ import {
 import PremiumPrice from '../components/PremiumPrice';
 import Spinner from '../components/Spinner';
 import DevPlanToggle from '../components/DevPlanToggle';
+import { usePaystackReturnSync } from '../hooks/usePaystackReturnSync';
+import { setPendingPaymentReference } from '../utils/pendingPayment';
 
 export default function Upgrade() {
     const { showToast } = useToast();
@@ -34,6 +36,8 @@ export default function Upgrade() {
     const listAmount = selectedPlan?.listAmount ?? (isYearly ? PREMIUM_LIST_PRICE_YEARLY_NGN : PREMIUM_LIST_PRICE_NGN);
     const savings = selectedPlan?.savings ?? PREMIUM_YEARLY_SAVINGS_NGN;
 
+    usePaystackReturnSync(() => setPaying(false));
+
     useEffect(() => {
         apiFetch('/payments/plan')
             .then(setPlan)
@@ -44,13 +48,14 @@ export default function Upgrade() {
     const handlePay = async () => {
         setPaying(true);
         try {
-            const { authorization_url } = await apiFetch('/payments/initialize', {
+            const { authorization_url, reference } = await apiFetch('/payments/initialize', {
                 method: 'POST',
                 body: JSON.stringify({
                     callbackOrigin: window.location.origin,
                     interval: billingInterval,
                 }),
             });
+            setPendingPaymentReference(reference);
             window.location.assign(authorization_url);
         } catch (err) {
             showToast(err.message, 'error');

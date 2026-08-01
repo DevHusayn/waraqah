@@ -9,8 +9,6 @@ import {
     cacheUserProfile,
     getCachedUserProfile,
     clearUserProfileCache,
-    cacheBusinessSummary,
-    getCachedBusinessSummary,
     clearBusinessSummaryCache,
 } from '../utils/authHint';
 import { clearUserQueryCache } from '../lib/queryClient';
@@ -28,10 +26,15 @@ export function useAuth() {
 
 export function AuthProvider({ children }) {
     const likelySessionRef = useRef(hasLikelyAuthSession());
+    const userIdRef = useRef(null);
     const [user, setUser] = useState(() =>
         likelySessionRef.current ? getCachedUserProfile() : null
     );
     const [resolving, setResolving] = useState(true);
+
+    if (user?.id && userIdRef.current !== user.id) {
+        userIdRef.current = user.id;
+    }
 
     const clearSession = useCallback(() => {
         clearCsrfToken();
@@ -45,6 +48,12 @@ export function AuthProvider({ children }) {
     }, []);
 
     const applySessionUser = useCallback((nextUser) => {
+        const nextId = nextUser?.id ? String(nextUser.id) : null;
+        if (userIdRef.current && nextId && userIdRef.current !== nextId) {
+            clearBusinessSummaryCache();
+            clearUserQueryCache();
+        }
+        userIdRef.current = nextId;
         setUser(nextUser || null);
         if (nextUser) {
             cacheUserProfile(nextUser);

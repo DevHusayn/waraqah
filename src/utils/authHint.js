@@ -86,7 +86,7 @@ export function clearUserProfileCache() {
     }
 }
 
-function serializeBusinessSummary(info) {
+function serializeBusinessSummary(info, userId) {
     const avatar = String(
         info.companyLogoAvatarUrl || info.companyLogoUrl || info.businessLogo || ''
     ).trim();
@@ -98,6 +98,7 @@ function serializeBusinessSummary(info) {
               : '';
 
     return JSON.stringify({
+        userId: String(userId || ''),
         name: String(info.name || '').trim(),
         email: String(info.email || '').trim(),
         plan: info.plan || 'free',
@@ -107,23 +108,27 @@ function serializeBusinessSummary(info) {
     });
 }
 
-function parseCachedBusinessSummary(raw) {
+function parseCachedBusinessSummary(raw, expectedUserId) {
     if (!raw) return null;
     try {
         const parsed = JSON.parse(raw);
-        return parsed?.name ? parsed : null;
+        if (!parsed?.name) return null;
+        if (expectedUserId) {
+            const expected = String(expectedUserId);
+            if (!parsed.userId || String(parsed.userId) !== expected) return null;
+        }
+        return parsed;
     } catch {
         return null;
     }
 }
 
 /** Cache business name and summary fields for instant dashboard header on refresh. */
-export function cacheBusinessSummary(info) {
-    if (!info?.name?.trim()) {
-        clearBusinessSummaryCache();
+export function cacheBusinessSummary(info, userId) {
+    if (!userId || !info?.name?.trim()) {
         return;
     }
-    const payload = serializeBusinessSummary(info);
+    const payload = serializeBusinessSummary(info, userId);
     try {
         sessionStorage.setItem(BUSINESS_CACHE_KEY, payload);
         localStorage.setItem(BUSINESS_CACHE_KEY, payload);
@@ -132,11 +137,12 @@ export function cacheBusinessSummary(info) {
     }
 }
 
-export function getCachedBusinessSummary() {
+export function getCachedBusinessSummary(userId) {
+    if (!userId) return null;
     try {
         return (
-            parseCachedBusinessSummary(sessionStorage.getItem(BUSINESS_CACHE_KEY)) ||
-            parseCachedBusinessSummary(localStorage.getItem(BUSINESS_CACHE_KEY))
+            parseCachedBusinessSummary(sessionStorage.getItem(BUSINESS_CACHE_KEY), userId) ||
+            parseCachedBusinessSummary(localStorage.getItem(BUSINESS_CACHE_KEY), userId)
         );
     } catch {
         return null;

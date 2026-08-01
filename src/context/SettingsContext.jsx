@@ -36,8 +36,8 @@ const EMPTY_BUSINESS = {
     autoPaymentReminders: true,
 };
 
-function businessPlaceholder() {
-    const cached = getCachedBusinessSummary();
+function businessPlaceholder(userId) {
+    const cached = userId ? getCachedBusinessSummary(userId) : null;
     return cached ? { ...EMPTY_BUSINESS, ...cached } : EMPTY_BUSINESS;
 }
 
@@ -85,14 +85,13 @@ export const SettingsProvider = ({ children }) => {
         },
         enabled: shouldFetch && Boolean(userId),
         staleTime: STALE_TIMES.businessInfo,
-        placeholderData: (prev) => prev ?? businessPlaceholder(),
+        placeholderData: (prev) => prev ?? businessPlaceholder(userId),
     });
 
     useEffect(() => {
-        if (businessInfo?.name?.trim()) {
-            cacheBusinessSummary(businessInfo);
-        }
-    }, [businessInfo]);
+        if (!userId || !isFetched || !businessInfo?.name?.trim()) return;
+        cacheBusinessSummary(businessInfo, userId);
+    }, [businessInfo, userId, isFetched]);
 
     const setBusinessInfo = useCallback(
         (updater) => {
