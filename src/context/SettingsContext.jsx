@@ -2,7 +2,7 @@ import { createContext, useContext, useCallback, useRef, useEffect, useState, us
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../utils/api';
 import { useAuth } from './AuthContext';
-import { shouldPrefetchUserData } from '../utils/authHint';
+import { shouldPrefetchUserData, getCachedBusinessSummary, cacheBusinessSummary } from '../utils/authHint';
 import { buildBusinessInfoPayload } from '../utils/businessPayload';
 import { mergeBusinessInfoSummary, getCompanyLogoAvatarUrl } from '../utils/brandAssets';
 import { isPremiumUser } from '../utils/premium';
@@ -35,6 +35,11 @@ const EMPTY_BUSINESS = {
     autoEmailInvoices: false,
     autoPaymentReminders: true,
 };
+
+function businessPlaceholder() {
+    const cached = getCachedBusinessSummary();
+    return cached ? { ...EMPTY_BUSINESS, ...cached } : EMPTY_BUSINESS;
+}
 
 export const useSettings = () => {
     const context = useContext(SettingsContext);
@@ -80,8 +85,14 @@ export const SettingsProvider = ({ children }) => {
         },
         enabled: shouldFetch && Boolean(userId),
         staleTime: STALE_TIMES.businessInfo,
-        placeholderData: (prev) => prev ?? EMPTY_BUSINESS,
+        placeholderData: (prev) => prev ?? businessPlaceholder(),
     });
+
+    useEffect(() => {
+        if (businessInfo?.name?.trim()) {
+            cacheBusinessSummary(businessInfo);
+        }
+    }, [businessInfo]);
 
     const setBusinessInfo = useCallback(
         (updater) => {

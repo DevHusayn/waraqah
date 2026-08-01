@@ -20,6 +20,8 @@ export function useDashboardQuery() {
         },
         enabled: isAuthenticated && Boolean(userId),
         staleTime: STALE_TIMES.dashboard,
+        placeholderData: (prev, previousQuery) =>
+            previousQuery?.queryKey?.[1] === userId ? prev : undefined,
     });
 }
 

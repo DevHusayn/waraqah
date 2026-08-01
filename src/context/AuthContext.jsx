@@ -9,6 +9,9 @@ import {
     cacheUserProfile,
     getCachedUserProfile,
     clearUserProfileCache,
+    cacheBusinessSummary,
+    getCachedBusinessSummary,
+    clearBusinessSummaryCache,
 } from '../utils/authHint';
 import { clearUserQueryCache } from '../lib/queryClient';
 
@@ -35,6 +38,7 @@ export function AuthProvider({ children }) {
         clearAccessToken();
         clearAuthSessionHint();
         clearUserProfileCache();
+        clearBusinessSummaryCache();
         clearUserQueryCache();
         setUser(null);
         likelySessionRef.current = false;

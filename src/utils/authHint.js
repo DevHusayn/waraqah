@@ -3,6 +3,7 @@ import { getAccessToken } from './authToken';
 
 const HINT_KEY = 'waraqah_auth_hint';
 const USER_CACHE_KEY = 'waraqah_user_cache';
+const BUSINESS_CACHE_KEY = 'waraqah_business_cache';
 
 function readAuthHint() {
     try {
@@ -85,6 +86,60 @@ export function clearUserProfileCache() {
     }
 }
 
+function serializeBusinessSummary(info) {
+    return JSON.stringify({
+        name: String(info.name || '').trim(),
+        email: String(info.email || '').trim(),
+        plan: info.plan || 'free',
+        defaultCurrency: info.defaultCurrency || 'NGN',
+    });
+}
+
+function parseCachedBusinessSummary(raw) {
+    if (!raw) return null;
+    try {
+        const parsed = JSON.parse(raw);
+        return parsed?.name ? parsed : null;
+    } catch {
+        return null;
+    }
+}
+
+/** Cache business name and summary fields for instant dashboard header on refresh. */
+export function cacheBusinessSummary(info) {
+    if (!info?.name?.trim()) {
+        clearBusinessSummaryCache();
+        return;
+    }
+    const payload = serializeBusinessSummary(info);
+    try {
+        sessionStorage.setItem(BUSINESS_CACHE_KEY, payload);
+        localStorage.setItem(BUSINESS_CACHE_KEY, payload);
+    } catch {
+        /* storage blocked */
+    }
+}
+
+export function getCachedBusinessSummary() {
+    try {
+        return (
+            parseCachedBusinessSummary(sessionStorage.getItem(BUSINESS_CACHE_KEY)) ||
+            parseCachedBusinessSummary(localStorage.getItem(BUSINESS_CACHE_KEY))
+        );
+    } catch {
+        return null;
+    }
+}
+
+export function clearBusinessSummaryCache() {
+    try {
+        sessionStorage.removeItem(BUSINESS_CACHE_KEY);
+        localStorage.removeItem(BUSINESS_CACHE_KEY);
+    } catch {
+        /* ignore */
+    }
+}
+
 /** Best-effort signal that the browser likely holds an active session. */
 export function hasLikelyAuthSession() {
     if (getAccessToken()) return true;
@@ -103,6 +158,7 @@ export function clearLegacyAuthHints() {
     try {
         localStorage.removeItem(HINT_KEY);
         localStorage.removeItem(USER_CACHE_KEY);
+        localStorage.removeItem(BUSINESS_CACHE_KEY);
     } catch {
         /* ignore */
     }

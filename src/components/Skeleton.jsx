@@ -185,6 +185,14 @@ export function StatementPageSkeleton() {
                 </div>
                 <Skeleton className="h-12 w-full sm:w-56 rounded-xl" />
             </div>
+            <StatementContentSkeleton />
+        </LoadingStatus>
+    );
+}
+
+export function StatementContentSkeleton() {
+    return (
+        <>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
                 {Array.from({ length: 6 }).map((_, i) => (
                     <div key={i} className="card !p-4 space-y-2">
@@ -200,7 +208,7 @@ export function StatementPageSkeleton() {
                 </div>
                 <TableSkeleton rows={5} columns={6} className="!border-0 !shadow-none !rounded-none" />
             </div>
-        </LoadingStatus>
+        </>
     );
 }
 

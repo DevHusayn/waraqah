@@ -23,6 +23,11 @@ export function usePagedQuery({
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const fetcherRef = useRef(fetcher);
     fetcherRef.current = fetcher;
+    const lastStatusCountsRef = useRef(null);
+
+    useEffect(() => {
+        lastStatusCountsRef.current = null;
+    }, [userId]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -69,6 +74,10 @@ export function usePagedQuery({
         },
     });
 
+    if (data?.statusCounts) {
+        lastStatusCountsRef.current = data.statusCounts;
+    }
+
     const goToPage = useCallback((next) => {
         setPage((prev) => {
             const target = typeof next === 'function' ? next(prev) : next;
@@ -98,7 +107,7 @@ export function usePagedQuery({
         data: data?.data ?? [],
         setData: () => {},
         pagination: data?.pagination ?? { page: 1, limit, total: 0, totalPages: 0 },
-        statusCounts: data?.statusCounts ?? null,
+        statusCounts: data?.statusCounts ?? lastStatusCountsRef.current,
         loading: isLoading,
         fetching: isFetching,
         error: error?.message || '',
