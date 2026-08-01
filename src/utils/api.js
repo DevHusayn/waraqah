@@ -176,6 +176,48 @@ export async function apiFetch(path, options = {}) {
     return res.json();
 }
 
+/** Download a CSV (or other blob) export from an authenticated GET endpoint. */
+export async function downloadExport(path, { filename, timeoutMs } = {}) {
+    const { signal, cancelTimeout } = createFetchSignal({ timeoutMs });
+
+    let res;
+    try {
+        res = await fetch(`${API_BASE}${path}`, {
+            credentials: 'include',
+            headers: buildAuthHeaders(),
+            signal,
+        });
+    } catch (err) {
+        if (isAbortLikeError(err)) {
+            throw tagNetworkError(
+                new Error('The request took too long. Please check your connection and try again.')
+            );
+        }
+        throw tagNetworkError(new Error(getNetworkErrorMessage()));
+    } finally {
+        cancelTimeout();
+    }
+
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const err = new Error(data.message || 'Export failed. Please try again.');
+        err.status = res.status;
+        throw err;
+    }
+
+    const blob = await res.blob();
+    const disposition = res.headers.get('Content-Disposition') || '';
+    const match = disposition.match(/filename="([^"]+)"/);
+    const resolvedName = filename || match?.[1] || 'export.csv';
+
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = resolvedName;
+    anchor.click();
+    URL.revokeObjectURL(url);
+}
+
 export async function authFetch(path, options = {}) {
     const { timeoutMs, signal: _signal, ...fetchOptions } = options;
     const { signal, cancelTimeout } = createFetchSignal({ signal: _signal, timeoutMs });

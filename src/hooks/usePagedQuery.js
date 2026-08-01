@@ -24,9 +24,11 @@ export function usePagedQuery({
     const fetcherRef = useRef(fetcher);
     fetcherRef.current = fetcher;
     const lastStatusCountsRef = useRef(null);
+    const lastSummaryRef = useRef(null);
 
     useEffect(() => {
         lastStatusCountsRef.current = null;
+        lastSummaryRef.current = null;
     }, [userId]);
 
     useEffect(() => {
@@ -66,6 +68,8 @@ export function usePagedQuery({
             if (!prevParams || typeof prevParams !== 'object') return undefined;
             const sameListFilters =
                 prevParams.status === queryParams.status &&
+                prevParams.plan === queryParams.plan &&
+                prevParams.activity === queryParams.activity &&
                 prevParams.sort === queryParams.sort &&
                 prevParams.search === queryParams.search &&
                 prevParams.year === queryParams.year &&
@@ -77,6 +81,20 @@ export function usePagedQuery({
     if (data?.statusCounts) {
         lastStatusCountsRef.current = data.statusCounts;
     }
+    if (data?.summary) {
+        lastSummaryRef.current = data.summary;
+    }
+
+    const setData = useCallback(
+        (updater) => {
+            queryClient.setQueryData(queryKey, (old) => {
+                if (!old?.data) return old;
+                const nextData = typeof updater === 'function' ? updater(old.data) : updater;
+                return { ...old, data: nextData };
+            });
+        },
+        [queryClient, queryKey]
+    );
 
     const goToPage = useCallback((next) => {
         setPage((prev) => {
@@ -105,9 +123,10 @@ export function usePagedQuery({
         setSearch,
         debouncedSearch,
         data: data?.data ?? [],
-        setData: () => {},
+        setData,
         pagination: data?.pagination ?? { page: 1, limit, total: 0, totalPages: 0 },
         statusCounts: data?.statusCounts ?? lastStatusCountsRef.current,
+        summary: data?.summary ?? lastSummaryRef.current,
         loading: isLoading,
         fetching: isFetching,
         error: error?.message || '',

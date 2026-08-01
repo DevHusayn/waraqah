@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import {
     Search,
     Shield,
@@ -14,69 +14,45 @@ import {
     RotateCcw,
     Users,
     FileText,
+    ExternalLink,
+    Download,
 } from 'lucide-react';
-import { apiFetch } from '../utils/api';
+import { apiFetch, downloadExport } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { FREE_MONTHLY_INVOICE_LIMIT } from '../utils/invoiceLimits';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import PageHeader from '../components/PageHeader';
 import Spinner from '../components/Spinner';
-import { AdminPageSkeleton } from '../components/Skeleton';
+import { TableBodySkeleton } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
 import PaginationBar from '../components/PaginationBar';
-import { usePagedList } from '../hooks/usePagedList';
-import { buildListQuery } from '../utils/pagination';
+import CustomSelect from '../components/CustomSelect';
+import { usePagedQuery } from '../hooks/usePagedQuery';
+import {
+    buildListQuery,
+    buildAdminUsersExportQuery,
+    buildAdminUsersExportFilename,
+} from '../utils/pagination';
+import { StatusBadge, PlanBadge, UsageBadge } from '../components/admin/AdminBadges';
 
-function StatusBadge({ status }) {
-    const active = status === 'active';
-    return (
-        <span
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold capitalize ${
-                active
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-            }`}
-        >
-            {active ? <CheckCircle size={12} aria-hidden /> : <Ban size={12} aria-hidden />}
-            {status || 'unknown'}
-        </span>
-    );
-}
+const PLAN_FILTER_OPTIONS = [
+    { value: 'all', label: 'All plans' },
+    { value: 'free', label: 'Free' },
+    { value: 'premium', label: 'Premium' },
+];
 
-function PlanBadge({ plan }) {
-    const premium = plan === 'premium';
-    return (
-        <span
-            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold capitalize ${
-                premium ? 'bg-amber-100 text-amber-800' : 'bg-zinc-100 text-zinc-600'
-            }`}
-        >
-            {premium ? <Crown size={12} aria-hidden /> : null}
-            {plan || 'free'}
-        </span>
-    );
-}
+const STATUS_FILTER_OPTIONS = [
+    { value: 'all', label: 'All statuses' },
+    { value: 'active', label: 'Active' },
+    { value: 'suspended', label: 'Suspended' },
+];
 
-function UsageBadge({ usage }) {
-    if (!usage || usage.unlimited) {
-        return (
-            <span className="text-xs font-medium text-zinc-500">Unlimited</span>
-        );
-    }
-    const atLimit = !usage.canCreate;
-    return (
-        <span
-            className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold tabular-nums ${
-                atLimit
-                    ? 'bg-red-100 text-red-800'
-                    : 'bg-green-100 text-green-800'
-            }`}
-        >
-            {usage.used}/{usage.limit} this month
-        </span>
-    );
-}
+const ACTIVITY_FILTER_OPTIONS = [
+    { value: 'all', label: 'All activity' },
+    { value: 'has_invoices', label: 'Has invoices' },
+    { value: 'no_invoices', label: 'No invoices yet' },
+];
 
 function AdminActionItem({
     icon: Icon,
@@ -108,6 +84,7 @@ function AdminActionsMenu({
     user,
     currentUserId,
     actionLoading,
+    onView,
     onPlan,
     onStatus,
     onAdmin,
@@ -194,6 +171,13 @@ function AdminActionsMenu({
                       className="rounded-xl border border-zinc-200 bg-white shadow-card p-1.5"
                       role="menu"
                   >
+                      <AdminActionItem
+                          icon={ExternalLink}
+                          label="View profile"
+                          disabled={busy}
+                          onClick={() => closeAnd(() => onView(user._id))}
+                      />
+                      <div className="my-1 border-t border-zinc-100" />
                       <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
                           Plan & billing
                       </p>
@@ -279,44 +263,103 @@ function AdminActionsMenu({
 }
 
 export default function AdminDashboard() {
+    const navigate = useNavigate();
     const [actionLoading, setActionLoading] = useState('');
+    const [exportLoading, setExportLoading] = useState(false);
+    const [planFilter, setPlanFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [activityFilter, setActivityFilter] = useState('all');
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [confirm, setConfirm] = useState({ open: false, userId: null });
     const [forbidden, setForbidden] = useState(false);
-    const [summary, setSummary] = useState({ total: 0, premium: 0, suspended: 0 });
 
     const { user } = useAuth();
     const currentUserId = user?.id ? String(user.id) : '';
 
-    const fetcher = useCallback(async ({ page, limit, search }) => {
-        try {
-            const payload = await apiFetch(
-                `/auth/admin/users?${buildListQuery({ page, limit, search })}`
-            );
-            if (payload?.summary) setSummary(payload.summary);
-            return payload;
-        } catch (e) {
-            if (e.status === 403) {
-                setForbidden(true);
-                return { data: [], pagination: { page: 1, limit, total: 0, totalPages: 0 } };
+    const fetcher = useCallback(
+        async ({ page, limit, search, plan, status, activity }) => {
+            try {
+                return await apiFetch(
+                    `/auth/admin/users?${buildListQuery({
+                        page,
+                        limit,
+                        search,
+                        plan,
+                        status,
+                        activity,
+                    })}`
+                );
+            } catch (e) {
+                if (e.status === 403) {
+                    setForbidden(true);
+                    return { data: [], pagination: { page: 1, limit, total: 0, totalPages: 0 } };
+                }
+                throw e;
             }
-            throw e;
-        }
-    }, []);
+        },
+        []
+    );
 
     const {
         setPage,
         search,
         setSearch,
+        debouncedSearch,
         data: users,
         pagination,
+        summary,
         loading,
+        fetching,
         error,
         refresh,
         setData: setUsers,
-    } = usePagedList({ fetcher, enabled: !forbidden });
+        invalidateList,
+    } = usePagedQuery({
+        queryKeyBase: 'adminUsers',
+        fetcher,
+        enabled: !forbidden,
+        extraParams: {
+            plan: planFilter,
+            status: statusFilter,
+            activity: activityFilter,
+        },
+    });
 
-    const stats = summary;
+    useEffect(() => {
+        setPage(1);
+    }, [planFilter, statusFilter, activityFilter, setPage]);
+
+    const stats = summary ?? { total: 0, premium: 0, suspended: 0 };
+    const tableLoading = loading && users.length === 0;
+
+    const handleExport = async () => {
+        setExportLoading(true);
+        try {
+            const query = buildAdminUsersExportQuery({
+                search: debouncedSearch,
+                plan: planFilter,
+                status: statusFilter,
+                activity: activityFilter,
+            });
+            const filename = buildAdminUsersExportFilename({
+                search: debouncedSearch,
+                plan: planFilter,
+                status: statusFilter,
+                activity: activityFilter,
+            });
+            await downloadExport(`/auth/admin/users/export?${query}`, { filename });
+            setAlert({ open: true, message: 'Users exported successfully.', type: 'success' });
+        } catch (e) {
+            setAlert({ open: true, message: e.message });
+        }
+        setExportLoading(false);
+    };
+
+    const hasActiveFilters =
+        planFilter !== 'all' ||
+        statusFilter !== 'all' ||
+        activityFilter !== 'all' ||
+        Boolean(debouncedSearch.trim());
 
     const handleStatus = async (userId) => {
         setActionLoading(`${userId}-status`);
@@ -330,6 +373,7 @@ export default function AdminDashboard() {
                 )
             );
             await refresh();
+            invalidateList();
         } catch (e) {
             setAlert({ open: true, message: e.message });
         }
@@ -345,6 +389,7 @@ export default function AdminDashboard() {
             await apiFetch(`/auth/admin/users/${userId}`, { method: 'DELETE' });
             setConfirm({ open: false, userId: null });
             await refresh();
+            invalidateList();
         } catch (e) {
             setAlert({ open: true, message: e.message });
         }
@@ -397,6 +442,7 @@ export default function AdminDashboard() {
                 )
             );
             await refresh();
+            invalidateList();
         } catch (e) {
             setAlert({ open: true, message: e.message });
         }
@@ -441,20 +487,8 @@ export default function AdminDashboard() {
         setActionLoading('');
     };
 
-    if (loading && users.length === 0) {
-        return <AdminPageSkeleton />;
-    }
-
     if (forbidden) {
         return <Navigate to="/" replace />;
-    }
-
-    if (error) {
-        return (
-            <div className="max-w-3xl mx-auto card border-red-200 bg-red-50 text-red-800">
-                {error}
-            </div>
-        );
     }
 
     return (
@@ -482,7 +516,7 @@ export default function AdminDashboard() {
                     subtitle="Manage users, plans, and account access"
                 />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                     <div className="stat-card">
                         <div className="flex items-center gap-2.5 min-w-0">
                             <div className="stat-card-icon bg-brand-light">
@@ -518,26 +552,89 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
+                {error ? (
+                    <div className="mb-4 card border-red-200 bg-red-50 text-red-800 text-sm">
+                        {error}
+                    </div>
+                ) : null}
+
                 <div className="card !p-0 overflow-hidden">
-                    <div className="px-4 sm:px-6 py-4 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                        <div className="flex items-center gap-2 text-sm text-zinc-600">
-                            <FileText size={16} aria-hidden />
-                            <span>
-                                {pagination.total} user{pagination.total === 1 ? '' : 's'}
-                            </span>
+                    <div className="px-4 sm:px-6 py-4 border-b border-zinc-100 space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div className="flex items-center gap-2 text-sm text-zinc-600">
+                                <FileText size={16} aria-hidden />
+                                <span>
+                                    {pagination.total} user{pagination.total === 1 ? '' : 's'}
+                                    {hasActiveFilters ? (
+                                        <span className="text-zinc-400"> (filtered)</span>
+                                    ) : null}
+                                </span>
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:items-center">
+                                <div className="relative flex-1 sm:w-72">
+                                    <Search
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400"
+                                        aria-hidden
+                                    />
+                                    <input
+                                        type="search"
+                                        className="input-field pl-9"
+                                        placeholder="Search name, email, business…"
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleExport}
+                                    disabled={exportLoading || tableLoading || pagination.total === 0}
+                                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-200 bg-white text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors disabled:opacity-50 min-w-[108px]"
+                                >
+                                    {exportLoading ? (
+                                        <Spinner size="sm" inline />
+                                    ) : (
+                                        <Download size={16} aria-hidden />
+                                    )}
+                                    Export
+                                </button>
+                            </div>
                         </div>
-                        <div className="relative max-w-xs w-full sm:w-72">
-                            <Search
-                                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400"
-                                aria-hidden
+                        <div className="flex flex-wrap gap-2">
+                            <CustomSelect
+                                value={planFilter}
+                                onChange={setPlanFilter}
+                                options={PLAN_FILTER_OPTIONS}
+                                aria-label="Filter by plan"
+                                className="w-full sm:w-[140px]"
                             />
-                            <input
-                                type="search"
-                                className="input-field pl-9"
-                                placeholder="Search name, email, business…"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
+                            <CustomSelect
+                                value={statusFilter}
+                                onChange={setStatusFilter}
+                                options={STATUS_FILTER_OPTIONS}
+                                aria-label="Filter by status"
+                                className="w-full sm:w-[150px]"
                             />
+                            <CustomSelect
+                                value={activityFilter}
+                                onChange={setActivityFilter}
+                                options={ACTIVITY_FILTER_OPTIONS}
+                                aria-label="Filter by activity"
+                                className="w-full sm:w-[160px]"
+                            />
+                            {hasActiveFilters ? (
+                                <button
+                                    type="button"
+                                    className="inline-flex items-center px-3 py-2 rounded-xl border border-zinc-200 bg-zinc-50 text-sm font-medium text-zinc-600 hover:bg-zinc-100 transition-colors"
+                                    onClick={() => {
+                                        setPlanFilter('all');
+                                        setStatusFilter('all');
+                                        setActivityFilter('all');
+                                        setSearch('');
+                                    }}
+                                >
+                                    Clear filters
+                                </button>
+                            ) : null}
                         </div>
                     </div>
 
@@ -555,8 +652,15 @@ export default function AdminDashboard() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-100">
-                                {users.map((user) => (
-                                    <tr key={user._id} className="hover:bg-zinc-50/80 transition-colors">
+                                {tableLoading ? (
+                                    <TableBodySkeleton rows={8} columns={7} />
+                                ) : (
+                                users.map((user) => (
+                                    <tr
+                                        key={user._id}
+                                        className="hover:bg-zinc-50/80 transition-colors cursor-pointer"
+                                        onClick={() => navigate(`/admin/users/${user._id}`)}
+                                    >
                                         <td className="px-4 sm:px-6 py-4">
                                             <div className="min-w-[180px]">
                                                 <p className="font-semibold text-zinc-900 flex items-center gap-2">
@@ -610,11 +714,12 @@ export default function AdminDashboard() {
                                                 <span className="text-xs font-medium text-red-600">Missing</span>
                                             )}
                                         </td>
-                                        <td className="px-4 sm:px-6 py-4 text-right">
+                                        <td className="px-4 sm:px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                                             <AdminActionsMenu
                                                 user={user}
                                                 currentUserId={currentUserId}
                                                 actionLoading={actionLoading}
+                                                onView={(id) => navigate(`/admin/users/${id}`)}
                                                 onPlan={handlePlan}
                                                 onStatus={handleStatus}
                                                 onAdmin={handleAdmin}
@@ -624,24 +729,34 @@ export default function AdminDashboard() {
                                             />
                                         </td>
                                     </tr>
-                                ))}
+                                ))
+                                )}
                             </tbody>
                         </table>
                     </div>
 
-                    {users.length === 0 && (
+                    {users.length === 0 && !tableLoading && (
                         <EmptyState
                             icon={Users}
-                            title={search ? 'No users match your search' : 'No users yet'}
+                            title={search || hasActiveFilters ? 'No users match your filters' : 'No users yet'}
                             description={
-                                search
-                                    ? 'Try a different search term.'
+                                search || hasActiveFilters
+                                    ? 'Try adjusting your search or filters.'
                                     : 'Registered accounts will appear here.'
                             }
                             action={
-                                search ? (
-                                    <button type="button" onClick={() => setSearch('')} className="btn-secondary">
-                                        Clear search
+                                search || hasActiveFilters ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setPlanFilter('all');
+                                            setStatusFilter('all');
+                                            setActivityFilter('all');
+                                            setSearch('');
+                                        }}
+                                        className="btn-secondary"
+                                    >
+                                        Clear filters
                                     </button>
                                 ) : null
                             }
@@ -653,7 +768,7 @@ export default function AdminDashboard() {
                             totalPages={pagination.totalPages}
                             total={pagination.total}
                             onPageChange={setPage}
-                            disabled={loading}
+                            disabled={loading || fetching}
                         />
                     </div>
                 </div>

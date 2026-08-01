@@ -92,7 +92,7 @@ export function ListPageSkeleton({ rows = 6, columns = 4, withToolbar = true, wi
     );
 }
 
-export function StatsCardsSkeleton({ count = 3, className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6' }) {
+export function StatsCardsSkeleton({ count = 3, className = 'grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6' }) {
     return (
         <div className={className}>
             {Array.from({ length: count }).map((_, i) => (
@@ -108,20 +108,47 @@ export function StatsCardsSkeleton({ count = 3, className = 'grid grid-cols-1 sm
     );
 }
 
+export function TableBodySkeleton({ rows = 6, columns = 7 }) {
+    return (
+        <>
+            {Array.from({ length: rows }).map((_, row) => (
+                <tr key={row} className="animate-pulse">
+                    {Array.from({ length: columns }).map((_, col) => (
+                        <td key={col} className="px-4 sm:px-6 py-4">
+                            <Skeleton
+                                className={`h-4 ${
+                                    col === 0 ? 'w-32' : col === columns - 1 ? 'w-20 ml-auto' : 'w-16'
+                                }`}
+                            />
+                        </td>
+                    ))}
+                </tr>
+            ))}
+        </>
+    );
+}
+
+export function AdminTableSkeleton() {
+    return (
+        <div className="max-w-7xl mx-auto">
+            <PageHeaderSkeleton withAction={false} />
+            <StatsCardsSkeleton count={3} />
+            <div className="card !p-0 overflow-hidden">
+                <div className="px-4 sm:px-6 py-4 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-9 w-full sm:w-72 rounded-lg" />
+                </div>
+                <TableSkeleton rows={8} columns={7} className="!border-0 !shadow-none !rounded-none" />
+            </div>
+        </div>
+    );
+}
+
+/** @deprecated Use AdminTableSkeleton for route fallback; prefer inline headers + TableBodySkeleton in-page. */
 export function AdminPageSkeleton() {
     return (
         <LoadingStatus label="Loading admin dashboard">
-            <div className="max-w-7xl mx-auto">
-                <PageHeaderSkeleton withAction={false} />
-                <StatsCardsSkeleton count={3} />
-                <div className="card !p-0 overflow-hidden">
-                    <div className="px-4 sm:px-6 py-4 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-9 w-full sm:w-72 rounded-lg" />
-                    </div>
-                    <TableSkeleton rows={8} columns={7} className="!border-0 !shadow-none !rounded-none" />
-                </div>
-            </div>
+            <AdminTableSkeleton />
         </LoadingStatus>
     );
 }

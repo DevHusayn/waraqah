@@ -50,6 +50,7 @@ const PrivacySettings = lazy(() => import('./pages/settings/PrivacySettings'));
 const AboutSettings = lazy(() => import('./pages/settings/AboutSettings'));
 const NotificationSettings = lazy(() => import('./pages/settings/NotificationSettings'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'));
 const Upgrade = lazy(() => import('./pages/Upgrade'));
 const UpgradeCallback = lazy(() => import('./pages/UpgradeCallback'));
 const MonthlyStatement = lazy(() => import('./pages/MonthlyStatement'));
@@ -150,6 +151,7 @@ function App() {
                                             <Route path="/statements" element={<PrivateRoute><RouteSuspense fallback={<StatementPageSkeleton />}><MonthlyStatement /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/upgrade" element={<PrivateRoute><RouteSuspense fallback={<UpgradePageSkeleton />}><Upgrade /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/admin" element={<PrivateRoute><AdminRoute><RouteSuspense fallback={<AdminPageSkeleton />}><AdminDashboard /></RouteSuspense></AdminRoute></PrivateRoute>} />
+                                            <Route path="/admin/users/:userId" element={<PrivateRoute><AdminRoute><RouteSuspense fallback={<AdminPageSkeleton />}><AdminUserDetail /></RouteSuspense></AdminRoute></PrivateRoute>} />
                                         </Routes>
                                     </AppLayout>
                                 }

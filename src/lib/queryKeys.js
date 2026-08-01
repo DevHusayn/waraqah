@@ -10,6 +10,7 @@ export const queryKeys = {
     clients: (userId, params) => ['clients', userId, params],
     products: (userId, params) => ['products', userId, params],
     drafts: (userId, params) => ['drafts', userId, params],
+    adminUsers: (userId, params) => ['adminUsers', userId, params],
 };
 
 export const STALE_TIMES = {
