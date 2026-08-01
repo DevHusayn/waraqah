@@ -35,27 +35,50 @@ async function checkDbSubscriptionActive(refreshBusinessInfo) {
     return isPremiumUser(info);
 }
 
+async function tryVerifyWithPaystack(reference) {
+    if (!reference) return false;
+    try {
+        await apiFetch(`/payments/verify/${encodeURIComponent(reference)}`);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 /**
- * Poll our DB for active subscription (webhook-updated). Does not call Paystack.
+ * Poll our DB for active subscription. Calls verify on attempt 1 as a fallback when
+ * the Paystack webhook has not reached the server yet (common in local dev).
  */
 export async function pollSubscriptionStatus({
+    reference,
     businessInfo,
     refreshBusinessInfo,
     onAttempt,
+    signal,
 } = {}) {
     if (isPremiumUser(businessInfo)) {
         return successResult();
     }
 
     for (let attempt = 1; attempt <= MAX_POLL_ATTEMPTS; attempt += 1) {
+        if (signal?.aborted) {
+            return processingResult();
+        }
+
         const delayBefore = attempt > 1 ? POLL_DELAYS_MS[attempt - 2] : 0;
         onAttempt?.(attempt, delayBefore);
 
         if (attempt > 1) {
             await delay(POLL_DELAYS_MS[attempt - 2]);
+            if (signal?.aborted) {
+                return processingResult();
+            }
         }
 
         try {
+            if (reference && attempt === 1) {
+                await tryVerifyWithPaystack(reference);
+            }
             if (await checkDbSubscriptionActive(refreshBusinessInfo)) {
                 return successResult();
             }
@@ -67,8 +90,9 @@ export async function pollSubscriptionStatus({
     return processingResult();
 }
 
-/** Single DB status check for manual "Check again" — no background loop. */
+/** Single DB status check for manual "Check again" — verifies with Paystack when reference known. */
 export async function checkSubscriptionStatusManual({
+    reference,
     businessInfo,
     refreshBusinessInfo,
 } = {}) {
@@ -77,6 +101,9 @@ export async function checkSubscriptionStatusManual({
     }
 
     try {
+        if (reference) {
+            await tryVerifyWithPaystack(reference);
+        }
         if (await checkDbSubscriptionActive(refreshBusinessInfo)) {
             return successResult();
         }

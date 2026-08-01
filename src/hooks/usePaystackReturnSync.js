@@ -24,10 +24,11 @@ export function usePaystackReturnSync(onReset) {
 
         const reference = getPendingPaymentReference();
         if (reference) {
-            const result = await pollSubscriptionStatus({
-                businessInfo,
-                refreshBusinessInfo,
-            });
+        const result = await pollSubscriptionStatus({
+            reference,
+            businessInfo,
+            refreshBusinessInfo,
+        });
 
             if (result.status === 'success') {
                 clearPendingPaymentReference();
