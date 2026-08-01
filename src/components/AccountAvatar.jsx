@@ -1,4 +1,5 @@
 import { useSettings } from '../context/SettingsContext';
+import { useAuth } from '../context/AuthContext';
 import { isPremiumUser, getBusinessInitials } from '../utils/premium';
 import { getCompanyLogoAvatarUrl } from '../utils/brandAssets';
 
@@ -47,12 +48,13 @@ function AvatarSkeleton({ size }) {
 }
 
 export default function AccountAvatar({ size = 'sm' }) {
+    const { loading: authLoading } = useAuth();
     const { businessInfo, loading, assetsReady } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const logo = getCompanyLogoAvatarUrl(businessInfo);
     const waitingForPremiumAssets = premium && !logo && !assetsReady;
 
-    if (loading || waitingForPremiumAssets) {
+    if (authLoading || loading || waitingForPremiumAssets) {
         return <AvatarSkeleton size={size} />;
     }
 

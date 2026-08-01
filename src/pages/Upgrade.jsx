@@ -7,7 +7,14 @@ import { useSettings } from '../context/SettingsContext';
 import { isPremiumUser } from '../utils/premium';
 import { formatCurrency } from '../utils/currency';
 import { PREMIUM_PLAN_FEATURES } from '../constants/planFeatures';
-import { PREMIUM_PRICE_NGN } from '../constants/pricing';
+import {
+    PREMIUM_PRICE_NGN,
+    PREMIUM_LIST_PRICE_NGN,
+    PREMIUM_PRICE_YEARLY_NGN,
+    PREMIUM_LIST_PRICE_YEARLY_NGN,
+    PREMIUM_YEARLY_SAVINGS_NGN,
+    premiumIntervalSuffix,
+} from '../constants/pricing';
 import PremiumPrice from '../components/PremiumPrice';
 import Spinner from '../components/Spinner';
 import DevPlanToggle from '../components/DevPlanToggle';
@@ -18,9 +25,14 @@ export default function Upgrade() {
     const [plan, setPlan] = useState(null);
     const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
+    const [billingInterval, setBillingInterval] = useState('monthly');
 
     const premium = isPremiumUser(businessInfo);
-    const monthlyAmount = plan?.amount ?? PREMIUM_PRICE_NGN;
+    const isYearly = billingInterval === 'yearly';
+    const selectedPlan = plan?.plans?.[billingInterval];
+    const amount = selectedPlan?.amount ?? (isYearly ? PREMIUM_PRICE_YEARLY_NGN : PREMIUM_PRICE_NGN);
+    const listAmount = selectedPlan?.listAmount ?? (isYearly ? PREMIUM_LIST_PRICE_YEARLY_NGN : PREMIUM_LIST_PRICE_NGN);
+    const savings = selectedPlan?.savings ?? PREMIUM_YEARLY_SAVINGS_NGN;
 
     useEffect(() => {
         apiFetch('/payments/plan')
@@ -34,7 +46,10 @@ export default function Upgrade() {
         try {
             const { authorization_url } = await apiFetch('/payments/initialize', {
                 method: 'POST',
-                body: JSON.stringify({ callbackOrigin: window.location.origin }),
+                body: JSON.stringify({
+                    callbackOrigin: window.location.origin,
+                    interval: billingInterval,
+                }),
             });
             window.location.assign(authorization_url);
         } catch (err) {
@@ -65,14 +80,49 @@ export default function Upgrade() {
 
             <div className="premium-card">
                 <div className="px-5 py-4 border-b border-amber-200/70">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-3">
                         <Crown className="h-4 w-4 text-amber-600" />
                         <span className="text-sm font-semibold text-zinc-900">Premium</span>
-                        <span className="ml-auto rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">
-                            Monthly
-                        </span>
                     </div>
-                    <PremiumPrice amount={monthlyAmount} size="sm" className="mt-1" />
+
+                    {!premium && (
+                        <div className="grid grid-cols-2 gap-1 rounded-lg bg-zinc-100 p-1 mb-3">
+                            <button
+                                type="button"
+                                onClick={() => setBillingInterval('monthly')}
+                                className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+                                    billingInterval === 'monthly'
+                                        ? 'bg-white text-zinc-900 shadow-sm'
+                                        : 'text-zinc-600 hover:text-zinc-900'
+                                }`}
+                            >
+                                Monthly
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setBillingInterval('yearly')}
+                                className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+                                    billingInterval === 'yearly'
+                                        ? 'bg-white text-zinc-900 shadow-sm'
+                                        : 'text-zinc-600 hover:text-zinc-900'
+                                }`}
+                            >
+                                Yearly
+                                <span className="ml-1 text-[10px] font-bold uppercase text-green-700">
+                                    Save ₦{savings.toLocaleString('en-NG')}
+                                </span>
+                            </button>
+                        </div>
+                    )}
+
+                    <PremiumPrice
+                        amount={amount}
+                        listAmount={listAmount}
+                        size="sm"
+                        className="mt-1"
+                        suffix={premiumIntervalSuffix(billingInterval)}
+                        savingsLabel={isYearly ? '2 months free' : ''}
+                    />
                 </div>
 
                 <ul className="px-5 py-4 space-y-2.5">
@@ -88,7 +138,7 @@ export default function Upgrade() {
                     ))}
                     <li className="flex items-start gap-3 text-xs text-zinc-500 pt-2">
                         <span className="h-5 w-5 shrink-0 flex items-center justify-center text-zinc-400">·</span>
-                        Auto-renews monthly via Paystack ({formatCurrency(monthlyAmount)})
+                        Auto-renews {isYearly ? 'yearly' : 'monthly'} via Paystack ({formatCurrency(amount)})
                     </li>
                     <li className="flex items-start gap-3 text-xs text-zinc-500">
                         <span className="h-5 w-5 shrink-0 flex items-center justify-center text-zinc-400">·</span>
@@ -103,7 +153,7 @@ export default function Upgrade() {
                         </div>
                     ) : (
                         <>
-                            {!plan?.paystackConfigured && (
+                            {!loading && !plan?.paystackConfigured && (
                                 <p className="text-sm text-zinc-700 bg-zinc-100 border border-zinc-200 rounded-md px-3 py-2">
                                     Paystack is not configured on the server. Add your keys to{' '}
                                     <code className="text-xs">backend .env</code> on your server.
@@ -112,7 +162,7 @@ export default function Upgrade() {
                             <button
                                 type="button"
                                 onClick={handlePay}
-                                disabled={paying || !plan?.paystackConfigured}
+                                disabled={paying || loading || !plan?.paystackConfigured}
                                 className="btn-primary w-full"
                             >
                                 {paying ? (
@@ -140,8 +190,9 @@ export default function Upgrade() {
             </div>
 
             <p className="mt-6 text-center text-xs text-zinc-500 leading-relaxed">
-                You will be charged {formatCurrency(monthlyAmount)} now and each month until you cancel.
-                Paystack secures your card for renewals.
+                {isYearly
+                    ? `You will be charged ${formatCurrency(amount)} now and each year until you cancel. Paystack secures your card for renewals.`
+                    : `You will be charged ${formatCurrency(amount)} now and each month until you cancel. Paystack secures your card for renewals.`}
             </p>
         </div>
     );

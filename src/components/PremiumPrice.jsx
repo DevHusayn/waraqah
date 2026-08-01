@@ -16,6 +16,7 @@ export default function PremiumPrice({
     showLaunchBadge = true,
     showStrikethrough = true,
     suffix = '/month',
+    savingsLabel = '',
     className = '',
 }) {
     const isLarge = size === 'lg';
@@ -51,6 +52,9 @@ export default function PremiumPrice({
                     </span>
                 ) : null}
             </div>
+            {savingsLabel ? (
+                <p className="mt-1 text-xs font-semibold text-green-700">{savingsLabel}</p>
+            ) : null}
         </div>
     );
 }

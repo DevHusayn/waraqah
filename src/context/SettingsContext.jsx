@@ -55,17 +55,32 @@ export const SettingsProvider = ({ children }) => {
     const {
         data: businessInfo = EMPTY_BUSINESS,
         isLoading,
-        isFetching,
+        isFetched,
         refetch: refetchBusinessInfo,
     } = useQuery({
         queryKey: queryKeys.businessInfo(userId),
         queryFn: async () => {
             const info = await apiFetch('/business-info?summary=1');
             const prev = queryClient.getQueryData(queryKeys.businessInfo(userId));
-            return mergeBusinessInfoSummary(prev ?? EMPTY_BUSINESS, info);
+            let merged = mergeBusinessInfoSummary(prev ?? EMPTY_BUSINESS, info);
+
+            if (isPremiumUser(merged) && !getCompanyLogoAvatarUrl(merged)) {
+                try {
+                    const assets = await apiFetch('/business-info/assets');
+                    merged = mergeBusinessInfoSummary(merged, { ...merged, ...assets });
+                    assetsLoadedRef.current = true;
+                } catch {
+                    /* branding assets are optional for initial render */
+                }
+            } else if (isPremiumUser(merged)) {
+                assetsLoadedRef.current = true;
+            }
+
+            return merged;
         },
         enabled: shouldFetch && Boolean(userId),
         staleTime: STALE_TIMES.businessInfo,
+        placeholderData: (prev) => prev ?? EMPTY_BUSINESS,
     });
 
     const setBusinessInfo = useCallback(
@@ -92,8 +107,12 @@ export const SettingsProvider = ({ children }) => {
     }, [shouldFetch, authLoading, isAuthenticated, userId, refetchBusinessInfo, queryClient]);
 
     const fetchBusinessAssets = useCallback(async () => {
-        if (!shouldFetch || assetsLoadedRef.current) {
-            if (shouldFetch) setAssetsReady(true);
+        if (!shouldFetch || !userId) return;
+
+        const current = queryClient.getQueryData(queryKeys.businessInfo(userId)) ?? EMPTY_BUSINESS;
+        const hasAvatar = getCompanyLogoAvatarUrl(current).length > 0;
+        if (assetsLoadedRef.current && (!isPremiumUser(current) || hasAvatar)) {
+            setAssetsReady(true);
             return;
         }
 
@@ -106,7 +125,7 @@ export const SettingsProvider = ({ children }) => {
         } finally {
             setAssetsReady(true);
         }
-    }, [shouldFetch, setBusinessInfo]);
+    }, [shouldFetch, userId, setBusinessInfo, queryClient]);
 
     useEffect(() => {
         const onLogin = () => {
@@ -127,7 +146,12 @@ export const SettingsProvider = ({ children }) => {
     }, [fetchBusinessInfo, fetchBusinessAssets, queryClient]);
 
     useEffect(() => {
-        if (!shouldFetch || isLoading) return;
+        assetsLoadedRef.current = false;
+        setAssetsReady(false);
+    }, [userId]);
+
+    useEffect(() => {
+        if (!shouldFetch || !userId || isLoading || !isFetched) return;
 
         if (!isPremiumUser(businessInfo)) {
             setAssetsReady(true);
@@ -139,8 +163,13 @@ export const SettingsProvider = ({ children }) => {
             return;
         }
 
-        fetchBusinessAssets();
-    }, [shouldFetch, isLoading, businessInfo, fetchBusinessAssets]);
+        if (!assetsLoadedRef.current) {
+            fetchBusinessAssets();
+            return;
+        }
+
+        setAssetsReady(true);
+    }, [shouldFetch, userId, isLoading, isFetched, businessInfo, fetchBusinessAssets]);
 
     const persistBusinessInfo = async (payload) => {
         const updated = await apiFetch('/business-info', {
@@ -182,7 +211,11 @@ export const SettingsProvider = ({ children }) => {
         businessInfo,
         updateBusinessInfo,
         setBusinessInfo,
-        loading: isLoading || (isFetching && businessInfo === EMPTY_BUSINESS),
+        loading:
+            authLoading
+            || (shouldFetch && !userId)
+            || isLoading
+            || (shouldFetch && Boolean(userId) && !isFetched),
         assetsReady,
         refreshBusinessInfo: fetchBusinessInfo,
         fetchBusinessAssets,

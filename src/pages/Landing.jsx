@@ -23,7 +23,7 @@ import { AUTH_LOGIN_PATH, AUTH_REGISTER_PATH } from '../constants/authRoutes';
 import { TERMS_PATH, PRIVACY_PATH } from '../constants/legalRoutes';
 import { FREE_MONTHLY_INVOICE_LIMIT } from '../utils/invoiceLimits';
 import { FREE_PLAN_FEATURES, PREMIUM_PLAN_FEATURES } from '../constants/planFeatures';
-import { PREMIUM_PRICE_NGN, formatPremiumPrice } from '../constants/pricing';
+import { PREMIUM_PRICE_NGN, PREMIUM_PRICE_YEARLY_NGN, formatPremiumPrice, premiumYearlyPriceLabel } from '../constants/pricing';
 import PremiumPrice from '../components/PremiumPrice';
 import { useRevealOnScroll, revealClass } from '../hooks/useRevealOnScroll';
 
@@ -46,8 +46,6 @@ const SOCIAL_ICONS = {
     linkedin: Linkedin,
     x: XIcon,
 };
-
-const PREMIUM_PRICE = PREMIUM_PRICE_NGN;
 
 function formatPrice(amount) {
     return Number(amount).toLocaleString('en-US', { maximumFractionDigits: 0 });
@@ -101,7 +99,7 @@ const FAQ_ITEMS = [
     },
     {
         q: 'How does Premium billing work?',
-        a: `Premium is ₦${formatPremiumPrice(PREMIUM_PRICE)}/month (launch price) through Paystack. You can cancel auto-renewal and keep access until the period ends.`,
+        a: `Premium is ₦${formatPremiumPrice(PREMIUM_PRICE_NGN)}/month or ₦${formatPremiumPrice(PREMIUM_PRICE_YEARLY_NGN)}/year (2 months free) through Paystack. You can cancel auto-renewal and keep access until the period ends.`,
     },
     {
         q: 'Can Waraqah email my clients?',
@@ -318,6 +316,9 @@ export default function Landing() {
                                     <h3 className="text-lg font-semibold text-zinc-900">Premium</h3>
                                 </div>
                                 <PremiumPrice className="mt-2" />
+                                <p className="mt-2 text-sm text-zinc-600">
+                                    or {premiumYearlyPriceLabel()}/year — save 2 months
+                                </p>
                                 <ul className="mt-8 space-y-3 flex-1">
                                     <li className="flex items-start gap-3 text-sm font-semibold text-zinc-900 pb-3 mb-1 border-b border-amber-200/70">
                                         <Check className="h-5 w-5 text-amber-600 flex-shrink-0" />

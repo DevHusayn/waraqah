@@ -55,7 +55,7 @@ function DocumentTypeBadge({ doc }) {
 }
 
 const Dashboard = () => {
-    const { businessInfo: settingsBusinessInfo, setBusinessInfo } = useSettings();
+    const { businessInfo: settingsBusinessInfo } = useSettings();
     const navigate = useNavigate();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen } = useInvoiceCreateGuard();
     const { data, isLoading, isFetching } = useDashboardQuery();
@@ -65,12 +65,6 @@ const Dashboard = () => {
     const displayBusinessName = getDisplayBusinessName(businessInfo);
     const usageFromDashboard = data?.invoiceUsage;
     const effectiveUsage = usageFromDashboard || invoiceUsage;
-
-    useEffect(() => {
-        if (data?.businessInfo) {
-            setBusinessInfo((prev) => ({ ...prev, ...data.businessInfo }));
-        }
-    }, [data?.businessInfo, setBusinessInfo]);
 
     useEffect(() => {
         if (data) {

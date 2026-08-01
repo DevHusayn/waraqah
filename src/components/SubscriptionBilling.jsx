@@ -5,17 +5,25 @@ import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
 import { isPremiumUser } from '../utils/premium';
-import { premiumPriceLabel } from '../constants/pricing';
+import {
+    premiumPriceLabel,
+    premiumYearlyPriceLabel,
+    PREMIUM_YEARLY_SAVINGS_NGN,
+} from '../constants/pricing';
+import Spinner from '../components/Spinner';
 
 export default function SubscriptionBilling() {
     const { businessInfo, refreshBusinessInfo } = useSettings();
     const { showToast } = useToast();
     const [cancelling, setCancelling] = useState(false);
+    const [switching, setSwitching] = useState(false);
 
     const premium = isPremiumUser(businessInfo);
     const hasSubscription = Boolean(businessInfo.paystackSubscriptionCode);
     const isActiveSub = businessInfo.subscriptionStatus === 'active';
     const renewsAt = businessInfo.premiumUntil || businessInfo.subscriptionRenews;
+    const billingInterval = businessInfo.billingInterval || 'monthly';
+    const isMonthly = billingInterval === 'monthly';
 
     const handleCancel = async () => {
         if (!window.confirm('Cancel auto-renewal? You keep Premium until the end of the current billing period.')) {
@@ -33,6 +41,24 @@ export default function SubscriptionBilling() {
         }
     };
 
+    const handleSwitchToYearly = async () => {
+        setSwitching(true);
+        try {
+            const { authorization_url } = await apiFetch('/payments/initialize', {
+                method: 'POST',
+                body: JSON.stringify({
+                    callbackOrigin: window.location.origin,
+                    interval: 'yearly',
+                    switchFromMonthly: true,
+                }),
+            });
+            window.location.assign(authorization_url);
+        } catch (err) {
+            showToast(err.message, 'error');
+            setSwitching(false);
+        }
+    };
+
     if (!premium && !hasSubscription) {
         return (
             <Link
@@ -40,13 +66,18 @@ export default function SubscriptionBilling() {
                 className="inline-flex items-center gap-2 text-sm font-semibold text-brand hover:underline"
             >
                 <Sparkles className="h-4 w-4" />
-                Subscribe — {premiumPriceLabel()}/month
+                Subscribe — from {premiumPriceLabel()}/month
             </Link>
         );
     }
 
+    const billingLabel = billingInterval === 'yearly'
+        ? `Billed yearly · ${premiumYearlyPriceLabel()}/yr`
+        : `Billed monthly · ${premiumPriceLabel()}/mo`;
+
     return (
         <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 px-4 py-3 space-y-2">
+            <p className="text-sm font-medium text-zinc-700">{billingLabel}</p>
             {renewsAt && (
                 <p className="flex items-center gap-2 text-sm text-zinc-600">
                     <Calendar className="h-4 w-4 text-zinc-400 shrink-0" />
@@ -80,6 +111,23 @@ export default function SubscriptionBilling() {
             )}
             {businessInfo.subscriptionStatus === 'cancelled' && (
                 <p className="text-sm text-zinc-600">Auto-renewal is off.</p>
+            )}
+            {isActiveSub && hasSubscription && isMonthly && (
+                <button
+                    type="button"
+                    onClick={handleSwitchToYearly}
+                    disabled={switching}
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:underline transition-colors disabled:opacity-50"
+                >
+                    {switching ? (
+                        <>
+                            <Spinner size="sm" inline />
+                            Redirecting to Paystack…
+                        </>
+                    ) : (
+                        <>Switch to yearly & save ₦{PREMIUM_YEARLY_SAVINGS_NGN.toLocaleString('en-NG')}</>
+                    )}
+                </button>
             )}
             {isActiveSub && hasSubscription && (
                 <button
