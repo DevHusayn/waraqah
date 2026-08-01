@@ -538,14 +538,15 @@ async function drawSignatureStampBlock(
     const stampMaxH = 28;
     const nameGap = 4.5;
     const ruleGap = 2.5;
+    const ruleBelowGap = 1.5;
 
     const signatureTextH = hasSignature ? nameGap + 10 : 0;
     const blockH = Math.max(
-        hasSignature ? sigMaxH + signatureTextH + ruleGap + 4 : 0,
+        hasSignature ? sigMaxH + ruleBelowGap + ruleGap + 4 + signatureTextH : 0,
         hasStamp ? stampMaxH : 0
     );
     const blockTop = footerLineY - blockH - 4;
-    const imageY = blockTop + (hasSignature ? ruleGap + 1 : 0);
+    const imageY = blockTop;
 
     let stampDrawn = null;
     if (hasStamp) {
@@ -567,13 +568,13 @@ async function drawSignatureStampBlock(
         });
 
         if (drawn) {
-            const ruleY = drawn.y - ruleGap;
+            const ruleY = drawn.y + drawn.h + ruleBelowGap;
             doc.setDrawColor(...grayColor);
             doc.setLineWidth(0.35);
             doc.line(drawn.x, ruleY, drawn.x + drawn.w, ruleY);
 
             const name = String(ownerName || '').trim();
-            let textY = drawn.y + drawn.h + 4;
+            let textY = ruleY + ruleGap + 2;
             if (name) {
                 doc.setFontSize(8);
                 doc.setFont(undefined, 'bold');
@@ -627,7 +628,7 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         (isReceiptDoc ? 'RCP' : isQuotationDoc ? 'QTN' : 'INV');
     const hasSignatureAsset = Boolean(signatureUrl);
     const hasStampAsset = isReceiptDoc && Boolean(stampUrl);
-    const signatureBlockH = hasSignatureAsset ? 36 : hasStampAsset ? 32 : 0;
+    const signatureBlockH = hasSignatureAsset ? 39 : hasStampAsset ? 32 : 0;
     const FOOTER_ZONE = getFooterZoneHeight(signatureBlockH);
     const CONTENT_BOTTOM = pageHeight - FOOTER_ZONE;
 
