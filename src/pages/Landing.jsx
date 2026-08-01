@@ -23,7 +23,15 @@ import { AUTH_LOGIN_PATH, AUTH_REGISTER_PATH } from '../constants/authRoutes';
 import { TERMS_PATH, PRIVACY_PATH } from '../constants/legalRoutes';
 import { FREE_MONTHLY_INVOICE_LIMIT } from '../utils/invoiceLimits';
 import { FREE_PLAN_FEATURES, PREMIUM_PLAN_FEATURES } from '../constants/planFeatures';
-import { PREMIUM_PRICE_NGN, PREMIUM_PRICE_YEARLY_NGN, formatPremiumPrice, premiumYearlyPriceLabel } from '../constants/pricing';
+import {
+    PREMIUM_PRICE_NGN,
+    PREMIUM_LIST_PRICE_NGN,
+    PREMIUM_PRICE_YEARLY_NGN,
+    PREMIUM_LIST_PRICE_YEARLY_NGN,
+    PREMIUM_YEARLY_SAVINGS_NGN,
+    formatPremiumPrice,
+    premiumIntervalSuffix,
+} from '../constants/pricing';
 import PremiumPrice from '../components/PremiumPrice';
 import { useRevealOnScroll, revealClass } from '../hooks/useRevealOnScroll';
 
@@ -143,6 +151,76 @@ function CtaButton({ className = '', children = 'Get started' }) {
             {children}
             <ArrowRight className="h-4 w-4" />
         </Link>
+    );
+}
+
+function LandingPremiumCard() {
+    const [billingInterval, setBillingInterval] = useState('monthly');
+    const isYearly = billingInterval === 'yearly';
+    const amount = isYearly ? PREMIUM_PRICE_YEARLY_NGN : PREMIUM_PRICE_NGN;
+    const listAmount = isYearly ? PREMIUM_LIST_PRICE_YEARLY_NGN : PREMIUM_LIST_PRICE_NGN;
+
+    return (
+        <div className="premium-card p-8 h-full flex flex-col relative overflow-hidden landing-premium-glow">
+            <div className="absolute top-4 right-4 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 uppercase tracking-wide">
+                Popular
+            </div>
+            <div className="flex items-center gap-2">
+                <Crown className="h-5 w-5 text-amber-600" />
+                <h3 className="text-lg font-semibold text-zinc-900">Premium</h3>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1 rounded-lg bg-zinc-100 p-1 mt-4 mb-3">
+                <button
+                    type="button"
+                    onClick={() => setBillingInterval('monthly')}
+                    className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+                        billingInterval === 'monthly'
+                            ? 'bg-white text-zinc-900 shadow-sm'
+                            : 'text-zinc-600 hover:text-zinc-900'
+                    }`}
+                >
+                    Monthly
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setBillingInterval('yearly')}
+                    className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+                        billingInterval === 'yearly'
+                            ? 'bg-white text-zinc-900 shadow-sm'
+                            : 'text-zinc-600 hover:text-zinc-900'
+                    }`}
+                >
+                    Yearly
+                    <span className="ml-1 text-[10px] font-bold uppercase text-green-700">
+                        Save ₦{PREMIUM_YEARLY_SAVINGS_NGN.toLocaleString('en-NG')}
+                    </span>
+                </button>
+            </div>
+
+            <PremiumPrice
+                amount={amount}
+                listAmount={listAmount}
+                suffix={premiumIntervalSuffix(billingInterval)}
+                savingsLabel={isYearly ? '2 months free' : ''}
+            />
+            <p className="mt-2 text-sm text-zinc-600">
+                Billed {isYearly ? 'yearly' : 'monthly'} via Paystack. Cancel anytime.
+            </p>
+            <ul className="mt-8 space-y-3 flex-1">
+                <li className="flex items-start gap-3 text-sm font-semibold text-zinc-900 pb-3 mb-1 border-b border-amber-200/70">
+                    <Check className="h-5 w-5 text-amber-600 flex-shrink-0" />
+                    Everything in Free, plus:
+                </li>
+                {PREMIUM_PLAN_FEATURES.map((f) => (
+                    <li key={f} className="flex items-start gap-3 text-zinc-700 text-sm">
+                        <Check className="h-5 w-5 text-amber-600 flex-shrink-0" />
+                        {f}
+                    </li>
+                ))}
+            </ul>
+            <CtaButton className="w-full mt-8 py-3 justify-center" />
+        </div>
     );
 }
 
@@ -307,32 +385,7 @@ export default function Landing() {
                             </div>
                         </SectionReveal>
                         <SectionReveal delay={2}>
-                            <div className="premium-card p-8 h-full flex flex-col relative overflow-hidden landing-premium-glow">
-                                <div className="absolute top-4 right-4 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 uppercase tracking-wide">
-                                    Popular
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Crown className="h-5 w-5 text-amber-600" />
-                                    <h3 className="text-lg font-semibold text-zinc-900">Premium</h3>
-                                </div>
-                                <PremiumPrice className="mt-2" />
-                                <p className="mt-2 text-sm text-zinc-600">
-                                    or {premiumYearlyPriceLabel()}/year — save 2 months
-                                </p>
-                                <ul className="mt-8 space-y-3 flex-1">
-                                    <li className="flex items-start gap-3 text-sm font-semibold text-zinc-900 pb-3 mb-1 border-b border-amber-200/70">
-                                        <Check className="h-5 w-5 text-amber-600 flex-shrink-0" />
-                                        Everything in Free, plus:
-                                    </li>
-                                    {PREMIUM_PLAN_FEATURES.map((f) => (
-                                        <li key={f} className="flex items-start gap-3 text-zinc-700 text-sm">
-                                            <Check className="h-5 w-5 text-amber-600 flex-shrink-0" />
-                                            {f}
-                                        </li>
-                                    ))}
-                                </ul>
-                                <CtaButton className="w-full mt-8 py-3 justify-center" />
-                            </div>
+                            <LandingPremiumCard />
                         </SectionReveal>
                     </div>
                 </div>
