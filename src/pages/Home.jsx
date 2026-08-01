@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
 import PrivateRoute from '../utils/PrivateRoute';
 import { DashboardSkeleton } from '../components/Skeleton';
-import { PublicPageSpinner } from '../components/Spinner';
 import { hasLikelyAuthSession } from '../utils/authHint';
 
 const Landing = lazy(() => import('./Landing'));
@@ -21,7 +20,7 @@ function DashboardHome({ gated = true }) {
     return gated ? <PrivateRoute>{content}</PrivateRoute> : content;
 }
 
-/** Guests see marketing landing; signed-in users go straight to the dashboard. */
+/** Guests see marketing landing immediately; signed-in users go straight to the dashboard. */
 export default function Home() {
     const { isAuthenticated, loading, resolving } = useAuth();
     const authPending = loading || resolving;
@@ -32,10 +31,6 @@ export default function Home() {
 
     if (authPending && hasLikelyAuthSession()) {
         return <DashboardHome gated={false} />;
-    }
-
-    if (authPending) {
-        return <PublicPageSpinner />;
     }
 
     return (
