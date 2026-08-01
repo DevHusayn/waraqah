@@ -1,46 +1,19 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import {
-    Plus,
-    Save,
-    ArrowLeft,
-    ClipboardList,
-    PenLine,
-    Users,
-    List,
-    StickyNote,
-    X,
-    Package,
-    ScrollText,
-    Check,
-} from 'lucide-react';
-import Spinner, { PageSpinner } from '../components/Spinner';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, ClipboardList } from 'lucide-react';
+import { PageSpinner } from '../components/Spinner';
 import { format } from 'date-fns';
 import { useQuotation } from '../context/QuotationContext';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
-import {
-    APP_CURRENCY,
-    formatCurrency,
-    getCurrencySelectOptions,
-    normalizeCurrency,
-} from '../utils/currency';
-import { getClientBusiness } from '../utils/clientHelpers';
-import InvoiceLimitModal from '../components/InvoiceLimitModal';
+import { APP_CURRENCY, normalizeCurrency } from '../utils/currency';
 import InvoiceUsageBanner from '../components/InvoiceUsageBanner';
-import FormSection from '../components/FormSection';
 import { useQuotationCreateGuard } from '../hooks/useQuotationCreateGuard';
+import { useDocumentFormHandlers } from '../hooks/useDocumentFormHandlers';
 import { canCreateInvoice, formatInvoiceUsageLabel } from '../utils/invoiceLimits';
-import FieldValidationMessage from '../components/FieldValidationMessage';
-import RequiredLabel from '../components/RequiredLabel';
-import {
-    inputClass,
-    focusFieldById,
-    clearFieldError,
-    firstFieldError,
-} from '../utils/formFieldValidation';
+import { focusFieldById, firstFieldError } from '../utils/formFieldValidation';
 import {
     buildQuotationFieldErrors,
     buildQuotationDraftFieldErrors,
@@ -49,46 +22,35 @@ import {
 } from '../utils/quotationFormValidation';
 import { calculateInvoiceTotals } from '../utils/invoiceTotals';
 import { buildQuotationPayload, prepareQuotationPdf } from '../utils/sendQuotationFlow';
-import { ensureInvoiceClient, clientDetailsFromRecord } from '../utils/ensureInvoiceClient';
+import { clientDetailsFromRecord } from '../utils/ensureInvoiceClient';
 import ClientDetailsModal from '../components/ClientDetailsModal';
 import { shareInvoicePdf, getShareFallbackHint } from '../utils/shareInvoicePdf';
-import ShareDocumentModal from '../components/ShareDocumentModal';
-import { getDisplayNumber } from '../utils/receiptHelpers';
+import DocumentFormModals from '../components/documentForm/DocumentFormModals';
+import DocumentDetailsSection from '../components/documentForm/DocumentDetailsSection';
+import DocumentClientSection from '../components/documentForm/DocumentClientSection';
+import DocumentLineItemsSection from '../components/documentForm/DocumentLineItemsSection';
+import DocumentSummaryCard from '../components/documentForm/DocumentSummaryCard';
+import DocumentActionButtons from '../components/documentForm/DocumentActionButtons';
+import { DocumentNotesSection, DocumentTermsSection } from '../components/documentForm/DocumentNotesSection';
+import { hasDraftContent } from '../utils/documentFormHelpers';
 import { DEFAULT_QUOTATION_TERMS } from '../utils/documentHelpers';
-import CustomSelect from '../components/CustomSelect';
-import DatePickerField from '../components/DatePickerField';
-import CustomUnitModal from '../components/CustomUnitModal';
-import {
-    CUSTOM_UNIT_OPTION,
-    DEFAULT_INVOICE_UNIT,
-    buildUnitSelectOptions,
-    normalizeInvoiceUnit,
-} from '@waraqah/shared';
+import { DEFAULT_INVOICE_UNIT, normalizeInvoiceUnit } from '@waraqah/shared';
 
-function hasClientDetails(data) {
-    return Boolean(
-        String(data.clientBusiness || '').trim() ||
-            String(data.clientPhone || '').trim() ||
-            String(data.clientAddress || '').trim() ||
-            String(data.clientAdditionalInfo || '').trim()
-    );
-}
-
-function hasDraftContent(data) {
-    if (String(data.clientName || '').trim()) return true;
-    if (data.clientId) return true;
-    if (String(data.notes || '').trim()) return true;
-    if (String(data.terms || '').trim() && data.terms !== DEFAULT_QUOTATION_TERMS) return true;
-    if (Number(data.discountValue) > 0) return true;
-    return (data.items || []).some((item) => String(item.description || '').trim());
-}
+const quotationDraftContentCheck = (data) =>
+    String(data.terms || '').trim() && data.terms !== DEFAULT_QUOTATION_TERMS;
 
 const CreateQuotation = () => {
     const { id } = useParams();
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { addQuotation, updateQuotation, quotations, loading: quotationsLoading, refreshQuotations, sendQuotationEmailToClient } =
-        useQuotation();
+    const {
+        addQuotation,
+        updateQuotation,
+        quotations,
+        loading: quotationsLoading,
+        refreshQuotations,
+        sendQuotationEmailToClient,
+    } = useQuotation();
     const { clients, products, addClient, updateClient, fetchProducts } = useInvoice();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen } = useQuotationCreateGuard();
     const { businessInfo } = useSettings();
@@ -154,9 +116,26 @@ const CreateQuotation = () => {
 
     formDataRef.current = formData;
 
-    const markDirty = () => {
+    const markDirty = useCallback(() => {
         isDirtyRef.current = true;
-    };
+    }, []);
+
+    const handlers = useDocumentFormHandlers({
+        formData,
+        setFormData,
+        setFieldErrors,
+        clients,
+        products,
+        addClient,
+        updateClient,
+        setCustomUnitModal,
+        customUnitModal,
+        markDirty,
+    });
+
+    const handleValidUntilToggle = handlers.createExpiryToggleHandler('hasValidUntil', 'validUntil');
+    const handleIssueDateChange = handlers.createIssueDateChangeHandler();
+    const handleValidUntilChange = handlers.createExpiryDateChangeHandler('validUntil');
 
     useEffect(() => {
         if (id) draftIdRef.current = id;
@@ -266,159 +245,13 @@ const CreateQuotation = () => {
         setSearchParams(next, { replace: true });
     }, [clients, searchParams, setSearchParams]);
 
-    const resolveClientId = useCallback(
-        async (data) => ensureInvoiceClient(data, clients, { addClient, updateClient }),
-        [clients, addClient, updateClient]
-    );
-
-    const handleClientNameChange = (e) => {
-        markDirty();
-        const { value } = e.target;
-        setFormData((prev) => {
-            const next = { ...prev, clientName: value };
-            if (prev.clientId) {
-                const linked = clients.find((c) => c.id === prev.clientId);
-                if (linked && linked.name !== value) next.clientId = '';
-            }
-            return next;
-        });
-        clearFieldError(setFieldErrors, 'clientName');
-        clearFieldError(setFieldErrors, 'clientId');
-    };
-
-    const handleClientEmailChange = (e) => {
-        markDirty();
-        setFormData((prev) => ({ ...prev, clientEmail: e.target.value }));
-        clearFieldError(setFieldErrors, 'clientEmail');
-    };
-
-    const handleSelectSavedClient = (clientId) => {
-        if (!clientId) return;
-        const client = clients.find((c) => c.id === clientId);
-        if (!client) return;
-        markDirty();
-        setFormData((prev) => ({
-            ...prev,
-            clientId,
-            clientName: client.name || '',
-            clientEmail: client.email || '',
-            ...clientDetailsFromRecord(client),
-            clientAdditionalInfo: '',
-        }));
-        clearFieldError(setFieldErrors, 'clientName');
-        clearFieldError(setFieldErrors, 'clientId');
-        clearFieldError(setFieldErrors, 'clientEmail');
-    };
-
-    const handleSaveClientDetails = (details) => {
-        markDirty();
-        setFormData((prev) => ({
-            ...prev,
-            clientBusiness: details.business,
-            clientPhone: details.phone,
-            clientAddress: details.address,
-            clientAdditionalInfo: details.additionalInfo,
-        }));
-    };
-
-    const handleChange = (e) => {
-        markDirty();
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-        clearFieldError(setFieldErrors, name);
-    };
-
-    const handleItemChange = (index, field, value) => {
-        markDirty();
-        const newItems = [...formData.items];
-        newItems[index][field] = value;
-        setFormData({ ...formData, items: newItems });
-        clearFieldError(setFieldErrors, `item-${index}-${field}`);
-    };
-
-    const handleUnitChange = (index, value) => {
-        if (value === CUSTOM_UNIT_OPTION) {
-            setCustomUnitModal({ index });
-            return;
-        }
-        handleItemChange(index, 'unit', value);
-    };
-
-    const handleCurrencyChange = (currency) => {
-        markDirty();
-        setFormData((prev) => ({
-            ...prev,
-            currency: normalizeCurrency(currency),
-        }));
-    };
-
-    const handleCustomUnitSave = (unitName) => {
-        if (customUnitModal == null) return;
-        handleItemChange(customUnitModal.index, 'unit', unitName.trim());
-        setCustomUnitModal(null);
-    };
-
-    const addItem = () => {
-        markDirty();
-        setFormData({
-            ...formData,
-            items: [
-                ...formData.items,
-                { description: '', quantity: 1, rate: 0, unit: DEFAULT_INVOICE_UNIT },
-            ],
-        });
-    };
-
-    const isEmptyItem = (item) => !String(item.description || '').trim();
-
-    const addProductItem = (productId) => {
-        const product = products.find((p) => p.id === productId);
-        if (!product) return;
-        markDirty();
-        const description = product.description
-            ? `${product.name} — ${product.description}`
-            : product.name;
-        const newLine = {
-            description,
-            quantity: 1,
-            rate: product.unitPrice || 0,
-            unit: DEFAULT_INVOICE_UNIT,
-        };
-        const emptyIndex = formData.items.findIndex(isEmptyItem);
-
-        setFormData((prev) => {
-            const targetIndex = prev.items.findIndex(isEmptyItem);
-            if (targetIndex === -1) return { ...prev, items: [...prev.items, newLine] };
-            const items = [...prev.items];
-            items[targetIndex] = newLine;
-            return { ...prev, items };
-        });
-
-        if (emptyIndex !== -1) {
-            setFieldErrors((prev) => {
-                const next = { ...prev };
-                delete next[`item-${emptyIndex}-description`];
-                delete next[`item-${emptyIndex}-quantity`];
-                delete next[`item-${emptyIndex}-rate`];
-                return next;
-            });
-        }
-    };
-
-    const removeItem = (index) => {
-        if (formData.items.length > 1) {
-            markDirty();
-            setFormData({ ...formData, items: formData.items.filter((_, i) => i !== index) });
-        }
-    };
-
     const persistDraft = useCallback(
         async ({ silent = true, redirectAfterCreate = true } = {}) => {
             if (!isDraftFlow) return null;
             if (saveInFlightRef.current) return null;
 
             const current = formDataRef.current;
-            if (!hasDraftContent(current)) return null;
+            if (!hasDraftContent(current, { extraCheck: quotationDraftContentCheck })) return null;
 
             const draftErrors = buildQuotationDraftFieldErrors(current);
             const order = getQuotationFieldFocusOrder(current.items.length, current);
@@ -431,13 +264,12 @@ const CreateQuotation = () => {
                 return null;
             }
 
-            if (saveInFlightRef.current) return null;
             saveInFlightRef.current = true;
             if (!silent) setSaving(true);
 
             try {
                 const clientId = String(current.clientName || '').trim()
-                    ? await resolveClientId(current)
+                    ? await handlers.resolveClientId(current)
                     : current.clientId || null;
                 const payload = buildQuotationPayload({ ...current, clientId }, 'draft');
                 const draftId = id || draftIdRef.current;
@@ -464,14 +296,14 @@ const CreateQuotation = () => {
                 if (!silent) setSaving(false);
             }
         },
-        [isDraftFlow, id, addQuotation, updateQuotation, navigate, showToast, resolveClientId]
+        [isDraftFlow, id, addQuotation, updateQuotation, navigate, showToast, handlers]
     );
 
     useEffect(() => {
         return () => {
             if (!isDraftFlow) return;
             if (!isDirtyRef.current) return;
-            if (!hasDraftContent(formDataRef.current)) return;
+            if (!hasDraftContent(formDataRef.current, { extraCheck: quotationDraftContentCheck })) return;
             persistDraft({ silent: true, redirectAfterCreate: false });
         };
     }, [isDraftFlow, persistDraft]);
@@ -506,7 +338,7 @@ const CreateQuotation = () => {
         isDirtyRef.current = false;
         setSending(true);
         try {
-            const clientId = await resolveClientId(formData);
+            const clientId = await handlers.resolveClientId(formData);
             const payload = buildQuotationPayload({ ...formData, clientId }, 'sent');
             const draftId = id || draftIdRef.current;
             let saved;
@@ -536,11 +368,7 @@ const CreateQuotation = () => {
 
             sharePdfRef.current = null;
             setSharePdfReady(false);
-            setShareModal({
-                quotation: saved,
-                client,
-                clientAlreadyEmailed,
-            });
+            setShareModal({ quotation: saved, client, clientAlreadyEmailed });
 
             if (clientAlreadyEmailed && client?.email) {
                 showToast(`Quotation emailed to ${client.email}`, 'success');
@@ -577,9 +405,7 @@ const CreateQuotation = () => {
                 sharePdfRef.current = generated;
                 setSharePdfReady(true);
             } catch (err) {
-                if (!cancelled) {
-                    showToast(err.message || 'Failed to prepare PDF', 'error');
-                }
+                if (!cancelled) showToast(err.message || 'Failed to prepare PDF', 'error');
             }
         })();
 
@@ -632,10 +458,6 @@ const CreateQuotation = () => {
         }
     };
 
-    const handleSkipShare = () => {
-        finishAfterShare();
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (isDraftFlow) return;
@@ -652,7 +474,7 @@ const CreateQuotation = () => {
 
         setSaving(true);
         try {
-            const clientId = await resolveClientId(formData);
+            const clientId = await handlers.resolveClientId(formData);
             const totals = getTotals();
             const quotationData = {
                 ...formData,
@@ -686,12 +508,6 @@ const CreateQuotation = () => {
         [formData]
     );
 
-    const handleValidUntilToggle = () => {
-        markDirty();
-        setFormData((prev) => ({ ...prev, hasValidUntil: !prev.hasValidUntil }));
-        clearFieldError(setFieldErrors, 'validUntil');
-    };
-
     const selectedClient = clients.find((c) => c.id === formData.clientId);
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
     const backHref = id ? `/quotations/${id}` : '/quotations';
@@ -702,7 +518,11 @@ const CreateQuotation = () => {
             : 'Discount';
 
     const handleLeavePage = async () => {
-        if (isDraftFlow && isDirtyRef.current && hasDraftContent(formDataRef.current)) {
+        if (
+            isDraftFlow &&
+            isDirtyRef.current &&
+            hasDraftContent(formDataRef.current, { extraCheck: quotationDraftContentCheck })
+        ) {
             try {
                 await persistDraft({ silent: true, redirectAfterCreate: false });
             } catch {
@@ -718,108 +538,42 @@ const CreateQuotation = () => {
 
     const pageTitle = isDraftEdit ? 'Complete quotation' : id ? 'Edit quotation' : 'Create quotation';
 
-    const actionButtons = (variant = 'mobile') => {
-        const actionBtn = 'w-full text-sm py-2.5 px-4 gap-2 whitespace-nowrap min-h-[44px]';
-        const layoutClass =
-            variant === 'desktop'
-                ? 'flex flex-col gap-2 w-full'
-                : 'grid grid-cols-2 gap-2 sm:gap-3 w-full';
-
-        if (isDraftFlow) {
-            return (
-                <div className={layoutClass}>
-                    <button
-                        type="button"
-                        onClick={handleSaveDraft}
-                        className={`btn-secondary ${actionBtn} disabled:opacity-60`}
-                        disabled={saving || sending}
-                    >
-                        {saving ? (
-                            <>
-                                <Spinner size="sm" inline />
-                                Saving…
-                            </>
-                        ) : (
-                            <>
-                                <PenLine size={16} className="shrink-0" aria-hidden />
-                                Save as draft
-                            </>
-                        )}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleSendQuotation}
-                        className={`btn-primary ${actionBtn} disabled:opacity-60`}
-                        disabled={!sendReady || sending || saving}
-                    >
-                        {sending ? (
-                            <>
-                                <Spinner size="sm" inline />
-                                Saving…
-                            </>
-                        ) : (
-                            <>
-                                <ClipboardList size={16} className="shrink-0" aria-hidden />
-                                Create quotation
-                            </>
-                        )}
-                    </button>
-                </div>
-            );
-        }
-
-        return (
-            <button
-                type="submit"
-                form="quotation-form"
-                className={`btn-primary ${actionBtn} disabled:opacity-60`}
-                disabled={saving}
-            >
-                {saving ? (
-                    <>
-                        <Spinner size="sm" inline />
-                        Saving…
-                    </>
-                ) : (
-                    <>
-                        <Save size={16} className="shrink-0" aria-hidden />
-                        Save changes
-                    </>
-                )}
-            </button>
-        );
-    };
-
     if (quotationNotReady) {
         return <PageSpinner label="Loading quotation…" centered className="min-h-[40vh]" />;
     }
 
+    const actionButtons = (variant = 'mobile') => (
+        <DocumentActionButtons
+            variant={variant}
+            isDraftFlow={isDraftFlow}
+            saving={saving}
+            sending={sending}
+            sendReady={sendReady}
+            formId="quotation-form"
+            sendIcon={ClipboardList}
+            sendLabel="Create quotation"
+            onSaveDraft={handleSaveDraft}
+            onSend={handleSendQuotation}
+        />
+    );
+
     return (
         <div className="max-w-6xl mx-auto pb-24 xl:pb-8">
-            <InvoiceLimitModal
-                open={limitModalOpen}
-                onClose={() => setLimitModalOpen(false)}
-                usage={invoiceUsage}
-            />
-
-            <ShareDocumentModal
-                open={Boolean(shareModal)}
+            <DocumentFormModals
+                limitModalOpen={limitModalOpen}
+                onCloseLimitModal={() => setLimitModalOpen(false)}
+                invoiceUsage={invoiceUsage}
+                shareModal={shareModal}
                 docLabel="quotation"
-                docNumber={shareModal ? getDisplayNumber(shareModal.quotation) : ''}
-                clientName={shareModal?.client?.name}
-                clientEmail={shareModal?.client?.email}
-                shareReady={sharePdfReady}
+                shareDocKey="quotation"
+                sharePdfReady={sharePdfReady}
                 emailSending={emailSending}
-                clientAlreadyEmailed={Boolean(shareModal?.clientAlreadyEmailed)}
                 onShare={handleShareFromModal}
                 onEmailClient={handleEmailFromModal}
-                onSkip={handleSkipShare}
-            />
-
-            <CustomUnitModal
-                open={customUnitModal != null}
-                onClose={() => setCustomUnitModal(null)}
-                onSave={handleCustomUnitSave}
+                onSkipShare={finishAfterShare}
+                customUnitModalOpen={customUnitModal != null}
+                onCloseCustomUnitModal={() => setCustomUnitModal(null)}
+                onCustomUnitSave={handlers.handleCustomUnitSave}
             />
 
             <button
@@ -856,470 +610,71 @@ const CreateQuotation = () => {
             <form id="quotation-form" onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     <div className="xl:col-span-2 space-y-6">
-                        <FormSection
+                        <DocumentDetailsSection
                             icon={ClipboardList}
                             title="Quotation details"
                             description="Number, dates, tax, and discount"
-                        >
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="label">Quotation number</label>
-                                    <input
-                                        type="text"
-                                        value={quotationNumberDisplay}
-                                        className="input-field bg-zinc-50 text-zinc-500 cursor-not-allowed"
-                                        readOnly
-                                        disabled
-                                    />
-                                </div>
-                                <div>
-                                    <RequiredLabel htmlFor="quotation-tax-rate">Tax rate (%)</RequiredLabel>
-                                    <input
-                                        id="quotation-tax-rate"
-                                        type="number"
-                                        name="taxRate"
-                                        value={formData.taxRate}
-                                        onChange={handleChange}
-                                        className={inputClass(Boolean(fieldErrors.taxRate))}
-                                        min="0"
-                                        max="100"
-                                        step="0.01"
-                                        aria-invalid={Boolean(fieldErrors.taxRate)}
-                                    />
-                                    <FieldValidationMessage message={fieldErrors.taxRate} />
-                                </div>
-                                <div>
-                                    <label className="label" htmlFor="quotation-discount-value">
-                                        Discount (%)
-                                    </label>
-                                    <input
-                                        id="quotation-discount-value"
-                                        type="number"
-                                        name="discountValue"
-                                        value={formData.discountValue}
-                                        onChange={handleChange}
-                                        className={inputClass(Boolean(fieldErrors.discountValue))}
-                                        min="0"
-                                        max="100"
-                                        step="0.01"
-                                        placeholder="0"
-                                        aria-invalid={Boolean(fieldErrors.discountValue)}
-                                    />
-                                    <FieldValidationMessage message={fieldErrors.discountValue} />
-                                </div>
-                                <div>
-                                    <RequiredLabel htmlFor="quotation-date">Issue date</RequiredLabel>
-                                    <DatePickerField
-                                        id="quotation-date"
-                                        value={formData.date}
-                                        onChange={(val) => {
-                                            markDirty();
-                                            setFormData((prev) => ({ ...prev, date: val }));
-                                            clearFieldError(setFieldErrors, 'date');
-                                        }}
-                                        error={Boolean(fieldErrors.date)}
-                                        allowClear={false}
-                                        placeholder="Issue date"
-                                    />
-                                    <FieldValidationMessage message={fieldErrors.date} />
-                                </div>
-                                <div>
-                                    <div className="flex items-center justify-between gap-3 mb-2">
-                                        <label className="label mb-0" htmlFor="quotation-valid-until-toggle">
-                                            Valid until
-                                        </label>
-                                        <button
-                                            id="quotation-valid-until-toggle"
-                                            type="button"
-                                            role="switch"
-                                            aria-checked={formData.hasValidUntil}
-                                            aria-controls="quotation-valid-until"
-                                            onClick={handleValidUntilToggle}
-                                            className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${
-                                                formData.hasValidUntil ? 'bg-brand' : 'bg-zinc-200'
-                                            }`}
-                                        >
-                                            <span
-                                                className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition ${
-                                                    formData.hasValidUntil
-                                                        ? 'translate-x-5'
-                                                        : 'translate-x-0'
-                                                }`}
-                                            />
-                                        </button>
-                                    </div>
-                                    {formData.hasValidUntil ? (
-                                        <>
-                                            <DatePickerField
-                                                id="quotation-valid-until"
-                                                value={formData.validUntil}
-                                                onChange={(val) => {
-                                                    markDirty();
-                                                    setFormData((prev) => ({
-                                                        ...prev,
-                                                        validUntil: val,
-                                                    }));
-                                                    clearFieldError(setFieldErrors, 'validUntil');
-                                                }}
-                                                min={formData.date || undefined}
-                                                error={Boolean(fieldErrors.validUntil)}
-                                                allowClear={false}
-                                                placeholder="Valid until"
-                                            />
-                                            <FieldValidationMessage message={fieldErrors.validUntil} />
-                                        </>
-                                    ) : (
-                                        <p className="text-xs text-zinc-500">
-                                            No expiry date will appear on this quotation.
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        </FormSection>
+                            idPrefix="quotation"
+                            numberLabel="Quotation number"
+                            numberDisplay={quotationNumberDisplay}
+                            formData={formData}
+                            fieldErrors={fieldErrors}
+                            onChange={handlers.handleChange}
+                            onIssueDateChange={handleIssueDateChange}
+                            expiry={{
+                                label: 'Valid until',
+                                hasFieldKey: 'hasValidUntil',
+                                dateFieldKey: 'validUntil',
+                                emptyHint: 'No expiry date will appear on this quotation.',
+                                onToggle: handleValidUntilToggle,
+                                onDateChange: handleValidUntilChange,
+                            }}
+                        />
 
-                        <FormSection icon={Users} title="Client" description="Who this quotation is for">
-                            <div className="space-y-4">
-                                <div>
-                                    <RequiredLabel htmlFor="quotation-client-name">Client name</RequiredLabel>
-                                    <input
-                                        id="quotation-client-name"
-                                        type="text"
-                                        name="clientName"
-                                        value={formData.clientName}
-                                        onChange={handleClientNameChange}
-                                        className={inputClass(
-                                            Boolean(fieldErrors.clientName || fieldErrors.clientId)
-                                        )}
-                                        placeholder="John Doe"
-                                        aria-invalid={Boolean(
-                                            fieldErrors.clientName || fieldErrors.clientId
-                                        )}
-                                    />
-                                    <FieldValidationMessage
-                                        message={fieldErrors.clientName || fieldErrors.clientId}
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="quotation-client-email" className="label">
-                                        Email{' '}
-                                        <span className="text-zinc-400 font-normal">(optional)</span>
-                                    </label>
-                                    <input
-                                        id="quotation-client-email"
-                                        type="email"
-                                        name="clientEmail"
-                                        value={formData.clientEmail}
-                                        onChange={handleClientEmailChange}
-                                        className={inputClass(Boolean(fieldErrors.clientEmail))}
-                                        placeholder="client@example.com"
-                                        aria-invalid={Boolean(fieldErrors.clientEmail)}
-                                    />
-                                    <FieldValidationMessage message={fieldErrors.clientEmail} />
-                                    <p className="mt-1.5 text-xs text-zinc-500">
-                                        Add an email to send this quotation directly to your client.
-                                    </p>
-                                </div>
-                                <div>
-                                    <button
-                                        type="button"
-                                        onClick={() => setClientDetailsModalOpen(true)}
-                                        className={
-                                            hasClientDetails(formData)
-                                                ? 'inline-flex items-center gap-2 text-sm font-medium text-brand hover:text-brand-dark transition-colors'
-                                                : 'inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors'
-                                        }
-                                    >
-                                        {hasClientDetails(formData) ? (
-                                            <>
-                                                <Check size={16} aria-hidden />
-                                                Client details added
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Plus size={16} aria-hidden />
-                                                Add more details
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                                {clients.length > 0 && (
-                                    <div>
-                                        <label htmlFor="quotation-saved-client" className="label">
-                                            Fill from saved client
-                                        </label>
-                                        <CustomSelect
-                                            id="quotation-saved-client"
-                                            value={formData.clientId}
-                                            onChange={handleSelectSavedClient}
-                                            options={clients.map((client) => ({
-                                                value: client.id,
-                                                label: `${client.name}${getClientBusiness(client) ? ` — ${getClientBusiness(client)}` : ''}`,
-                                            }))}
-                                            placeholder="Choose a saved client"
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        </FormSection>
+                        <DocumentClientSection
+                            idPrefix="quotation"
+                            docLabel="quotation"
+                            formData={formData}
+                            fieldErrors={fieldErrors}
+                            clients={clients}
+                            onNameChange={handlers.handleClientNameChange}
+                            onEmailChange={handlers.handleClientEmailChange}
+                            onSelectSavedClient={handlers.handleSelectSavedClient}
+                            onOpenDetailsModal={() => setClientDetailsModalOpen(true)}
+                        />
 
-                        <FormSection
-                            icon={List}
-                            title="Items"
-                            description="Products or services on this quotation"
-                            actions={
-                                <button type="button" onClick={addItem} className="btn-secondary text-sm py-2 px-3">
-                                    <Plus size={16} aria-hidden />
-                                    Add item
-                                </button>
-                            }
-                        >
-                            <div className="space-y-4">
-                                {formData.items.map((item, index) => (
-                                    <div
-                                        key={index}
-                                        className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-4"
-                                    >
-                                        <div className="flex items-center justify-between mb-3">
-                                            <span className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
-                                                Item {index + 1}
-                                            </span>
-                                            {formData.items.length > 1 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeItem(index)}
-                                                    className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                                                    aria-label={`Remove item ${index + 1}`}
-                                                >
-                                                    <X size={16} />
-                                                </button>
-                                            )}
-                                        </div>
-                                        <div className="space-y-4">
-                                            <div>
-                                                <RequiredLabel htmlFor={`quotation-item-${index}-description`}>
-                                                    Description
-                                                </RequiredLabel>
-                                                <textarea
-                                                    id={`quotation-item-${index}-description`}
-                                                    value={item.description}
-                                                    onChange={(e) =>
-                                                        handleItemChange(index, 'description', e.target.value)
-                                                    }
-                                                    className={inputClass(
-                                                        Boolean(fieldErrors[`item-${index}-description`]),
-                                                        'resize-none min-h-[72px]'
-                                                    )}
-                                                    rows={2}
-                                                    placeholder="Service or product"
-                                                    aria-invalid={Boolean(
-                                                        fieldErrors[`item-${index}-description`]
-                                                    )}
-                                                />
-                                                <FieldValidationMessage
-                                                    message={fieldErrors[`item-${index}-description`]}
-                                                />
-                                            </div>
-                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                                <div>
-                                                    <RequiredLabel htmlFor={`quotation-item-${index}-unit`}>
-                                                        Unit
-                                                    </RequiredLabel>
-                                                    <div className="flex gap-2">
-                                                        <CustomSelect
-                                                            id={`quotation-item-${index}-unit`}
-                                                            value={normalizeInvoiceUnit(item.unit)}
-                                                            onChange={(value) => handleUnitChange(index, value)}
-                                                            options={buildUnitSelectOptions(item.unit)}
-                                                            aria-label={`Unit for item ${index + 1}`}
-                                                            className="min-w-0 flex-1"
-                                                        />
-                                                        <input
-                                                            id={`quotation-item-${index}-quantity`}
-                                                            type="number"
-                                                            value={item.quantity}
-                                                            onChange={(e) =>
-                                                                handleItemChange(
-                                                                    index,
-                                                                    'quantity',
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                            className={`${inputClass(
-                                                                Boolean(fieldErrors[`item-${index}-quantity`])
-                                                            )} w-[4.75rem] shrink-0`}
-                                                            min="1"
-                                                            aria-label={`${normalizeInvoiceUnit(item.unit)} for item ${index + 1}`}
-                                                            aria-invalid={Boolean(
-                                                                fieldErrors[`item-${index}-quantity`]
-                                                            )}
-                                                        />
-                                                    </div>
-                                                    <FieldValidationMessage
-                                                        message={fieldErrors[`item-${index}-quantity`]}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <RequiredLabel htmlFor={`quotation-item-${index}-rate`}>
-                                                        Rate
-                                                    </RequiredLabel>
-                                                    <div className="flex gap-2">
-                                                        <CustomSelect
-                                                            id={`quotation-item-${index}-currency`}
-                                                            value={normalizeCurrency(
-                                                                formData.currency || APP_CURRENCY
-                                                            )}
-                                                            onChange={handleCurrencyChange}
-                                                            options={getCurrencySelectOptions()}
-                                                            aria-label={`Currency for rate on item ${index + 1}`}
-                                                            className="w-[5.75rem] shrink-0"
-                                                        />
-                                                        <input
-                                                            id={`quotation-item-${index}-rate`}
-                                                            type="number"
-                                                            value={item.rate}
-                                                            onChange={(e) =>
-                                                                handleItemChange(index, 'rate', e.target.value)
-                                                            }
-                                                            className={`${inputClass(
-                                                                Boolean(fieldErrors[`item-${index}-rate`])
-                                                            )} min-w-0 flex-1`}
-                                                            min="0"
-                                                            step="0.01"
-                                                            aria-invalid={Boolean(
-                                                                fieldErrors[`item-${index}-rate`]
-                                                            )}
-                                                        />
-                                                    </div>
-                                                    <FieldValidationMessage
-                                                        message={fieldErrors[`item-${index}-rate`]}
-                                                    />
-                                                </div>
-                                                <div className="flex flex-col justify-end min-w-0">
-                                                    <span className="label">Amount</span>
-                                                    <p className="text-base font-semibold text-zinc-900 py-2.5 tabular-nums break-all">
-                                                        {formatCurrency(
-                                                            item.quantity * item.rate,
-                                                            formData.currency
-                                                        )}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            {products.length > 0 ? (
-                                <div className="mt-4 flex flex-col sm:flex-row sm:items-end gap-3 p-4 rounded-xl border border-brand/20 bg-brand-subtle/30">
-                                    <div className="flex-1 min-w-0">
-                                        <label htmlFor="quotation-product-pick" className="label">
-                                            Add from product
-                                        </label>
-                                        <CustomSelect
-                                            id="quotation-product-pick"
-                                            value=""
-                                            onChange={(productId) => {
-                                                if (productId) addProductItem(productId);
-                                            }}
-                                            options={products.map((product) => ({
-                                                value: product.id,
-                                                label: `${product.name} — ${formatCurrency(product.unitPrice || 0, formData.currency)}`,
-                                            }))}
-                                            placeholder="Select a saved product…"
-                                            leadingIcon={<Package size={18} aria-hidden />}
-                                            aria-label="Add line item from saved product"
-                                        />
-                                    </div>
-                                </div>
-                            ) : (
-                                <p className="mt-4 text-sm text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3">
-                                    Save products in{' '}
-                                    <Link to="/products" className="text-brand font-medium hover:underline">
-                                        Products
-                                    </Link>{' '}
-                                    to add line items in one click.
-                                </p>
-                            )}
-                        </FormSection>
+                        <DocumentLineItemsSection
+                            idPrefix="quotation"
+                            docLabel="quotation"
+                            formData={formData}
+                            fieldErrors={fieldErrors}
+                            products={products}
+                            onItemChange={handlers.handleItemChange}
+                            onUnitChange={handlers.handleUnitChange}
+                            onCurrencyChange={handlers.handleCurrencyChange}
+                            onAddItem={handlers.addItem}
+                            onRemoveItem={handlers.removeItem}
+                            onAddProductItem={handlers.addProductItem}
+                        />
 
-                        <FormSection
-                            icon={ScrollText}
-                            title="Terms & Conditions"
-                            description="Shown with this quotation"
-                        >
-                            <textarea
-                                name="terms"
-                                value={formData.terms}
-                                onChange={handleChange}
-                                className={inputClass(false, 'resize-none min-h-[140px]')}
-                                rows={6}
-                                placeholder="Quotation terms…"
-                            />
-                        </FormSection>
+                        <DocumentTermsSection formData={formData} onChange={handlers.handleChange} />
 
-                        <FormSection icon={StickyNote} title="Notes" description="Extra info for the client">
-                            <textarea
-                                name="notes"
-                                value={formData.notes}
-                                onChange={handleChange}
-                                className={inputClass(false, 'resize-none min-h-[100px]')}
-                                rows={4}
-                                placeholder="Optional note…"
-                            />
-                        </FormSection>
+                        <DocumentNotesSection
+                            description="Extra info for the client"
+                            placeholder="Optional note…"
+                            formData={formData}
+                            onChange={handlers.handleChange}
+                        />
                     </div>
 
                     <div className="xl:col-span-1 space-y-4 xl:sticky xl:top-24">
-                        <div className="card space-y-5">
-                            <h3 className="text-sm font-semibold text-zinc-900">Summary</h3>
-
-                            {formData.clientName.trim() && (
-                                <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-100">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-1.5">
-                                        Bill to
-                                    </p>
-                                    <p className="font-semibold text-zinc-900">{formData.clientName}</p>
-                                    {selectedClient && getClientBusiness(selectedClient) && (
-                                        <p className="text-sm text-zinc-600 mt-0.5">
-                                            {getClientBusiness(selectedClient)}
-                                        </p>
-                                    )}
-                                    {formData.clientEmail.trim() && (
-                                        <p className="text-sm text-zinc-500 mt-0.5">
-                                            {formData.clientEmail}
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-
-                            <dl className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <dt className="text-zinc-500">Subtotal</dt>
-                                    <dd className="font-medium text-zinc-900">
-                                        {formatCurrency(totals.subtotal, formData.currency)}
-                                    </dd>
-                                </div>
-                                {totals.discount > 0 && (
-                                    <div className="flex justify-between">
-                                        <dt className="text-zinc-500">{discountLabel}</dt>
-                                        <dd className="font-medium text-red-600">
-                                            −{formatCurrency(totals.discount, formData.currency)}
-                                        </dd>
-                                    </div>
-                                )}
-                                <div className="flex justify-between">
-                                    <dt className="text-zinc-500">Tax ({formData.taxRate}%)</dt>
-                                    <dd className="font-medium text-zinc-900">
-                                        {formatCurrency(totals.tax, formData.currency)}
-                                    </dd>
-                                </div>
-                                <div className="pt-3 border-t border-zinc-200 flex justify-between items-center">
-                                    <dt className="font-semibold text-zinc-900">Estimated total</dt>
-                                    <dd className="text-2xl font-bold text-brand">
-                                        {formatCurrency(totals.total, formData.currency)}
-                                    </dd>
-                                </div>
-                            </dl>
-                        </div>
+                        <DocumentSummaryCard
+                            formData={formData}
+                            selectedClient={selectedClient}
+                            totals={totals}
+                            discountLabel={discountLabel}
+                            totalLabel="Estimated total"
+                        />
 
                         <div className="hidden xl:block card p-4">{actionButtons('desktop')}</div>
                     </div>
@@ -1335,7 +690,7 @@ const CreateQuotation = () => {
                     address: formData.clientAddress,
                     additionalInfo: formData.clientAdditionalInfo,
                 }}
-                onSave={handleSaveClientDetails}
+                onSave={handlers.handleSaveClientDetails}
             />
 
             <div className="fixed bottom-0 left-0 right-0 md:left-[15.5rem] z-30 xl:hidden border-t border-zinc-200 bg-white/95 backdrop-blur-sm shadow-[0_-4px_16px_rgba(15,23,42,0.06)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4">

@@ -26,13 +26,13 @@
         "@tanstack/react-query": "^5.101.4",
         "@waraqah/shared": "*",
         "date-fns": "^3.0.0",
-        "jspdf": "^2.5.1",
+        "jspdf": "^3.0.4",
         "jspdf-autotable": "^3.8.0",
         "lucide-react": "^0.300.0",
         "pdf-lib": "^1.17.1",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
-        "react-router-dom": "^6.20.0"
+        "react-router-dom": "^6.30.4"
     },
     "devDependencies": {
         "@fontsource/bodoni-moda": "^5.3.0",

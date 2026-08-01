@@ -4,6 +4,10 @@ import { useAuth } from './AuthContext';
 import { useInvoice } from './InvoiceContext';
 import { shouldPrefetchUserData } from '../utils/authHint';
 import { buildListQuery, PICKER_PAGE_SIZE, unwrapListResponse } from '../utils/pagination';
+import {
+    invalidateInvoiceListQueries,
+    invalidateQuotationListQueries,
+} from '../lib/queryClient';
 
 const QuotationContext = createContext();
 
@@ -22,9 +26,14 @@ export const QuotationProvider = ({ children }) => {
     const [loading, setLoading] = useState(false);
     const [quotationsLoading, setQuotationsLoading] = useState(false);
     const quotationsFetchedRef = useRef(false);
-    const { isAuthenticated, loading: authLoading } = useAuth();
+    const { isAuthenticated, loading: authLoading, user } = useAuth();
+    const userId = user?.id;
     const { refreshMeta } = useInvoice();
     const shouldFetch = shouldPrefetchUserData(isAuthenticated);
+
+    const invalidateListCaches = useCallback(() => {
+        invalidateQuotationListQueries(userId);
+    }, [userId]);
 
     const refreshQuotations = useCallback(async () => {
         const payload = await apiFetch(
@@ -33,7 +42,8 @@ export const QuotationProvider = ({ children }) => {
         const { data } = unwrapListResponse(payload);
         setQuotations(data.map(mapQuotation));
         quotationsFetchedRef.current = true;
-    }, []);
+        invalidateListCaches();
+    }, [invalidateListCaches]);
 
     const fetchQuotations = useCallback(
         async ({ force = false, limit = PICKER_PAGE_SIZE } = {}) => {
@@ -103,6 +113,7 @@ export const QuotationProvider = ({ children }) => {
         if (options.skipRefresh) {
             setQuotations((prev) => [mapped, ...prev.filter((q) => q.id !== mapped.id)]);
             quotationsFetchedRef.current = true;
+            invalidateListCaches();
             if (refreshMeta) await refreshMeta();
             return mapped;
         }
@@ -123,12 +134,14 @@ export const QuotationProvider = ({ children }) => {
             return prev.map((q) => (q.id === id ? mapped : q));
         });
         if (refreshMeta) await refreshMeta();
+        invalidateListCaches();
         return mapped;
     };
 
     const deleteQuotation = async (id) => {
         await apiFetch(`/quotations/${id}`, { method: 'DELETE' });
         setQuotations((prev) => prev.filter((q) => q.id !== id));
+        invalidateListCaches();
         if (refreshMeta) await refreshMeta();
     };
 
@@ -140,6 +153,8 @@ export const QuotationProvider = ({ children }) => {
         const quotation = mapQuotation(result.quotation);
         const invoice = { ...result.invoice, id: result.invoice._id || result.invoice.id };
         setQuotations((prev) => prev.map((q) => (q.id === id ? quotation : q)));
+        invalidateListCaches();
+        invalidateInvoiceListQueries(userId);
         return { quotation, invoice };
     };
 

@@ -53,17 +53,17 @@ const Invoices = () => {
     const [sortBy, setSortBy] = useState('newest');
 
     const fetcher = useCallback(
-        ({ page, limit, search }) =>
+        ({ page, limit, search, status, sort }) =>
             apiFetch(
                 `/invoices?${buildListQuery({
                     page,
                     limit,
                     search,
-                    status: filter,
-                    sort: sortBy,
+                    status,
+                    sort,
                 })}`
             ),
-        [filter, sortBy]
+        []
     );
 
     const {
@@ -78,7 +78,7 @@ const Invoices = () => {
     } = usePagedQuery({
         queryKeyBase: 'invoices',
         fetcher,
-        extraDeps: [filter, sortBy],
+        extraParams: { status: filter, sort: sortBy },
     });
 
     const invoices = useMemo(() => data.map(mapInvoice), [data]);
@@ -86,6 +86,14 @@ const Invoices = () => {
     useEffect(() => {
         setPage(1);
     }, [filter, sortBy, setPage]);
+
+    const handleFilterChange = useCallback(
+        (next) => {
+            setFilter(next);
+            setPage(1);
+        },
+        [setPage]
+    );
 
     const filterTabs = useMemo(() => {
         const counts = statusCounts || {};
@@ -144,7 +152,7 @@ const Invoices = () => {
                     </ToolbarActions>
                 </Toolbar>
 
-                <FilterTabs tabs={filterTabs} value={filter} onChange={setFilter} className="mb-4" />
+                <FilterTabs tabs={filterTabs} value={filter} onChange={handleFilterChange} className="mb-4" />
 
                 {loading && invoices.length === 0 ? (
                     <ListPageSkeleton rows={8} columns={6} withAction={false} />

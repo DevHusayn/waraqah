@@ -52,17 +52,17 @@ const Quotations = () => {
     const [sortBy, setSortBy] = useState('newest');
 
     const fetcher = useCallback(
-        ({ page, limit, search }) =>
+        ({ page, limit, search, status, sort }) =>
             apiFetch(
                 `/quotations?${buildListQuery({
                     page,
                     limit,
                     search,
-                    status: filter,
-                    sort: sortBy,
+                    status,
+                    sort,
                 })}`
             ),
-        [filter, sortBy]
+        []
     );
 
     const {
@@ -77,7 +77,7 @@ const Quotations = () => {
     } = usePagedQuery({
         queryKeyBase: 'quotations',
         fetcher,
-        extraDeps: [filter, sortBy],
+        extraParams: { status: filter, sort: sortBy },
     });
 
     const quotations = useMemo(() => data.map(mapQuotation), [data]);
@@ -85,6 +85,14 @@ const Quotations = () => {
     useEffect(() => {
         setPage(1);
     }, [filter, sortBy, setPage]);
+
+    const handleFilterChange = useCallback(
+        (next) => {
+            setFilter(next);
+            setPage(1);
+        },
+        [setPage]
+    );
 
     const filterTabs = useMemo(() => {
         const counts = statusCounts || {};
@@ -142,7 +150,7 @@ const Quotations = () => {
                     </ToolbarActions>
                 </Toolbar>
 
-                <FilterTabs tabs={filterTabs} value={filter} onChange={setFilter} className="mb-4" />
+                <FilterTabs tabs={filterTabs} value={filter} onChange={handleFilterChange} className="mb-4" />
 
                 {loading && quotations.length === 0 ? (
                     <ListPageSkeleton rows={8} columns={6} withAction={false} />

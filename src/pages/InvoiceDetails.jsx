@@ -51,11 +51,13 @@ import {
     getNextPaymentReminderDate,
     hasRecordedPayments,
     isAutoPaymentRemindersEnabled,
-    normalizeInvoiceUnit,
-    resolveQuantityColumnLabel,
     PAYMENT_REMINDER_DUE_WINDOW_DAYS,
     PAYMENT_REMINDER_MIN_DAYS_BETWEEN,
 } from '@waraqah/shared';
+import SummaryRow from '../components/documentDetails/SummaryRow';
+import DocumentClientDisplay from '../components/documentDetails/DocumentClientDisplay';
+import DocumentLineItemsTable from '../components/documentDetails/DocumentLineItemsTable';
+import { DocumentNotesDisplay } from '../components/documentDetails/DocumentTextSections';
 
 function mapInvoiceRecord(invoice) {
     return { ...invoice, id: invoice._id || invoice.id };
@@ -68,15 +70,6 @@ function invoiceHasLineItems(invoice) {
 async function generateInvoicePdf(invoice, client, businessInfo, options) {
     const { generateInvoicePdfBlob } = await import('../utils/pdfGenerator');
     return generateInvoicePdfBlob(invoice, client, businessInfo, options);
-}
-
-function SummaryRow({ label, value }) {
-    return (
-        <div className="flex justify-between gap-4 text-sm">
-            <dt className="text-zinc-500 shrink-0">{label}</dt>
-            <dd className="font-medium text-zinc-900 text-right">{value}</dd>
-        </div>
-    );
 }
 
 function DocumentTypeToggle({ documentMode, onDocumentModeChange }) {
@@ -766,116 +759,14 @@ const InvoiceDetails = () => {
 
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     <div className="xl:col-span-2 space-y-6 order-2 xl:order-1">
-                        <FormSection icon={User} title="Client" description="Bill-to contact">
-                            {client ? (
-                                <div className="space-y-2">
-                                    <p className="font-semibold text-zinc-900 text-lg">{client.name}</p>
-                                    {getClientBusiness(client) && (
-                                        <p className="text-sm text-zinc-600 flex items-center gap-1.5">
-                                            <Building2 size={14} className="text-zinc-400" aria-hidden />
-                                            {getClientBusiness(client)}
-                                        </p>
-                                    )}
-                                    {client.email && (
-                                        <p className="text-sm text-zinc-600 flex items-center gap-1.5">
-                                            <Mail size={14} className="text-zinc-400" aria-hidden />
-                                            {client.email}
-                                        </p>
-                                    )}
-                                    {client.phone && (
-                                        <p className="text-sm text-zinc-600 flex items-center gap-1.5">
-                                            <Phone size={14} className="text-zinc-400" aria-hidden />
-                                            {client.phone}
-                                        </p>
-                                    )}
-                                    {client.address && (
-                                        <p className="text-sm text-zinc-600 whitespace-pre-wrap">
-                                            {client.address}
-                                        </p>
-                                    )}
-                                    {invoice.clientAdditionalInfo && (
-                                        <p className="text-sm text-zinc-600 whitespace-pre-wrap">
-                                            {invoice.clientAdditionalInfo}
-                                        </p>
-                                    )}
-                                </div>
-                            ) : (
-                                <p className="text-zinc-500 text-sm">Client not found</p>
-                            )}
-                        </FormSection>
+                        <DocumentClientDisplay
+                            client={client}
+                            additionalInfo={invoice.clientAdditionalInfo}
+                        />
 
-                        <div className="card !p-0 overflow-hidden">
-                            <div className="px-4 sm:px-6 py-4 border-b border-zinc-100 flex items-center gap-3">
-                                <div className="p-2 rounded-md bg-zinc-50 border border-zinc-200/50 shrink-0">
-                                    <List className="h-4 w-4 text-zinc-500" strokeWidth={1.75} aria-hidden />
-                                </div>
-                                <div>
-                                    <h2 className="text-lg font-semibold text-zinc-900">Items</h2>
-                                    <p className="text-xs text-zinc-500">
-                                        {(invoice.items || []).length} line item
-                                        {(invoice.items || []).length === 1 ? '' : 's'}
-                                    </p>
-                                </div>
-                            </div>
+                        <DocumentLineItemsTable items={invoice.items} currency={invoice.currency} />
 
-                            <div className="md:hidden divide-y divide-zinc-100">
-                                {(invoice.items || []).map((item, index) => (
-                                    <div key={index} className="px-4 py-4">
-                                        <p className="font-medium text-zinc-900">{item.description}</p>
-                                        <div className="mt-2 flex items-center justify-between gap-3 text-sm">
-                                            <span className="text-zinc-500">
-                                                {normalizeInvoiceUnit(item.unit)} {item.quantity} ·{' '}
-                                                {formatCurrency(item.rate, invoice.currency)}
-                                            </span>
-                                            <span className="font-semibold text-zinc-900 shrink-0">
-                                                {formatCurrency(
-                                                    Number(item.quantity) * Number(item.rate),
-                                                    invoice.currency
-                                                )}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <table className="hidden md:table w-full text-sm">
-                                <thead className="bg-zinc-50 text-zinc-500 uppercase text-xs">
-                                    <tr>
-                                        <th className="text-left px-6 py-3 font-semibold">Description</th>
-                                        <th className="text-center px-4 py-3 w-24 font-semibold">
-                                            {resolveQuantityColumnLabel(invoice.items)}
-                                        </th>
-                                        <th className="text-right px-4 py-3 font-semibold">Rate</th>
-                                        <th className="text-right px-6 py-3 font-semibold">Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-zinc-100">
-                                    {(invoice.items || []).map((item, index) => (
-                                        <tr key={index}>
-                                            <td className="px-6 py-4 text-zinc-900">{item.description}</td>
-                                            <td className="px-4 py-4 text-center text-zinc-600">{item.quantity}</td>
-                                            <td className="px-4 py-4 text-right text-zinc-600 whitespace-nowrap">
-                                                {formatCurrency(item.rate, invoice.currency)}
-                                            </td>
-                                            <td className="px-6 py-4 text-right font-medium text-zinc-900 whitespace-nowrap">
-                                                {formatCurrency(
-                                                    Number(item.quantity) * Number(item.rate),
-                                                    invoice.currency
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {invoice.notes && (
-                            <FormSection icon={StickyNote} title="Notes" description="Additional information">
-                                <p className="text-zinc-600 whitespace-pre-wrap text-sm leading-relaxed">
-                                    {invoice.notes}
-                                </p>
-                            </FormSection>
-                        )}
+                        <DocumentNotesDisplay notes={invoice.notes} />
                     </div>
 
                     <div className="space-y-6 order-1 xl:order-2">

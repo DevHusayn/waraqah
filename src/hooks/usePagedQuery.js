@@ -55,8 +55,18 @@ export function usePagedQuery({
         },
         enabled: enabled && Boolean(userId),
         staleTime: STALE_TIMES.lists,
-        placeholderData: (prev, previousQuery) =>
-            previousQuery?.queryKey?.[1] === userId ? prev : undefined,
+        placeholderData: (prev, previousQuery) => {
+            if (previousQuery?.queryKey?.[1] !== userId) return undefined;
+            const prevParams = previousQuery?.queryKey?.[2];
+            if (!prevParams || typeof prevParams !== 'object') return undefined;
+            const sameListFilters =
+                prevParams.status === queryParams.status &&
+                prevParams.sort === queryParams.sort &&
+                prevParams.search === queryParams.search &&
+                prevParams.year === queryParams.year &&
+                prevParams.month === queryParams.month;
+            return sameListFilters ? prev : undefined;
+        },
     });
 
     const goToPage = useCallback((next) => {

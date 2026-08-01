@@ -6,7 +6,7 @@ import { shouldPrefetchUserData } from '../utils/authHint';
 import { isDraft } from '../utils/invoiceHelpers';
 import { buildListQuery, PICKER_PAGE_SIZE, unwrapListResponse } from '../utils/pagination';
 import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
-import { invalidateDashboardQueries } from '../lib/queryClient';
+import { invalidateDashboardQueries, invalidateInvoiceListQueries } from '../lib/queryClient';
 
 const InvoiceContext = createContext();
 
@@ -31,6 +31,12 @@ export const InvoiceProvider = ({ children }) => {
     const productsFetchedRef = useRef(false);
     const invoicesFetchedRef = useRef(false);
     const draftsFetchedRef = useRef(false);
+    const invoicesRef = useRef(invoices);
+    const draftsRef = useRef(drafts);
+    const productsRef = useRef(products);
+    invoicesRef.current = invoices;
+    draftsRef.current = drafts;
+    productsRef.current = products;
     const { isAuthenticated, loading: authLoading, user } = useAuth();
     const userId = user?.id;
     const shouldFetch = shouldPrefetchUserData(isAuthenticated);
@@ -61,6 +67,10 @@ export const InvoiceProvider = ({ children }) => {
         invalidateDashboardQueries(userId);
     }, [queryClient, userId]);
 
+    const invalidateListCaches = useCallback(() => {
+        invalidateInvoiceListQueries(userId);
+    }, [userId]);
+
     const refreshInvoices = useCallback(async () => {
         const [invPayload] = await Promise.all([
             apiFetch(`/invoices?${buildListQuery({ page: 1, limit: PICKER_PAGE_SIZE })}`),
@@ -71,13 +81,14 @@ export const InvoiceProvider = ({ children }) => {
         const { data } = unwrapListResponse(invPayload);
         setInvoices(data.map(mapInvoice));
         invoicesFetchedRef.current = true;
+        invalidateListCaches();
         await refreshMeta();
-    }, [refreshMeta, queryClient, userId]);
+    }, [refreshMeta, queryClient, userId, invalidateListCaches]);
 
     const fetchInvoices = useCallback(async ({ force = false, year, month, limit = PICKER_PAGE_SIZE } = {}) => {
         if (!shouldFetch && !isAuthenticated) return [];
         const forMonth = year != null && month != null;
-        if (!forMonth && invoicesFetchedRef.current && !force) return invoices;
+        if (!forMonth && invoicesFetchedRef.current && !force) return invoicesRef.current;
 
         setInvoicesLoading(true);
         try {
@@ -101,11 +112,11 @@ export const InvoiceProvider = ({ children }) => {
         } finally {
             setInvoicesLoading(false);
         }
-    }, [shouldFetch, isAuthenticated, invoices]);
+    }, [shouldFetch, isAuthenticated]);
 
     const fetchDrafts = useCallback(async ({ force = false } = {}) => {
         if (!shouldFetch && !isAuthenticated) return [];
-        if (draftsFetchedRef.current && !force) return drafts;
+        if (draftsFetchedRef.current && !force) return draftsRef.current;
 
         setDraftsLoading(true);
         try {
@@ -124,11 +135,11 @@ export const InvoiceProvider = ({ children }) => {
         } finally {
             setDraftsLoading(false);
         }
-    }, [shouldFetch, isAuthenticated, drafts]);
+    }, [shouldFetch, isAuthenticated, refreshMeta]);
 
     const fetchProducts = useCallback(async ({ force = false } = {}) => {
         if (!shouldFetch && !isAuthenticated) return [];
-        if (productsFetchedRef.current && !force) return products;
+        if (productsFetchedRef.current && !force) return productsRef.current;
 
         setProductsLoading(true);
         try {
@@ -146,7 +157,7 @@ export const InvoiceProvider = ({ children }) => {
         } finally {
             setProductsLoading(false);
         }
-    }, [shouldFetch, isAuthenticated, products]);
+    }, [shouldFetch, isAuthenticated]);
 
     const fetchUserData = useCallback(async () => {
         if (!shouldFetch) {
@@ -198,7 +209,7 @@ export const InvoiceProvider = ({ children }) => {
         };
     }, [fetchUserData]);
 
-    const resetAll = () => {
+    const resetAll = useCallback(() => {
         setInvoices([]);
         setDrafts([]);
         setClients([]);
@@ -206,9 +217,9 @@ export const InvoiceProvider = ({ children }) => {
         productsFetchedRef.current = false;
         invoicesFetchedRef.current = false;
         draftsFetchedRef.current = false;
-    };
+    }, []);
 
-    const addInvoice = async (invoice, options = {}) => {
+    const addInvoice = useCallback(async (invoice, options = {}) => {
         const newInvoice = await apiFetch('/invoices', {
             method: 'POST',
             body: JSON.stringify(invoice),
@@ -222,14 +233,15 @@ export const InvoiceProvider = ({ children }) => {
                 invoicesFetchedRef.current = true;
             }
             await refreshMeta();
+            invalidateListCaches();
             return mapped;
         }
         await refreshInvoices();
         draftsFetchedRef.current = false;
         return mapped;
-    };
+    }, [refreshInvoices, refreshMeta, invalidateListCaches]);
 
-    const updateInvoice = async (id, updatedInvoice) => {
+    const updateInvoice = useCallback(async (id, updatedInvoice) => {
         const updated = await apiFetch(`/invoices/${id}`, {
             method: 'PUT',
             body: JSON.stringify(updatedInvoice),
@@ -255,10 +267,11 @@ export const InvoiceProvider = ({ children }) => {
         }
 
         await refreshMeta();
+        invalidateListCaches();
         return mapped;
-    };
+    }, [refreshMeta, invalidateListCaches]);
 
-    const recordInvoicePayment = async (id, payment) => {
+    const recordInvoicePayment = useCallback(async (id, payment) => {
         const updated = await apiFetch(`/invoices/${id}/payments`, {
             method: 'POST',
             body: JSON.stringify({
@@ -276,26 +289,28 @@ export const InvoiceProvider = ({ children }) => {
             return prev.map((inv) => (inv.id === id ? mapped : inv));
         });
         await refreshMeta();
+        invalidateListCaches();
         return mapped;
-    };
+    }, [refreshMeta, invalidateListCaches]);
 
-    const deleteInvoice = async (id) => {
+    const deleteInvoice = useCallback(async (id) => {
         const wasDraft = drafts.some((inv) => inv.id === id) || invoices.some((inv) => inv.id === id && isDraft(inv));
         await apiFetch(`/invoices/${id}`, { method: 'DELETE' });
         setInvoices((prev) => prev.filter((inv) => inv.id !== id));
         setDrafts((prev) => prev.filter((inv) => inv.id !== id));
+        invalidateListCaches();
         if (wasDraft) {
             await refreshMeta();
         }
-    };
+    }, [drafts, invoices, refreshMeta, invalidateListCaches]);
 
-    const sendInvoiceEmailToClient = async (id) =>
-        apiFetch(`/invoices/${id}/send-email`, { method: 'POST' });
+    const sendInvoiceEmailToClient = useCallback(async (id) =>
+        apiFetch(`/invoices/${id}/send-email`, { method: 'POST' }), []);
 
-    const sendPaymentReminderToClient = async (id) =>
-        apiFetch(`/invoices/${id}/send-reminder`, { method: 'POST' });
+    const sendPaymentReminderToClient = useCallback(async (id) =>
+        apiFetch(`/invoices/${id}/send-reminder`, { method: 'POST' }), []);
 
-    const markInvoiceReminderSent = (id, lastPaymentReminderAt) => {
+    const markInvoiceReminderSent = useCallback((id, lastPaymentReminderAt) => {
         const sentAt = lastPaymentReminderAt || new Date().toISOString();
         const patch = (prev) =>
             prev.map((inv) =>
@@ -306,12 +321,12 @@ export const InvoiceProvider = ({ children }) => {
         setInvoices(patch);
         setDrafts(patch);
         return sentAt;
-    };
+    }, []);
 
-    const sendReceiptEmailToClient = async (id) =>
-        apiFetch(`/invoices/${id}/send-receipt`, { method: 'POST' });
+    const sendReceiptEmailToClient = useCallback(async (id) =>
+        apiFetch(`/invoices/${id}/send-receipt`, { method: 'POST' }), []);
 
-    const addClient = async (client) => {
+    const addClient = useCallback(async (client) => {
         const newClient = await apiFetch('/clients', {
             method: 'POST',
             body: JSON.stringify(client),
@@ -319,9 +334,9 @@ export const InvoiceProvider = ({ children }) => {
         const mapped = mapClient(newClient);
         setClients((prev) => [...prev, mapped]);
         return mapped;
-    };
+    }, []);
 
-    const updateClient = async (id, updatedClient) => {
+    const updateClient = useCallback(async (id, updatedClient) => {
         const updated = await apiFetch(`/clients/${id}`, {
             method: 'PUT',
             body: JSON.stringify(updatedClient),
@@ -329,14 +344,14 @@ export const InvoiceProvider = ({ children }) => {
         const mapped = mapClient(updated);
         setClients((prev) => prev.map((client) => (client.id === id ? mapped : client)));
         return mapped;
-    };
+    }, []);
 
-    const deleteClient = async (id) => {
+    const deleteClient = useCallback(async (id) => {
         await apiFetch(`/clients/${id}`, { method: 'DELETE' });
         setClients((prev) => prev.filter((client) => client.id !== id));
-    };
+    }, []);
 
-    const addProduct = async (product) => {
+    const addProduct = useCallback(async (product) => {
         const newProduct = await apiFetch('/products', {
             method: 'POST',
             body: JSON.stringify(product),
@@ -345,9 +360,9 @@ export const InvoiceProvider = ({ children }) => {
         setProducts((prev) => [...prev, mapped]);
         productsFetchedRef.current = true;
         return mapped;
-    };
+    }, []);
 
-    const updateProduct = async (id, updatedProduct) => {
+    const updateProduct = useCallback(async (id, updatedProduct) => {
         const updated = await apiFetch(`/products/${id}`, {
             method: 'PUT',
             body: JSON.stringify(updatedProduct),
@@ -355,12 +370,12 @@ export const InvoiceProvider = ({ children }) => {
         const mapped = mapProduct(updated);
         setProducts((prev) => prev.map((product) => (product.id === id ? mapped : product)));
         return mapped;
-    };
+    }, []);
 
-    const deleteProduct = async (id) => {
+    const deleteProduct = useCallback(async (id) => {
         await apiFetch(`/products/${id}`, { method: 'DELETE' });
         setProducts((prev) => prev.filter((product) => product.id !== id));
-    };
+    }, []);
 
     const draftInvoices = useMemo(() => {
         const source =
@@ -394,7 +409,7 @@ export const InvoiceProvider = ({ children }) => {
         });
     }, []);
 
-    const value = {
+    const value = useMemo(() => ({
         invoices,
         draftInvoices,
         draftCount,
@@ -427,7 +442,40 @@ export const InvoiceProvider = ({ children }) => {
         invoicesLoading,
         draftsLoading,
         productsLoading,
-    };
+    }), [
+        invoices,
+        draftInvoices,
+        draftCount,
+        clients,
+        products,
+        invoiceUsage,
+        addInvoice,
+        updateInvoice,
+        recordInvoicePayment,
+        deleteInvoice,
+        sendInvoiceEmailToClient,
+        sendPaymentReminderToClient,
+        markInvoiceReminderSent,
+        sendReceiptEmailToClient,
+        addClient,
+        updateClient,
+        deleteClient,
+        addProduct,
+        updateProduct,
+        deleteProduct,
+        fetchUserData,
+        fetchInvoices,
+        fetchDrafts,
+        fetchProducts,
+        refreshInvoices,
+        refreshMeta,
+        upsertInvoice,
+        resetAll,
+        loading,
+        invoicesLoading,
+        draftsLoading,
+        productsLoading,
+    ]);
 
     return (
         <InvoiceContext.Provider value={value}>

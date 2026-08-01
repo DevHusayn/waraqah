@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback, useRef, useEffect, useState } from 'react';
+import { createContext, useContext, useCallback, useRef, useEffect, useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../utils/api';
 import { useAuth } from './AuthContext';
@@ -171,7 +171,7 @@ export const SettingsProvider = ({ children }) => {
         setAssetsReady(true);
     }, [shouldFetch, userId, isLoading, isFetched, businessInfo, fetchBusinessAssets]);
 
-    const persistBusinessInfo = async (payload) => {
+    const persistBusinessInfo = useCallback(async (payload) => {
         const updated = await apiFetch('/business-info', {
             method: 'PUT',
             body: JSON.stringify(payload),
@@ -181,19 +181,19 @@ export const SettingsProvider = ({ children }) => {
         setBusinessInfo(updated);
         invalidateDashboardQueries(userId);
         return updated;
-    };
+    }, [setBusinessInfo, userId]);
 
-    const updateBusinessInfo = async (info) => {
+    const updateBusinessInfo = useCallback(async (info) => {
         const payload = buildBusinessInfoPayload(info, businessInfo);
         return persistBusinessInfo(payload);
-    };
+    }, [businessInfo, persistBusinessInfo]);
 
-    const saveBusinessAsset = async (field, dataUrl) => {
+    const saveBusinessAsset = useCallback(async (field, dataUrl) => {
         const payload = buildBusinessInfoPayload({ [field]: dataUrl }, businessInfo);
         return persistBusinessInfo(payload);
-    };
+    }, [businessInfo, persistBusinessInfo]);
 
-    const saveCompanyLogo = async ({ companyLogoUrl, companyLogoAvatarUrl }) => {
+    const saveCompanyLogo = useCallback(async ({ companyLogoUrl, companyLogoAvatarUrl }) => {
         const payload = buildBusinessInfoPayload(
             {
                 companyLogoUrl,
@@ -203,26 +203,41 @@ export const SettingsProvider = ({ children }) => {
             businessInfo
         );
         return persistBusinessInfo(payload);
-    };
+    }, [businessInfo, persistBusinessInfo]);
 
-    const saveBusinessLogo = async (logoDataUrl) => saveBusinessAsset('companyLogoUrl', logoDataUrl);
+    const saveBusinessLogo = useCallback(
+        async (logoDataUrl) => saveBusinessAsset('companyLogoUrl', logoDataUrl),
+        [saveBusinessAsset]
+    );
 
-    const value = {
+    const loading = authLoading
+        || (shouldFetch && !userId)
+        || isLoading
+        || (shouldFetch && Boolean(userId) && !isFetched);
+
+    const value = useMemo(() => ({
         businessInfo,
         updateBusinessInfo,
         setBusinessInfo,
-        loading:
-            authLoading
-            || (shouldFetch && !userId)
-            || isLoading
-            || (shouldFetch && Boolean(userId) && !isFetched),
+        loading,
         assetsReady,
         refreshBusinessInfo: fetchBusinessInfo,
         fetchBusinessAssets,
         saveBusinessLogo,
         saveCompanyLogo,
         saveBusinessAsset,
-    };
+    }), [
+        businessInfo,
+        updateBusinessInfo,
+        setBusinessInfo,
+        loading,
+        assetsReady,
+        fetchBusinessInfo,
+        fetchBusinessAssets,
+        saveBusinessLogo,
+        saveCompanyLogo,
+        saveBusinessAsset,
+    ]);
 
     return (
         <SettingsContext.Provider value={value}>

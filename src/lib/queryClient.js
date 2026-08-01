@@ -43,6 +43,20 @@ export function invalidateDashboardQueries(userId) {
     }
 }
 
+/** Invalidate paginated invoice/draft list caches after mutations. */
+export function invalidateInvoiceListQueries(userId) {
+    if (!userId) return;
+    queryClient.invalidateQueries({ queryKey: ['invoices', userId] });
+    queryClient.invalidateQueries({ queryKey: ['drafts', userId] });
+}
+
+/** Invalidate paginated quotation/draft list caches after mutations. */
+export function invalidateQuotationListQueries(userId) {
+    if (!userId) return;
+    queryClient.invalidateQueries({ queryKey: ['quotations', userId] });
+    queryClient.invalidateQueries({ queryKey: ['drafts', userId] });
+}
+
 /** Wipe all cached server state — call on logout / account switch. */
 export function clearUserQueryCache() {
     queryClient.clear();
