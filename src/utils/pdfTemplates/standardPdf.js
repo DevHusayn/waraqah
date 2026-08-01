@@ -10,7 +10,7 @@ import {
 } from '@waraqah/shared';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { autoTable } from 'jspdf-autotable';
 import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../../constants/brand';
 import { getCurrencySymbol } from '../currency';
 import { getClientBusiness } from '../clientHelpers';
@@ -701,7 +701,7 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     };
     const quantityColumnLabel = resolveQuantityColumnLabel(invoice.items).toUpperCase();
 
-    doc.autoTable({
+    autoTable(doc, {
         startY: tableStartY,
         head: [['#', 'DESCRIPTION', quantityColumnLabel, 'RATE', 'TOTAL']],
         body: tableData,

@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { autoTable } from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { getCurrencySymbol } from './currency';
 import { drawPdfGeometricBackground } from './pdfBackground';
@@ -79,7 +79,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
         ['Invoices in period', String(statement.totals.invoiceCount)],
     ];
 
-    doc.autoTable({
+    autoTable(doc, {
         startY: 56,
         head: [['Category', 'Amount']],
         body: summaryBody,
@@ -143,7 +143,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
 
         const clientAlign = ['left', 'center', 'center', 'center', 'center', 'center'];
 
-        doc.autoTable({
+        autoTable(doc, {
             startY: tableY + 4,
             head: [tableHead],
             body: tableBody,
