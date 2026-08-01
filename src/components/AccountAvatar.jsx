@@ -2,6 +2,7 @@ import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
 import { isPremiumUser, getBusinessInitials } from '../utils/premium';
 import { getCompanyLogoAvatarUrl } from '../utils/brandAssets';
+import { hasLikelyAuthSession } from '../utils/authHint';
 
 const SIZE_CLASSES = {
     sm: {
@@ -42,20 +43,14 @@ function AvatarContent({ businessInfo, premium, size }) {
     );
 }
 
-function AvatarSkeleton({ size }) {
-    const { box } = SIZE_CLASSES[size] || SIZE_CLASSES.sm;
-    return <div className={`${box} rounded-full bg-zinc-200/80 animate-pulse`} aria-hidden />;
-}
-
 export default function AccountAvatar({ size = 'sm' }) {
-    const { loading: authLoading } = useAuth();
-    const { businessInfo, loading, assetsReady } = useSettings();
+    const { isAuthenticated } = useAuth();
+    const { businessInfo } = useSettings();
     const premium = isPremiumUser(businessInfo);
-    const logo = getCompanyLogoAvatarUrl(businessInfo);
-    const waitingForPremiumAssets = premium && !logo && !assetsReady;
+    const likelySession = hasLikelyAuthSession();
 
-    if (authLoading || loading || waitingForPremiumAssets) {
-        return <AvatarSkeleton size={size} />;
+    if (!isAuthenticated && !likelySession) {
+        return null;
     }
 
     return <AvatarContent businessInfo={businessInfo} premium={premium} size={size} />;

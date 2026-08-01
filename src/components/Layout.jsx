@@ -16,10 +16,11 @@ import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
 import { useAuth } from '../context/AuthContext';
 import WaraqahLogo from './WaraqahLogo';
-import AccountAvatar from './AccountAvatar';
+import AccountAvatarPill from './AccountAvatarPill';
 import BusinessSetupCoachmark from './BusinessSetupCoachmark';
 import ConfirmModal from './ConfirmModal';
 import { isPremiumUser } from '../utils/premium';
+import { hasLikelyAuthSession } from '../utils/authHint';
 import { needsBusinessSetup } from '@waraqah/shared';
 import {
     clearBusinessSetupCoachmarkFlag,
@@ -50,7 +51,8 @@ const Layout = ({ children }) => {
     const { businessInfo, fetchBusinessAssets, loading: settingsLoading } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const { draftCount } = useInvoice();
-    const { isAuthenticated, isAdmin, user } = useAuth();
+    const { isAuthenticated, isAdmin, user, loading: authLoading } = useAuth();
+    const showAccountAvatar = isAuthenticated || authLoading || hasLikelyAuthSession();
     const [showSetupCoachmark, setShowSetupCoachmark] = useState(false);
 
     useEffect(() => {
@@ -154,16 +156,7 @@ const Layout = ({ children }) => {
                     <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} subtitle={APP_TAGLINE} />
                 </div>
                 <div className="flex flex-1 items-center justify-end px-4 sm:px-6 lg:px-8">
-                    {isAuthenticated ? (
-                        <Link
-                            to="/settings"
-                            data-business-setup-anchor
-                            aria-label="Settings"
-                            className="rounded-md p-1 outline-none transition-colors hover:bg-zinc-100/80 focus-visible:ring-2 focus-visible:ring-zinc-900/10"
-                        >
-                            <AccountAvatar size="sm" />
-                        </Link>
-                    ) : null}
+                    {showAccountAvatar ? <AccountAvatarPill /> : null}
                 </div>
             </header>
 
@@ -179,16 +172,7 @@ const Layout = ({ children }) => {
                         <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
                     </div>
                     <div className="flex items-center gap-1.5">
-                        {isAuthenticated ? (
-                            <Link
-                                to="/settings"
-                                data-business-setup-anchor
-                                aria-label="Settings"
-                                className="rounded-md p-1 outline-none transition-colors hover:bg-zinc-100/80 focus-visible:ring-2 focus-visible:ring-zinc-900/10"
-                            >
-                                <AccountAvatar size="sm" />
-                            </Link>
-                        ) : null}
+                        {showAccountAvatar ? <AccountAvatarPill /> : null}
                         <button
                             type="button"
                             className="inline-flex items-center justify-center rounded-md p-2 text-zinc-600 hover:bg-zinc-100/80 transition-colors"

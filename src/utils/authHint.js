@@ -87,11 +87,23 @@ export function clearUserProfileCache() {
 }
 
 function serializeBusinessSummary(info) {
+    const avatar = String(
+        info.companyLogoAvatarUrl || info.companyLogoUrl || info.businessLogo || ''
+    ).trim();
+    const cacheAvatar =
+        avatar.startsWith('http://') || avatar.startsWith('https://')
+            ? avatar
+            : avatar.length > 0 && avatar.length <= 150_000
+              ? avatar
+              : '';
+
     return JSON.stringify({
         name: String(info.name || '').trim(),
         email: String(info.email || '').trim(),
         plan: info.plan || 'free',
         defaultCurrency: info.defaultCurrency || 'NGN',
+        brandColor: String(info.brandColor || '').trim(),
+        companyLogoAvatarUrl: cacheAvatar,
     });
 }
 
