@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { apiFetch } from '../utils/api';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import {
     clearPendingPaymentReference,
     getPendingPaymentReference,
 } from '../utils/pendingPayment';
+import { pollSubscriptionStatus } from '../utils/paymentVerification';
 
 /**
  * Recover from Paystack checkout when the user returns via the back button.
- * Resets loading UI, verifies any pending payment, and refreshes plan status.
+ * Polls DB subscription status with exponential backoff — no Paystack calls from the client.
  */
 export function usePaystackReturnSync(onReset) {
-    const { refreshBusinessInfo, setBusinessInfo } = useSettings();
+    const { refreshBusinessInfo, businessInfo } = useSettings();
     const { showToast } = useToast();
     const syncingRef = useRef(false);
 
@@ -24,33 +24,30 @@ export function usePaystackReturnSync(onReset) {
 
         const reference = getPendingPaymentReference();
         if (reference) {
-            try {
-                const data = await apiFetch(`/payments/verify/${encodeURIComponent(reference)}`);
+            const result = await pollSubscriptionStatus({
+                businessInfo,
+                refreshBusinessInfo,
+            });
+
+            if (result.status === 'success') {
                 clearPendingPaymentReference();
-                if (data.businessInfo) {
-                    setBusinessInfo(data.businessInfo);
-                }
                 showToast('Premium activated!', 'success');
-            } catch (err) {
-                const incomplete = err.status === 400;
-                if (incomplete || err.status === 404) {
-                    clearPendingPaymentReference();
-                }
+            } else {
                 showToast(
-                    incomplete
-                        ? 'Payment was not completed. You can try again when ready.'
-                        : (err.message || 'Could not verify payment. Please try again.'),
-                    incomplete ? 'info' : 'error',
+                    'Payment is still processing. Check Plan & Billing in a moment.',
+                    'info'
                 );
+            }
+        } else {
+            try {
+                await refreshBusinessInfo();
+            } catch {
+                /* ignore refresh errors on back navigation */
             }
         }
 
-        try {
-            await refreshBusinessInfo();
-        } finally {
-            syncingRef.current = false;
-        }
-    }, [onReset, refreshBusinessInfo, setBusinessInfo, showToast]);
+        syncingRef.current = false;
+    }, [onReset, refreshBusinessInfo, showToast, businessInfo]);
 
     useEffect(() => {
         const nav = performance.getEntriesByType('navigation')[0];

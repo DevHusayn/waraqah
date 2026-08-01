@@ -163,6 +163,12 @@ export async function apiFetch(path, options = {}) {
         if (data.code) err.code = data.code;
         if (data.usage) err.usage = data.usage;
         err.status = res.status;
+        const retryAfterHeader = res.headers.get('Retry-After');
+        if (retryAfterHeader) {
+            const parsed = Number.parseInt(retryAfterHeader, 10);
+            if (Number.isFinite(parsed)) err.retryAfter = parsed;
+        }
+        if (data.retryAfter) err.retryAfter = data.retryAfter;
         if (res.status >= 500) tagServerError(err, res.status);
         throw err;
     }
@@ -206,6 +212,12 @@ export async function authFetch(path, options = {}) {
         const err = new Error(data.message || 'Something went wrong. Please try again.');
         if (data.code) err.code = data.code;
         err.status = res.status;
+        const retryAfterHeader = res.headers.get('Retry-After');
+        if (retryAfterHeader) {
+            const parsed = Number.parseInt(retryAfterHeader, 10);
+            if (Number.isFinite(parsed)) err.retryAfter = parsed;
+        }
+        if (data.retryAfter) err.retryAfter = data.retryAfter;
         if (res.status >= 500) tagServerError(err, res.status);
         throw err;
     }

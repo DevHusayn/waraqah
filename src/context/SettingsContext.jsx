@@ -41,6 +41,13 @@ function businessPlaceholder(userId) {
     return cached ? { ...EMPTY_BUSINESS, ...cached } : EMPTY_BUSINESS;
 }
 
+function businessInfoPlaceholder(prev, previousQuery, userId) {
+    if (previousQuery?.queryKey?.[1] !== userId) {
+        return businessPlaceholder(userId);
+    }
+    return prev ?? businessPlaceholder(userId);
+}
+
 export const useSettings = () => {
     const context = useContext(SettingsContext);
     if (!context) {
@@ -85,7 +92,8 @@ export const SettingsProvider = ({ children }) => {
         },
         enabled: shouldFetch && Boolean(userId),
         staleTime: STALE_TIMES.businessInfo,
-        placeholderData: (prev) => prev ?? businessPlaceholder(userId),
+        placeholderData: (prev, previousQuery) =>
+            businessInfoPlaceholder(prev, previousQuery, userId),
     });
 
     useEffect(() => {
@@ -94,9 +102,10 @@ export const SettingsProvider = ({ children }) => {
     }, [businessInfo, userId, isFetched]);
 
     const setBusinessInfo = useCallback(
-        (updater) => {
-            if (!userId) return;
-            queryClient.setQueryData(queryKeys.businessInfo(userId), (prev) => {
+        (updater, targetUserId) => {
+            const id = targetUserId ?? userId;
+            if (!id) return;
+            queryClient.setQueryData(queryKeys.businessInfo(id), (prev) => {
                 const current = prev ?? EMPTY_BUSINESS;
                 return typeof updater === 'function' ? updater(current) : updater;
             });

@@ -152,7 +152,7 @@ function Auth() {
         await fetchUserData();
         try {
             const info = await apiFetch('/business-info');
-            setBusinessInfo(info);
+            setBusinessInfo(info, data.user?.id);
         } catch (businessErr) {
             console.error('Failed to fetch business info:', businessErr);
         }
@@ -193,7 +193,7 @@ function Auth() {
             await fetchUserData();
             try {
                 const info = await apiFetch('/business-info');
-                setBusinessInfo(info);
+                setBusinessInfo(info, data.user?.id);
             } catch (businessErr) {
                 console.error('Failed to fetch business info:', businessErr);
             }

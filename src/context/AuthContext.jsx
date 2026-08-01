@@ -43,6 +43,7 @@ export function AuthProvider({ children }) {
         clearUserProfileCache();
         clearBusinessSummaryCache();
         clearUserQueryCache();
+        userIdRef.current = null;
         setUser(null);
         likelySessionRef.current = false;
     }, []);

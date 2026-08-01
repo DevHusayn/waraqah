@@ -1,24 +1,79 @@
-import { useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock, XCircle } from 'lucide-react';
 import Spinner from '../components/Spinner';
-import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { clearPendingPaymentReference } from '../utils/pendingPayment';
+import {
+    checkSubscriptionStatusManual,
+    MAX_POLL_ATTEMPTS,
+    pollSubscriptionStatus,
+} from '../utils/paymentVerification';
 
 export default function UpgradeCallback() {
     const [searchParams] = useSearchParams();
-    const { refreshBusinessInfo, setBusinessInfo } = useSettings();
+    const { refreshBusinessInfo, businessInfo } = useSettings();
     const { isAuthenticated, loading: authLoading } = useAuth();
     const [status, setStatus] = useState('loading');
     const [message, setMessage] = useState('');
-    const verified = useRef(false);
+    const [retryHint, setRetryHint] = useState('');
+    const [checking, setChecking] = useState(false);
+    const initialPollStarted = useRef(false);
+
+    const reference = searchParams.get('reference') || searchParams.get('trxref');
+
+    const applyPollResult = useCallback((result) => {
+        if (result.status === 'success') {
+            clearPendingPaymentReference();
+            window.dispatchEvent(new Event('app-login'));
+            setStatus('success');
+            setMessage(result.message);
+            return;
+        }
+
+        setStatus('processing');
+        setMessage(result.message);
+    }, []);
+
+    const runPoll = useCallback(async () => {
+        setRetryHint('');
+        setStatus('loading');
+
+        const result = await pollSubscriptionStatus({
+            businessInfo,
+            refreshBusinessInfo,
+            onAttempt: (attempt, delayMs) => {
+                if (delayMs > 0) {
+                    setRetryHint(
+                        `Checking again in ${Math.ceil(delayMs / 1000)}s… (${attempt}/${MAX_POLL_ATTEMPTS})`
+                    );
+                } else {
+                    setRetryHint('');
+                }
+            },
+        });
+
+        applyPollResult(result);
+    }, [applyPollResult, businessInfo, refreshBusinessInfo]);
+
+    const handleCheckAgain = useCallback(async () => {
+        setChecking(true);
+        setRetryHint('');
+        setStatus('loading');
+
+        const result = await checkSubscriptionStatusManual({
+            businessInfo,
+            refreshBusinessInfo,
+        });
+
+        applyPollResult(result);
+        setChecking(false);
+    }, [applyPollResult, businessInfo, refreshBusinessInfo]);
 
     useEffect(() => {
-        if (verified.current) return;
+        if (initialPollStarted.current) return;
 
-        const reference = searchParams.get('reference') || searchParams.get('trxref');
         if (!reference) {
             setStatus('error');
             setMessage('No payment reference found. Return from Paystack should include ?reference= in the URL.');
@@ -33,34 +88,18 @@ export default function UpgradeCallback() {
             return;
         }
 
-        verified.current = true;
-
-        apiFetch(`/payments/verify/${encodeURIComponent(reference)}`)
-            .then((data) => {
-                if (data.businessInfo) {
-                    setBusinessInfo(data.businessInfo);
-                }
-                return refreshBusinessInfo();
-            })
-            .then(() => {
-                clearPendingPaymentReference();
-                window.dispatchEvent(new Event('app-login'));
-                setStatus('success');
-                setMessage('Payment successful. Premium is now active.');
-            })
-            .catch((err) => {
-                clearPendingPaymentReference();
-                setStatus('error');
-                setMessage(err.message || 'Payment verification failed.');
-            });
-    }, [searchParams, setBusinessInfo, refreshBusinessInfo, authLoading, isAuthenticated]);
+        initialPollStarted.current = true;
+        runPoll();
+    }, [reference, authLoading, isAuthenticated, runPoll]);
 
     if (status === 'loading') {
         return (
             <div className="max-w-md mx-auto text-center py-20">
                 <Spinner size="xl" centered className="mx-auto mb-4" />
                 <h1 className="text-lg font-semibold text-zinc-950 tracking-tight">Confirming payment…</h1>
-                <p className="text-zinc-500 mt-2 text-[13px]">Please wait while we verify with Paystack.</p>
+                <p className="text-zinc-500 mt-2 text-[13px]">
+                    {retryHint || 'Checking your subscription status…'}
+                </p>
             </div>
         );
     }
@@ -83,27 +122,61 @@ export default function UpgradeCallback() {
         );
     }
 
+    if (status === 'processing') {
+        return (
+            <div className="max-w-md mx-auto text-center py-16">
+                <Clock className="h-14 w-14 text-amber-500 mx-auto mb-4" />
+                <h1 className="page-title">Still processing</h1>
+                <p className="text-zinc-600 mt-2 mb-8">{message}</p>
+                <div className="flex flex-col gap-3 items-center">
+                    <button
+                        type="button"
+                        onClick={handleCheckAgain}
+                        disabled={checking}
+                        className="btn-primary w-full sm:w-auto"
+                    >
+                        {checking ? (
+                            <>
+                                <Spinner size="sm" inline />
+                                Checking…
+                            </>
+                        ) : (
+                            'Check again'
+                        )}
+                    </button>
+                    <Link to="/" className="btn-secondary w-full sm:w-auto">
+                        Go to dashboard
+                    </Link>
+                    <p className="text-xs text-zinc-500 mt-2">
+                        Premium usually activates within a minute. You can leave and check Plan &amp; Billing in
+                        Settings.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="max-w-md mx-auto text-center py-16">
             <XCircle className="h-14 w-14 text-red-500 mx-auto mb-4" />
-            <h1 className="page-title">Payment incomplete</h1>
+            <h1 className="page-title">Cannot verify payment</h1>
             <p className="text-zinc-600 mt-2 mb-8">{message}</p>
             <div className="flex flex-col gap-3 items-center">
-                <Link to="/upgrade" className="btn-primary">
-                    Try again
-                </Link>
                 {!isAuthenticated ? (
                     <Link
                         to={`/auth?returnTo=${encodeURIComponent(
-                            `/upgrade/callback?reference=${searchParams.get('reference') || searchParams.get('trxref') || ''}`
+                            `/upgrade/callback?reference=${reference || ''}`
                         )}`}
-                        className="text-sm text-brand underline"
+                        className="btn-primary"
                     >
                         Sign in to verify payment
                     </Link>
-                ) : null}
+                ) : (
+                    <Link to="/upgrade" className="btn-secondary">
+                        Back to upgrade
+                    </Link>
+                )}
             </div>
         </div>
     );
 }
-
