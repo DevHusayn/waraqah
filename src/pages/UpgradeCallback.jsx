@@ -69,7 +69,6 @@ export default function UpgradeCallback() {
         }
 
         if (authLoading) {
-            setStatus('loading');
             setRetryHint('Signing you in…');
             return undefined;
         }
@@ -111,7 +110,9 @@ export default function UpgradeCallback() {
                 },
             });
 
-            if (pollGeneration !== pollGenerationRef.current) return;
+            if (pollGeneration !== pollGenerationRef.current) {
+                return;
+            }
             applyPollResult(result);
         })();
 
