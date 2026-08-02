@@ -20,10 +20,22 @@ function processingResult(message = PROCESSING_MESSAGE) {
     return { status: 'processing', message };
 }
 
+function isPlanResponsePremium(plan) {
+    if (!plan) return false;
+    if (plan.isPremium === true) return true;
+    return plan.subscription?.status === 'active';
+}
+
+function applyVerifyResponse(data, setBusinessInfo) {
+    if (!data?.businessInfo) return false;
+    setBusinessInfo?.(data.businessInfo);
+    return isPremiumUser(data.businessInfo);
+}
+
 async function checkDbSubscriptionActive(refreshBusinessInfo) {
     try {
         const plan = await apiFetch('/payments/plan');
-        if (plan?.subscription?.status === 'active') {
+        if (isPlanResponsePremium(plan)) {
             await refreshBusinessInfo?.();
             return true;
         }
@@ -31,27 +43,34 @@ async function checkDbSubscriptionActive(refreshBusinessInfo) {
         /* fall through to business-info check */
     }
 
-    const info = await refreshBusinessInfo?.();
-    return isPremiumUser(info);
+    try {
+        const info = await refreshBusinessInfo?.();
+        return isPremiumUser(info);
+    } catch {
+        return false;
+    }
 }
 
-async function tryVerifyWithPaystack(reference) {
+async function tryVerifyWithPaystack(reference, setBusinessInfo) {
     if (!reference) return false;
     try {
-        await apiFetch(`/payments/verify/${encodeURIComponent(reference)}`);
-        return true;
+        const data = await apiFetch(`/payments/verify/${encodeURIComponent(reference)}`);
+        if (applyVerifyResponse(data, setBusinessInfo)) {
+            return true;
+        }
+        return false;
     } catch {
         return false;
     }
 }
 
 /**
- * Poll our DB for active subscription. Calls verify on attempt 1 as a fallback when
- * the Paystack webhook has not reached the server yet (common in local dev).
+ * Poll our DB for active subscription. Calls verify on attempt 1 when webhook may lag.
  */
 export async function pollSubscriptionStatus({
     reference,
     businessInfo,
+    setBusinessInfo,
     refreshBusinessInfo,
     onAttempt,
     signal,
@@ -77,7 +96,10 @@ export async function pollSubscriptionStatus({
 
         try {
             if (reference && attempt === 1) {
-                await tryVerifyWithPaystack(reference);
+                const verified = await tryVerifyWithPaystack(reference, setBusinessInfo);
+                if (verified) {
+                    return successResult();
+                }
             }
             if (await checkDbSubscriptionActive(refreshBusinessInfo)) {
                 return successResult();
@@ -90,10 +112,11 @@ export async function pollSubscriptionStatus({
     return processingResult();
 }
 
-/** Single DB status check for manual "Check again" — verifies with Paystack when reference known. */
+/** Single DB status check for manual "Check again". */
 export async function checkSubscriptionStatusManual({
     reference,
     businessInfo,
+    setBusinessInfo,
     refreshBusinessInfo,
 } = {}) {
     if (isPremiumUser(businessInfo)) {
@@ -102,7 +125,10 @@ export async function checkSubscriptionStatusManual({
 
     try {
         if (reference) {
-            await tryVerifyWithPaystack(reference);
+            const verified = await tryVerifyWithPaystack(reference, setBusinessInfo);
+            if (verified) {
+                return successResult();
+            }
         }
         if (await checkDbSubscriptionActive(refreshBusinessInfo)) {
             return successResult();
