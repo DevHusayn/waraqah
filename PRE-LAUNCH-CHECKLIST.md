@@ -38,7 +38,7 @@ After changing any variable → **Redeploy frontend**.
 | `JWT_SECRET` | Yes | 32+ random characters (unique, not dev secret) |
 | `FRONTEND_URL` | Yes | `https://mywaraqah.com` (no trailing slash) |
 | `RESEND_API_KEY` | Yes | Live Resend key; domain `mywaraqah.com` verified |
-| `EMAIL_FROM` | Yes | e.g. `Waraqah <notifications@mywaraqah.com>` |
+| `EMAIL_FROM` | Yes | e.g. `Waraqah <no_reply@mail.mywaraqah.com>` |
 | `ALLOW_DEV_PLAN` | Yes | **`false`** |
 | `CRON_SECRET` | Yes | Long random string (Vercel Cron auth) |
 | `PAYSTACK_SECRET_KEY` | Yes | `sk_live_...` for real billing (or `sk_test_...` for test mode) |
@@ -62,7 +62,7 @@ The backend **refuses to start in production** if `JWT_SECRET` is too short, `AL
 ## 5. Resend (email)
 
 - [ ] Domain `mywaraqah.com` verified in Resend
-- [ ] `notifications@mywaraqah.com` (or your `EMAIL_FROM`) can send
+- [ ] `no_reply@mail.mywaraqah.com` (or your `EMAIL_FROM`) can send
 - [ ] Test: register → verification email arrives
 - [ ] Test: forgot password email arrives
 - [ ] Test: send invoice to client (if auto-email enabled)

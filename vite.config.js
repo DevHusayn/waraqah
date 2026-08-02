@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 const APP_NAME = 'Waraqah'
-const APP_TAGLINE = 'Invoice. Get Paid, Grow.'
+const APP_TAGLINE = 'Invoice. Get Paid. Grow.'
 const APP_DESCRIPTION =
     'Waraqah helps freelancers and businesses create professional invoices in seconds, email clients with invoices and receipts, manage payments, and export polished PDFs.'
 

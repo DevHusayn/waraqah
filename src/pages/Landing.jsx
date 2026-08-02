@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import LandingNav from '../components/LandingNav';
 import LandingInvoicePreview from '../components/LandingInvoicePreview';
+import FeatureCarousel from '../components/FeatureCarousel';
 import WaraqahLogo from '../components/WaraqahLogo';
 import { APP_NAME, APP_SOCIAL_LINKS, APP_TAGLINE } from '../constants/brand';
 import { AUTH_LOGIN_PATH, AUTH_REGISTER_PATH } from '../constants/authRoutes';
@@ -64,21 +65,25 @@ const WHY_ITEMS = [
         icon: ClipboardList,
         title: 'Win work with clear quotations',
         text: 'Send professional estimates with valid-until dates and terms, then convert accepted quotations into invoices in one click.',
+        stamp: 'Signed',
     },
     {
         icon: Clock,
         title: 'Stop rebuilding documents from scratch',
         text: 'Save clients and products once, reuse their details, and send polished quotation and invoice PDFs in seconds, not hours.',
+        stamp: 'Reused',
     },
     {
         icon: TrendingUp,
         title: 'Look professional, get paid faster',
         text: 'Clear totals, branded PDFs, and client emails help you look established from the first estimate through to the final receipt.',
+        stamp: 'Paid',
     },
     {
         icon: Smartphone,
         title: 'Work from anywhere',
         text: 'Create quotations and invoices, track payments, and download PDFs on your phone or laptop. Your workspace travels with you.',
+        stamp: 'Synced',
     },
 ];
 
@@ -297,22 +302,9 @@ export default function Landing() {
                             Estimating and invoicing should not slow down your work. Here is what changes when both live in one place.
                         </p>
                     </SectionReveal>
-                    <div className="mt-14 grid sm:grid-cols-2 gap-6 lg:gap-8">
-                        {WHY_ITEMS.map((item, i) => {
-                            const Icon = item.icon;
-                            return (
-                                <SectionReveal key={item.title} delay={i + 1}>
-                                    <div className="rounded-lg border border-zinc-200/80 bg-zinc-50/50 p-6 h-full">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-zinc-100 text-zinc-600">
-                                            <Icon className="h-5 w-5" />
-                                        </div>
-                                        <h3 className="mt-4 text-base font-semibold text-zinc-950">{item.title}</h3>
-                                        <p className="mt-2 text-sm text-zinc-500 leading-relaxed">{item.text}</p>
-                                    </div>
-                                </SectionReveal>
-                            );
-                        })}
-                    </div>
+                    <SectionReveal className="mt-14">
+                        <FeatureCarousel items={WHY_ITEMS} />
+                    </SectionReveal>
                     <SectionReveal className="mt-12 text-center">
                         <CtaButton className="inline-flex" />
                     </SectionReveal>
