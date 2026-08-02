@@ -3,12 +3,25 @@ import {
     isPremiumUser,
     getBusinessInitials,
     getPlanLabel,
+    canCancelPremiumAutoRenewal,
+    isPremiumAutoRenewing,
+    hasPaystackSubscription,
     LOGO_MAX_BYTES,
     BRAND_IMAGE_MAX_EDGE,
 } from '@waraqah/shared';
 import { convertDataUrlToPng, convertDataUrlToJpeg } from './imageToPng';
 
-export { PLANS, isPremiumUser, getBusinessInitials, getPlanLabel, LOGO_MAX_BYTES, BRAND_IMAGE_MAX_EDGE };
+export {
+    PLANS,
+    isPremiumUser,
+    getBusinessInitials,
+    getPlanLabel,
+    canCancelPremiumAutoRenewal,
+    isPremiumAutoRenewing,
+    hasPaystackSubscription,
+    LOGO_MAX_BYTES,
+    BRAND_IMAGE_MAX_EDGE,
+};
 
 export const PNG_ACCEPT = 'image/png';
 export const BRAND_IMAGE_ACCEPT = 'image/png,image/jpeg,image/svg+xml,.svg';

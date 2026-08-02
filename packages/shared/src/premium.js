@@ -24,6 +24,20 @@ export function isPremiumUser(businessInfo) {
     return businessInfo.plan === PLANS.PREMIUM || businessInfo.isPremium === true;
 }
 
+export function hasPaystackSubscription(businessInfo) {
+    return Boolean(String(businessInfo?.paystackSubscriptionCode || '').trim());
+}
+
+/** True when the user can cancel Paystack auto-renewal from the app. */
+export function canCancelPremiumAutoRenewal(businessInfo) {
+    if (!hasPaystackSubscription(businessInfo)) return false;
+    return businessInfo.subscriptionStatus !== 'cancelled';
+}
+
+export function isPremiumAutoRenewing(businessInfo) {
+    return hasPaystackSubscription(businessInfo) && businessInfo.subscriptionStatus === 'active';
+}
+
 /** Max upload size for logo, stamp, and signature images. */
 export const LOGO_MAX_BYTES = 2 * 1024 * 1024;
 

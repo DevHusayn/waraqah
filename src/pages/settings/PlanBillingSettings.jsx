@@ -7,13 +7,15 @@ import SubscriptionBilling from '../../components/SubscriptionBilling';
 import BillingHistory from '../../components/BillingHistory';
 import DevPlanToggle from '../../components/DevPlanToggle';
 import { useSettings } from '../../context/SettingsContext';
-import { isPremiumUser } from '../../utils/premium';
+import { canCancelPremiumAutoRenewal, isPremiumUser } from '../../utils/premium';
 import { premiumUpgradeLabel } from '../../constants/pricing';
 
 export default function PlanBillingSettings() {
     const { businessInfo } = useSettings();
     const [formData, setFormData] = useState(businessInfo);
     const premium = isPremiumUser(businessInfo);
+    const showSubscriptionManagement = premium || Boolean(businessInfo.paystackSubscriptionCode);
+    const canCancelAutoRenewal = canCancelPremiumAutoRenewal(businessInfo);
 
     useEffect(() => {
         setFormData(businessInfo);
@@ -67,9 +69,20 @@ export default function PlanBillingSettings() {
                         </div>
                     </div>
                     <DevPlanToggle formData={formData} setFormData={setFormData} />
-                    <SubscriptionBilling />
                 </div>
             </SettingsSection>
+            {showSubscriptionManagement ? (
+                <SettingsSection
+                    title="Manage subscription"
+                    description={
+                        canCancelAutoRenewal
+                            ? 'Billing cycle, renewal date, and auto-renewal'
+                            : 'Your billing cycle and renewal status'
+                    }
+                >
+                    <SubscriptionBilling />
+                </SettingsSection>
+            ) : null}
             <SettingsSection
                 title="Billing history"
                 description="Past subscription payments"

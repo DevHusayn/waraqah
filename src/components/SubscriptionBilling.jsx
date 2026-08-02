@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePaystackReturnSync } from '../hooks/usePaystackReturnSync';
 import { setPendingPaymentReference } from '../utils/pendingPayment';
 import { Link } from 'react-router-dom';
@@ -6,7 +6,7 @@ import { Calendar, Sparkles, XCircle } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
-import { isPremiumUser } from '../utils/premium';
+import { canCancelPremiumAutoRenewal, isPremiumAutoRenewing, isPremiumUser } from '../utils/premium';
 import {
     premiumPriceLabel,
     premiumYearlyPriceLabel,
@@ -24,10 +24,23 @@ export default function SubscriptionBilling() {
 
     const premium = isPremiumUser(businessInfo);
     const hasSubscription = Boolean(businessInfo.paystackSubscriptionCode);
-    const isActiveSub = businessInfo.subscriptionStatus === 'active';
+    const isActiveSub = isPremiumAutoRenewing(businessInfo);
+    const canCancelAutoRenewal = canCancelPremiumAutoRenewal(businessInfo);
     const renewsAt = businessInfo.premiumUntil || businessInfo.subscriptionRenews;
     const billingInterval = businessInfo.billingInterval || 'monthly';
     const isMonthly = billingInterval === 'monthly';
+    const syncAttemptedRef = useRef(false);
+
+    useEffect(() => {
+        if (!premium || hasSubscription || syncAttemptedRef.current) return;
+        syncAttemptedRef.current = true;
+
+        apiFetch('/payments/subscription/sync', { method: 'POST' })
+            .then(() => refreshBusinessInfo())
+            .catch(() => {
+                syncAttemptedRef.current = false;
+            });
+    }, [premium, hasSubscription, refreshBusinessInfo]);
 
     const handleCancel = async () => {
         if (!window.confirm('Cancel auto-renewal? You keep Premium until the end of the current billing period.')) {
@@ -134,16 +147,21 @@ export default function SubscriptionBilling() {
                     )}
                 </button>
             )}
-            {isActiveSub && hasSubscription && (
-                <button
-                    type="button"
-                    onClick={handleCancel}
-                    disabled={cancelling}
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-600 hover:text-red-600 transition-colors disabled:opacity-50"
-                >
-                    <XCircle className="h-4 w-4" />
-                    {cancelling ? 'Cancelling…' : 'Cancel auto-renewal'}
-                </button>
+            {canCancelAutoRenewal && (
+                <div className="pt-3 mt-1 border-t border-zinc-200 space-y-2">
+                    <p className="text-sm text-zinc-600">
+                        Auto-renewal is on. Cancel anytime — you keep Premium until the end of your billing period.
+                    </p>
+                    <button
+                        type="button"
+                        onClick={handleCancel}
+                        disabled={cancelling}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50"
+                    >
+                        <XCircle className="h-4 w-4" />
+                        {cancelling ? 'Cancelling…' : 'Cancel auto-renewal'}
+                    </button>
+                </div>
             )}
         </div>
     );
