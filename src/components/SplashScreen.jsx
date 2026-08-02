@@ -1,8 +1,6 @@
 import { useEffect } from 'react';
-import { APP_NAME } from '../constants/brand';
+import { APP_NAME, APP_TAGLINE } from '../constants/brand';
 import { markPwaSessionAlive, clearPwaColdStartBackground } from '../utils/splashSession';
-
-const TAGLINE_PARTS = ['Quote', 'Invoice', 'Get Paid'];
 
 const SPLASH_DURATION_MS = 2800;
 const OS_HANDOFF_SPLASH_DURATION_MS = 2200;
@@ -43,17 +41,7 @@ export default function SplashScreen({ onFinish, handoffFromOsSplash = false }) 
                         <span className="waraqah-splash__rest-text">araqah</span>
                     </span>
                 </div>
-                <p className="waraqah-splash__tagline" aria-label="Quote. Invoice. Get Paid.">
-                    {TAGLINE_PARTS.map((part, index) => (
-                        <span
-                            key={part}
-                            className="waraqah-splash__tagline-word"
-                            style={{ '--i': index }}
-                        >
-                            {part}
-                        </span>
-                    ))}
-                </p>
+                <p className="waraqah-splash__tagline">{APP_TAGLINE}</p>
             </div>
         </div>
     );

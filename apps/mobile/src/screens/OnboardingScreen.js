@@ -20,8 +20,8 @@ const { width } = Dimensions.get('window');
 const SLIDES = [
     {
         id: '1',
-        title: 'Quote and invoice like a pro',
-        description: 'Send estimates, convert to invoices, and brand your PDFs in seconds.',
+        title: 'Invoice like a pro',
+        description: 'Send polished invoices, mark payments, and brand your PDFs in seconds.',
         Icon: ClipboardList,
         tint: colors.brandSubtle,
         icon: colors.brand,
@@ -37,7 +37,7 @@ const SLIDES = [
     {
         id: '3',
         title: 'Grow your business',
-        description: 'Clients, products, quotations, and invoices in one calm workspace.',
+        description: 'Clients, products, and invoices in one calm workspace.',
         Icon: TrendingUp,
         tint: '#EFF6FF',
         icon: '#2563EB',

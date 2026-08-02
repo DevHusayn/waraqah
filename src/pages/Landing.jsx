@@ -68,7 +68,7 @@ const WHY_ITEMS = [
     {
         icon: Clock,
         title: 'Stop rebuilding documents from scratch',
-        text: 'Save clients and products once, reuse their details, and send polished quotation and invoice PDFs in seconds — not hours.',
+        text: 'Save clients and products once, reuse their details, and send polished quotation and invoice PDFs in seconds, not hours.',
     },
     {
         icon: TrendingUp,
@@ -91,11 +91,11 @@ const STEPS = [
 const FAQ_ITEMS = [
     {
         q: 'Who is Waraqah for?',
-        a: 'Freelancers and businesses in Nigeria who want polished PDF quotations and invoices, client records, payment tracking, and a simple dashboard — without spreadsheets.',
+        a: 'Freelancers and businesses in Nigeria who want polished PDF quotations and invoices, client records, payment tracking, and a simple dashboard, without spreadsheets.',
     },
     {
         q: 'What is the difference between a quotation and an invoice?',
-        a: 'A quotation is an estimate you send before work is agreed — it is not a demand for payment. Once accepted, you can convert it into an invoice. Payment and receipts happen on the invoice.',
+        a: 'A quotation is an estimate you send before work is agreed. It is not a demand for payment. Once accepted, you can convert it into an invoice. Payment and receipts happen on the invoice.',
     },
     {
         q: 'What happens on the Free plan?',
@@ -249,7 +249,7 @@ export default function Landing() {
                         className={`grid lg:grid-cols-2 gap-12 lg:gap-16 items-center ${revealClass(heroVisible)}`}
                     >
                         <div>
-                            <p className="inline-flex items-center rounded-full bg-white/80 border border-brand/20 px-4 py-1.5 text-sm font-medium text-brand shadow-sm landing-float-badge">
+                            <p className="text-sm font-medium text-zinc-500">
                                 {APP_TAGLINE}
                             </p>
                             <h1 className="mt-6 text-3xl sm:text-4xl lg:text-[3.25rem] font-bold tracking-tight text-zinc-950 leading-[1.1]">
@@ -272,18 +272,15 @@ export default function Landing() {
                         </div>
 
                         <div className="relative">
-                            <div className="rounded-xl border border-zinc-200/80 bg-white shadow-card-md p-4 sm:p-5 landing-float-card">
-                                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3 text-center sm:text-left">
-                                    Sample invoice
-                                </p>
-                                <LandingInvoicePreview />
-                                <div className="mt-4 flex gap-2 items-center px-1">
-                                    <div className="flex-1 h-2 rounded-full bg-brand-light overflow-hidden">
-                                        <div className="h-full w-4/5 bg-brand rounded-full landing-progress-bar" />
-                                    </div>
-                                    <span className="text-xs text-zinc-400 font-medium">~seconds</span>
+                            <div className="landing-paper-stack">
+                                <div className="landing-paper landing-paper--back" aria-hidden />
+                                <div className="landing-paper landing-paper--front">
+                                    <LandingInvoicePreview />
                                 </div>
                             </div>
+                            <p className="mt-4 text-right text-xs text-zinc-400 pr-1">
+                                Sample PDF layout
+                            </p>
                         </div>
                     </div>
                 </div>

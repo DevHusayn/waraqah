@@ -2,13 +2,13 @@ import { FREE_MONTHLY_INVOICE_LIMIT } from './invoiceLimits.js';
 
 export const FREE_PLAN_FEATURES = [
     `${FREE_MONTHLY_INVOICE_LIMIT} invoices & quotations per month`,
-    'Create and send professional quotations',
+    'Create and send professional invoices',
     'Convert accepted quotations to invoices',
     'Client management',
     'Product catalog for quick line items',
     'Bank details on invoices',
     'Professional PDF invoices & quotations',
-    'Email invoices, quotations, reminders, and receipts',
+    'Email invoices, reminders, and receipts',
     'Mark paid with PDF receipts',
     'Dashboard and status tracking',
 ];

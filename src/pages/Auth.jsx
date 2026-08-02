@@ -27,8 +27,8 @@ import FieldValidationMessage from '../components/FieldValidationMessage';
 const LOGIN_FIELD_ORDER = ['email', 'password'];
 
 const FEATURES = [
-    { id: 'pdf', icon: FileText, text: 'Professional PDF quotations, invoices & receipts' },
-    { id: 'track', icon: Zap, text: 'Convert quotes, mark paid, track revenue' },
+    { id: 'pdf', icon: FileText, text: 'Professional PDF invoices & receipts' },
+    { id: 'track', icon: Zap, text: 'Mark paid, send reminders, track revenue' },
     { id: 'storage', icon: Shield, text: 'Secure cloud storage for your records' },
 ];
 
@@ -263,10 +263,10 @@ function Auth() {
                 <div>
                     <WaraqahLogo size="lg" inverted iconStyle="solid" />
                     <h2 className="mt-10 text-3xl font-semibold leading-tight max-w-sm">
-                        Quote professionally. Get paid faster.
+                        Invoice professionally. Get paid faster.
                     </h2>
                     <p className="mt-4 text-white/80 text-base leading-relaxed max-w-md">
-                        Create branded quotations and invoices, track payments, and manage clients —
+                        Create branded invoices, track payments, and manage clients —
                         all in one place.
                     </p>
                     <ul className="mt-10 space-y-4">
@@ -295,7 +295,7 @@ function Auth() {
                                 <>
                                     <div className="mb-6">
                                         <h1 className="page-title">Welcome back</h1>
-                                        <p className="page-subtitle">Sign in to manage your quotations and invoices</p>
+                                        <p className="page-subtitle">Sign in to manage your invoices</p>
                                     </div>
 
                                     <div className="flex rounded-md border border-zinc-200/80 bg-zinc-50/50 p-1 mb-6">
