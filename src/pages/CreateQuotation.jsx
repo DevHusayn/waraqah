@@ -31,7 +31,9 @@ import DocumentClientSection from '../components/documentForm/DocumentClientSect
 import DocumentLineItemsSection from '../components/documentForm/DocumentLineItemsSection';
 import DocumentSummaryCard from '../components/documentForm/DocumentSummaryCard';
 import DocumentActionButtons from '../components/documentForm/DocumentActionButtons';
+import DocumentPreviewOverlay from '../components/documentForm/DocumentPreviewOverlay';
 import { DocumentNotesSection, DocumentTermsSection } from '../components/documentForm/DocumentNotesSection';
+import { buildDocumentPreviewFromForm } from '../utils/buildDocumentPreviewData';
 import { hasDraftContent } from '../utils/documentFormHelpers';
 import { DEFAULT_QUOTATION_TERMS } from '../utils/documentHelpers';
 import { DEFAULT_INVOICE_UNIT, normalizeInvoiceUnit } from '@waraqah/shared';
@@ -63,6 +65,7 @@ const CreateQuotation = () => {
     const [fieldErrors, setFieldErrors] = useState({});
     const [customUnitModal, setCustomUnitModal] = useState(null);
     const [clientDetailsModalOpen, setClientDetailsModalOpen] = useState(false);
+    const [previewOpen, setPreviewOpen] = useState(false);
 
     const draftIdRef = useRef(null);
     const saveInFlightRef = useRef(false);
@@ -334,6 +337,7 @@ const CreateQuotation = () => {
 
         if (saveInFlightRef.current) return;
 
+        setPreviewOpen(false);
         saveInFlightRef.current = true;
         isDirtyRef.current = false;
         setSending(true);
@@ -508,6 +512,11 @@ const CreateQuotation = () => {
         [formData]
     );
 
+    const previewData = useMemo(
+        () => buildDocumentPreviewFromForm(formData, { type: 'quotation' }),
+        [formData]
+    );
+
     const selectedClient = clients.find((c) => c.id === formData.clientId);
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
     const backHref = id ? `/quotations/${id}` : '/quotations';
@@ -553,6 +562,7 @@ const CreateQuotation = () => {
             sendIcon={ClipboardList}
             sendLabel="Create quotation"
             onSaveDraft={handleSaveDraft}
+            onPreview={() => setPreviewOpen(true)}
             onSend={handleSendQuotation}
         />
     );
@@ -574,6 +584,19 @@ const CreateQuotation = () => {
                 customUnitModalOpen={customUnitModal != null}
                 onCloseCustomUnitModal={() => setCustomUnitModal(null)}
                 onCustomUnitSave={handlers.handleCustomUnitSave}
+            />
+
+            <DocumentPreviewOverlay
+                open={previewOpen}
+                onClose={() => setPreviewOpen(false)}
+                onSend={handleSendQuotation}
+                sendLabel="Create quotation"
+                sendReady={sendReady}
+                sending={sending}
+                invoice={previewData.invoice}
+                client={previewData.client}
+                businessInfo={businessInfo}
+                mode="quotation"
             />
 
             <button
