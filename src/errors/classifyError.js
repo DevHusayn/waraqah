@@ -3,6 +3,9 @@ import { ERROR_TYPES } from './errorStates';
 const NETWORK_MESSAGE_RE =
     /failed to fetch|networkerror|network request failed|load failed|internet connection|couldn't connect|could not connect|check your connection|check your internet|offline|err_internet_disconnected|err_network_changed/i;
 
+const CHUNK_LOAD_MESSAGE_RE =
+    /failed to fetch dynamically imported module|loading chunk [\d]+ failed|chunkloaderror|importing a module script failed|error loading dynamically imported module/i;
+
 /**
  * Classify a failure into a user-facing error type.
  * Prefers explicit error metadata, then connectivity, then HTTP status.
@@ -26,6 +29,13 @@ export function classifyError(error, { isOnline = typeof navigator === 'undefine
     }
 
     return ERROR_TYPES.UNEXPECTED;
+}
+
+/** True when a lazy route chunk failed to load (cached rejection until reload). */
+export function isChunkLoadError(error) {
+    if (!error) return false;
+    if (error.name === 'ChunkLoadError') return true;
+    return CHUNK_LOAD_MESSAGE_RE.test(error.message || '');
 }
 
 export function isNetworkError(error) {

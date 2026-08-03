@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import AppErrorScreen from './AppErrorScreen';
-import { classifyError } from '../errors/classifyError';
+import { classifyError, isChunkLoadError } from '../errors/classifyError';
 import { ERROR_TYPES } from '../errors/errorStates';
+import { queryClient } from '../lib/queryClient';
 
 export default function ErrorFallback({ error, onReset, errorType }) {
     const [isOnline, setIsOnline] = useState(
@@ -21,22 +22,31 @@ export default function ErrorFallback({ error, onReset, errorType }) {
 
     const type = errorType || classifyError(error, { isOnline });
 
+    const handleTryAgain = useCallback(() => {
+        if (isChunkLoadError(error)) {
+            window.location.reload();
+            return;
+        }
+        queryClient.resetQueries();
+        onReset?.();
+    }, [error, onReset]);
+
     // Leave the offline screen automatically when connectivity returns.
     useEffect(() => {
         if (type !== ERROR_TYPES.OFFLINE || !onReset) return undefined;
 
         const handleOnline = () => {
-            onReset();
+            handleTryAgain();
         };
 
         window.addEventListener('online', handleOnline);
         return () => window.removeEventListener('online', handleOnline);
-    }, [type, onReset]);
+    }, [type, onReset, handleTryAgain]);
 
     return (
         <AppErrorScreen
             type={type}
-            onReset={onReset}
+            onReset={handleTryAgain}
             debugDetail={import.meta.env.DEV && error?.message ? error.message : null}
         />
     );

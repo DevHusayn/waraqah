@@ -5,7 +5,7 @@ import { captureException } from '../monitoring/sentry';
 export default class ErrorBoundary extends Component {
     constructor(props) {
         super(props);
-        this.state = { error: null };
+        this.state = { error: null, resetKey: 0 };
     }
 
     static getDerivedStateFromError(error) {
@@ -17,14 +17,17 @@ export default class ErrorBoundary extends Component {
     }
 
     reset = () => {
-        this.setState({ error: null });
+        this.setState((prev) => ({
+            error: null,
+            resetKey: prev.resetKey + 1,
+        }));
     };
 
     render() {
-        const { error } = this.state;
+        const { error, resetKey } = this.state;
         if (error) {
             return <ErrorFallback error={error} onReset={this.reset} />;
         }
-        return this.props.children;
+        return <div key={resetKey}>{this.props.children}</div>;
     }
 }
