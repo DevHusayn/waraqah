@@ -15,11 +15,13 @@ export default function Spinner({
     label,
     centered = false,
     inline = false,
+    tone = 'brand',
 }) {
     const s = SIZES[size] || SIZES.md;
     const radius = 10;
     const circumference = 2 * Math.PI * radius;
     const arc = circumference * 0.72;
+    const toneClass = tone === 'on-color' ? 'waraqah-spinner--on-color' : '';
 
     const wrapClass = inline
         ? 'inline-flex items-center gap-2'
@@ -35,7 +37,7 @@ export default function Spinner({
             className={`${wrapClass} ${className}`.trim()}
         >
             <svg
-                className={`waraqah-spinner ${s.svg}`}
+                className={`waraqah-spinner shrink-0 ${s.svg} ${toneClass}`.trim()}
                 viewBox="0 0 24 24"
                 fill="none"
                 aria-hidden

@@ -79,7 +79,7 @@
     }
 
     .btn-danger {
-        @apply bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-[13px] font-medium py-2 px-3.5 rounded-md transition-all duration-200 ease-smooth flex items-center justify-center gap-2 shadow-soft;
+        @apply bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-[13px] font-medium py-2 px-3.5 rounded-md transition-all duration-200 ease-smooth flex items-center justify-center gap-2 shadow-soft disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none;
     }
 
     .btn-brand {
@@ -294,16 +294,18 @@
         stroke-linecap: round;
     }
 
+    .waraqah-spinner--on-color .waraqah-spinner-track,
     .btn-primary .waraqah-spinner-track,
     .btn-danger .waraqah-spinner-track,
     .btn-brand .waraqah-spinner-track {
         stroke: rgb(255 255 255 / 0.35);
     }
 
+    .waraqah-spinner--on-color .waraqah-spinner-arc,
     .btn-primary .waraqah-spinner-arc,
     .btn-danger .waraqah-spinner-arc,
     .btn-brand .waraqah-spinner-arc {
-        stroke: currentColor;
+        stroke: rgb(255 255 255);
     }
 }
 

@@ -63,7 +63,7 @@ export default function ConfirmModal({
                     >
                         {loading ? (
                             <>
-                                <Spinner size="sm" inline />
+                                <Spinner size="sm" inline tone="on-color" />
                                 Please wait…
                             </>
                         ) : (

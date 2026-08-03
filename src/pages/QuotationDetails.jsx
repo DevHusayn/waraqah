@@ -226,6 +226,7 @@ const QuotationDetails = () => {
 
     const [alert, setAlert] = useState({ open: false, message: '' });
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const [deleting, setDeleting] = useState(false);
     const [confirmConvert, setConfirmConvert] = useState(false);
     const [emailing, setEmailing] = useState(false);
     const [converting, setConverting] = useState(false);
@@ -377,6 +378,7 @@ const QuotationDetails = () => {
     };
 
     const handleDelete = async () => {
+        setDeleting(true);
         try {
             await deleteQuotation(id);
             clearCachedPdf(id);
@@ -384,8 +386,10 @@ const QuotationDetails = () => {
             navigate('/quotations');
         } catch (err) {
             setAlert({ open: true, message: err.message || 'Failed to delete quotation.' });
+        } finally {
+            setDeleting(false);
+            setConfirmDelete(false);
         }
-        setConfirmDelete(false);
     };
 
     const handleCopyPublicLink = async () => {
@@ -498,8 +502,9 @@ const QuotationDetails = () => {
                 confirmLabel="Delete quotation"
                 cancelLabel="Keep quotation"
                 variant="danger"
+                loading={deleting}
                 onConfirm={handleDelete}
-                onCancel={() => setConfirmDelete(false)}
+                onCancel={() => !deleting && setConfirmDelete(false)}
             />
             <ConfirmModal
                 open={confirmConvert}

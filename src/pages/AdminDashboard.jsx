@@ -506,6 +506,7 @@ export default function AdminDashboard() {
                 confirmLabel="Delete user"
                 cancelLabel="Cancel"
                 variant="danger"
+                loading={Boolean(confirm.userId && actionLoading === `${confirm.userId}-delete`)}
                 onConfirm={confirmDelete}
                 onCancel={() => setConfirm({ open: false, userId: null })}
             />

@@ -363,6 +363,7 @@ const InvoiceDetails = () => {
     const [saving, setSaving] = useState(false);
     const [alert, setAlert] = useState({ open: false, message: '' });
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const [deleting, setDeleting] = useState(false);
     const [confirmCancel, setConfirmCancel] = useState(false);
     const [confirmSendReminder, setConfirmSendReminder] = useState(false);
     const [emailing, setEmailing] = useState(false);
@@ -582,6 +583,7 @@ const InvoiceDetails = () => {
     };
 
     const handleDelete = async () => {
+        setDeleting(true);
         try {
             await deleteInvoice(id);
             clearCachedPdf(id);
@@ -589,8 +591,10 @@ const InvoiceDetails = () => {
             navigate('/invoices');
         } catch (err) {
             setAlert({ open: true, message: err.message || 'Failed to delete invoice.' });
+        } finally {
+            setDeleting(false);
+            setConfirmDelete(false);
         }
-        setConfirmDelete(false);
     };
 
     const handleCopyPublicLink = async () => {
@@ -699,8 +703,9 @@ const InvoiceDetails = () => {
                 confirmLabel="Delete invoice"
                 cancelLabel="Keep invoice"
                 variant="danger"
+                loading={deleting}
                 onConfirm={handleDelete}
-                onCancel={() => setConfirmDelete(false)}
+                onCancel={() => !deleting && setConfirmDelete(false)}
             />
             <ConfirmModal
                 open={confirmCancel}

@@ -489,7 +489,7 @@ function DeleteAccountModal({ open, email, onConfirm, onCancel, loading }) {
                     >
                         {loading ? (
                             <>
-                                <Spinner size="sm" inline />
+                                <Spinner size="sm" inline tone="on-color" />
                                 Deleting…
                             </>
                         ) : (
