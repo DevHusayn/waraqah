@@ -14,7 +14,7 @@ import RequiredLabel from '../components/RequiredLabel';
 import { getNetworkErrorMessage } from '../utils/apiConfig';
 import { authFetch, apiFetch, applyLoginResponse, prepareForLogin } from '../utils/api';
 import SocialAuthButtons from '../components/auth/SocialAuthButtons';
-import { markBusinessSetupCoachmark } from '../utils/businessSetupCoachmark';
+import { markBusinessSetupCoachmark, clearBusinessSetupCoachmarkFlag } from '../utils/businessSetupCoachmark';
 import {
     validateRequired,
     validateEmail,
@@ -190,6 +190,7 @@ function Auth() {
             });
             applyLoginResponse(data);
             setSession(data.user);
+            clearBusinessSetupCoachmarkFlag();
             await fetchUserData();
             try {
                 const info = await apiFetch('/business-info');

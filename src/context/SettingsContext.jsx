@@ -68,6 +68,8 @@ export const SettingsProvider = ({ children }) => {
         data: businessInfo = EMPTY_BUSINESS,
         isLoading,
         isFetched,
+        isSuccess,
+        isError,
         isPlaceholderData,
         refetch: refetchBusinessInfo,
     } = useQuery({
@@ -98,9 +100,9 @@ export const SettingsProvider = ({ children }) => {
     });
 
     useEffect(() => {
-        if (!userId || !isFetched || !businessInfo?.name?.trim()) return;
+        if (!userId || !isSuccess || isPlaceholderData || !businessInfo?.name?.trim()) return;
         cacheBusinessSummary(businessInfo, userId);
-    }, [businessInfo, userId, isFetched]);
+    }, [businessInfo, userId, isSuccess, isPlaceholderData]);
 
     const setBusinessInfo = useCallback(
         (updater, targetUserId) => {
@@ -235,7 +237,8 @@ export const SettingsProvider = ({ children }) => {
         || isLoading
         || (shouldFetch && Boolean(userId) && !isFetched);
 
-    const businessInfoReady = Boolean(userId) && isFetched && !isPlaceholderData;
+    const businessInfoReady =
+        Boolean(userId) && isSuccess && isFetched && !isPlaceholderData && !isError;
 
     const value = useMemo(() => ({
         businessInfo,

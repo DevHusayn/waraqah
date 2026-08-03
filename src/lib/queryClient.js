@@ -1,4 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
+import { needsBusinessSetup } from '@waraqah/shared';
 import { STALE_TIMES, queryKeys } from './queryKeys';
 import { mergeBusinessInfoSummary } from '../utils/brandAssets';
 import { resetPrefetchState } from '../utils/prefetchRoutes';
@@ -22,7 +23,9 @@ export function seedDashboardCache(userId, data) {
     queryClient.setQueryData(queryKeys.dashboard(userId), data);
 
     if (data.businessInfo) {
-        cacheBusinessSummary(data.businessInfo, userId);
+        if (!needsBusinessSetup(data.businessInfo)) {
+            cacheBusinessSummary(data.businessInfo, userId);
+        }
         queryClient.setQueryData(queryKeys.businessInfo(userId), (prev) =>
             mergeBusinessInfoSummary(prev, data.businessInfo)
         );

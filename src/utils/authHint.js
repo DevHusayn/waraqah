@@ -1,5 +1,6 @@
 import { getCsrfToken } from './csrf';
 import { getAccessToken } from './authToken';
+import { needsBusinessSetup } from '@waraqah/shared';
 
 const HINT_KEY = 'waraqah_auth_hint';
 const USER_CACHE_KEY = 'waraqah_user_cache';
@@ -128,6 +129,9 @@ function parseCachedBusinessSummary(raw, expectedUserId) {
 /** Cache business name and summary fields for instant dashboard header on refresh. */
 export function cacheBusinessSummary(info, userId) {
     if (!userId || !info?.name?.trim()) {
+        return;
+    }
+    if (needsBusinessSetup(info)) {
         return;
     }
     const payload = serializeBusinessSummary(info, userId);

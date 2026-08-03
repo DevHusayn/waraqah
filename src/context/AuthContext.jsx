@@ -12,6 +12,7 @@ import {
     clearBusinessSummaryCache,
 } from '../utils/authHint';
 import { clearUserQueryCache } from '../lib/queryClient';
+import { clearBusinessSetupCoachmarkFlag } from '../utils/businessSetupCoachmark';
 
 const AuthContext = createContext(null);
 const AUTH_PROBE_TIMEOUT_MS = 8000;
@@ -42,6 +43,7 @@ export function AuthProvider({ children }) {
         clearAuthSessionHint();
         clearUserProfileCache();
         clearBusinessSummaryCache();
+        clearBusinessSetupCoachmarkFlag();
         clearUserQueryCache();
         userIdRef.current = null;
         setUser(null);
@@ -60,6 +62,9 @@ export function AuthProvider({ children }) {
             cacheUserProfile(nextUser);
             setAuthSessionHint();
             likelySessionRef.current = true;
+            if ((nextUser.authProvider || 'local') === 'local') {
+                clearBusinessSetupCoachmarkFlag();
+            }
         } else {
             clearUserProfileCache();
             clearAuthSessionHint();

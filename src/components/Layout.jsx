@@ -20,7 +20,7 @@ import AccountAvatarPill from './AccountAvatarPill';
 import BusinessSetupCoachmark from './BusinessSetupCoachmark';
 import ConfirmModal from './ConfirmModal';
 import { isPremiumUser } from '../utils/premium';
-import { hasLikelyAuthSession } from '../utils/authHint';
+import { hasLikelyAuthSession, getCachedBusinessSummary } from '../utils/authHint';
 import { needsBusinessSetup } from '@waraqah/shared';
 import {
     clearBusinessSetupCoachmarkFlag,
@@ -58,27 +58,31 @@ const Layout = ({ children }) => {
     const { draftCount } = useInvoice();
     const { isAuthenticated, isAdmin, user, loading: authLoading } = useAuth();
     const showAccountAvatar = isAuthenticated || authLoading || hasLikelyAuthSession();
-    const [showSetupCoachmark, setShowSetupCoachmark] = useState(false);
+    const [, setCoachmarkRevision] = useState(0);
+    const dismissed = isBusinessSetupCoachmarkDismissed(user?.id);
+
+    const showSetupCoachmark =
+        isAuthenticated &&
+        !settingsLoading &&
+        businessInfoReady &&
+        Boolean(user?.id) &&
+        user.authProvider === 'google' &&
+        needsBusinessSetup(businessInfo) &&
+        !dismissed &&
+        hasBusinessSetupCoachmarkFlag();
 
     useEffect(() => {
-        if (!isAuthenticated || settingsLoading || !businessInfoReady || !user?.id) {
-            setShowSetupCoachmark(false);
-            return;
-        }
-
-        const profileIncomplete = needsBusinessSetup(businessInfo);
-        const dismissed = isBusinessSetupCoachmarkDismissed(user.id);
-        const shouldShow =
-            profileIncomplete &&
-            !dismissed &&
-            (hasBusinessSetupCoachmarkFlag() || user.authProvider === 'google');
-
-        setShowSetupCoachmark(shouldShow);
-
-        if (!profileIncomplete) {
+        if (!user?.id) return;
+        const cached = getCachedBusinessSummary(user.id);
+        if (cached && !needsBusinessSetup(cached)) {
             clearBusinessSetupCoachmarkFlag();
         }
-    }, [isAuthenticated, settingsLoading, businessInfoReady, user, businessInfo]);
+    }, [user?.id]);
+
+    useEffect(() => {
+        if (!businessInfoReady || needsBusinessSetup(businessInfo)) return;
+        clearBusinessSetupCoachmarkFlag();
+    }, [businessInfoReady, businessInfo]);
 
     useEffect(() => {
         if (!isAuthenticated) return undefined;
@@ -240,7 +244,7 @@ const Layout = ({ children }) => {
                 <BusinessSetupCoachmark
                     userId={user?.id}
                     authProvider={user?.authProvider}
-                    onDismiss={() => setShowSetupCoachmark(false)}
+                    onDismiss={() => setCoachmarkRevision((n) => n + 1)}
                 />
             ) : null}
 
