@@ -46,7 +46,7 @@ function DocumentTypeBadge({ doc }) {
             className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide border ${
                 isQuotation
                     ? 'bg-sky-50 text-sky-700 border-sky-200/70'
-                    : 'bg-zinc-50 text-zinc-600 border-zinc-200/70'
+                    : 'bg-brand-subtle text-brand border-brand/20'
             }`}
         >
             {isQuotation ? 'QTN' : 'INV'}
