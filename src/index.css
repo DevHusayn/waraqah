@@ -293,6 +293,18 @@
         stroke: var(--brand);
         stroke-linecap: round;
     }
+
+    .btn-primary .waraqah-spinner-track,
+    .btn-danger .waraqah-spinner-track,
+    .btn-brand .waraqah-spinner-track {
+        stroke: rgb(255 255 255 / 0.35);
+    }
+
+    .btn-primary .waraqah-spinner-arc,
+    .btn-danger .waraqah-spinner-arc,
+    .btn-brand .waraqah-spinner-arc {
+        stroke: currentColor;
+    }
 }
 
 @keyframes toast-in {
