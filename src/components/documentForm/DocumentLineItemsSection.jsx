@@ -1,20 +1,18 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, X, List, Package } from 'lucide-react';
+import { Plus, List, Package } from 'lucide-react';
 import FormSection from '../FormSection';
-import RequiredLabel from '../RequiredLabel';
-import FieldValidationMessage from '../FieldValidationMessage';
+import LineItemEditor from './LineItemEditor';
+import LineItemSummaryCard from './LineItemSummaryCard';
 import CustomSelect from '../CustomSelect';
-import { inputClass } from '../../utils/formFieldValidation';
-import {
-    APP_CURRENCY,
-    formatCurrency,
-    getCurrencySelectOptions,
-    normalizeCurrency,
-} from '../../utils/currency';
-import {
-    buildUnitSelectOptions,
-    normalizeInvoiceUnit,
-} from '@waraqah/shared';
+import { formatCurrency } from '../../utils/currency';
+
+function firstItemErrorIndex(fieldErrors) {
+    const match = Object.keys(fieldErrors).find((key) => key.startsWith('item-'));
+    if (!match) return null;
+    const index = Number.parseInt(match.split('-')[1], 10);
+    return Number.isNaN(index) ? null : index;
+}
 
 export default function DocumentLineItemsSection({
     idPrefix,
@@ -29,140 +27,96 @@ export default function DocumentLineItemsSection({
     onRemoveItem,
     onAddProductItem,
 }) {
+    const items = formData.items || [];
+    const itemsLength = items.length;
+    const prevItemsLengthRef = useRef(itemsLength);
+
+    const [activeIndex, setActiveIndex] = useState(() => Math.max(0, itemsLength - 1));
+
+    useEffect(() => {
+        if (itemsLength > prevItemsLengthRef.current) {
+            setActiveIndex(itemsLength - 1);
+        } else if (activeIndex >= itemsLength) {
+            setActiveIndex(Math.max(0, itemsLength - 1));
+        }
+        prevItemsLengthRef.current = itemsLength;
+    }, [itemsLength, activeIndex]);
+
+    useEffect(() => {
+        const errorIndex = firstItemErrorIndex(fieldErrors);
+        if (errorIndex != null && errorIndex !== activeIndex) {
+            setActiveIndex(errorIndex);
+        }
+    }, [fieldErrors, activeIndex]);
+
+    const handleAddItem = useCallback(() => {
+        onAddItem();
+    }, [onAddItem]);
+
+    const handleRemoveItem = useCallback(
+        (index) => {
+            onRemoveItem(index);
+            setActiveIndex((current) => {
+                const nextLength = itemsLength - 1;
+                if (nextLength <= 0) return 0;
+                if (index < current) return current - 1;
+                if (index === current) return Math.min(current, nextLength - 1);
+                return current;
+            });
+        },
+        [onRemoveItem, itemsLength]
+    );
+
+    const handleEditItem = useCallback((index) => {
+        setActiveIndex(index);
+    }, []);
+
+    const savedItemIndices = items
+        .map((_, index) => index)
+        .filter((index) => index !== activeIndex);
+
+    const activeItem = items[activeIndex];
+    const showSavedItems = savedItemIndices.length > 0;
+
     return (
         <FormSection
             icon={List}
             title="Items"
             description={`Products or services on this ${docLabel}`}
-            actions={
-                <button type="button" onClick={onAddItem} className="btn-secondary text-sm py-2 px-3">
+        >
+            {activeItem ? (
+                <div className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-4">
+                    <div className="mb-3">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                            Current item
+                        </span>
+                    </div>
+                    <LineItemEditor
+                        idPrefix={idPrefix}
+                        index={activeIndex}
+                        item={activeItem}
+                        currency={formData.currency}
+                        fieldErrors={fieldErrors}
+                        onItemChange={onItemChange}
+                        onUnitChange={onUnitChange}
+                        onCurrencyChange={onCurrencyChange}
+                    />
+                </div>
+            ) : null}
+
+            <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-2">
+                <button
+                    type="button"
+                    onClick={handleAddItem}
+                    className="btn-secondary text-sm py-2 px-3 w-full sm:w-auto"
+                >
                     <Plus size={16} aria-hidden />
                     Add item
                 </button>
-            }
-        >
-            <div className="space-y-4">
-                {formData.items.map((item, index) => (
-                    <div
-                        key={index}
-                        className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-4"
-                    >
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
-                                Item {index + 1}
-                            </span>
-                            {formData.items.length > 1 && (
-                                <button
-                                    type="button"
-                                    onClick={() => onRemoveItem(index)}
-                                    className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                                    aria-label={`Remove item ${index + 1}`}
-                                >
-                                    <X size={16} />
-                                </button>
-                            )}
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <RequiredLabel htmlFor={`${idPrefix}-item-${index}-description`}>
-                                    Description
-                                </RequiredLabel>
-                                <textarea
-                                    id={`${idPrefix}-item-${index}-description`}
-                                    value={item.description}
-                                    onChange={(e) =>
-                                        onItemChange(index, 'description', e.target.value)
-                                    }
-                                    className={inputClass(
-                                        Boolean(fieldErrors[`item-${index}-description`]),
-                                        'resize-none min-h-[72px]'
-                                    )}
-                                    rows={2}
-                                    placeholder="Service or product"
-                                    aria-invalid={Boolean(fieldErrors[`item-${index}-description`])}
-                                />
-                                <FieldValidationMessage
-                                    message={fieldErrors[`item-${index}-description`]}
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div>
-                                    <RequiredLabel htmlFor={`${idPrefix}-item-${index}-unit`}>
-                                        Unit
-                                    </RequiredLabel>
-                                    <div className="flex gap-2">
-                                        <CustomSelect
-                                            id={`${idPrefix}-item-${index}-unit`}
-                                            value={normalizeInvoiceUnit(item.unit)}
-                                            onChange={(value) => onUnitChange(index, value)}
-                                            options={buildUnitSelectOptions(item.unit)}
-                                            aria-label={`Unit for item ${index + 1}`}
-                                            className="min-w-0 flex-1"
-                                        />
-                                        <input
-                                            id={`${idPrefix}-item-${index}-quantity`}
-                                            type="number"
-                                            value={item.quantity}
-                                            onChange={(e) =>
-                                                onItemChange(index, 'quantity', e.target.value)
-                                            }
-                                            className={`${inputClass(
-                                                Boolean(fieldErrors[`item-${index}-quantity`])
-                                            )} w-[4.75rem] shrink-0`}
-                                            min="1"
-                                            aria-label={`${normalizeInvoiceUnit(item.unit)} for item ${index + 1}`}
-                                            aria-invalid={Boolean(fieldErrors[`item-${index}-quantity`])}
-                                        />
-                                    </div>
-                                    <FieldValidationMessage
-                                        message={fieldErrors[`item-${index}-quantity`]}
-                                    />
-                                </div>
-                                <div>
-                                    <RequiredLabel htmlFor={`${idPrefix}-item-${index}-rate`}>
-                                        Rate
-                                    </RequiredLabel>
-                                    <div className="flex gap-2">
-                                        <CustomSelect
-                                            id={`${idPrefix}-item-${index}-currency`}
-                                            value={normalizeCurrency(formData.currency || APP_CURRENCY)}
-                                            onChange={onCurrencyChange}
-                                            options={getCurrencySelectOptions()}
-                                            aria-label={`Currency for rate on item ${index + 1}`}
-                                            className="w-[5.75rem] shrink-0"
-                                        />
-                                        <input
-                                            id={`${idPrefix}-item-${index}-rate`}
-                                            type="number"
-                                            value={item.rate}
-                                            onChange={(e) =>
-                                                onItemChange(index, 'rate', e.target.value)
-                                            }
-                                            className={`${inputClass(
-                                                Boolean(fieldErrors[`item-${index}-rate`])
-                                            )} min-w-0 flex-1`}
-                                            min="0"
-                                            step="0.01"
-                                            aria-invalid={Boolean(fieldErrors[`item-${index}-rate`])}
-                                        />
-                                    </div>
-                                    <FieldValidationMessage
-                                        message={fieldErrors[`item-${index}-rate`]}
-                                    />
-                                </div>
-                                <div className="flex flex-col justify-end min-w-0">
-                                    <span className="label">Amount</span>
-                                    <p className="text-base font-semibold text-zinc-900 py-2.5 tabular-nums break-all">
-                                        {formatCurrency(item.quantity * item.rate, formData.currency)}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ))}
             </div>
+
             {products.length > 0 ? (
-                <div className="mt-4 flex flex-col sm:flex-row sm:items-end gap-3 p-4 rounded-xl border border-brand/20 bg-brand-subtle/30">
+                <div className="mt-3 flex flex-col sm:flex-row sm:items-end gap-3 p-4 rounded-xl border border-brand/20 bg-brand-subtle/30">
                     <div className="flex-1 min-w-0">
                         <label htmlFor={`${idPrefix}-product-pick`} className="label">
                             Add from product
@@ -171,7 +125,7 @@ export default function DocumentLineItemsSection({
                             id={`${idPrefix}-product-pick`}
                             value=""
                             onChange={(productId) => {
-                                if (productId) onAddProductItem(productId);
+                                if (productId) onAddProductItem(productId, activeIndex);
                             }}
                             options={products.map((product) => ({
                                 value: product.id,
@@ -184,7 +138,7 @@ export default function DocumentLineItemsSection({
                     </div>
                 </div>
             ) : (
-                <p className="mt-4 text-sm text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3">
+                <p className="mt-3 text-sm text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3">
                     Save products in{' '}
                     <Link to="/products" className="text-brand font-medium hover:underline">
                         Products
@@ -192,6 +146,27 @@ export default function DocumentLineItemsSection({
                     to add line items in one click.
                 </p>
             )}
+
+            {showSavedItems ? (
+                <div className="mt-6 space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                        Added items ({savedItemIndices.length})
+                    </p>
+                    <div className="space-y-2">
+                        {savedItemIndices.map((index) => (
+                            <LineItemSummaryCard
+                                key={index}
+                                index={index}
+                                item={items[index]}
+                                currency={formData.currency}
+                                onEdit={handleEditItem}
+                                onRemove={handleRemoveItem}
+                                canRemove={itemsLength > 1}
+                            />
+                        ))}
+                    </div>
+                </div>
+            ) : null}
         </FormSection>
     );
 }

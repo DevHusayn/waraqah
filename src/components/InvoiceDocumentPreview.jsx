@@ -399,14 +399,14 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                         <div className="flex items-end gap-8 sm:gap-10">
                             {signatureUrl ? (
                                 <div className="flex flex-col items-center min-w-[140px] max-w-[200px]">
-                                    <div className="w-full border-t border-zinc-300 mb-2" />
                                     <img
                                         src={signatureUrl}
                                         alt="Authorized signature"
                                         className="max-h-14 max-w-full object-contain"
                                     />
+                                    <div className="w-full border-t border-zinc-300 mt-1 mb-2" />
                                     {businessInfo?.name ? (
-                                        <p className="mt-2 text-sm font-semibold text-zinc-800 text-center">
+                                        <p className="text-sm font-semibold text-zinc-800 text-center">
                                             {businessInfo.name}
                                         </p>
                                     ) : null}

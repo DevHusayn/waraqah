@@ -126,7 +126,7 @@ export function useDocumentFormHandlers({
         }));
     }, [markDirty, setFormData]);
 
-    const addProductItem = useCallback((productId) => {
+    const addProductItem = useCallback((productId, preferredIndex) => {
         const product = products.find((p) => p.id === productId);
         if (!product) return;
         markDirty();
@@ -140,10 +140,22 @@ export function useDocumentFormHandlers({
             unit: DEFAULT_INVOICE_UNIT,
         };
 
-        const emptyIndex = formData.items.findIndex(isEmptyLineItem);
+        const resolveTargetIndex = (items) => {
+            if (
+                preferredIndex != null &&
+                preferredIndex >= 0 &&
+                preferredIndex < items.length &&
+                isEmptyLineItem(items[preferredIndex])
+            ) {
+                return preferredIndex;
+            }
+            return items.findIndex(isEmptyLineItem);
+        };
+
+        const emptyIndex = resolveTargetIndex(formData.items);
 
         setFormData((prev) => {
-            const targetIndex = prev.items.findIndex(isEmptyLineItem);
+            const targetIndex = resolveTargetIndex(prev.items);
             if (targetIndex === -1) {
                 return { ...prev, items: [...prev.items, newLine] };
             }
