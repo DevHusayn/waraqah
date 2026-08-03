@@ -68,6 +68,7 @@ export const SettingsProvider = ({ children }) => {
         data: businessInfo = EMPTY_BUSINESS,
         isLoading,
         isFetched,
+        isPlaceholderData,
         refetch: refetchBusinessInfo,
     } = useQuery({
         queryKey: queryKeys.businessInfo(userId),
@@ -234,8 +235,11 @@ export const SettingsProvider = ({ children }) => {
         || isLoading
         || (shouldFetch && Boolean(userId) && !isFetched);
 
+    const businessInfoReady = Boolean(userId) && isFetched && !isPlaceholderData;
+
     const value = useMemo(() => ({
         businessInfo,
+        businessInfoReady,
         updateBusinessInfo,
         setBusinessInfo,
         loading,
@@ -247,6 +251,7 @@ export const SettingsProvider = ({ children }) => {
         saveBusinessAsset,
     }), [
         businessInfo,
+        businessInfoReady,
         updateBusinessInfo,
         setBusinessInfo,
         loading,

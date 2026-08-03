@@ -48,7 +48,12 @@ const Layout = ({ children }) => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const handleLogout = useAppLogout();
-    const { businessInfo, fetchBusinessAssets, loading: settingsLoading } = useSettings();
+    const {
+        businessInfo,
+        businessInfoReady,
+        fetchBusinessAssets,
+        loading: settingsLoading,
+    } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const { draftCount } = useInvoice();
     const { isAuthenticated, isAdmin, user, loading: authLoading } = useAuth();
@@ -56,7 +61,7 @@ const Layout = ({ children }) => {
     const [showSetupCoachmark, setShowSetupCoachmark] = useState(false);
 
     useEffect(() => {
-        if (!isAuthenticated || settingsLoading || !user?.id) {
+        if (!isAuthenticated || settingsLoading || !businessInfoReady || !user?.id) {
             setShowSetupCoachmark(false);
             return;
         }
@@ -73,7 +78,7 @@ const Layout = ({ children }) => {
         if (!profileIncomplete) {
             clearBusinessSetupCoachmarkFlag();
         }
-    }, [isAuthenticated, settingsLoading, user, businessInfo]);
+    }, [isAuthenticated, settingsLoading, businessInfoReady, user, businessInfo]);
 
     useEffect(() => {
         if (!isAuthenticated) return undefined;

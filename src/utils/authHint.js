@@ -100,7 +100,9 @@ function serializeBusinessSummary(info, userId) {
     return JSON.stringify({
         userId: String(userId || ''),
         name: String(info.name || '').trim(),
+        address: String(info.address || '').trim(),
         email: String(info.email || '').trim(),
+        phone: String(info.phone || '').trim(),
         plan: info.plan || 'free',
         defaultCurrency: info.defaultCurrency || 'NGN',
         brandColor: String(info.brandColor || '').trim(),
