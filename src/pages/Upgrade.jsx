@@ -167,7 +167,7 @@ export default function Upgrade() {
                             <button
                                 type="button"
                                 onClick={handlePay}
-                                disabled={paying || loading || !plan?.paystackConfigured}
+                                disabled={paying || (plan != null && !plan.paystackConfigured)}
                                 className="btn-primary w-full"
                             >
                                 {paying ? (
