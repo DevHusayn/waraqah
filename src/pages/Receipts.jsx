@@ -12,6 +12,7 @@ import { useReceiptCreateGuard } from '../hooks/useReceiptCreateGuard';
 import { formatInvoiceUsageLabel } from '../utils/invoiceLimits';
 import { isPremiumUser } from '../utils/premium';
 import CustomSelect from '../components/CustomSelect';
+import FilterTabs from '../components/FilterTabs';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 import InvoiceUsageBanner from '../components/InvoiceUsageBanner';
@@ -40,6 +41,12 @@ const TABLE_COLUMNS = [
     { key: 'status', label: 'Status' },
 ];
 
+const RECEIPT_FILTER_TABS = [
+    { value: 'all', label: 'All' },
+    { value: 'partial', label: 'Part received' },
+    { value: 'full', label: 'Fully received' },
+];
+
 const mapReceipt = (r) => ({ ...r, id: r._id || r.id });
 
 const Receipts = () => {
@@ -47,32 +54,65 @@ const Receipts = () => {
     const { invoiceUsage, limitModalOpen, setLimitModalOpen, tryNavigateToCreate } =
         useReceiptCreateGuard();
     const { businessInfo } = useSettings();
+    const [filter, setFilter] = useState('all');
     const [sortBy, setSortBy] = useState('newest');
 
     const fetcher = useCallback(
-        ({ page, limit, search, sort }) =>
+        ({ page, limit, search, status, sort }) =>
             apiFetch(
                 `/receipts?${buildListQuery({
                     page,
                     limit,
                     search,
+                    status,
                     sort,
                 })}`
             ),
         []
     );
 
-    const { page, setPage, search, setSearch, data, pagination, loading } = usePagedQuery({
+    const {
+        page,
+        setPage,
+        search,
+        setSearch,
+        data,
+        pagination,
+        statusCounts,
+        loading,
+    } = usePagedQuery({
         queryKeyBase: 'receipts',
         fetcher,
-        extraParams: { sort: sortBy },
+        extraParams: { status: filter, sort: sortBy },
     });
 
     const receipts = useMemo(() => data.map(mapReceipt), [data]);
 
     useEffect(() => {
         setPage(1);
-    }, [sortBy, setPage]);
+    }, [filter, sortBy, setPage]);
+
+    const handleFilterChange = useCallback(
+        (next) => {
+            setFilter(next);
+            setPage(1);
+        },
+        [setPage]
+    );
+
+    const filterTabs = useMemo(() => {
+        const counts = statusCounts || {};
+        return RECEIPT_FILTER_TABS.map((tab) => ({
+            ...tab,
+            count: counts[tab.value] ?? 0,
+        }));
+    }, [statusCounts]);
+
+    const filterEmptyLabel = useMemo(() => {
+        if (filter === 'partial') return 'Part received';
+        if (filter === 'full') return 'Fully received';
+        return null;
+    }, [filter]);
 
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
     const premium = isPremiumUser(businessInfo);
@@ -116,16 +156,32 @@ const Receipts = () => {
                     </ToolbarActions>
                 </Toolbar>
 
-                {loading ? (
+                <FilterTabs tabs={filterTabs} value={filter} onChange={handleFilterChange} className="mb-4" />
+
+                {loading && receipts.length === 0 ? (
                     <ListPageSkeleton rows={8} columns={6} withAction={false} />
                 ) : receipts.length === 0 ? (
-                    <EmptyState
-                        icon={Receipt}
-                        title="No receipts yet"
-                        description="Issue a receipt when you've received payment and don't need an invoice."
-                        actionLabel="Create receipt"
-                        onAction={tryNavigateToCreate}
-                    />
+                    <div className="data-table-wrap">
+                        <EmptyState
+                            icon={Receipt}
+                            title={
+                                search
+                                    ? 'No matching receipts'
+                                    : filter === 'all'
+                                      ? 'No receipts yet'
+                                      : `No ${filterEmptyLabel?.toLowerCase()} receipts`
+                            }
+                            description={
+                                search
+                                    ? 'Try a different search term'
+                                    : filter === 'all'
+                                      ? 'Issue a receipt when you\'ve received payment and don\'t need an invoice.'
+                                      : `You don't have any ${filterEmptyLabel?.toLowerCase()} receipts yet.`
+                            }
+                            actionLabel={filter === 'all' && !search ? 'Create receipt' : undefined}
+                            onAction={filter === 'all' && !search ? tryNavigateToCreate : undefined}
+                        />
+                    </div>
                 ) : (
                     <>
                         <DataTable columns={TABLE_COLUMNS}>
