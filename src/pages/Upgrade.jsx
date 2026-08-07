@@ -25,7 +25,6 @@ export default function Upgrade() {
     const { showToast } = useToast();
     const { businessInfo } = useSettings();
     const [plan, setPlan] = useState(null);
-    const [loading, setLoading] = useState(true);
     const [paying, setPaying] = useState(false);
     const [billingInterval, setBillingInterval] = useState('monthly');
 
@@ -41,9 +40,10 @@ export default function Upgrade() {
     useEffect(() => {
         apiFetch('/payments/plan')
             .then(setPlan)
-            .catch((err) => showToast(err.message, 'error'))
-            .finally(() => setLoading(false));
-    }, [showToast]);
+            .catch(() => {
+                /* Optional: pricing uses local constants; ignore offline/errors on load */
+            });
+    }, []);
 
     const handlePay = async () => {
         setPaying(true);
@@ -157,32 +157,24 @@ export default function Upgrade() {
                             You already have Premium active.
                         </div>
                     ) : (
-                        <>
-                            {!loading && !plan?.paystackConfigured && (
-                                <p className="text-sm text-zinc-700 bg-zinc-100 border border-zinc-200 rounded-md px-3 py-2">
-                                    Paystack is not configured on the server. Add your keys to{' '}
-                                    <code className="text-xs">backend .env</code> on your server.
-                                </p>
+                        <button
+                            type="button"
+                            onClick={handlePay}
+                            disabled={paying}
+                            className="btn-primary w-full"
+                        >
+                            {paying ? (
+                                <>
+                                    <Spinner size="sm" inline />
+                                    Redirecting to Paystack…
+                                </>
+                            ) : (
+                                <>
+                                    <CreditCard className="h-5 w-5" />
+                                    Pay with Paystack
+                                </>
                             )}
-                            <button
-                                type="button"
-                                onClick={handlePay}
-                                disabled={paying || (plan != null && !plan.paystackConfigured)}
-                                className="btn-primary w-full"
-                            >
-                                {paying ? (
-                                    <>
-                                        <Spinner size="sm" inline />
-                                        Redirecting to Paystack…
-                                    </>
-                                ) : (
-                                    <>
-                                        <CreditCard className="h-5 w-5" />
-                                        Pay with Paystack
-                                    </>
-                                )}
-                            </button>
-                        </>
+                        </button>
                     )}
 
                     <p className="flex items-center justify-center gap-2 text-xs text-zinc-500">
