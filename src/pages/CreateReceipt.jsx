@@ -21,7 +21,8 @@ import {
     getReceiptFieldFocusOrder,
 } from '../utils/receiptFormValidation';
 import { calculateInvoiceTotals } from '../utils/invoiceTotals';
-import { buildReceiptPayload } from '../utils/sendReceiptFlow';
+import { buildReceiptPayload, prepareReceiptPdf } from '../utils/sendReceiptFlow';
+import { shareInvoicePdf, getShareFallbackHint } from '../utils/shareInvoicePdf';
 import { clientDetailsFromRecord } from '../utils/ensureInvoiceClient';
 import ClientDetailsModal from '../components/ClientDetailsModal';
 import DocumentFormModals from '../components/documentForm/DocumentFormModals';
@@ -58,23 +59,26 @@ const CreateReceipt = () => {
     const { id } = useParams();
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { addReceipt, updateReceipt, refreshReceipts } = useReceipt();
+    const { addReceipt, updateReceipt, refreshReceipts, sendReceiptEmailToClient } = useReceipt();
     const { clients, products, addClient, updateClient, fetchProducts } = useInvoice();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen } = useReceiptCreateGuard();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
     const [saving, setSaving] = useState(false);
     const [issuing, setIssuing] = useState(false);
+    const [emailSending, setEmailSending] = useState(false);
+    const [sharePdfReady, setSharePdfReady] = useState(false);
+    const [shareModal, setShareModal] = useState(null);
     const [fieldErrors, setFieldErrors] = useState({});
     const [customUnitModal, setCustomUnitModal] = useState(null);
     const [clientDetailsModalOpen, setClientDetailsModalOpen] = useState(false);
     const [previewOpen, setPreviewOpen] = useState(false);
-    const [nextReceiptNumber, setNextReceiptNumber] = useState('');
 
     const draftIdRef = useRef(null);
     const saveInFlightRef = useRef(false);
     const isDirtyRef = useRef(false);
     const formDataRef = useRef(null);
+    const sharePdfRef = useRef(null);
     const loadedReceiptIdRef = useRef(null);
     const [resolvedStatus, setResolvedStatus] = useState(id ? null : 'draft');
     const [receiptLoading, setReceiptLoading] = useState(Boolean(id));
@@ -147,13 +151,6 @@ const CreateReceipt = () => {
     useEffect(() => {
         fetchProducts().catch(() => {});
     }, [fetchProducts]);
-
-    useEffect(() => {
-        if (id) return;
-        apiFetch('/receipts/next-number')
-            .then((data) => setNextReceiptNumber(data.receiptNumber || ''))
-            .catch(() => {});
-    }, [id]);
 
     useEffect(() => {
         if (!id) return undefined;
@@ -356,18 +353,105 @@ const CreateReceipt = () => {
                 saved = await addReceipt(payload, { skipRefresh: true });
             }
 
-            showToast(`Receipt ${saved.receiptNumber || ''} issued`.trim(), 'success');
-            refreshReceipts().catch(() => {});
-            navigate(`/receipts/${saved.id}`);
+            draftIdRef.current = saved.id;
+            setFormData((prev) => ({
+                ...prev,
+                status: 'paid',
+                receiptNumber: saved.receiptNumber || prev.receiptNumber,
+            }));
+            const savedClient = clients.find((c) => c.id === saved.clientId);
+            const client = {
+                id: saved.clientId,
+                name: formData.clientName.trim(),
+                email: formData.clientEmail.trim(),
+                ...(savedClient || {}),
+            };
+            const clientAlreadyEmailed = Boolean(saved.clientReceiptEmailedAt);
+
+            sharePdfRef.current = null;
+            setSharePdfReady(false);
+            setShareModal({ receipt: saved, client, clientAlreadyEmailed });
+
+            if (clientAlreadyEmailed && client?.email) {
+                showToast(`Receipt emailed to ${client.email}`, 'success');
+            }
         } catch (err) {
             if (err.code === 'INVOICE_LIMIT_REACHED') {
                 setLimitModalOpen(true);
             } else {
                 showToast(err.message || 'Failed to issue receipt', 'error');
             }
+            setShareModal(null);
+            sharePdfRef.current = null;
         } finally {
             saveInFlightRef.current = false;
             setIssuing(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!shareModal?.receipt) return undefined;
+
+        const { receipt, client } = shareModal;
+        let cancelled = false;
+
+        (async () => {
+            try {
+                const generated = await prepareReceiptPdf(receipt, client, businessInfo, receipt.id);
+                if (cancelled) return;
+                sharePdfRef.current = generated;
+                setSharePdfReady(true);
+            } catch (err) {
+                if (!cancelled) showToast(err.message || 'Failed to prepare PDF', 'error');
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [shareModal?.receipt?.id, businessInfo, showToast]);
+
+    const finishAfterShare = () => {
+        setShareModal(null);
+        sharePdfRef.current = null;
+        setSharePdfReady(false);
+        refreshReceipts().catch(() => {});
+        navigate('/receipts');
+    };
+
+    const handleShareFromModal = async () => {
+        if (!shareModal?.receipt || !sharePdfRef.current) return;
+
+        try {
+            const shareResult = await shareInvoicePdf(
+                shareModal.receipt,
+                shareModal.client,
+                businessInfo,
+                { mode: 'receipt', cached: sharePdfRef.current }
+            );
+            if (shareResult?.method !== 'share') {
+                const hint = getShareFallbackHint();
+                if (hint) showToast(hint, 'info');
+            }
+            finishAfterShare();
+        } catch (shareErr) {
+            if (shareErr?.name === 'AbortError') return;
+            showToast(shareErr.message || 'Could not share PDF', 'error');
+        }
+    };
+
+    const handleEmailFromModal = async () => {
+        if (!shareModal?.receipt?.id || shareModal.clientAlreadyEmailed) return;
+
+        setEmailSending(true);
+        try {
+            const result = await sendReceiptEmailToClient(shareModal.receipt.id);
+            showToast(`Receipt emailed to ${result.sentTo}`, 'success');
+            finishAfterShare();
+        } catch (err) {
+            showToast(err.message || 'Failed to email receipt', 'error');
+        } finally {
+            setEmailSending(false);
         }
     };
 
@@ -416,13 +500,12 @@ const CreateReceipt = () => {
         return buildDocumentPreviewFromForm(
             {
                 ...formData,
-                receiptNumber: formData.receiptNumber || nextReceiptNumber,
                 status: 'paid',
                 amountPaid: Number.isFinite(amountPaid) ? amountPaid : totals.total,
             },
             { type: 'receipt' }
         );
-    }, [formData, nextReceiptNumber, totals.total]);
+    }, [formData, totals.total]);
 
     const selectedClient = clients.find((c) => c.id === formData.clientId);
 
@@ -445,7 +528,7 @@ const CreateReceipt = () => {
     };
 
     const receiptNumberDisplay = isDraftFlow
-        ? formData.receiptNumber || nextReceiptNumber || 'Assigned when issued'
+        ? formData.receiptNumber || 'Assigned when issued'
         : formData.receiptNumber || (id ? '—' : 'Loading…');
 
     const pageTitle = isDraftEdit ? 'Complete receipt' : id ? 'Edit receipt draft' : 'Create receipt';
@@ -476,6 +559,14 @@ const CreateReceipt = () => {
                 limitModalOpen={limitModalOpen}
                 onCloseLimitModal={() => setLimitModalOpen(false)}
                 invoiceUsage={invoiceUsage}
+                shareModal={shareModal}
+                docLabel="receipt"
+                shareDocKey="receipt"
+                sharePdfReady={sharePdfReady}
+                emailSending={emailSending}
+                onShare={handleShareFromModal}
+                onEmailClient={handleEmailFromModal}
+                onSkipShare={finishAfterShare}
                 customUnitModalOpen={customUnitModal != null}
                 onCloseCustomUnitModal={() => setCustomUnitModal(null)}
                 onCustomUnitSave={handlers.handleCustomUnitSave}

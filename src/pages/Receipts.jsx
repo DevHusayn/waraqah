@@ -99,9 +99,11 @@ const Receipts = () => {
                 <Toolbar className="mb-4">
                     <ToolbarSearch
                         value={search}
-                        onChange={setSearch}
+                        onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search by receipt number or client…"
                         icon={Search}
+                        type="search"
+                        aria-label="Search receipts"
                     />
                     <ToolbarActions>
                         <CustomSelect

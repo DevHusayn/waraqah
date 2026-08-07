@@ -10,6 +10,7 @@ export const queryKeys = {
     clients: (userId, params) => ['clients', userId, params],
     products: (userId, params) => ['products', userId, params],
     drafts: (userId, params) => ['drafts', userId, params],
+    receipts: (userId, params) => ['receipts', userId, params],
     adminUsers: (userId, params) => ['adminUsers', userId, params],
 };
 
