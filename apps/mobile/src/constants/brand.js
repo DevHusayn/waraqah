@@ -5,10 +5,10 @@ export const APP_WEBSITE_URL = (process.env.EXPO_PUBLIC_APP_URL || 'https://mywa
     .trim()
     .replace(/\/$/, '');
 export const APP_DOMAIN = getAppDomain(APP_WEBSITE_URL);
-export const APP_TAGLINE = 'Invoice. Get Paid. Grow.';
+export const APP_TAGLINE = 'Get Paid. Keep Records.';
 export const APP_VERSION = '1.0.0';
 export const APP_SUPPORT_EMAIL = 'support@mywaraqah.com';
 export const APP_DESCRIPTION =
-    'Waraqah helps freelancers and businesses create professional invoices in seconds, manage clients and products, mark payments, and export polished PDFs.';
+    'Waraqah helps freelancers and businesses send quotations and invoices, issue receipts, track payments, and export polished PDFs—all in one workspace.';
 
 export { APP_SOCIAL_LINKS, BRAND_COLORS, DEFAULT_BRAND_COLOR };
