@@ -132,6 +132,27 @@ export const ReceiptProvider = ({ children }) => {
     const sendReceiptEmailToClient = async (id) =>
         apiFetch(`/receipts/${id}/send-receipt`, { method: 'POST' });
 
+    const recordReceiptPayment = useCallback(async (id, payment) => {
+        const updated = await apiFetch(`/receipts/${id}/payments`, {
+            method: 'POST',
+            body: JSON.stringify({
+                amount: payment.amount,
+                method: payment.paymentMethod || payment.method,
+                date: payment.datePaid || payment.date,
+                note: payment.note || '',
+            }),
+        });
+        const mapped = mapReceipt(updated);
+        setReceipts((prev) => {
+            const exists = prev.some((r) => r.id === id);
+            if (!exists) return [mapped, ...prev];
+            return prev.map((r) => (r.id === id ? mapped : r));
+        });
+        invalidateListCaches();
+        if (refreshMeta) await refreshMeta();
+        return mapped;
+    }, [invalidateListCaches, refreshMeta]);
+
     const upsertReceipt = useCallback((record) => {
         if (!record) return;
         const mapped = mapReceipt(record);
@@ -148,6 +169,7 @@ export const ReceiptProvider = ({ children }) => {
         updateReceipt,
         deleteReceipt,
         sendReceiptEmailToClient,
+        recordReceiptPayment,
         fetchReceipts,
         refreshReceipts,
         upsertReceipt,

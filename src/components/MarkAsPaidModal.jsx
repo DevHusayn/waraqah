@@ -27,7 +27,9 @@ export default function MarkAsPaidModal({
     onConfirm,
     onCancel,
     saving = false,
+    variant = 'invoice',
 }) {
+    const isReceipt = variant === 'receipt';
     const balanceDue = useMemo(() => getInvoiceBalanceDue(invoice), [invoice]);
     const currency = invoice?.currency || 'NGN';
 
@@ -71,7 +73,11 @@ export default function MarkAsPaidModal({
 
     const handleConfirm = () => {
         if (!paymentMethod) {
-            setError('Please select how this invoice was paid.');
+            setError(
+                isReceipt
+                    ? 'Please select how this payment was received.'
+                    : 'Please select how this invoice was paid.'
+            );
             return;
         }
         if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
@@ -112,7 +118,8 @@ export default function MarkAsPaidModal({
                             Record payment
                         </h2>
                         <p className="text-sm text-zinc-500 mt-0.5">
-                            Balance due {formatCurrency(balanceDue, currency)}
+                            {isReceipt ? 'Balance remaining' : 'Balance due'}{' '}
+                            {formatCurrency(balanceDue, currency)}
                         </p>
                     </div>
                 </div>
@@ -199,21 +206,27 @@ export default function MarkAsPaidModal({
                         {isFullPayment ? (
                             <>
                                 <p className="text-sm font-semibold text-amber-950">
-                                    This settles the invoice in full
+                                    {isReceipt
+                                        ? 'This completes payment for this receipt'
+                                        : 'This settles the invoice in full'}
                                 </p>
                                 <p className="text-sm text-amber-900/90 mt-1 leading-relaxed">
-                                    A receipt will be generated. Once fully paid, this invoice cannot be
-                                    edited or deleted.
+                                    {isReceipt
+                                        ? 'The receipt will show the full amount received and zero balance remaining. You can email or share the updated receipt afterward.'
+                                        : 'A receipt will be generated. Once fully paid, this invoice cannot be edited or deleted.'}
                                 </p>
                             </>
                         ) : (
                             <>
                                 <p className="text-sm font-semibold text-sky-950">
-                                    This will mark the invoice as partially paid
+                                    {isReceipt
+                                        ? 'This records a partial payment'
+                                        : 'This will mark the invoice as partially paid'}
                                 </p>
                                 <p className="text-sm text-sky-900/90 mt-1 leading-relaxed">
-                                    You can record more payments later until the balance is cleared. A
-                                    receipt is issued only when the invoice is fully paid.
+                                    {isReceipt
+                                        ? 'You can record more payments on this receipt until the balance is cleared.'
+                                        : 'You can record more payments later until the balance is cleared. A receipt is issued only when the invoice is fully paid.'}
                                 </p>
                             </>
                         )}

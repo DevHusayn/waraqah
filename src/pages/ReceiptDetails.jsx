@@ -8,6 +8,7 @@ import {
     Download,
     Printer,
     Share2,
+    CheckCircle,
 } from 'lucide-react';
 import { useReceipt } from '../context/ReceiptContext';
 import { useInvoice } from '../context/InvoiceContext';
@@ -15,7 +16,8 @@ import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { PageSpinner } from '../components/Spinner';
 import AlertModal from '../components/AlertModal';
-import FormSection from '../components/FormSection';
+import MarkAsPaidModal from '../components/MarkAsPaidModal';
+import ActionMenu from '../components/ActionMenu';
 import {
     shareInvoicePdf,
     getShareFallbackHint,
@@ -51,10 +53,101 @@ async function generateReceiptPdf(receipt, client, businessInfo) {
     return generateInvoicePdfBlob(receipt, client, businessInfo, { mode: 'receipt' });
 }
 
+function ReceiptActionsPanel({
+    receipt,
+    canRecordPayment,
+    canEmailClient,
+    saving,
+    emailing,
+    onRecordPayment,
+    onShare,
+    onEmailClient,
+    onDownloadPdf,
+    onPrintPdf,
+    onCopyPublicLink,
+}) {
+    const actionsDisabled = saving || emailing;
+
+    const menuItems = [
+        {
+            id: 'share-receipt',
+            label: 'Share Receipt',
+            icon: Share2,
+            onClick: onShare,
+            hidden: canRecordPayment,
+            disabled: saving,
+        },
+        {
+            id: 'email-receipt',
+            label: emailing ? 'Sending…' : 'Email Receipt',
+            icon: Send,
+            onClick: onEmailClient,
+            hidden: !canEmailClient,
+            disabled: actionsDisabled,
+        },
+        {
+            id: 'download-receipt',
+            label: 'Download PDF',
+            icon: Download,
+            onClick: onDownloadPdf,
+            disabled: saving,
+        },
+        {
+            id: 'print-receipt',
+            label: 'Print Receipt',
+            icon: Printer,
+            onClick: onPrintPdf,
+            disabled: saving,
+        },
+        {
+            id: 'copy-link',
+            label: 'Copy Link',
+            icon: Copy,
+            onClick: onCopyPublicLink,
+            hidden: !receipt?.publicToken,
+            disabled: saving,
+        },
+    ];
+
+    const primaryAction = canRecordPayment
+        ? {
+              label: 'Record payment',
+              icon: CheckCircle,
+              onClick: onRecordPayment,
+          }
+        : {
+              label: 'Share Receipt',
+              icon: Share2,
+              onClick: onShare,
+          };
+
+    const PrimaryIcon = primaryAction.icon;
+
+    return (
+        <div className="card overflow-visible">
+            <h3 className="text-sm font-semibold text-zinc-900 pb-3 mb-4 border-b border-zinc-200">
+                Actions
+            </h3>
+            <div className="flex items-stretch gap-2">
+                <button
+                    type="button"
+                    onClick={primaryAction.onClick}
+                    className="btn-primary flex-1 min-w-0 min-h-[40px]"
+                    disabled={actionsDisabled}
+                >
+                    {PrimaryIcon ? <PrimaryIcon size={18} aria-hidden /> : null}
+                    {primaryAction.label}
+                </button>
+                <ActionMenu items={menuItems} disabled={saving} ariaLabel="Receipt actions" />
+            </div>
+        </div>
+    );
+}
+
 const ReceiptDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { receipts, sendReceiptEmailToClient, upsertReceipt } = useReceipt();
+    const { receipts, sendReceiptEmailToClient, upsertReceipt, recordReceiptPayment } = useReceipt();
     const { clients } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
@@ -62,6 +155,8 @@ const ReceiptDetails = () => {
     const [fetchedReceipt, setFetchedReceipt] = useState(null);
     const [resolving, setResolving] = useState(false);
     const [emailing, setEmailing] = useState(false);
+    const [markPaidOpen, setMarkPaidOpen] = useState(false);
+    const [recordingPayment, setRecordingPayment] = useState(false);
     const [alert, setAlert] = useState({ open: false, message: '' });
 
     const receiptFromList = useMemo(
@@ -218,6 +313,27 @@ const ReceiptDetails = () => {
         }
     };
 
+    const handleRecordPayment = async ({ amount, paymentMethod, datePaid }) => {
+        setRecordingPayment(true);
+        try {
+            const updated = await recordReceiptPayment(id, { amount, paymentMethod, datePaid });
+            const mapped = mapReceiptRecord(updated);
+            setFetchedReceipt(mapped);
+            upsertReceipt(mapped);
+            clearCachedPdf(id, 'receipt');
+            setMarkPaidOpen(false);
+            const remaining = getInvoiceBalanceDue(mapped);
+            showToast(
+                remaining <= 0.009 ? 'Receipt fully paid' : 'Payment recorded',
+                'success'
+            );
+        } catch (err) {
+            setAlert({ open: true, message: err.message || 'Failed to record payment.' });
+        } finally {
+            setRecordingPayment(false);
+        }
+    };
+
     if (resolving || !receipt || !receiptHasLineItems(receipt)) {
         return <PageSpinner label="Loading receipt…" className="max-w-6xl mx-auto" />;
     }
@@ -227,7 +343,21 @@ const ReceiptDetails = () => {
         return null;
     }
 
-    const actionsDisabled = emailing;
+    const canRecordPayment = isPartialReceipt;
+
+    const actionPanelProps = {
+        receipt,
+        canRecordPayment,
+        canEmailClient: clientHasEmail,
+        saving: recordingPayment,
+        emailing,
+        onRecordPayment: () => setMarkPaidOpen(true),
+        onShare: handleShare,
+        onEmailClient: handleEmail,
+        onDownloadPdf: handleDownload,
+        onPrintPdf: handlePrint,
+        onCopyPublicLink: handleCopyLink,
+    };
 
     return (
         <>
@@ -235,6 +365,15 @@ const ReceiptDetails = () => {
                 open={alert.open}
                 message={alert.message}
                 onClose={() => setAlert({ open: false, message: '' })}
+            />
+
+            <MarkAsPaidModal
+                open={markPaidOpen}
+                invoice={receipt}
+                variant="receipt"
+                onConfirm={handleRecordPayment}
+                onCancel={() => setMarkPaidOpen(false)}
+                saving={recordingPayment}
             />
 
             <div className="max-w-6xl mx-auto pb-8">
@@ -325,56 +464,6 @@ const ReceiptDetails = () => {
                             </dl>
                         </div>
 
-                        <FormSection title="Actions">
-                            <div className="space-y-2">
-                                {clientHasEmail ? (
-                                    <button
-                                        type="button"
-                                        onClick={handleEmail}
-                                        disabled={actionsDisabled}
-                                        className="btn-secondary w-full justify-center"
-                                    >
-                                        <Send size={16} aria-hidden />
-                                        {emailing ? 'Sending…' : 'Email receipt'}
-                                    </button>
-                                ) : null}
-                                <button
-                                    type="button"
-                                    onClick={handleShare}
-                                    className="btn-secondary w-full justify-center"
-                                >
-                                    <Share2 size={16} aria-hidden />
-                                    Share receipt
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleDownload}
-                                    className="btn-secondary w-full justify-center"
-                                >
-                                    <Download size={16} aria-hidden />
-                                    Download PDF
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handlePrint}
-                                    className="btn-secondary w-full justify-center"
-                                >
-                                    <Printer size={16} aria-hidden />
-                                    Print receipt
-                                </button>
-                                {receipt.publicToken ? (
-                                    <button
-                                        type="button"
-                                        onClick={handleCopyLink}
-                                        className="btn-secondary w-full justify-center"
-                                    >
-                                        <Copy size={16} aria-hidden />
-                                        Copy public link
-                                    </button>
-                                ) : null}
-                            </div>
-                        </FormSection>
-
                         {paymentHistory.length > 0 ? (
                             <div className="card">
                                 <h3 className="text-sm font-semibold text-zinc-900 mb-4">
@@ -384,18 +473,33 @@ const ReceiptDetails = () => {
                                     {paymentHistory.map((payment, index) => (
                                         <li
                                             key={`${payment.date || 'p'}-${index}`}
-                                            className="text-sm text-zinc-600"
+                                            className="flex items-start justify-between gap-3 text-sm"
                                         >
-                                            {formatCurrency(payment.amount, receipt.currency)} ·{' '}
-                                            {payment.date
-                                                ? format(new Date(payment.date), 'MMM dd, yyyy')
-                                                : '—'}{' '}
-                                            · {getPaymentMethodLabel(payment.method)}
+                                            <div className="min-w-0">
+                                                <p className="font-medium text-zinc-900">
+                                                    {formatCurrency(payment.amount, receipt.currency)}
+                                                </p>
+                                                <p className="text-xs text-zinc-500 mt-0.5">
+                                                    {payment.date
+                                                        ? format(new Date(payment.date), 'MMM dd, yyyy')
+                                                        : '—'}
+                                                    {' · '}
+                                                    {getPaymentMethodLabel(payment.method)}
+                                                </p>
+                                            </div>
                                         </li>
                                     ))}
                                 </ul>
                             </div>
                         ) : null}
+
+                        <div className="hidden xl:block">
+                            <ReceiptActionsPanel {...actionPanelProps} />
+                        </div>
+                    </div>
+
+                    <div className="order-3 xl:hidden">
+                        <ReceiptActionsPanel {...actionPanelProps} />
                     </div>
                 </div>
             </div>
