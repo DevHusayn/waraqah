@@ -1,13 +1,24 @@
 import { formatCurrency } from '../../utils/currency';
 import { getClientBusiness } from '../../utils/clientHelpers';
 
+const MONEY_EPS = 0.009;
+
 export default function DocumentSummaryCard({
     formData,
     selectedClient,
     totals,
     discountLabel,
     totalLabel,
+    amountReceived,
 }) {
+    const received =
+        amountReceived != null && Number.isFinite(amountReceived) ? amountReceived : null;
+    const isPartial =
+        received != null && totals.total > 0 && received + MONEY_EPS < totals.total;
+    const balanceRemaining = isPartial
+        ? Math.max(0, Math.round((totals.total - received) * 100) / 100)
+        : 0;
+
     return (
         <div className="card space-y-5">
             <h3 className="text-sm font-semibold text-zinc-900">Summary</h3>
@@ -50,12 +61,38 @@ export default function DocumentSummaryCard({
                         {formatCurrency(totals.tax, formData.currency)}
                     </dd>
                 </div>
-                <div className="pt-3 border-t border-zinc-200 flex justify-between items-center">
-                    <dt className="font-semibold text-zinc-900">{totalLabel}</dt>
-                    <dd className="text-2xl font-bold text-brand">
-                        {formatCurrency(totals.total, formData.currency)}
-                    </dd>
-                </div>
+                {isPartial ? (
+                    <>
+                        <div className="pt-3 border-t border-zinc-200 flex justify-between items-center">
+                            <dt className="font-semibold text-zinc-900">Total</dt>
+                            <dd className="text-lg font-bold text-zinc-900">
+                                {formatCurrency(totals.total, formData.currency)}
+                            </dd>
+                        </div>
+                        <div className="flex justify-between">
+                            <dt className="text-zinc-500">Amount received</dt>
+                            <dd className="font-medium text-zinc-900">
+                                {formatCurrency(received, formData.currency)}
+                            </dd>
+                        </div>
+                        <div className="pt-2 border-t border-zinc-100 flex justify-between items-center">
+                            <dt className="font-semibold text-zinc-900">Balance remaining</dt>
+                            <dd className="text-xl font-bold text-brand">
+                                {formatCurrency(balanceRemaining, formData.currency)}
+                            </dd>
+                        </div>
+                    </>
+                ) : (
+                    <div className="pt-3 border-t border-zinc-200 flex justify-between items-center">
+                        <dt className="font-semibold text-zinc-900">{totalLabel}</dt>
+                        <dd className="text-2xl font-bold text-brand">
+                            {formatCurrency(
+                                received != null && received > 0 ? received : totals.total,
+                                formData.currency
+                            )}
+                        </dd>
+                    </div>
+                )}
             </dl>
         </div>
     );

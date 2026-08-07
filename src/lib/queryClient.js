@@ -62,6 +62,13 @@ export function invalidateQuotationListQueries(userId) {
     queryClient.invalidateQueries({ queryKey: ['drafts', userId] });
 }
 
+/** Invalidate paginated receipt/draft list caches after mutations. */
+export function invalidateReceiptListQueries(userId) {
+    if (!userId) return;
+    queryClient.invalidateQueries({ queryKey: ['receipts', userId] });
+    queryClient.invalidateQueries({ queryKey: ['drafts', userId] });
+}
+
 /** Wipe all cached server state — call on logout / account switch. */
 export function clearUserQueryCache() {
     queryClient.clear();

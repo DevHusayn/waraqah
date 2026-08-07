@@ -15,7 +15,7 @@ import {
     getAuthorizedSignatureUrl,
 } from '../utils/brandAssets';
 import { isPremiumUser } from '../utils/premium';
-import { getDocumentNumber, getPaymentMethodLabel, resolvePdfMode } from '../utils/receiptHelpers';
+import { getDocumentNumber, getPaymentMethodLabel, resolvePdfMode, getReceiptDisplayStatus, isPartialReceipt } from '../utils/receiptHelpers';
 
 function lightenHex(hex, amount = 0.88) {
     const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '');
@@ -83,7 +83,7 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
     const logoUrl = premium ? getCompanyLogoUrl(businessInfo) : '';
     const stampUrl = premium && isReceipt ? getCompanyStampUrl(businessInfo) : '';
     const signatureUrl = premium ? getAuthorizedSignatureUrl(businessInfo) : '';
-    const badgeStatus = isReceipt ? 'paid' : invoice?.status;
+    const badgeStatus = isReceipt ? getReceiptDisplayStatus(invoice) : invoice?.status;
     const issueDate = invoice?.date ? format(new Date(invoice.date), 'MMM dd, yyyy') : 'N/A';
     const hasValidUntil = Boolean(invoice?.validUntil);
     const hasDueDate = Boolean(invoice?.dueDate);
@@ -98,18 +98,29 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
     const termsText = isQuotation ? invoice?.terms?.trim() || '' : '';
     const quantityColumnLabel = resolveQuantityColumnLabel(invoice?.items).toUpperCase();
     const docTitle = isReceipt ? 'RECEIPT' : isQuotation ? 'QUOTATION' : 'INVOICE';
+    const showPartialReceipt = isReceipt && isPartialReceipt(invoice);
     const showPartialPayment =
-        !isReceipt && !isQuotation && hasRecordedPayments(invoice) && invoice?.status !== 'paid';
+        showPartialReceipt ||
+        (!isReceipt && !isQuotation && hasRecordedPayments(invoice) && invoice?.status !== 'paid');
     const amountPaidValue = getInvoiceAmountPaid(invoice);
     const balanceDueValue = getInvoiceBalanceDue(invoice);
     const totalLabel = isReceipt
-        ? 'TOTAL PAID'
+        ? showPartialReceipt
+            ? 'BALANCE REMAINING'
+            : 'TOTAL PAID'
         : isQuotation
           ? 'ESTIMATED TOTAL'
           : showPartialPayment
             ? 'BALANCE DUE'
             : 'TOTAL DUE';
-    const emphasizedTotal = showPartialPayment ? balanceDueValue : invoice.total;
+    const emphasizedTotal = showPartialPayment
+        ? balanceDueValue
+        : isReceipt
+          ? amountPaidValue > 0
+              ? amountPaidValue
+              : invoice.total
+          : invoice.total;
+    const amountPaidRowLabel = isReceipt ? 'Amount received' : 'Amount paid';
 
     const paymentLines = [];
     if (showPaymentBox) {
@@ -319,7 +330,7 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                                     </dd>
                                 </div>
                                 <div className="flex justify-between gap-4">
-                                    <dt className="text-zinc-500">Amount paid</dt>
+                                    <dt className="text-zinc-500">{amountPaidRowLabel}</dt>
                                     <dd className="font-bold text-zinc-800">
                                         {formatCurrency(amountPaidValue, invoice.currency)}
                                     </dd>

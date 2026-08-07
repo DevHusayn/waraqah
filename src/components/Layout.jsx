@@ -3,6 +3,7 @@ import {
     LayoutDashboard,
     FileText,
     ClipboardList,
+    Receipt,
     PenLine,
     Users,
     Menu,
@@ -36,6 +37,7 @@ import NavLinks from './NavLinks';
 const NAV_ITEMS = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Invoices', href: '/invoices', icon: FileText },
+    { name: 'Receipts', href: '/receipts', icon: Receipt },
     { name: 'Quotations', href: '/quotations', icon: ClipboardList },
     { name: 'Drafts', href: '/invoices/drafts', icon: PenLine, badgeKey: 'drafts' },
     { name: 'Statements', href: '/statements', icon: FileBarChart, premiumFeature: true },

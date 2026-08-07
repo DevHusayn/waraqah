@@ -78,18 +78,20 @@ export default function DocumentDetailsSection({
                     />
                     <FieldValidationMessage message={fieldErrors.date} />
                 </div>
-                <ExpiryDateField
-                    idPrefix={idPrefix}
-                    label={expiry.label}
-                    hasExpiry={formData[expiry.hasFieldKey]}
-                    expiryValue={formData[expiry.dateFieldKey]}
-                    dateFieldKey={expiry.dateFieldKey}
-                    emptyHint={expiry.emptyHint}
-                    minDate={formData.date}
-                    fieldErrors={fieldErrors}
-                    onToggle={expiry.onToggle}
-                    onDateChange={expiry.onDateChange}
-                />
+                {expiry ? (
+                    <ExpiryDateField
+                        idPrefix={idPrefix}
+                        label={expiry.label}
+                        hasExpiry={formData[expiry.hasFieldKey]}
+                        expiryValue={formData[expiry.dateFieldKey]}
+                        dateFieldKey={expiry.dateFieldKey}
+                        emptyHint={expiry.emptyHint}
+                        minDate={formData.date}
+                        fieldErrors={fieldErrors}
+                        onToggle={expiry.onToggle}
+                        onDateChange={expiry.onDateChange}
+                    />
+                ) : null}
             </div>
         </FormSection>
     );

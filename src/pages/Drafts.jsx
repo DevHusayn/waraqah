@@ -4,6 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { PenLine, Plus, Trash2 } from 'lucide-react';
 import { useInvoice } from '../context/InvoiceContext';
 import { useQuotation } from '../context/QuotationContext';
+import { useReceipt } from '../context/ReceiptContext';
 import { getDraftLabel } from '../utils/invoiceHelpers';
 import { formatCurrency } from '../utils/currency';
 import PageHeader from '../components/PageHeader';
@@ -33,15 +34,18 @@ const mapDraft = (d) => ({
 
 function TypeBadge({ type }) {
     const isQuotation = type === 'quotation';
+    const isReceipt = type === 'receipt';
     return (
         <span
             className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold tracking-wide uppercase border ${
                 isQuotation
                     ? 'bg-sky-50 text-sky-700 border-sky-200/70'
-                    : 'bg-brand-subtle text-brand border-brand/20'
+                    : isReceipt
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200/70'
+                      : 'bg-brand-subtle text-brand border-brand/20'
             }`}
         >
-            {isQuotation ? 'QTN' : 'INV'}
+            {isQuotation ? 'QTN' : isReceipt ? 'RCP' : 'INV'}
         </span>
     );
 }
@@ -50,6 +54,7 @@ const Drafts = () => {
     const navigate = useNavigate();
     const { deleteInvoice, refreshMeta } = useInvoice();
     const { deleteQuotation } = useQuotation();
+    const { deleteReceipt } = useReceipt();
     const [deleteTarget, setDeleteTarget] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [createOpen, setCreateOpen] = useState(false);
@@ -67,10 +72,11 @@ const Drafts = () => {
 
     const drafts = data.map(mapDraft);
 
-    const editPath = (draft) =>
-        draft.documentType === 'quotation'
-            ? `/quotations/edit/${draft.id}`
-            : `/invoices/edit/${draft.id}`;
+    const editPath = (draft) => {
+        if (draft.documentType === 'quotation') return `/quotations/edit/${draft.id}`;
+        if (draft.documentType === 'receipt') return `/receipts/edit/${draft.id}`;
+        return `/invoices/edit/${draft.id}`;
+    };
 
     const handleDelete = async () => {
         if (!deleteTarget) return;
@@ -78,6 +84,8 @@ const Drafts = () => {
         try {
             if (deleteTarget.documentType === 'quotation') {
                 await deleteQuotation(deleteTarget.id);
+            } else if (deleteTarget.documentType === 'receipt') {
+                await deleteReceipt(deleteTarget.id);
             } else {
                 await deleteInvoice(deleteTarget.id);
             }
@@ -109,7 +117,7 @@ const Drafts = () => {
                 documentsOnly
             />
 
-            <PageHeader title="Drafts" subtitle="Resume unfinished invoices and quotations">
+            <PageHeader title="Drafts" subtitle="Resume unfinished invoices, receipts, and quotations">
                 <button
                     type="button"
                     onClick={() => setCreateOpen(true)}
@@ -127,7 +135,7 @@ const Drafts = () => {
                     <EmptyState
                         icon={PenLine}
                         title="No drafts yet"
-                        description="Save an invoice or quotation as a draft when you want to finish later."
+                        description="Save an invoice, receipt, or quotation as a draft when you want to finish later."
                         action={
                             <button
                                 type="button"

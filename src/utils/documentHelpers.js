@@ -7,5 +7,6 @@ export {
     extractDocumentSequence,
     formatDocumentNumber,
     isQuotationDocument,
+    isReceiptDocument,
     getQuotationDisplayNumber,
 } from '@waraqah/shared';

@@ -38,6 +38,10 @@ export function isQuotationDocument(doc) {
     return false;
 }
 
+export function isReceiptDocument(doc) {
+    return doc?.documentType === 'receipt';
+}
+
 export function getQuotationDisplayNumber(quotation) {
     if (!quotation) return '';
     return quotation.quotationNumber || '';

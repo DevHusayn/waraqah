@@ -4,6 +4,9 @@ export {
     PAYMENT_METHODS,
     MARK_PAID_METHODS,
     isReceipt,
+    isReceiptOnly,
+    isPartialReceipt,
+    getReceiptDisplayStatus,
     getPaymentMethodLabel,
     getReceiptNumber,
     getDisplayNumber,
@@ -16,3 +19,5 @@ export {
     RCP_PREFIX,
     QTN_PREFIX,
 } from '@waraqah/shared';
+
+export { isReceiptDocument } from '@waraqah/shared';

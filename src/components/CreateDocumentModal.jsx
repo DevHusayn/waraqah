@@ -1,7 +1,8 @@
-import { FileText, ClipboardList, Users, Package } from 'lucide-react';
+import { FileText, ClipboardList, Receipt, Users, Package } from 'lucide-react';
 import ModalShell from './ModalShell';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { useQuotationCreateGuard } from '../hooks/useQuotationCreateGuard';
+import { useReceiptCreateGuard } from '../hooks/useReceiptCreateGuard';
 import InvoiceLimitModal from './InvoiceLimitModal';
 
 const DOCUMENT_OPTIONS = [
@@ -11,6 +12,13 @@ const DOCUMENT_OPTIONS = [
         description: 'Bill a client for work done',
         icon: FileText,
         tone: 'bg-brand-subtle text-brand',
+    },
+    {
+        id: 'receipt',
+        label: 'Receipt',
+        description: 'Record payment received',
+        icon: Receipt,
+        tone: 'bg-emerald-50 text-emerald-700',
     },
     {
         id: 'quotation',
@@ -53,6 +61,11 @@ export default function CreateDocumentModal({ open, onClose, navigate, documents
         setLimitModalOpen: setQuotationLimitOpen,
         tryNavigateToCreate: tryCreateQuotation,
     } = useQuotationCreateGuard();
+    const {
+        limitModalOpen: receiptLimitOpen,
+        setLimitModalOpen: setReceiptLimitOpen,
+        tryNavigateToCreate: tryCreateReceipt,
+    } = useReceiptCreateGuard();
 
     const options = documentsOnly ? DOCUMENT_OPTIONS : ALL_OPTIONS;
 
@@ -66,6 +79,10 @@ export default function CreateDocumentModal({ open, onClose, navigate, documents
             tryCreateQuotation();
             return;
         }
+        if (option.id === 'receipt') {
+            tryCreateReceipt();
+            return;
+        }
         if (option.href) {
             navigate(option.href);
         }
@@ -74,10 +91,11 @@ export default function CreateDocumentModal({ open, onClose, navigate, documents
     return (
         <>
             <InvoiceLimitModal
-                open={invoiceLimitOpen || quotationLimitOpen}
+                open={invoiceLimitOpen || quotationLimitOpen || receiptLimitOpen}
                 onClose={() => {
                     setInvoiceLimitOpen(false);
                     setQuotationLimitOpen(false);
+                    setReceiptLimitOpen(false);
                 }}
                 usage={invoiceUsage}
             />

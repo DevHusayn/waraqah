@@ -14,8 +14,8 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatCurrency } from '../utils/currency';
-import { getDisplayNumber } from '../utils/receiptHelpers';
-import { isQuotationDocument } from '../utils/documentHelpers';
+import { getDisplayNumber, getReceiptDisplayStatus } from '../utils/receiptHelpers';
+import { isQuotationDocument, isReceiptDocument } from '../utils/documentHelpers';
 import PageHeader from '../components/PageHeader';
 import InvoiceLimitModal from '../components/InvoiceLimitModal';
 import CreateDocumentModal from '../components/CreateDocumentModal';
@@ -41,15 +41,18 @@ const RECENT_COLUMNS = [
 
 function DocumentTypeBadge({ doc }) {
     const isQuotation = isQuotationDocument(doc) || doc.documentType === 'quotation';
+    const isReceipt = isReceiptDocument(doc) || doc.documentType === 'receipt';
     return (
         <span
             className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide border ${
                 isQuotation
                     ? 'bg-sky-50 text-sky-700 border-sky-200/70'
-                    : 'bg-brand-subtle text-brand border-brand/20'
+                    : isReceipt
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200/70'
+                      : 'bg-brand-subtle text-brand border-brand/20'
             }`}
         >
-            {isQuotation ? 'QTN' : 'INV'}
+            {isQuotation ? 'QTN' : isReceipt ? 'RCP' : 'INV'}
         </span>
     );
 }
@@ -125,11 +128,22 @@ const Dashboard = () => {
 
     const statsLoading = isLoading || (isFetching && !stats);
 
+    const resolveDocumentStatus = (doc) => {
+        if (isReceiptDocument(doc) || doc.documentType === 'receipt') {
+            return getReceiptDisplayStatus(doc);
+        }
+        return doc.status;
+    };
+
     const openDocument = useCallback(
         (doc) => {
             const id = doc.id || doc._id;
             if (isQuotationDocument(doc) || doc.documentType === 'quotation') {
                 navigate(`/quotations/${id}`);
+                return;
+            }
+            if (isReceiptDocument(doc) || doc.documentType === 'receipt') {
+                navigate(`/receipts/${id}`);
                 return;
             }
             navigate(`/invoices/${id}`);
@@ -283,7 +297,7 @@ const Dashboard = () => {
                                         </span>
                                     </DataTableCell>
                                     <DataTableCell>
-                                        <StatusBadge status={doc.status} />
+                                        <StatusBadge status={resolveDocumentStatus(doc)} />
                                     </DataTableCell>
                                 </DataTableRow>
                             ))}

@@ -13,6 +13,7 @@ export function buildClientPreviewFromForm(formData) {
 
 export function buildDocumentPreviewFromForm(formData, { type = 'invoice' } = {}) {
     const isQuotation = type === 'quotation';
+    const isReceipt = type === 'receipt';
     const discountType = formData.discountType || (isQuotation ? 'percent' : 'fixed');
     const totals = calculateInvoiceTotals(formData.items, {
         taxRate: formData.taxRate,
@@ -45,6 +46,15 @@ export function buildDocumentPreviewFromForm(formData, { type = 'invoice' } = {}
             formData.terms !== undefined && formData.terms !== null
                 ? formData.terms
                 : DEFAULT_QUOTATION_TERMS;
+    } else if (isReceipt) {
+        invoice.documentType = 'receipt';
+        invoice.receiptNumber = formData.receiptNumber || 'Draft';
+        invoice.status = formData.status || 'paid';
+        invoice.paymentMethod = formData.paymentMethod || '';
+        invoice.datePaid = formData.datePaid || formData.date;
+        if (formData.amountPaid != null) {
+            invoice.amountPaid = Number(formData.amountPaid) || 0;
+        }
     } else {
         invoice.invoiceNumber = formData.invoiceNumber || 'Draft';
         invoice.dueDate = formData.hasDueDate ? formData.dueDate || null : null;

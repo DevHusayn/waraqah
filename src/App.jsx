@@ -7,6 +7,7 @@ import PrivateRoute from './utils/PrivateRoute';
 import AdminRoute from './utils/AdminRoute';
 import { InvoiceProvider } from './context/InvoiceContext';
 import { QuotationProvider } from './context/QuotationContext';
+import { ReceiptProvider } from './context/ReceiptContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
@@ -36,6 +37,9 @@ const InvoiceDetails = lazy(() => import('./pages/InvoiceDetails'));
 const Quotations = lazy(() => import('./pages/Quotations'));
 const CreateQuotation = lazy(() => import('./pages/CreateQuotation'));
 const QuotationDetails = lazy(() => import('./pages/QuotationDetails'));
+const Receipts = lazy(() => import('./pages/Receipts'));
+const CreateReceipt = lazy(() => import('./pages/CreateReceipt'));
+const ReceiptDetails = lazy(() => import('./pages/ReceiptDetails'));
 const Clients = lazy(() => import('./pages/Clients'));
 const Products = lazy(() => import('./pages/Products'));
 const SettingsLayout = lazy(() => import('./pages/settings/SettingsLayout'));
@@ -95,6 +99,7 @@ function App() {
                     <BrandTheme />
                     <InvoiceProvider>
                         <QuotationProvider>
+                        <ReceiptProvider>
                         <AppProviders>
                         <Router>
                         <Routes>
@@ -133,6 +138,10 @@ function App() {
                                             <Route path="/quotations/create" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><CreateQuotation /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/quotations/edit/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><CreateQuotation /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/quotations/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><QuotationDetails /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/receipts" element={<PrivateRoute><ListRoute><Receipts /></ListRoute></PrivateRoute>} />
+                                            <Route path="/receipts/create" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><CreateReceipt /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/receipts/edit/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><CreateReceipt /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/receipts/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><ReceiptDetails /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/clients" element={<PrivateRoute><ListRoute><Clients /></ListRoute></PrivateRoute>} />
                                             <Route path="/products" element={<PrivateRoute><ListRoute><Products /></ListRoute></PrivateRoute>} />
                                             <Route path="/settings" element={<PrivateRoute><RouteSuspense fallback={null}><SettingsLayout /></RouteSuspense></PrivateRoute>}>
@@ -159,6 +168,7 @@ function App() {
                         </Routes>
                         </Router>
                         </AppProviders>
+                        </ReceiptProvider>
                         </QuotationProvider>
                     </InvoiceProvider>
                 </SettingsProvider>

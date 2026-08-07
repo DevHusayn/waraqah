@@ -6,8 +6,11 @@ import {
     isQuotationDocument,
     getQuotationDisplayNumber,
 } from './documentHelpers.js';
+import { getInvoiceAmountPaid } from './invoicePayments.js';
 
 export { INV_PREFIX, RCP_PREFIX, QTN_PREFIX, extractDocumentSequence };
+
+const MONEY_EPS = 0.009;
 
 export function receiptFromInvoiceNumber(invoiceNumber) {
     if (!invoiceNumber) return '';
@@ -30,8 +33,29 @@ export const MARK_PAID_METHODS = PAYMENT_METHODS.filter((m) =>
     ['bank_transfer', 'cash', 'card'].includes(m.value)
 );
 
+export function isReceiptOnly(doc) {
+    return doc?.documentType === 'receipt';
+}
+
+/** Standalone receipt where amount received is less than the line-item total. */
+export function isPartialReceipt(doc) {
+    if (!isReceiptOnly(doc)) return false;
+    const total = Number(doc?.total) || 0;
+    if (total <= 0) return false;
+    const paid = getInvoiceAmountPaid(doc);
+    return paid > 0 && total - paid > MONEY_EPS;
+}
+
+/** UI/PDF badge status for standalone receipts (paid vs partial). */
+export function getReceiptDisplayStatus(doc) {
+    if (!doc) return 'paid';
+    if (doc.status === 'draft') return 'draft';
+    if (isPartialReceipt(doc)) return 'partial';
+    return doc.status === 'paid' ? 'paid' : doc.status || 'paid';
+}
+
 export function isReceipt(invoice) {
-    return invoice?.status === 'paid';
+    return isReceiptOnly(invoice) || invoice?.status === 'paid';
 }
 
 export function getPaymentMethodLabel(method) {
@@ -48,6 +72,7 @@ export function getReceiptNumber(invoice) {
 export function getDisplayNumber(doc) {
     if (!doc) return '';
     if (isQuotationDocument(doc)) return getQuotationDisplayNumber(doc);
+    if (isReceiptOnly(doc)) return getReceiptNumber(doc);
     return doc.invoiceNumber || '';
 }
 
@@ -78,6 +103,7 @@ export function getPdfFileName(doc, mode = 'auto') {
 export function resolvePdfMode(doc, mode = 'auto') {
     if (mode === 'invoice' || mode === 'receipt' || mode === 'quotation') return mode;
     if (isQuotationDocument(doc)) return 'quotation';
+    if (isReceiptOnly(doc)) return 'receipt';
     return isReceipt(doc) ? 'receipt' : 'invoice';
 }
 
