@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatCurrency } from '../utils/currency';
-import { getDisplayNumber, getReceiptDisplayStatus } from '../utils/receiptHelpers';
+import { getDisplayNumber, getReceiptStatusBadge } from '../utils/receiptHelpers';
 import { isQuotationDocument, isReceiptDocument } from '../utils/documentHelpers';
 import PageHeader from '../components/PageHeader';
 import InvoiceLimitModal from '../components/InvoiceLimitModal';
@@ -44,13 +44,12 @@ function DocumentTypeBadge({ doc }) {
     const isReceipt = isReceiptDocument(doc) || doc.documentType === 'receipt';
     return (
         <span
-            className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide border ${
-                isQuotation
-                    ? 'bg-sky-50 text-sky-700 border-sky-200/70'
-                    : isReceipt
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200/70'
-                      : 'bg-brand-subtle text-brand border-brand/20'
-            }`}
+            className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide border ${isQuotation
+                ? 'bg-sky-50 text-sky-700 border-sky-200/70'
+                : isReceipt
+                    ? 'bg-teal-50 text-teal-700 border-teal-200/70'
+                    : 'bg-brand-subtle text-brand border-brand/20'
+                }`}
         >
             {isQuotation ? 'QTN' : isReceipt ? 'RCP' : 'INV'}
         </span>
@@ -83,42 +82,42 @@ const Dashboard = () => {
         () =>
             stats
                 ? [
-                      {
-                          name: 'Total Invoices',
-                          value: stats.totalInvoices,
-                          icon: FileText,
-                          iconBg: 'bg-brand-light',
-                          iconColor: 'text-brand',
-                      },
-                      {
-                          name: 'Total Quotations',
-                          value: stats.totalQuotations ?? 0,
-                          icon: ClipboardList,
-                          iconBg: 'bg-sky-50',
-                          iconColor: 'text-sky-600',
-                      },
-                      {
-                          name: 'Total Clients',
-                          value: stats.totalClients,
-                          icon: Users,
-                          iconBg: 'bg-violet-50',
-                          iconColor: 'text-violet-600',
-                      },
-                      {
-                          name: 'Paid Revenue',
-                          value: formatCurrency(stats.paidRevenue),
-                          icon: Wallet,
-                          iconBg: 'bg-green-50',
-                          iconColor: 'text-green-600',
-                      },
-                      {
-                          name: 'Pending Revenue',
-                          value: formatCurrency(stats.pendingRevenue),
-                          icon: Clock,
-                          iconBg: 'bg-amber-50',
-                          iconColor: 'text-amber-600',
-                      },
-                  ]
+                    {
+                        name: 'Total Invoices',
+                        value: stats.totalInvoices,
+                        icon: FileText,
+                        iconBg: 'bg-brand-light',
+                        iconColor: 'text-brand',
+                    },
+                    {
+                        name: 'Total Quotations',
+                        value: stats.totalQuotations ?? 0,
+                        icon: ClipboardList,
+                        iconBg: 'bg-sky-50',
+                        iconColor: 'text-sky-600',
+                    },
+                    {
+                        name: 'Total Clients',
+                        value: stats.totalClients,
+                        icon: Users,
+                        iconBg: 'bg-violet-50',
+                        iconColor: 'text-violet-600',
+                    },
+                    {
+                        name: 'Paid Revenue',
+                        value: formatCurrency(stats.paidRevenue),
+                        icon: Wallet,
+                        iconBg: 'bg-green-50',
+                        iconColor: 'text-green-600',
+                    },
+                    {
+                        name: 'Pending Revenue',
+                        value: formatCurrency(stats.pendingRevenue),
+                        icon: Clock,
+                        iconBg: 'bg-amber-50',
+                        iconColor: 'text-amber-600',
+                    },
+                ]
                 : [],
         [stats]
     );
@@ -128,11 +127,11 @@ const Dashboard = () => {
 
     const statsLoading = isLoading || (isFetching && !stats);
 
-    const resolveDocumentStatus = (doc) => {
+    const resolveDocumentStatusBadge = (doc) => {
         if (isReceiptDocument(doc) || doc.documentType === 'receipt') {
-            return getReceiptDisplayStatus(doc);
+            return getReceiptStatusBadge(doc);
         }
-        return doc.status;
+        return { status: doc.status, label: undefined };
     };
 
     const openDocument = useCallback(
@@ -252,115 +251,115 @@ const Dashboard = () => {
                     </div>
                 </div>
             ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div>
-                    <h2 className="text-sm font-semibold text-zinc-950 mb-3">Recent documents</h2>
-                    {recentDocuments.length === 0 ? (
-                        <div className="data-table-wrap">
-                            <EmptyState
-                                icon={FileText}
-                                title="No documents yet"
-                                action={
-                                    <button
-                                        type="button"
-                                        onClick={() => setCreateModalOpen(true)}
-                                        className="btn-primary"
-                                    >
-                                        Create
-                                    </button>
-                                }
-                            />
-                        </div>
-                    ) : (
-                        <DataTable columns={RECENT_COLUMNS}>
-                            {recentDocuments.map((doc) => (
-                                <DataTableRow
-                                    key={`${doc.documentType || 'invoice'}-${doc.id || doc._id}`}
-                                    onClick={() => openDocument(doc)}
-                                >
-                                    <DataTableCell>
-                                        <div className="flex items-center gap-2 min-w-0">
-                                            <DocumentTypeBadge doc={doc} />
-                                            <span className="font-medium text-zinc-950 truncate">
-                                                {doc.displayNumber || getDisplayNumber(doc)}
-                                            </span>
-                                        </div>
-                                    </DataTableCell>
-                                    <DataTableCell>
-                                        <span className="truncate max-w-[160px] block">
-                                            {doc.clientName || 'Unknown Client'}
-                                        </span>
-                                    </DataTableCell>
-                                    <DataTableCell className="text-right">
-                                        <span className="font-medium tabular-nums">
-                                            {formatCurrency(doc.total, doc.currency)}
-                                        </span>
-                                    </DataTableCell>
-                                    <DataTableCell>
-                                        <StatusBadge status={resolveDocumentStatus(doc)} />
-                                    </DataTableCell>
-                                </DataTableRow>
-                            ))}
-                        </DataTable>
-                    )}
-                </div>
-
-                <div>
-                    <h2 className="text-sm font-semibold text-zinc-950 mb-3">Alerts</h2>
-                    {overdueInvoices.length === 0 ? (
-                        <div className="card">
-                            <EmptyState
-                                icon={CheckCircle}
-                                title="All caught up"
-                                description="No overdue invoices"
-                            />
-                        </div>
-                    ) : (
-                        <div className="data-table-wrap">
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Invoice</th>
-                                        <th>Due</th>
-                                        <th className="text-right">Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {overdueInvoices.map((invoice) => (
-                                        <DataTableRow
-                                            key={invoice.id || invoice._id}
-                                            onClick={() =>
-                                                navigate(`/invoices/${invoice.id || invoice._id}`)
-                                            }
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                        <h2 className="text-sm font-semibold text-zinc-950 mb-3">Recent documents</h2>
+                        {recentDocuments.length === 0 ? (
+                            <div className="data-table-wrap">
+                                <EmptyState
+                                    icon={FileText}
+                                    title="No documents yet"
+                                    action={
+                                        <button
+                                            type="button"
+                                            onClick={() => setCreateModalOpen(true)}
+                                            className="btn-primary"
                                         >
-                                            <DataTableCell>
-                                                <p className="font-medium text-zinc-950">
-                                                    {getDisplayNumber(invoice)}
-                                                </p>
-                                                <p className="text-xs text-zinc-500">
-                                                    {invoice.clientName || 'Unknown Client'}
-                                                </p>
-                                            </DataTableCell>
-                                            <DataTableCell>
-                                                <span className="text-red-600 text-xs">
-                                                    {invoice.dueDate
-                                                        ? format(new Date(invoice.dueDate), 'MMM d, yyyy')
-                                                        : '—'}
+                                            Create
+                                        </button>
+                                    }
+                                />
+                            </div>
+                        ) : (
+                            <DataTable columns={RECENT_COLUMNS}>
+                                {recentDocuments.map((doc) => (
+                                    <DataTableRow
+                                        key={`${doc.documentType || 'invoice'}-${doc.id || doc._id}`}
+                                        onClick={() => openDocument(doc)}
+                                    >
+                                        <DataTableCell>
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <DocumentTypeBadge doc={doc} />
+                                                <span className="font-medium text-zinc-950 truncate">
+                                                    {doc.displayNumber || getDisplayNumber(doc)}
                                                 </span>
-                                            </DataTableCell>
-                                            <DataTableCell className="text-right">
-                                                <span className="font-medium text-red-600 tabular-nums">
-                                                    {formatCurrency(invoice.total, invoice.currency)}
-                                                </span>
-                                            </DataTableCell>
-                                        </DataTableRow>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                                            </div>
+                                        </DataTableCell>
+                                        <DataTableCell>
+                                            <span className="truncate max-w-[160px] block">
+                                                {doc.clientName || 'Unknown Client'}
+                                            </span>
+                                        </DataTableCell>
+                                        <DataTableCell className="text-right">
+                                            <span className="font-medium tabular-nums">
+                                                {formatCurrency(doc.total, doc.currency)}
+                                            </span>
+                                        </DataTableCell>
+                                        <DataTableCell>
+                                            <StatusBadge {...resolveDocumentStatusBadge(doc)} />
+                                        </DataTableCell>
+                                    </DataTableRow>
+                                ))}
+                            </DataTable>
+                        )}
+                    </div>
+
+                    <div>
+                        <h2 className="text-sm font-semibold text-zinc-950 mb-3">Alerts</h2>
+                        {overdueInvoices.length === 0 ? (
+                            <div className="card">
+                                <EmptyState
+                                    icon={CheckCircle}
+                                    title="All caught up"
+                                    description="No overdue invoices"
+                                />
+                            </div>
+                        ) : (
+                            <div className="data-table-wrap">
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice</th>
+                                            <th>Due</th>
+                                            <th className="text-right">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {overdueInvoices.map((invoice) => (
+                                            <DataTableRow
+                                                key={invoice.id || invoice._id}
+                                                onClick={() =>
+                                                    navigate(`/invoices/${invoice.id || invoice._id}`)
+                                                }
+                                            >
+                                                <DataTableCell>
+                                                    <p className="font-medium text-zinc-950">
+                                                        {getDisplayNumber(invoice)}
+                                                    </p>
+                                                    <p className="text-xs text-zinc-500">
+                                                        {invoice.clientName || 'Unknown Client'}
+                                                    </p>
+                                                </DataTableCell>
+                                                <DataTableCell>
+                                                    <span className="text-red-600 text-xs">
+                                                        {invoice.dueDate
+                                                            ? format(new Date(invoice.dueDate), 'MMM d, yyyy')
+                                                            : '—'}
+                                                    </span>
+                                                </DataTableCell>
+                                                <DataTableCell className="text-right">
+                                                    <span className="font-medium text-red-600 tabular-nums">
+                                                        {formatCurrency(invoice.total, invoice.currency)}
+                                                    </span>
+                                                </DataTableCell>
+                                            </DataTableRow>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
             )}
         </div>
     );

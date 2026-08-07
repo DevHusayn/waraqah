@@ -41,7 +41,7 @@ function TypeBadge({ type }) {
                 isQuotation
                     ? 'bg-sky-50 text-sky-700 border-sky-200/70'
                     : isReceipt
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200/70'
+                      ? 'bg-teal-50 text-teal-700 border-teal-200/70'
                       : 'bg-brand-subtle text-brand border-brand/20'
             }`}
         >

@@ -7,6 +7,8 @@ export {
     isReceiptOnly,
     isPartialReceipt,
     getReceiptDisplayStatus,
+    getReceiptStatusLabel,
+    getReceiptStatusBadge,
     getPaymentMethodLabel,
     getReceiptNumber,
     getDisplayNumber,

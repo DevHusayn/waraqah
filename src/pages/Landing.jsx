@@ -258,11 +258,12 @@ export default function Landing() {
                         className={`grid lg:grid-cols-2 gap-12 lg:gap-16 items-center ${revealClass(heroVisible)}`}
                     >
                         <div>
-                            <p className="text-sm font-medium text-zinc-500">
+                            <p className="text-sm font-bold uppercase tracking-[0.14em] text-zinc-500">
                                 {APP_TAGLINE}
                             </p>
                             <h1 className="mt-6 text-3xl sm:text-4xl lg:text-[3.25rem] font-bold tracking-tight text-zinc-950 leading-[1.1]">
-                                Every sale. Every client.{' '}
+                                Every sale.{' '}
+                                <span className="whitespace-nowrap">Every client.</span>{' '}
                                 <span className="landing-text-shimmer">One record.</span>
                             </h1>
                             <p className="mt-6 text-lg text-zinc-600 max-w-xl leading-relaxed">
@@ -362,7 +363,7 @@ export default function Landing() {
                             <div className="rounded-lg border border-zinc-200 bg-white p-6 h-full flex flex-col">
                                 <h3 className="text-lg font-semibold text-zinc-900">Free</h3>
                                 <p className="mt-2 text-4xl font-bold text-zinc-900">
-                                    {formatPrice(0)}
+                                    ₦{formatPrice(0)}
                                     <span className="text-base font-normal text-zinc-500">/month</span>
                                 </p>
                                 <ul className="mt-8 space-y-3 flex-1">

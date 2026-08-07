@@ -5,7 +5,7 @@ import { Plus, Receipt, Search, ArrowUpDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
-import { getReceiptNumber, getPaymentMethodLabel, getReceiptDisplayStatus } from '../utils/receiptHelpers';
+import { getReceiptNumber, getPaymentMethodLabel, getReceiptStatusBadge } from '../utils/receiptHelpers';
 import PageHeader from '../components/PageHeader';
 import InvoiceLimitModal from '../components/InvoiceLimitModal';
 import { useReceiptCreateGuard } from '../hooks/useReceiptCreateGuard';
@@ -172,7 +172,7 @@ const Receipts = () => {
                                         {getPaymentMethodLabel(receipt.paymentMethod)}
                                     </DataTableCell>
                                     <DataTableCell>
-                                        <StatusBadge status={getReceiptDisplayStatus(receipt)} />
+                                        <StatusBadge {...getReceiptStatusBadge(receipt)} />
                                     </DataTableCell>
                                 </DataTableRow>
                                 );

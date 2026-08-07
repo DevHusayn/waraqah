@@ -54,6 +54,30 @@ export function getReceiptDisplayStatus(doc) {
     return doc.status === 'paid' ? 'paid' : doc.status || 'paid';
 }
 
+/** User-facing status label for standalone receipt badges (distinct from invoice wording). */
+export function getReceiptStatusLabel(statusKey) {
+    switch ((statusKey || '').toLowerCase()) {
+        case 'partial':
+            return 'Part received';
+        case 'paid':
+            return 'Fully received';
+        case 'draft':
+            return 'Draft';
+        default:
+            return statusKey || 'Fully received';
+    }
+}
+
+export function getReceiptStatusBadge(doc) {
+    const status = getReceiptDisplayStatus(doc);
+    const statusKey = {
+        partial: 'receipt_partial',
+        paid: 'receipt_paid',
+        draft: 'receipt_draft',
+    }[status] || 'receipt_paid';
+    return { status: statusKey, label: getReceiptStatusLabel(status) };
+}
+
 export function isReceipt(invoice) {
     return isReceiptOnly(invoice) || invoice?.status === 'paid';
 }

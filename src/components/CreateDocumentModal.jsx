@@ -18,7 +18,7 @@ const DOCUMENT_OPTIONS = [
         label: 'Receipt',
         description: 'Record payment received',
         icon: Receipt,
-        tone: 'bg-emerald-50 text-emerald-700',
+        tone: 'bg-teal-50 text-teal-700',
     },
     {
         id: 'quotation',

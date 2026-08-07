@@ -29,7 +29,7 @@ import { formatCurrency } from '../utils/currency';
 import {
     getReceiptNumber,
     getPaymentMethodLabel,
-    getReceiptDisplayStatus,
+    getReceiptStatusBadge,
 } from '../utils/receiptHelpers';
 import { getPublicInvoiceUrl } from '../utils/publicApi';
 import { apiFetch } from '../utils/api';
@@ -388,7 +388,7 @@ const ReceiptDetails = () => {
                 <div className="mb-8">
                     <div className="flex flex-wrap items-center gap-3">
                         <h1 className="page-title">{receiptNumber || 'Receipt'}</h1>
-                        <StatusBadge status={getReceiptDisplayStatus(receipt)} />
+                        <StatusBadge {...getReceiptStatusBadge(receipt)} />
                     </div>
                     <p className="page-subtitle mt-1">Payment record</p>
                 </div>
