@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { Download, Printer } from 'lucide-react';
 import { publicFetch } from '../utils/publicApi';
 import { getDownloadLabel } from '../utils/receiptHelpers';
-import { downloadPdfBlob } from '../utils/shareInvoicePdf';
+import { downloadPdfBlob, printPdfBlob } from '../utils/shareInvoicePdf';
 import InvoiceDocumentPreview from '../components/InvoiceDocumentPreview';
 import WaraqahLogo from '../components/WaraqahLogo';
 import Spinner from '../components/Spinner';
@@ -65,10 +65,25 @@ export default function PublicQuotation() {
         }
     }, [quotation, client, business, downloadBusy]);
 
-    const handlePrintPdf = useCallback(() => {
+    const handlePrintPdf = useCallback(async () => {
+        if (!quotation || !client || !business || downloadBusy) return;
+        setDownloadBusy(true);
         setPdfError('');
-        window.print();
-    }, []);
+        try {
+            const { generateInvoicePdfBlob } = await import('../utils/pdfGenerator');
+            const { blob } = await generateInvoicePdfBlob(
+                quotation,
+                client,
+                business,
+                { mode: pdfMode }
+            );
+            await printPdfBlob(blob);
+        } catch (err) {
+            setPdfError(err.message || 'Failed to print PDF.');
+        } finally {
+            setDownloadBusy(false);
+        }
+    }, [quotation, client, business, downloadBusy]);
 
     if (loading) {
         return (
@@ -141,9 +156,9 @@ export default function PublicQuotation() {
                 </div>
 
                 <footer className="mt-8 text-center text-xs text-zinc-500 print:hidden">
-                    <Link to="/" className="inline-flex items-center gap-2 hover:text-brand transition-colors">
+                    <Link to="/" className="inline-flex items-center gap-1.5 hover:text-brand transition-colors">
+                        <span>Powered by</span>
                         <WaraqahLogo className="h-5 w-auto" />
-                        <span>Powered by Waraqah</span>
                     </Link>
                 </footer>
             </div>

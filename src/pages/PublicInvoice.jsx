@@ -5,6 +5,7 @@ import { publicFetch } from '../utils/publicApi';
 import { getDownloadLabel } from '../utils/receiptHelpers';
 import {
     downloadPublicInvoicePdf,
+    printPublicInvoicePdf,
 } from '../utils/publicInvoicePdf';
 import InvoiceDocumentPreview from '../components/InvoiceDocumentPreview';
 import WaraqahLogo from '../components/WaraqahLogo';
@@ -68,10 +69,18 @@ export default function PublicInvoice() {
         }
     }, [invoice, client, business, showReceipt, downloadBusy]);
 
-    const handlePrintPdf = useCallback(() => {
+    const handlePrintPdf = useCallback(async () => {
+        if (!invoice || !client || !business || downloadBusy) return;
+        setDownloadBusy(true);
         setPdfError('');
-        window.print();
-    }, []);
+        try {
+            await printPublicInvoicePdf(invoice, client, business, showReceipt);
+        } catch (err) {
+            setPdfError(err.message || 'Failed to print PDF.');
+        } finally {
+            setDownloadBusy(false);
+        }
+    }, [invoice, client, business, showReceipt, downloadBusy]);
 
     if (loading) {
         return (
@@ -142,9 +151,9 @@ export default function PublicInvoice() {
                 </div>
 
                 <footer className="mt-8 text-center text-xs text-zinc-500 print:hidden">
-                    <Link to="/" className="inline-flex items-center gap-2 hover:text-brand transition-colors">
+                    <Link to="/" className="inline-flex items-center gap-1.5 hover:text-brand transition-colors">
+                        <span>Powered by</span>
                         <WaraqahLogo className="h-5 w-auto" />
-                        <span>Powered by Waraqah</span>
                     </Link>
                 </footer>
             </div>

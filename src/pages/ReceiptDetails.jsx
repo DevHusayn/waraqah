@@ -74,7 +74,6 @@ function ReceiptActionsPanel({
             label: 'Share Receipt',
             icon: Share2,
             onClick: onShare,
-            hidden: canRecordPayment,
             disabled: saving,
         },
         {
