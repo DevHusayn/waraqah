@@ -9,6 +9,7 @@ const SCALAR_FIELDS = [
     'taxRate',
     'brandColor',
     'defaultCurrency',
+    'timezone',
     'invoiceTemplateId',
     'paymentAccountName',
     'paymentBankName',

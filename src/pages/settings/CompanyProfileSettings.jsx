@@ -1,4 +1,5 @@
-import { Globe, Mail, MapPin, Phone } from 'lucide-react';
+import { Globe, Mail, MapPin, Phone, Clock3 } from 'lucide-react';
+import { BUSINESS_TIMEZONE_OPTIONS } from '@waraqah/shared';
 import FieldValidationMessage from '../../components/FieldValidationMessage';
 import ProfileFormFields from '../../components/settings/ProfileFormFields';
 import SettingsPageShell from '../../components/settings/SettingsPageShell';
@@ -27,7 +28,7 @@ export default function CompanyProfileSettings() {
     } = useBusinessSettingsForm({
         validate: buildProfileFieldErrors,
         fieldOrder: PROFILE_FIELD_ORDER,
-        payloadKeys: ['name', 'address', 'email', 'phone', 'website'],
+        payloadKeys: ['name', 'address', 'email', 'phone', 'website', 'timezone'],
         autoEditIfEmpty: true,
         successMessage: 'Company profile saved',
     });
@@ -64,6 +65,15 @@ export default function CompanyProfileSettings() {
                         <div className="sm:col-span-2">
                             <ViewField label="Address" value={businessInfo.address} icon={MapPin} />
                         </div>
+                        <ViewField
+                            label="Business timezone"
+                            value={
+                                BUSINESS_TIMEZONE_OPTIONS.find(
+                                    (option) => option.value === businessInfo.timezone
+                                )?.label || businessInfo.timezone
+                            }
+                            icon={Clock3}
+                        />
                     </dl>
                 </div>
             ) : (
@@ -72,6 +82,7 @@ export default function CompanyProfileSettings() {
                         formData={formData}
                         errors={errors}
                         onChange={handleChange}
+                        showTimezone
                     />
                     {errors.submit ? (
                         <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3">

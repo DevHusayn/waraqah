@@ -41,6 +41,8 @@ export function buildListQuery({
     sort,
     year,
     month,
+    summaryYear,
+    summaryMonth,
 } = {}) {
     const params = new URLSearchParams();
     params.set('page', String(page));
@@ -52,6 +54,8 @@ export function buildListQuery({
     if (sort) params.set('sort', sort);
     if (year != null && year !== '') params.set('year', String(year));
     if (month != null && month !== '') params.set('month', String(month));
+    if (summaryYear != null && summaryYear !== '') params.set('summaryYear', String(summaryYear));
+    if (summaryMonth != null && summaryMonth !== '') params.set('summaryMonth', String(summaryMonth));
     return params.toString();
 }
 

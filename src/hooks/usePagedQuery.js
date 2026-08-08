@@ -66,15 +66,19 @@ export function usePagedQuery({
             if (previousQuery?.queryKey?.[1] !== userId) return undefined;
             const prevParams = previousQuery?.queryKey?.[2];
             if (!prevParams || typeof prevParams !== 'object') return undefined;
-            const sameListFilters =
+
+            const sameListContent =
                 prevParams.status === queryParams.status &&
                 prevParams.plan === queryParams.plan &&
                 prevParams.activity === queryParams.activity &&
                 prevParams.sort === queryParams.sort &&
                 prevParams.search === queryParams.search &&
                 prevParams.year === queryParams.year &&
-                prevParams.month === queryParams.month;
-            return sameListFilters ? prev : undefined;
+                prevParams.month === queryParams.month &&
+                prevParams.page === queryParams.page &&
+                prevParams.limit === queryParams.limit;
+
+            return sameListContent && prev ? prev : undefined;
         },
     });
 
@@ -84,6 +88,28 @@ export function usePagedQuery({
     if (data?.summary) {
         lastSummaryRef.current = data.summary;
     }
+
+    const summaryFromCache =
+        lastSummaryRef.current &&
+        lastSummaryRef.current.period?.year === queryParams.summaryYear &&
+        lastSummaryRef.current.period?.month === queryParams.summaryMonth
+            ? lastSummaryRef.current
+            : null;
+
+    const summaryMatchesPeriod = (summary) =>
+        summary?.period?.year === queryParams.summaryYear &&
+        summary?.period?.month === queryParams.summaryMonth;
+
+    const resolvedSummary = summaryMatchesPeriod(data?.summary)
+        ? data.summary
+        : summaryFromCache;
+
+    const summaryLoading =
+        isFetching &&
+        Boolean(queryParams.summaryYear && queryParams.summaryMonth) &&
+        !summaryMatchesPeriod(data?.summary);
+
+    const initialLoading = isLoading && !(data?.data?.length > 0);
 
     const setData = useCallback(
         (updater) => {
@@ -126,8 +152,9 @@ export function usePagedQuery({
         setData,
         pagination: data?.pagination ?? { page: 1, limit, total: 0, totalPages: 0 },
         statusCounts: data?.statusCounts ?? lastStatusCountsRef.current,
-        summary: data?.summary ?? lastSummaryRef.current,
-        loading: isLoading,
+        summary: resolvedSummary,
+        summaryLoading,
+        loading: initialLoading,
         fetching: isFetching,
         error: error?.message || '',
         refresh,

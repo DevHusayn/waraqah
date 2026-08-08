@@ -1,7 +1,7 @@
 import FieldValidationMessage from '../FieldValidationMessage';
 import RequiredLabel from '../RequiredLabel';
 import { inputClass } from '../../utils/formFieldValidation';
-import { REPLAY_MASK } from '@waraqah/shared';
+import { BUSINESS_TIMEZONE_OPTIONS, REPLAY_MASK } from '@waraqah/shared';
 
 const DEFAULT_REQUIRED_FIELDS = ['name', 'address', 'email', 'phone'];
 
@@ -25,6 +25,7 @@ export default function ProfileFormFields({
     emailInputId,
     autoCompleteSection,
     requiredFields = DEFAULT_REQUIRED_FIELDS,
+    showTimezone = false,
 }) {
     const fieldId = (key) => `${idPrefix}${key}`;
     const businessEmailId = emailInputId || fieldId('email');
@@ -138,6 +139,32 @@ export default function ProfileFormFields({
                     spellCheck={false}
                 />
             </div>
+
+            {showTimezone ? (
+                <div>
+                    <label htmlFor={fieldId('timezone')} className="label">
+                        Business timezone
+                    </label>
+                    <select
+                        id={fieldId('timezone')}
+                        name="timezone"
+                        value={formData.timezone || 'Africa/Lagos'}
+                        onChange={onChange}
+                        className={inputClass(Boolean(errors.timezone))}
+                        aria-invalid={Boolean(errors.timezone)}
+                    >
+                        {BUSINESS_TIMEZONE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
+                    <p className="text-xs text-zinc-500 mt-1.5">
+                        Used for monthly stats and reporting boundaries.
+                    </p>
+                    <FieldValidationMessage message={errors.timezone} />
+                </div>
+            ) : null}
         </div>
     );
 }

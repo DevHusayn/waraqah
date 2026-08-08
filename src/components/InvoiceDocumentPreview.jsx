@@ -6,7 +6,8 @@ import {
     hasRecordedPayments,
     resolveQuantityColumnLabel,
 } from '@waraqah/shared';
-import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../constants/brand';
+import { APP_DOMAIN, APP_TAGLINE, APP_WEBSITE_URL } from '../constants/brand';
+import WaraqahLogo from './WaraqahLogo';
 import { formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
 import {
@@ -448,10 +449,11 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                                 : `Thank you for doing business with ${businessInfo?.name || 'us'}.`}
                         </p>
                     ) : (
-                        <>
-                            <p className="font-bold" style={{ color: brandColor }}>
-                                Powered by {APP_NAME}
-                            </p>
+                        <div className="flex flex-col items-center gap-1">
+                            <div className="inline-flex items-center justify-center gap-2 text-zinc-500">
+                                <span>Powered by</span>
+                                <WaraqahLogo size="sm" />
+                            </div>
                             <p className="mt-1">{APP_TAGLINE}</p>
                             <p className="mt-2">
                                 {FREE_PDF_FOOTER_CTA_PREFIX}
@@ -463,7 +465,7 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                                     {APP_DOMAIN}
                                 </a>
                             </p>
-                        </>
+                        </div>
                     )}
                 </div>
             </div>

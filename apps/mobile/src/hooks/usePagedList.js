@@ -19,6 +19,7 @@ export function usePagedList({
         totalPages: 0,
     });
     const [statusCounts, setStatusCounts] = useState(null);
+    const [summary, setSummary] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const requestIdRef = useRef(0);
@@ -56,6 +57,7 @@ export function usePagedList({
                 setData(unwrapped.data);
                 setPagination(unwrapped.pagination);
                 if (unwrapped.statusCounts) setStatusCounts(unwrapped.statusCounts);
+                setSummary(unwrapped.summary ?? null);
             } catch (err) {
                 if (reqId !== requestIdRef.current) return;
                 setError(err?.message || 'Could not load list');
@@ -91,6 +93,7 @@ export function usePagedList({
         setData,
         pagination,
         statusCounts,
+        summary,
         loading,
         error,
         refresh,

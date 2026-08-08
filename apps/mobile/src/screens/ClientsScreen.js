@@ -19,6 +19,8 @@ import {
     SearchBar,
 } from '../components/ui';
 import { usePagedList } from '../hooks/usePagedList';
+import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
+import { SummaryPeriodControls } from '../components/SummaryPeriodControls';
 import { apiFetch } from '../api/client';
 import { buildListQuery } from '../utils/pagination';
 import { colors, fontFamily, fontSize, shadows, spacing } from '../theme';
@@ -36,11 +38,25 @@ export function ClientsScreen() {
     const [saving, setSaving] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const sheetRef = useRef(null);
+    const {
+        summaryYear,
+        summaryMonth,
+        shiftPeriod,
+        periodLabel,
+    } = useSummaryPeriod();
 
     const fetcher = useCallback(
         ({ page, limit, search }) =>
-            apiFetch(`/clients?${buildListQuery({ page, limit, search })}`),
-        []
+            apiFetch(
+                `/clients?${buildListQuery({
+                    page,
+                    limit,
+                    search,
+                    summaryYear,
+                    summaryMonth,
+                })}`
+            ),
+        [summaryYear, summaryMonth]
     );
 
     const {
@@ -50,9 +66,13 @@ export function ClientsScreen() {
         setSearch,
         data,
         pagination,
+        summary,
         loading,
         refresh,
-    } = usePagedList({ fetcher });
+    } = usePagedList({
+        fetcher,
+        extraDeps: [summaryYear, summaryMonth],
+    });
 
     const clients = data.map(mapClient);
 
@@ -133,6 +153,24 @@ export function ClientsScreen() {
                             <View style={{ flex: 1 }}>
                                 <Text style={styles.pageTitle}>Clients</Text>
                                 <Text style={styles.pageSub}>People and businesses you invoice</Text>
+                                <View style={styles.statsRow}>
+                                    <View style={styles.statCard}>
+                                        <Text style={styles.statLabel}>Total clients</Text>
+                                        <Text style={styles.statValue}>
+                                            {summary?.totalClients ?? '—'}
+                                        </Text>
+                                    </View>
+                                    <View style={styles.statCard}>
+                                        <SummaryPeriodControls
+                                            periodLabel={periodLabel}
+                                            onPrevious={() => shiftPeriod(-1)}
+                                            onNext={() => shiftPeriod(1)}
+                                        />
+                                        <Text style={styles.statValue}>
+                                            {summary?.newInPeriod ?? summary?.newThisMonth ?? '—'}
+                                        </Text>
+                                    </View>
+                                </View>
                             </View>
                             <Pressable
                                 onPress={openAdd}
@@ -265,6 +303,31 @@ const styles = StyleSheet.create({
         fontFamily: fontFamily.regular,
         fontSize: fontSize.md,
         color: colors.muted,
+        marginTop: 4,
+    },
+    statsRow: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+        marginTop: spacing.md,
+    },
+    statCard: {
+        flex: 1,
+        backgroundColor: colors.white,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: colors.slate200,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+    },
+    statLabel: {
+        fontFamily: fontFamily.medium,
+        fontSize: fontSize.xs,
+        color: colors.muted,
+    },
+    statValue: {
+        fontFamily: fontFamily.bold,
+        fontSize: fontSize.xl,
+        color: colors.foreground,
         marginTop: 4,
     },
     addBtn: {

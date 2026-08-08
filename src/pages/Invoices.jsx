@@ -20,9 +20,11 @@ import EmptyState from '../components/EmptyState';
 import InvoiceUsageBanner from '../components/InvoiceUsageBanner';
 import Toolbar, { ToolbarSearch, ToolbarActions } from '../components/Toolbar';
 import StatusBadge from '../components/StatusBadge';
-import { ListPageSkeleton } from '../components/Skeleton';
+import { ListPageSkeleton, ListSummaryStatsSkeleton } from '../components/Skeleton';
 import PaginationBar from '../components/PaginationBar';
+import ListSummaryStats from '../components/ListSummaryStats';
 import { usePagedQuery } from '../hooks/usePagedQuery';
+import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 
@@ -51,9 +53,16 @@ const Invoices = () => {
     const { businessInfo } = useSettings();
     const [filter, setFilter] = useState('all');
     const [sortBy, setSortBy] = useState('newest');
+    const {
+        summaryYear,
+        summaryMonth,
+        monthInputValue,
+        setMonthInputValue,
+        periodLabel,
+    } = useSummaryPeriod();
 
     const fetcher = useCallback(
-        ({ page, limit, search, status, sort }) =>
+        ({ page, limit, search, status, sort, summaryYear: year, summaryMonth: month }) =>
             apiFetch(
                 `/invoices?${buildListQuery({
                     page,
@@ -61,6 +70,8 @@ const Invoices = () => {
                     search,
                     status,
                     sort,
+                    summaryYear: year,
+                    summaryMonth: month,
                 })}`
             ),
         []
@@ -74,11 +85,13 @@ const Invoices = () => {
         data,
         pagination,
         statusCounts,
+        summary,
+        summaryLoading,
         loading,
     } = usePagedQuery({
         queryKeyBase: 'invoices',
         fetcher,
-        extraParams: { status: filter, sort: sortBy },
+        extraParams: { status: filter, sort: sortBy, summaryYear, summaryMonth },
     });
 
     const invoices = useMemo(() => data.map(mapInvoice), [data]);
@@ -106,6 +119,7 @@ const Invoices = () => {
 
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
     const premium = isPremiumUser(businessInfo);
+    const showStats = !(loading && invoices.length === 0 && !search);
 
     const clientLabel = (invoice) =>
         invoice.clientName || 'Unknown Client';
@@ -127,6 +141,22 @@ const Invoices = () => {
 
                 {!premium && usageLabel ? (
                     <InvoiceUsageBanner label={usageLabel} className="mb-4" />
+                ) : null}
+
+                {showStats ? (
+                    <ListSummaryStats
+                        visible
+                        totalLabel="Total invoices"
+                        total={summary?.totalInvoices}
+                        newInPeriod={summary?.newInPeriod ?? summary?.newThisMonth}
+                        totalIcon={FileText}
+                        periodLabel={periodLabel}
+                        monthInputValue={monthInputValue}
+                        onPeriodChange={setMonthInputValue}
+                        summaryLoading={summaryLoading}
+                    />
+                ) : loading && invoices.length === 0 && !search ? (
+                    <ListSummaryStatsSkeleton />
                 ) : null}
 
                 <Toolbar className="mb-4">
@@ -155,7 +185,13 @@ const Invoices = () => {
                 <FilterTabs tabs={filterTabs} value={filter} onChange={handleFilterChange} className="mb-4" />
 
                 {loading && invoices.length === 0 ? (
-                    <ListPageSkeleton rows={8} columns={6} withAction={false} />
+                    <ListPageSkeleton
+                        rows={8}
+                        columns={6}
+                        withHeader={false}
+                        withToolbar={false}
+                        withAction={false}
+                    />
                 ) : invoices.length === 0 ? (
                     <div className="data-table-wrap">
                         <EmptyState

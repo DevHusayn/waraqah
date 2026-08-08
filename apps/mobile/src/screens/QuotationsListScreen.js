@@ -16,6 +16,8 @@ import {
 } from '../components/ui';
 import { useQuotationCreateGuard } from '../hooks/useQuotationCreateGuard';
 import { usePagedList } from '../hooks/usePagedList';
+import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
+import { SummaryPeriodControls } from '../components/SummaryPeriodControls';
 import { apiFetch } from '../api/client';
 import { buildListQuery } from '../utils/pagination';
 import { colors, fontFamily, fontSize, shadows, spacing } from '../theme';
@@ -30,6 +32,12 @@ export function QuotationsListScreen({ navigation }) {
     const [refreshing, setRefreshing] = useState(false);
     const limitModalRef = useRef(null);
     const { invoiceUsage, tryCreate, goUpgrade } = useQuotationCreateGuard(limitModalRef, navigation);
+    const {
+        summaryYear,
+        summaryMonth,
+        shiftPeriod,
+        periodLabel,
+    } = useSummaryPeriod();
 
     const fetcher = useCallback(
         ({ page, limit, search }) =>
@@ -40,9 +48,11 @@ export function QuotationsListScreen({ navigation }) {
                     search,
                     status: filter,
                     sort: 'newest',
+                    summaryYear,
+                    summaryMonth,
                 })}`
             ),
-        [filter]
+        [filter, summaryYear, summaryMonth]
     );
 
     const {
@@ -53,11 +63,12 @@ export function QuotationsListScreen({ navigation }) {
         data,
         pagination,
         statusCounts,
+        summary,
         loading,
         refresh,
     } = usePagedList({
         fetcher,
-        extraDeps: [filter],
+        extraDeps: [filter, summaryYear, summaryMonth],
     });
 
     useEffect(() => {
@@ -101,6 +112,24 @@ export function QuotationsListScreen({ navigation }) {
                     <View>
                         <Text style={styles.pageTitle}>Quotations</Text>
                         <Text style={styles.pageSub}>Manage estimates and proposals</Text>
+                        <View style={styles.statsRow}>
+                            <View style={styles.statCard}>
+                                <Text style={styles.statLabel}>Total quotations</Text>
+                                <Text style={styles.statValue}>
+                                    {summary?.totalQuotations ?? '—'}
+                                </Text>
+                            </View>
+                            <View style={styles.statCard}>
+                                <SummaryPeriodControls
+                                    periodLabel={periodLabel}
+                                    onPrevious={() => shiftPeriod(-1)}
+                                    onNext={() => shiftPeriod(1)}
+                                />
+                                <Text style={styles.statValue}>
+                                    {summary?.newInPeriod ?? summary?.newThisMonth ?? '—'}
+                                </Text>
+                            </View>
+                        </View>
                         {!premium && usageLabel ? (
                             <View style={styles.padX}>
                                 <UsageBanner label={usageLabel} />
@@ -186,7 +215,33 @@ const styles = StyleSheet.create({
         fontSize: fontSize.md,
         color: colors.muted,
         paddingHorizontal: spacing.xl,
-        marginBottom: spacing.xl,
+        marginTop: 4,
+    },
+    statsRow: {
+        flexDirection: 'row',
+        gap: spacing.sm,
+        marginTop: spacing.md,
+        marginBottom: spacing.md,
+        paddingHorizontal: spacing.xl,
+    },
+    statCard: {
+        flex: 1,
+        backgroundColor: colors.white,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: colors.slate200,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+    },
+    statLabel: {
+        fontFamily: fontFamily.medium,
+        fontSize: fontSize.xs,
+        color: colors.muted,
+    },
+    statValue: {
+        fontFamily: fontFamily.bold,
+        fontSize: fontSize.xl,
+        color: colors.foreground,
         marginTop: 4,
     },
     padX: { paddingHorizontal: spacing.xl, marginBottom: spacing.md },

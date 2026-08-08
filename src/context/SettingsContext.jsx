@@ -18,6 +18,7 @@ const EMPTY_BUSINESS = {
     email: '',
     phone: '',
     website: '',
+    timezone: 'Africa/Lagos',
     defaultCurrency: 'NGN',
     taxRate: 10,
     brandColor: DEFAULT_BRAND_COLOR,

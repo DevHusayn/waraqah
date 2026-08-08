@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Edit, Trash2, Search, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Users, UserPlus } from 'lucide-react';
+import ListSummaryStats from '../components/ListSummaryStats';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import ClientFormModal, { EMPTY_CLIENT } from '../components/ClientFormModal';
@@ -12,7 +13,8 @@ import EmptyState from '../components/EmptyState';
 import Toolbar, { ToolbarSearch } from '../components/Toolbar';
 import PaginationBar from '../components/PaginationBar';
 import { usePagedQuery } from '../hooks/usePagedQuery';
-import { ListPageSkeleton } from '../components/Skeleton';
+import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
+import { ListPageSkeleton, ListSummaryStatsSkeleton } from '../components/Skeleton';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 import { getClientBusiness } from '../utils/clientHelpers';
@@ -48,10 +50,25 @@ const Clients = () => {
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [confirm, setConfirm] = useState({ open: false, clientId: null });
     const [deleting, setDeleting] = useState(false);
+    const {
+        summaryYear,
+        summaryMonth,
+        monthInputValue,
+        setMonthInputValue,
+        periodLabel,
+    } = useSummaryPeriod();
 
     const fetcher = useCallback(
-        ({ page, limit, search }) =>
-            apiFetch(`/clients?${buildListQuery({ page, limit, search })}`),
+        ({ page, limit, search, summaryYear: year, summaryMonth: month }) =>
+            apiFetch(
+                `/clients?${buildListQuery({
+                    page,
+                    limit,
+                    search,
+                    summaryYear: year,
+                    summaryMonth: month,
+                })}`
+            ),
         []
     );
 
@@ -61,9 +78,15 @@ const Clients = () => {
         setSearch,
         data,
         pagination,
+        summary,
+        summaryLoading,
         loading,
         refresh,
-    } = usePagedQuery({ queryKeyBase: 'clients', fetcher });
+    } = usePagedQuery({
+        queryKeyBase: 'clients',
+        fetcher,
+        extraParams: { summaryYear, summaryMonth },
+    });
 
     const clients = data.map(mapClient);
 
@@ -148,7 +171,11 @@ const Clients = () => {
         }
     };
 
-    const hasNoClientsAtAll = !loading && pagination.total === 0 && !search;
+    const hasNoClientsAtAll =
+        !loading && !search && (summary ? summary.totalClients === 0 : pagination.total === 0);
+    const showClientStats = !(loading && clients.length === 0 && !search);
+    const totalClients = summary?.totalClients;
+    const newInPeriod = summary?.newInPeriod ?? summary?.newThisMonth;
 
     return (
         <>
@@ -184,8 +211,25 @@ const Clients = () => {
                 </button>
             </PageHeader>
 
+            {showClientStats ? (
+                <ListSummaryStats
+                    visible
+                    totalLabel="Total clients"
+                    total={totalClients}
+                    newInPeriod={newInPeriod}
+                    totalIcon={Users}
+                    newIcon={UserPlus}
+                    periodLabel={periodLabel}
+                    monthInputValue={monthInputValue}
+                    onPeriodChange={setMonthInputValue}
+                    summaryLoading={summaryLoading}
+                />
+            ) : loading && clients.length === 0 && !search ? (
+                <ListSummaryStatsSkeleton />
+            ) : null}
+
             {loading && clients.length === 0 && !search ? (
-                <ListPageSkeleton rows={8} columns={5} />
+                <ListPageSkeleton rows={8} columns={5} withHeader={false} />
             ) : hasNoClientsAtAll ? (
                 <div className="data-table-wrap">
                     <EmptyState

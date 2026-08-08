@@ -159,7 +159,7 @@ export default function PublicQuotation() {
                 <footer className="mt-8 text-center text-xs text-zinc-500 print:hidden">
                     <Link to="/" className="inline-flex items-center gap-1.5 hover:text-brand transition-colors">
                         <span>Powered by</span>
-                        <WaraqahLogo className="h-5 w-auto" />
+                        <WaraqahLogo size="sm" />
                     </Link>
                 </footer>
             </div>

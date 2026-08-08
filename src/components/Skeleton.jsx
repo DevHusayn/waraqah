@@ -82,11 +82,38 @@ export function TableSkeleton({ rows = 6, columns = 5, className = '' }) {
     );
 }
 
-export function ListPageSkeleton({ rows = 6, columns = 4, withToolbar = true, withAction = true }) {
+export function ListSummaryStatsSkeleton({ className = 'mb-6' }) {
+    return (
+        <div className={`grid grid-cols-2 gap-3 max-w-lg ${className}`.trim()} aria-hidden>
+            {[0, 1].map((index) => (
+                <div key={index} className="stat-card">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                        <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
+                        <Skeleton className={`h-3 ${index === 0 ? 'w-[5.5rem]' : 'w-[7.5rem]'}`} />
+                    </div>
+                    <Skeleton className="h-6 w-10" />
+                </div>
+            ))}
+        </div>
+    );
+}
+
+export function ListPageSkeleton({
+    rows = 6,
+    columns = 4,
+    withToolbar = true,
+    withAction = true,
+    withHeader = true,
+    withSummaryStats = false,
+    withFilterTabs = false,
+    withSort = false,
+}) {
     return (
         <LoadingStatus label="Loading page">
-            <PageHeaderSkeleton withAction={withAction} />
-            {withToolbar ? <ToolbarSkeleton /> : null}
+            {withHeader ? <PageHeaderSkeleton withAction={withAction} /> : null}
+            {withSummaryStats ? <ListSummaryStatsSkeleton /> : null}
+            {withToolbar ? <ToolbarSkeleton withSort={withSort} /> : null}
+            {withFilterTabs ? <FilterTabsSkeleton /> : null}
             <TableSkeleton rows={rows} columns={columns} />
         </LoadingStatus>
     );

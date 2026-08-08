@@ -36,7 +36,7 @@ export default function VerifyEmail() {
         <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
             <div className="w-full max-w-md card text-center">
                 <Link to="/" className="inline-flex mb-6">
-                    <WaraqahLogo className="h-8 w-auto" />
+                    <WaraqahLogo size="md" />
                 </Link>
 
                 {status === 'loading' ? (

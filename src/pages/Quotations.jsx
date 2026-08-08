@@ -18,9 +18,11 @@ import EmptyState from '../components/EmptyState';
 import InvoiceUsageBanner from '../components/InvoiceUsageBanner';
 import Toolbar, { ToolbarSearch, ToolbarActions } from '../components/Toolbar';
 import StatusBadge from '../components/StatusBadge';
-import { ListPageSkeleton } from '../components/Skeleton';
+import { ListPageSkeleton, ListSummaryStatsSkeleton } from '../components/Skeleton';
 import PaginationBar from '../components/PaginationBar';
+import ListSummaryStats from '../components/ListSummaryStats';
 import { usePagedQuery } from '../hooks/usePagedQuery';
+import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 
@@ -50,9 +52,16 @@ const Quotations = () => {
     const { businessInfo } = useSettings();
     const [filter, setFilter] = useState('all');
     const [sortBy, setSortBy] = useState('newest');
+    const {
+        summaryYear,
+        summaryMonth,
+        monthInputValue,
+        setMonthInputValue,
+        periodLabel,
+    } = useSummaryPeriod();
 
     const fetcher = useCallback(
-        ({ page, limit, search, status, sort }) =>
+        ({ page, limit, search, status, sort, summaryYear: year, summaryMonth: month }) =>
             apiFetch(
                 `/quotations?${buildListQuery({
                     page,
@@ -60,6 +69,8 @@ const Quotations = () => {
                     search,
                     status,
                     sort,
+                    summaryYear: year,
+                    summaryMonth: month,
                 })}`
             ),
         []
@@ -73,11 +84,13 @@ const Quotations = () => {
         data,
         pagination,
         statusCounts,
+        summary,
+        summaryLoading,
         loading,
     } = usePagedQuery({
         queryKeyBase: 'quotations',
         fetcher,
-        extraParams: { status: filter, sort: sortBy },
+        extraParams: { status: filter, sort: sortBy, summaryYear, summaryMonth },
     });
 
     const quotations = useMemo(() => data.map(mapQuotation), [data]);
@@ -105,6 +118,7 @@ const Quotations = () => {
 
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
     const premium = isPremiumUser(businessInfo);
+    const showStats = !(loading && quotations.length === 0 && !search);
 
     const clientLabel = (quotation) => quotation.clientName || 'Unknown Client';
 
@@ -125,6 +139,22 @@ const Quotations = () => {
 
                 {!premium && usageLabel ? (
                     <InvoiceUsageBanner label={usageLabel} className="mb-4" />
+                ) : null}
+
+                {showStats ? (
+                    <ListSummaryStats
+                        visible
+                        totalLabel="Total quotations"
+                        total={summary?.totalQuotations}
+                        newInPeriod={summary?.newInPeriod ?? summary?.newThisMonth}
+                        totalIcon={ClipboardList}
+                        periodLabel={periodLabel}
+                        monthInputValue={monthInputValue}
+                        onPeriodChange={setMonthInputValue}
+                        summaryLoading={summaryLoading}
+                    />
+                ) : loading && quotations.length === 0 && !search ? (
+                    <ListSummaryStatsSkeleton />
                 ) : null}
 
                 <Toolbar className="mb-4">
@@ -153,7 +183,13 @@ const Quotations = () => {
                 <FilterTabs tabs={filterTabs} value={filter} onChange={handleFilterChange} className="mb-4" />
 
                 {loading && quotations.length === 0 ? (
-                    <ListPageSkeleton rows={8} columns={6} withAction={false} />
+                    <ListPageSkeleton
+                        rows={8}
+                        columns={6}
+                        withHeader={false}
+                        withToolbar={false}
+                        withAction={false}
+                    />
                 ) : quotations.length === 0 ? (
                     <div className="data-table-wrap">
                         <EmptyState

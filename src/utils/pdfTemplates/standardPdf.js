@@ -36,6 +36,7 @@ import { drawCenteredPdfFooterCta } from '../pdfLink';
 import { addFooterLinkToPdfBlob } from '../pdfFooterLink';
 import { addPdfPreviewThumbnail } from '../pdfPageThumbnail';
 import { resolvePdfPaperFormat } from '../pdfPageFormat';
+import { loadWaraqahLogoIcon } from '../waraqahBrandLogo';
 
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -471,7 +472,7 @@ function drawBottomBoxes(
     return y;
 }
 
-function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayColor, mode = 'invoice') {
+function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayColor, mode = 'invoice', waraqahLogoPng = '') {
     doc.setDrawColor(229, 231, 235);
     doc.setLineWidth(0.5);
     doc.line(15, footerY - 4, 195, footerY - 4);
@@ -491,19 +492,53 @@ function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayC
         return null;
     }
 
-    doc.setTextColor(...primaryColor);
+    const lockupY = footerY + 1;
+    const iconSize = 5.5;
+    const poweredByLabel = 'Powered by';
+    const gapAfterLabel = 2;
+    const gapAfterIcon = 0.6;
+
+    doc.setFontSize(7);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(...grayColor);
+    const poweredByWidth = doc.getTextWidth(poweredByLabel);
+
+    doc.setFontSize(8);
     doc.setFont(undefined, 'bold');
-    doc.text(`Powered by ${APP_NAME}`, 105, footerY + 1, { align: 'center' });
+    doc.setTextColor(...primaryColor);
+    const nameWidth = doc.getTextWidth(APP_NAME);
+
+    const lockupWidth = waraqahLogoPng
+        ? iconSize + gapAfterIcon + nameWidth
+        : nameWidth;
+    const totalWidth = poweredByWidth + gapAfterLabel + lockupWidth;
+    let x = (210 - totalWidth) / 2;
+
+    doc.setFontSize(7);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(...grayColor);
+    doc.text(poweredByLabel, x, lockupY + 0.4);
+    x += poweredByWidth + gapAfterLabel;
+
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(...primaryColor);
+    if (waraqahLogoPng) {
+        doc.addImage(waraqahLogoPng, 'PNG', x, lockupY - iconSize + 1.2, iconSize, iconSize);
+        x += iconSize + gapAfterIcon;
+    }
+    doc.text(APP_NAME, x, lockupY + 0.4);
+
     setPdfBodyFont(doc);
     doc.setFontSize(7);
     doc.setTextColor(...grayColor);
-    doc.text(APP_TAGLINE, 105, footerY + 5.5, { align: 'center' });
+    doc.text(APP_TAGLINE, 105, footerY + 6.5, { align: 'center' });
 
     return drawCenteredPdfFooterCta(
         doc,
         FREE_PDF_FOOTER_CTA_PREFIX,
         APP_DOMAIN,
-        footerY + 10,
+        footerY + 11,
         primaryColor,
         grayColor
     );
@@ -911,6 +946,8 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     } catch {
         /* optional assets */
     }
+
+    const waraqahLogoPng = premium ? '' : await loadWaraqahLogoIcon(pngCache);
     const footerLinkBounds = drawPageFooter(
         doc,
         businessInfo,
@@ -918,7 +955,8 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         footerLineY,
         primaryColor,
         grayColor,
-        mode
+        mode,
+        waraqahLogoPng
     );
 
     const filename = getPdfFileName(invoice, mode);

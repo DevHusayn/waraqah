@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { format, parseISO, startOfMonth } from 'date-fns';
 import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -53,6 +54,131 @@ function buildYearOptions(centerYear, max, min) {
     return years;
 }
 
+function MonthPickerPanel({
+    mode,
+    setMode,
+    viewYear,
+    setViewYear,
+    yearOptions,
+    selectedMonthIndex,
+    selectedYear,
+    max,
+    min,
+    onPickMonth,
+    onPickYear,
+    onThisMonth,
+}) {
+    return (
+        <>
+            <div className="mb-3 flex items-center justify-between gap-2">
+                <button
+                    type="button"
+                    onClick={() =>
+                        mode === 'year'
+                            ? setViewYear((y) => y - 12)
+                            : setViewYear((y) => y - 1)
+                    }
+                    className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 transition-colors"
+                    aria-label={mode === 'year' ? 'Previous years' : 'Previous year'}
+                >
+                    <ChevronLeft size={18} />
+                </button>
+
+                {mode === 'month' ? (
+                    <button
+                        type="button"
+                        onClick={() => setMode('year')}
+                        className="min-w-[5.5rem] rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-sm font-semibold text-zinc-900 hover:border-brand/30 hover:bg-brand-light/40 transition-colors"
+                        aria-label="Select year"
+                    >
+                        {viewYear}
+                    </button>
+                ) : (
+                    <span className="text-sm font-semibold text-zinc-900 tabular-nums">
+                        {yearOptions[0]} – {yearOptions[yearOptions.length - 1]}
+                    </span>
+                )}
+
+                <button
+                    type="button"
+                    onClick={() =>
+                        mode === 'year'
+                            ? setViewYear((y) => y + 12)
+                            : setViewYear((y) => y + 1)
+                    }
+                    className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 transition-colors"
+                    aria-label={mode === 'year' ? 'Next years' : 'Next year'}
+                >
+                    <ChevronRight size={18} />
+                </button>
+            </div>
+
+            {mode === 'year' ? (
+                <div className="grid grid-cols-3 gap-1.5">
+                    {yearOptions.map((year) => {
+                        const yearDisabled = isYearDisabled(year, max, min);
+                        const isSelected = selectedYear === year;
+
+                        return (
+                            <button
+                                key={year}
+                                type="button"
+                                disabled={yearDisabled}
+                                onClick={() => onPickYear(year)}
+                                className={`rounded-lg py-2 text-sm font-medium transition-colors ${
+                                    isSelected
+                                        ? 'bg-brand text-white shadow-sm'
+                                        : yearDisabled
+                                          ? 'text-zinc-300 cursor-not-allowed'
+                                          : 'text-zinc-700 hover:bg-brand-light hover:text-brand'
+                                }`}
+                            >
+                                {year}
+                            </button>
+                        );
+                    })}
+                </div>
+            ) : (
+                <div className="grid grid-cols-4 gap-1.5">
+                    {MONTHS.map(({ value: monthIndex, label }) => {
+                        const isSelected =
+                            selectedMonthIndex === monthIndex && selectedYear === viewYear;
+                        const monthDisabled = isMonthDisabled(viewYear, monthIndex, max, min);
+
+                        return (
+                            <button
+                                key={monthIndex}
+                                type="button"
+                                disabled={monthDisabled}
+                                onClick={() => onPickMonth(monthIndex)}
+                                className={`rounded-lg py-2 text-sm font-medium transition-colors ${
+                                    isSelected
+                                        ? 'bg-brand text-white shadow-sm'
+                                        : monthDisabled
+                                          ? 'text-zinc-300 cursor-not-allowed'
+                                          : 'text-zinc-700 hover:bg-brand-light hover:text-brand'
+                                }`}
+                            >
+                                {label}
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
+
+            <div className="mt-3 flex justify-end border-t border-zinc-100 pt-3">
+                <button
+                    type="button"
+                    onClick={onThisMonth}
+                    className="text-sm font-medium text-brand hover:text-brand-hover transition-colors"
+                >
+                    This month
+                </button>
+            </div>
+        </>
+    );
+}
+
 export default function MonthPickerField({
     id,
     value,
@@ -61,15 +187,24 @@ export default function MonthPickerField({
     min,
     disabled = false,
     className = '',
+    variant = 'field',
+    displayLabel,
+    portal = false,
+    triggerAriaLabel,
 }) {
     const [open, setOpen] = useState(false);
-    const [mode, setMode] = useState('month'); // 'month' | 'year'
+    const [mode, setMode] = useState('month');
     const rootRef = useRef(null);
+    const triggerRef = useRef(null);
+    const panelRef = useRef(null);
+    const [panelStyle, setPanelStyle] = useState(null);
 
     const selected = parseMonthValue(value);
     const [viewYear, setViewYear] = useState(() =>
         selected ? selected.getFullYear() : new Date().getFullYear()
     );
+
+    const isInline = variant === 'inline';
 
     useEffect(() => {
         if (selected) setViewYear(selected.getFullYear());
@@ -80,16 +215,62 @@ export default function MonthPickerField({
     }, [open]);
 
     useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (rootRef.current && !rootRef.current.contains(e.target)) {
-                setOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+        if (!open) return undefined;
 
-    const displayLabel = selected ? format(selected, 'MMMM yyyy') : 'Select month';
+        const handleClickOutside = (event) => {
+            const target = event.target;
+            if (rootRef.current?.contains(target)) return;
+            if (panelRef.current?.contains(target)) return;
+            setOpen(false);
+        };
+
+        const handleEscape = (event) => {
+            if (event.key === 'Escape') setOpen(false);
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [open]);
+
+    useEffect(() => {
+        if (!open || !portal) {
+            setPanelStyle(null);
+            return undefined;
+        }
+
+        const updatePosition = () => {
+            const trigger = triggerRef.current;
+            if (!trigger) return;
+            const rect = trigger.getBoundingClientRect();
+            const width = 288;
+            const left = Math.min(
+                Math.max(12, rect.left),
+                window.innerWidth - width - 12
+            );
+            setPanelStyle({
+                position: 'fixed',
+                top: rect.bottom + 6,
+                left,
+                width,
+                zIndex: 60,
+            });
+        };
+
+        updatePosition();
+        window.addEventListener('resize', updatePosition);
+        window.addEventListener('scroll', updatePosition, true);
+        return () => {
+            window.removeEventListener('resize', updatePosition);
+            window.removeEventListener('scroll', updatePosition, true);
+        };
+    }, [open, portal]);
+
+    const formattedLabel = selected ? format(selected, 'MMMM yyyy') : 'Select month';
+    const triggerText = displayLabel || formattedLabel;
 
     const yearOptions = useMemo(
         () => buildYearOptions(viewYear, max, min),
@@ -109,144 +290,93 @@ export default function MonthPickerField({
         setMode('month');
     };
 
+    const goToThisMonth = () => {
+        const now = new Date();
+        const current = format(startOfMonth(now), 'yyyy-MM');
+        onChange(current);
+        setViewYear(now.getFullYear());
+        setMode('month');
+        setOpen(false);
+    };
+
     const selectedMonthIndex = selected ? selected.getMonth() : null;
     const selectedYear = selected ? selected.getFullYear() : null;
 
+    const panel = open ? (
+        <div
+            ref={panelRef}
+            role="dialog"
+            aria-label={mode === 'year' ? 'Choose year' : 'Choose month'}
+            style={portal ? panelStyle ?? undefined : undefined}
+            className={`rounded-xl border border-zinc-200 bg-white p-4 shadow-card animate-fade-in ${
+                portal ? '' : 'absolute z-50 mt-1.5 left-0 w-[18rem]'
+            }`}
+        >
+            <MonthPickerPanel
+                mode={mode}
+                setMode={setMode}
+                viewYear={viewYear}
+                setViewYear={setViewYear}
+                yearOptions={yearOptions}
+                selectedMonthIndex={selectedMonthIndex}
+                selectedYear={selectedYear}
+                max={max}
+                min={min}
+                onPickMonth={pickMonth}
+                onPickYear={pickYear}
+                onThisMonth={goToThisMonth}
+            />
+        </div>
+    ) : null;
+
     return (
-        <div ref={rootRef} className={`relative ${className}`}>
-            <button
-                id={id}
-                type="button"
-                disabled={disabled}
-                onClick={() => setOpen((prev) => !prev)}
-                aria-haspopup="dialog"
-                aria-expanded={open}
-                className={`input-field mt-1 flex items-center justify-between gap-2 text-left max-w-xs ${
-                    !selected ? 'text-zinc-400' : 'text-zinc-900'
-                }`}
-            >
-                <span className="flex items-center gap-2 truncate">
-                    <Calendar size={18} className="shrink-0 text-brand" />
-                    {displayLabel}
-                </span>
-                <ChevronDown
-                    size={18}
-                    className={`shrink-0 text-zinc-400 transition-transform ${open ? 'rotate-180' : ''}`}
-                />
-            </button>
-
-            {open && (
-                <div
-                    role="dialog"
-                    aria-label={mode === 'year' ? 'Choose year' : 'Choose month'}
-                    className="absolute z-30 mt-1.5 w-full min-w-[288px] max-w-xs rounded-xl border border-zinc-200 bg-white p-4 shadow-card animate-fade-in"
+        <div ref={rootRef} className={`relative ${isInline ? 'inline' : ''} ${className}`.trim()}>
+            {isInline ? (
+                <button
+                    ref={triggerRef}
+                    id={id}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => setOpen((prev) => !prev)}
+                    aria-haspopup="dialog"
+                    aria-expanded={open}
+                    aria-label={triggerAriaLabel || `Select month, currently ${triggerText}`}
+                    className="inline-flex items-center gap-0.5 max-w-full align-baseline text-zinc-600 hover:text-zinc-800 transition-colors disabled:opacity-50"
                 >
-                    <div className="mb-3 flex items-center justify-between">
-                        <button
-                            type="button"
-                            onClick={() =>
-                                mode === 'year'
-                                    ? setViewYear((y) => y - 12)
-                                    : setViewYear((y) => y - 1)
-                            }
-                            className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 transition-colors"
-                            aria-label={mode === 'year' ? 'Previous years' : 'Previous year'}
-                        >
-                            <ChevronLeft size={18} />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setMode((m) => (m === 'year' ? 'month' : 'year'))}
-                            className="rounded-lg px-2 py-1 text-sm font-semibold text-zinc-900 hover:bg-zinc-100 transition-colors"
-                            aria-label={mode === 'year' ? 'Show months' : 'Select year'}
-                        >
-                            {mode === 'year' ? `${yearOptions[0]} – ${yearOptions[yearOptions.length - 1]}` : viewYear}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() =>
-                                mode === 'year'
-                                    ? setViewYear((y) => y + 12)
-                                    : setViewYear((y) => y + 1)
-                            }
-                            className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 transition-colors"
-                            aria-label={mode === 'year' ? 'Next years' : 'Next year'}
-                        >
-                            <ChevronRight size={18} />
-                        </button>
-                    </div>
-
-                    {mode === 'year' ? (
-                        <div className="grid grid-cols-3 gap-2">
-                            {yearOptions.map((year) => {
-                                const yearDisabled = isYearDisabled(year, max, min);
-                                const isSelected = selectedYear === year;
-
-                                return (
-                                    <button
-                                        key={year}
-                                        type="button"
-                                        disabled={yearDisabled}
-                                        onClick={() => pickYear(year)}
-                                        className={`rounded-lg py-2.5 text-sm font-medium transition-colors ${
-                                            isSelected
-                                                ? 'bg-brand text-white shadow-sm'
-                                                : yearDisabled
-                                                  ? 'text-zinc-300 cursor-not-allowed'
-                                                  : 'text-zinc-700 hover:bg-brand-light hover:text-brand'
-                                        }`}
-                                    >
-                                        {year}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-3 gap-2">
-                            {MONTHS.map(({ value: monthIndex, label }) => {
-                                const isSelected =
-                                    selectedMonthIndex === monthIndex && selectedYear === viewYear;
-                                const monthDisabled = isMonthDisabled(viewYear, monthIndex, max, min);
-
-                                return (
-                                    <button
-                                        key={monthIndex}
-                                        type="button"
-                                        disabled={monthDisabled}
-                                        onClick={() => pickMonth(monthIndex)}
-                                        className={`rounded-lg py-2.5 text-sm font-medium transition-colors ${
-                                            isSelected
-                                                ? 'bg-brand text-white shadow-sm'
-                                                : monthDisabled
-                                                  ? 'text-zinc-300 cursor-not-allowed'
-                                                  : 'text-zinc-700 hover:bg-brand-light hover:text-brand'
-                                        }`}
-                                    >
-                                        {label}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    )}
-
-                    <div className="mt-3 flex justify-end border-t border-zinc-100 pt-3">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                const now = new Date();
-                                const current = format(startOfMonth(now), 'yyyy-MM');
-                                onChange(current);
-                                setViewYear(now.getFullYear());
-                                setMode('month');
-                                setOpen(false);
-                            }}
-                            className="text-sm font-medium text-brand hover:text-brand-hover transition-colors"
-                        >
-                            This month
-                        </button>
-                    </div>
-                </div>
+                    <span className="underline decoration-zinc-400 underline-offset-[3px] hover:decoration-brand truncate">
+                        {triggerText}
+                    </span>
+                    <ChevronDown
+                        size={12}
+                        className={`shrink-0 text-zinc-400 transition-transform ${open ? 'rotate-180' : ''}`}
+                        aria-hidden
+                    />
+                </button>
+            ) : (
+                <button
+                    ref={triggerRef}
+                    id={id}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => setOpen((prev) => !prev)}
+                    aria-haspopup="dialog"
+                    aria-expanded={open}
+                    className={`input-field mt-1 flex items-center justify-between gap-2 text-left max-w-xs ${
+                        !selected ? 'text-zinc-400' : 'text-zinc-900'
+                    }`}
+                >
+                    <span className="flex items-center gap-2 truncate">
+                        <Calendar size={18} className="shrink-0 text-brand" />
+                        {triggerText}
+                    </span>
+                    <ChevronDown
+                        size={18}
+                        className={`shrink-0 text-zinc-400 transition-transform ${open ? 'rotate-180' : ''}`}
+                    />
+                </button>
             )}
+
+            {portal && panel ? createPortal(panel, document.body) : !portal ? panel : null}
         </div>
     );
 }

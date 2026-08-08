@@ -13,7 +13,7 @@ export default defineConfig({
         react(),
         VitePWA({
             registerType: 'autoUpdate',
-            includeAssets: ['favicon-16.png', 'favicon-32.png', 'pwa/apple-touch-icon.png'],
+            includeAssets: ['favicon-16.png', 'favicon-32.png', 'brand/waraqah-logo.svg', 'brand/waraqah-logo-light.svg', 'pwa/apple-touch-icon.png'],
             manifest: {
                 name: `${APP_NAME} — ${APP_TAGLINE}`,
                 short_name: APP_NAME,
