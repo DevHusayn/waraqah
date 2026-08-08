@@ -158,11 +158,12 @@ export const ReceiptProvider = ({ children }) => {
 
     const upsertReceipt = useCallback((record) => {
         if (!record) return;
-        const mapped = mapReceipt(record);
+        const { client: _client, ...rest } = record;
+        const mapped = mapReceipt(rest);
         setReceipts((prev) => {
-            const exists = prev.some((r) => r.id === mapped.id);
+            const exists = prev.some((r) => String(r.id) === String(mapped.id));
             if (!exists) return [mapped, ...prev];
-            return prev.map((r) => (r.id === mapped.id ? mapped : r));
+            return prev.map((r) => (String(r.id) === String(mapped.id) ? mapped : r));
         });
     }, []);
 

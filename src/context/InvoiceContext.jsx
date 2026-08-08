@@ -347,7 +347,7 @@ export const InvoiceProvider = ({ children }) => {
             body: JSON.stringify(updatedClient),
         });
         const mapped = mapClient(updated);
-        setClients((prev) => prev.map((client) => (client.id === id ? mapped : client)));
+        setClients((prev) => prev.map((client) => (String(client.id) === String(id) ? mapped : client)));
         return mapped;
     }, []);
 

@@ -17,6 +17,7 @@ import { useToast } from '../context/ToastContext';
 import { PageSpinner } from '../components/Spinner';
 import AlertModal from '../components/AlertModal';
 import MarkAsPaidModal from '../components/MarkAsPaidModal';
+import ClientFormModal, { EMPTY_CLIENT } from '../components/ClientFormModal';
 import ActionMenu from '../components/ActionMenu';
 import {
     shareInvoicePdf,
@@ -33,6 +34,7 @@ import {
     getReceiptStatusBadge,
 } from '../utils/receiptHelpers';
 import { getPublicInvoiceUrl } from '../utils/publicApi';
+import { getClientBusiness } from '../utils/clientHelpers';
 import { apiFetch } from '../utils/api';
 import { getInvoicePayments, getInvoiceAmountPaid, getInvoiceBalanceDue } from '@waraqah/shared';
 import StatusBadge from '../components/StatusBadge';
@@ -41,8 +43,111 @@ import DocumentClientDisplay from '../components/documentDetails/DocumentClientD
 import DocumentLineItemsTable from '../components/documentDetails/DocumentLineItemsTable';
 import { DocumentNotesDisplay } from '../components/documentDetails/DocumentTextSections';
 
+function normalizeDocumentClientId(value) {
+    if (value == null || value === '') return null;
+    if (typeof value === 'object') {
+        const id = value._id || value.id;
+        return id ? String(id) : null;
+    }
+    return String(value);
+}
+
+function pickClientEmail(...candidates) {
+    for (const candidate of candidates) {
+        const email = String(candidate ?? '').trim();
+        if (email) return email;
+    }
+    return '';
+}
+
 function mapReceiptRecord(receipt) {
-    return { ...receipt, id: receipt._id || receipt.id, documentType: 'receipt' };
+    const embeddedClient = receipt?.client
+        ? {
+              ...receipt.client,
+              id: receipt.client.id || receipt.client._id,
+          }
+        : null;
+    const { client: _client, ...rest } = receipt || {};
+    return {
+        ...rest,
+        id: receipt._id || receipt.id,
+        documentType: 'receipt',
+        ...(embeddedClient ? { client: embeddedClient } : {}),
+    };
+}
+
+function mapClientRecord(client) {
+    if (!client) return null;
+    return {
+        ...client,
+        id: client.id || client._id,
+        email: String(client.email ?? '').trim(),
+    };
+}
+
+async function fetchReceiptWithLinkedClient(receiptId) {
+    const data = await apiFetch(`/receipts/${receiptId}`);
+    let mapped = mapReceiptRecord(data);
+    const clientId = normalizeDocumentClientId(mapped.clientId);
+    let linkedClient = null;
+
+    if (clientId) {
+        try {
+            const linked = await apiFetch(`/clients/${clientId}`);
+            linkedClient = mapClientRecord(linked);
+            mapped = {
+                ...mapped,
+                client: {
+                    ...(mapped.client || {}),
+                    ...linkedClient,
+                    id: linkedClient.id,
+                    email: pickClientEmail(linkedClient.email, mapped.client?.email),
+                },
+            };
+        } catch {
+            // Receipt may still render using embedded or cached client data.
+        }
+    }
+
+    return { mapped, linkedClient };
+}
+
+function resolveReceiptClient(receipt, clients, clientOverride = null, linkedClient = null) {
+    const clientId = normalizeDocumentClientId(receipt?.clientId);
+    const fromList = clientId
+        ? clients.find(
+              (c) =>
+                  String(c.id) === clientId
+                  || String(c._id) === clientId
+          ) || null
+        : null;
+    const embedded =
+        receipt?.client && (receipt.client.name || receipt.client.email)
+            ? receipt.client
+            : null;
+    const linked = linkedClient ? mapClientRecord(linkedClient) : null;
+
+    const email = pickClientEmail(
+        clientOverride?.email,
+        linked?.email,
+        fromList?.email,
+        embedded?.email
+    );
+
+    if (!fromList && !embedded && !linked && !clientOverride && !email) {
+        return null;
+    }
+
+    return {
+        id: normalizeDocumentClientId(
+            clientOverride?.id || linked?.id || fromList?.id || embedded?.id || embedded?._id || clientId
+        ),
+        name: clientOverride?.name || linked?.name || fromList?.name || embedded?.name || '',
+        email,
+        phone: clientOverride?.phone || linked?.phone || fromList?.phone || embedded?.phone || '',
+        address: clientOverride?.address || linked?.address || fromList?.address || embedded?.address || '',
+        company: clientOverride?.company || linked?.company || fromList?.company || embedded?.company || '',
+    };
 }
 
 function receiptHasLineItems(receipt) {
@@ -58,11 +163,14 @@ function ReceiptActionsPanel({
     receipt,
     canRecordPayment,
     canEmailClient,
+    canEditClient,
+    contactResolved,
     saving,
     emailing,
     onRecordPayment,
     onShare,
     onEmailClient,
+    onEditClient,
     onDownloadPdf,
     onPrintPdf,
     onCopyPublicLink,
@@ -82,8 +190,8 @@ function ReceiptActionsPanel({
             label: emailing ? 'Sending…' : 'Email Receipt',
             icon: Send,
             onClick: onEmailClient,
-            hidden: !canEmailClient,
-            disabled: actionsDisabled,
+            hidden: receipt?.status !== 'paid',
+            disabled: actionsDisabled || !canEmailClient,
         },
         {
             id: 'download-receipt',
@@ -140,6 +248,19 @@ function ReceiptActionsPanel({
                 </button>
                 <ActionMenu items={menuItems} disabled={saving} ariaLabel="Receipt actions" />
             </div>
+            {contactResolved && receipt?.status === 'paid' && !canEmailClient && canEditClient ? (
+                <p className="mt-3 text-xs leading-relaxed text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
+                    <span className="font-medium">Email Receipt</span> is unavailable until this client has an
+                    email.{' '}
+                    <button
+                        type="button"
+                        className="font-semibold text-brand hover:underline"
+                        onClick={onEditClient}
+                    >
+                        Edit client
+                    </button>
+                </p>
+            ) : null}
         </div>
     );
 }
@@ -148,7 +269,7 @@ const ReceiptDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { receipts, sendReceiptEmailToClient, upsertReceipt, recordReceiptPayment } = useReceipt();
-    const { clients } = useInvoice();
+    const { clients, updateClient, fetchUserData } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
 
@@ -158,56 +279,73 @@ const ReceiptDetails = () => {
     const [markPaidOpen, setMarkPaidOpen] = useState(false);
     const [recordingPayment, setRecordingPayment] = useState(false);
     const [alert, setAlert] = useState({ open: false, message: '' });
+    const [clientEditOpen, setClientEditOpen] = useState(false);
+    const [clientOverride, setClientOverride] = useState(null);
+    const [linkedClient, setLinkedClient] = useState(null);
+    const [contactResolved, setContactResolved] = useState(false);
 
     const receiptFromList = useMemo(
-        () => receipts.find((r) => r.id === id) || null,
+        () => receipts.find((r) => String(r.id) === String(id)) || null,
         [receipts, id]
     );
 
     const receipt = fetchedReceipt || receiptFromList;
-    const client = useMemo(() => {
-        if (!receipt?.clientId) return null;
-        return clients.find((c) => c.id === receipt.clientId) || null;
-    }, [receipt, clients]);
+    const client = useMemo(
+        () => resolveReceiptClient(receipt, clients, clientOverride, linkedClient),
+        [receipt, clients, clientOverride, linkedClient]
+    );
 
     const receiptNumber = getReceiptNumber(receipt);
     const amountPaid = getInvoiceAmountPaid(receipt);
     const balanceDue = getInvoiceBalanceDue(receipt);
     const isPartialReceipt = amountPaid > 0 && balanceDue > 0.009;
     const paymentHistory = getInvoicePayments(receipt);
-    const clientHasEmail = Boolean(client?.email?.trim());
+    const clientRecordId = normalizeDocumentClientId(client?.id || receipt?.clientId);
+    const canEditClient = Boolean(clientRecordId);
+    const clientEditInitialData = client
+        ? {
+              name: client.name || '',
+              business: getClientBusiness(client) || '',
+              email: client.email || '',
+              phone: client.phone || '',
+              address: client.address || '',
+          }
+        : EMPTY_CLIENT;
+
+    useEffect(() => {
+        setClientOverride(null);
+        setLinkedClient(null);
+        setContactResolved(false);
+    }, [id]);
 
     useEffect(() => {
         if (!id) return undefined;
 
-        if (receiptHasLineItems(receiptFromList)) {
-            setFetchedReceipt(null);
-            setResolving(false);
-            return undefined;
-        }
-
         let cancelled = false;
         setResolving(true);
+        setContactResolved(false);
 
-        apiFetch(`/receipts/${id}`)
-            .then((data) => {
-                if (!cancelled) {
-                    const mapped = mapReceiptRecord(data);
-                    setFetchedReceipt(mapped);
-                    upsertReceipt(mapped);
-                }
-            })
-            .catch(() => {
+        (async () => {
+            try {
+                const { mapped, linkedClient: linked } = await fetchReceiptWithLinkedClient(id);
+                if (cancelled) return;
+                if (linked) setLinkedClient(linked);
+                setFetchedReceipt(mapped);
+                upsertReceipt(mapped);
+            } catch {
                 if (!cancelled) navigate('/receipts', { replace: true });
-            })
-            .finally(() => {
-                if (!cancelled) setResolving(false);
-            });
+            } finally {
+                if (!cancelled) {
+                    setResolving(false);
+                    setContactResolved(true);
+                }
+            }
+        })();
 
         return () => {
             cancelled = true;
         };
-    }, [id, receiptFromList, navigate, upsertReceipt]);
+    }, [id, navigate, upsertReceipt]);
 
     useEffect(() => {
         if (!receipt || !client || !receiptHasLineItems(receipt)) return undefined;
@@ -313,6 +451,52 @@ const ReceiptDetails = () => {
         }
     };
 
+    const handleEditClient = () => {
+        if (!canEditClient) return;
+        setClientEditOpen(true);
+    };
+
+    const handleClientSubmit = async (formData, editing) => {
+        const clientId = normalizeDocumentClientId(editing?.id || clientRecordId);
+        if (!clientId) {
+            setAlert({ open: true, message: 'Client record not found for this receipt.' });
+            return;
+        }
+        try {
+            const updatedClient = await updateClient(clientId, formData);
+            const normalizedClient = mapClientRecord({
+                ...updatedClient,
+                id: normalizeDocumentClientId(updatedClient.id || updatedClient._id),
+                email: pickClientEmail(updatedClient.email, formData.email),
+            });
+            setClientOverride(normalizedClient);
+            setLinkedClient(normalizedClient);
+            await fetchUserData();
+            const { mapped, linkedClient: linked } = await fetchReceiptWithLinkedClient(id);
+            const mergedClient = {
+                ...(mapped.client || {}),
+                ...normalizedClient,
+                email: pickClientEmail(normalizedClient.email, mapped.client?.email),
+            };
+            mapped.client = mergedClient;
+            if (linked) {
+                setLinkedClient({
+                    ...linked,
+                    ...normalizedClient,
+                    email: mergedClient.email,
+                });
+            }
+            setFetchedReceipt(mapped);
+            upsertReceipt(mapped);
+            setContactResolved(true);
+            clearCachedPdf(id, 'receipt');
+            setClientEditOpen(false);
+            showToast('Client updated', 'success');
+        } catch (err) {
+            setAlert({ open: true, message: err.message || 'Failed to update client.' });
+        }
+    };
+
     const handleRecordPayment = async ({ amount, paymentMethod, datePaid }) => {
         setRecordingPayment(true);
         try {
@@ -344,16 +528,21 @@ const ReceiptDetails = () => {
     }
 
     const canRecordPayment = isPartialReceipt;
+    const emailOnFile = String(client?.email ?? '').trim();
+    const canEmailClient = Boolean(emailOnFile);
 
     const actionPanelProps = {
         receipt,
         canRecordPayment,
-        canEmailClient: clientHasEmail,
+        canEmailClient,
+        canEditClient,
+        contactResolved,
         saving: recordingPayment,
         emailing,
         onRecordPayment: () => setMarkPaidOpen(true),
         onShare: handleShare,
         onEmailClient: handleEmail,
+        onEditClient: handleEditClient,
         onDownloadPdf: handleDownload,
         onPrintPdf: handlePrint,
         onCopyPublicLink: handleCopyLink,
@@ -374,6 +563,14 @@ const ReceiptDetails = () => {
                 onConfirm={handleRecordPayment}
                 onCancel={() => setMarkPaidOpen(false)}
                 saving={recordingPayment}
+            />
+
+            <ClientFormModal
+                open={clientEditOpen}
+                onClose={() => setClientEditOpen(false)}
+                onSubmit={handleClientSubmit}
+                editingClient={clientRecordId ? { id: clientRecordId } : null}
+                initialData={clientEditInitialData}
             />
 
             <div className="max-w-6xl mx-auto pb-8">
@@ -397,7 +594,9 @@ const ReceiptDetails = () => {
                     <div className="xl:col-span-2 space-y-6 order-2 xl:order-1">
                         <DocumentClientDisplay
                             client={client}
+                            contactResolved={contactResolved}
                             additionalInfo={receipt.clientAdditionalInfo}
+                            onEditClient={canEditClient ? handleEditClient : undefined}
                         />
                         <DocumentLineItemsTable items={receipt.items} currency={receipt.currency} />
                         <DocumentNotesDisplay notes={receipt.notes} />
