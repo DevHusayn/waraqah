@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     FileText,
-    Users,
+    Receipt,
     Wallet,
     Clock,
     TrendingUp,
@@ -83,13 +83,6 @@ const Dashboard = () => {
             stats
                 ? [
                     {
-                        name: 'Total Invoices',
-                        value: stats.totalInvoices,
-                        icon: FileText,
-                        iconBg: 'bg-brand-light',
-                        iconColor: 'text-brand',
-                    },
-                    {
                         name: 'Total Quotations',
                         value: stats.totalQuotations ?? 0,
                         icon: ClipboardList,
@@ -97,11 +90,18 @@ const Dashboard = () => {
                         iconColor: 'text-sky-600',
                     },
                     {
-                        name: 'Total Clients',
-                        value: stats.totalClients,
-                        icon: Users,
-                        iconBg: 'bg-violet-50',
-                        iconColor: 'text-violet-600',
+                        name: 'Total Invoices',
+                        value: stats.totalInvoices,
+                        icon: FileText,
+                        iconBg: 'bg-brand-light',
+                        iconColor: 'text-brand',
+                    },
+                    {
+                        name: 'Total Receipts',
+                        value: stats.totalReceipts ?? 0,
+                        icon: Receipt,
+                        iconBg: 'bg-teal-50',
+                        iconColor: 'text-teal-600',
                     },
                     {
                         name: 'Paid Revenue',
@@ -210,14 +210,6 @@ const Dashboard = () => {
                         Create
                     </button>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <button type="button" onClick={() => navigate('/clients')} className="btn-secondary w-full justify-center">
-                            <Users size={16} />
-                            Clients
-                        </button>
-                        <button type="button" onClick={() => navigate('/invoices')} className="btn-secondary w-full justify-center">
-                            <TrendingUp size={16} />
-                            Invoices
-                        </button>
                         <button
                             type="button"
                             onClick={() => navigate('/quotations')}
@@ -225,6 +217,14 @@ const Dashboard = () => {
                         >
                             <ClipboardList size={16} />
                             Quotations
+                        </button>
+                        <button type="button" onClick={() => navigate('/invoices')} className="btn-secondary w-full justify-center">
+                            <TrendingUp size={16} />
+                            Invoices
+                        </button>
+                        <button type="button" onClick={() => navigate('/receipts')} className="btn-secondary w-full justify-center">
+                            <Receipt size={16} />
+                            Receipts
                         </button>
                         <button type="button" onClick={() => navigate('/statements')} className="btn-secondary w-full justify-center">
                             <FileBarChart size={16} />
