@@ -1,11 +1,19 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { getPdfFileName, isPremiumUser, resolvePdfMode } from '@waraqah/shared';
+import { getPdfFileName, isPremiumUser, resolvePdfMode, ANALYTICS_EVENTS, PDF_ACTIONS, PDF_DOCUMENT_TYPES } from '@waraqah/shared';
 import { buildInvoiceHtml } from './invoiceHtml';
 import { buildQuotationHtml } from './quotationHtml';
 import { buildStatementHtml } from './statementHtml';
 import { stampLastPageFooter } from './stampLastPageFooter';
 import { buildDocumentFooterConfig, buildStatementFooterConfig } from './footerConfig';
+import { captureEvent } from '../monitoring/posthog';
+
+function capturePdfDownloaded(documentType, action) {
+    captureEvent(ANALYTICS_EVENTS.PDF_DOWNLOADED, {
+        document_type: documentType,
+        action,
+    });
+}
 
 async function shareHtmlAsPdf(html, filename, { footer, includeFooterLink = false } = {}) {
     const { uri } = await Print.printToFileAsync({
@@ -38,6 +46,10 @@ export async function shareInvoicePdf(invoice, client, businessInfo, mode = 'aut
             dialogTitle: filename,
             UTI: 'com.adobe.pdf',
         });
+        capturePdfDownloaded(
+            resolvedMode === 'receipt' ? PDF_DOCUMENT_TYPES.RECEIPT : PDF_DOCUMENT_TYPES.INVOICE,
+            PDF_ACTIONS.SHARE
+        );
     }
 
     return pdfUri;
@@ -59,6 +71,7 @@ export async function shareQuotationPdf(quotation, client, businessInfo) {
             dialogTitle: filename,
             UTI: 'com.adobe.pdf',
         });
+        capturePdfDownloaded(PDF_DOCUMENT_TYPES.QUOTATION, PDF_ACTIONS.SHARE);
     }
 
     return pdfUri;
@@ -77,6 +90,7 @@ export async function shareStatementPdf(statement, businessInfo) {
             dialogTitle: filename,
             UTI: 'com.adobe.pdf',
         });
+        capturePdfDownloaded(PDF_DOCUMENT_TYPES.STATEMENT, PDF_ACTIONS.SHARE);
     }
 
     return pdfUri;

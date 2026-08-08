@@ -5,6 +5,8 @@ import { useInvoice } from './InvoiceContext';
 import { shouldPrefetchUserData } from '../utils/authHint';
 import { buildListQuery, PICKER_PAGE_SIZE, unwrapListResponse } from '../utils/pagination';
 import { invalidateReceiptListQueries } from '../lib/queryClient';
+import { ANALYTICS_EVENTS } from '@waraqah/shared';
+import { captureEvent } from '../monitoring/posthog';
 
 const ReceiptContext = createContext();
 
@@ -94,6 +96,7 @@ export const ReceiptProvider = ({ children }) => {
             body: JSON.stringify(receipt),
         });
         const mapped = mapReceipt(created);
+        captureEvent(ANALYTICS_EVENTS.RECEIPT_CREATED);
         if (options.skipRefresh) {
             setReceipts((prev) => [mapped, ...prev.filter((r) => r.id !== mapped.id)]);
             receiptsFetchedRef.current = true;

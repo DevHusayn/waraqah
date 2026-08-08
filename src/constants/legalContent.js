@@ -56,11 +56,11 @@ export const PRIVACY_SECTIONS = [
     },
     {
         title: 'Data sharing',
-        body: 'We do not sell your personal information. We share data only with service providers that help us operate the platform, such as payment processors, email delivery services, cloud hosting, and error monitoring — and only to the extent necessary for those services. We may disclose information if required by law or to protect our rights and users.',
+        body: 'We do not sell your personal information. We share data only with service providers that help us operate the platform, such as payment processors, email delivery services, cloud hosting, error monitoring, and product analytics — and only to the extent necessary for those services. We may disclose information if required by law or to protect our rights and users.',
     },
     {
         title: 'Third-party services',
-        body: 'Premium billing is processed by Paystack. Transactional email is delivered through Resend. Optional sign-in may use Google. We may use error monitoring tools such as Sentry. These providers have their own privacy policies governing how they handle data.',
+        body: 'Premium billing is processed by Paystack. Transactional email is delivered through Resend. Optional sign-in may use Google. We may use error monitoring tools such as Sentry and product analytics tools such as PostHog, including session recordings with sensitive fields masked. These providers have their own privacy policies governing how they handle data.',
     },
     {
         title: 'Data retention',
@@ -72,7 +72,7 @@ export const PRIVACY_SECTIONS = [
     },
     {
         title: 'Cookies and local storage',
-        body: 'We use cookies and browser storage to keep you signed in, protect against cross-site request forgery, and remember session preferences. You can control cookies through your browser settings, but disabling them may limit functionality.',
+        body: 'We use cookies and browser storage to keep you signed in, protect against cross-site request forgery, remember session preferences, and support analytics including session replay. Sensitive form fields and marked content are masked in recordings. You can control cookies through your browser settings, but disabling them may limit functionality.',
     },
     {
         title: 'Children\'s privacy',

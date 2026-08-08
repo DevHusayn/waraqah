@@ -2,6 +2,25 @@ import {
     getDocumentNumber,
     resolvePdfMode,
 } from './receiptHelpers';
+import {
+    ANALYTICS_EVENTS,
+    PDF_ACTIONS,
+    PDF_DOCUMENT_TYPES,
+} from '@waraqah/shared';
+import { captureEvent } from '../monitoring/posthog';
+
+function capturePdfDownloaded(documentType, action) {
+    captureEvent(ANALYTICS_EVENTS.PDF_DOWNLOADED, {
+        document_type: documentType,
+        action,
+    });
+}
+
+function documentTypeFromMode(mode) {
+    if (mode === 'receipt') return PDF_DOCUMENT_TYPES.RECEIPT;
+    if (mode === 'quotation') return PDF_DOCUMENT_TYPES.QUOTATION;
+    return PDF_DOCUMENT_TYPES.INVOICE;
+}
 
 export function buildInvoiceShareMessage(invoice, client, businessInfo, mode = 'auto') {
     const resolvedMode = resolvePdfMode(invoice, mode);
@@ -28,13 +47,16 @@ export function canSharePdfFiles() {
     }
 }
 
-export function downloadPdfBlob(blob, filename) {
+export function downloadPdfBlob(blob, filename, { documentType } = {}) {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
     anchor.download = filename;
     anchor.click();
     URL.revokeObjectURL(url);
+    if (documentType) {
+        capturePdfDownloaded(documentType, PDF_ACTIONS.DOWNLOAD);
+    }
 }
 
 /** Open PDF in a new tab and trigger the browser print dialog. */
@@ -71,16 +93,19 @@ export function printPdfBlob(blob) {
     return Promise.resolve();
 }
 
-export async function shareCachedPdfBlob({ blob, filename, message, docNumber }) {
+export async function shareCachedPdfBlob({ blob, filename, message, docNumber, documentType }) {
     const file = new File([blob], filename, { type: 'application/pdf' });
     const shareData = { text: message, title: docNumber, files: [file] };
 
     if (navigator.share && navigator.canShare?.(shareData)) {
         await navigator.share(shareData);
+        if (documentType) {
+            capturePdfDownloaded(documentType, PDF_ACTIONS.SHARE);
+        }
         return { method: 'share' };
     }
 
-    downloadPdfBlob(blob, filename);
+    downloadPdfBlob(blob, filename, { documentType });
     return { method: 'download' };
 }
 
@@ -88,6 +113,8 @@ export async function shareInvoicePdf(invoice, client, businessInfo, options = {
     const mode = options.mode ?? 'auto';
     const message = buildInvoiceShareMessage(invoice, client, businessInfo, mode);
     const docNumber = getDocumentNumber(invoice, mode);
+    const resolvedMode = resolvePdfMode(invoice, mode);
+    const documentType = documentTypeFromMode(resolvedMode);
 
     if (options.cached?.blob) {
         return shareCachedPdfBlob({
@@ -95,12 +122,13 @@ export async function shareInvoicePdf(invoice, client, businessInfo, options = {
             filename: options.cached.filename,
             message,
             docNumber,
+            documentType,
         });
     }
 
     const { generateInvoicePdfBlob } = await import('./pdfGenerator');
     const { blob, filename } = await generateInvoicePdfBlob(invoice, client, businessInfo, { mode });
-    return shareCachedPdfBlob({ blob, filename, message, docNumber });
+    return shareCachedPdfBlob({ blob, filename, message, docNumber, documentType });
 }
 
 export function getShareFallbackHint() {

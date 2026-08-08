@@ -3,6 +3,7 @@
  */
 
 import { downloadPdfBlob, printPdfBlob } from './shareInvoicePdf';
+import { PDF_DOCUMENT_TYPES } from '@waraqah/shared';
 
 export { printPdfBlob };
 
@@ -33,14 +34,18 @@ export function revokePublicInvoicePdfBundle(bundle) {
 
 export async function downloadPublicInvoicePdf(invoice, client, businessInfo, showReceipt) {
     const { blob, filename } = await generatePublicInvoicePdf(invoice, client, businessInfo, showReceipt);
-    downloadPdfBlob(blob, filename);
+    downloadPdfBlob(blob, filename, {
+        documentType: showReceipt ? PDF_DOCUMENT_TYPES.RECEIPT : PDF_DOCUMENT_TYPES.INVOICE,
+    });
 }
 
-export async function downloadPublicInvoicePdfBundle(bundle) {
+export async function downloadPublicInvoicePdfBundle(bundle, { showReceipt = false } = {}) {
     if (!bundle?.blob || !bundle?.filename) {
         throw new Error('PDF is not ready yet.');
     }
-    downloadPdfBlob(bundle.blob, bundle.filename);
+    downloadPdfBlob(bundle.blob, bundle.filename, {
+        documentType: showReceipt ? PDF_DOCUMENT_TYPES.RECEIPT : PDF_DOCUMENT_TYPES.INVOICE,
+    });
 }
 
 export async function printPublicInvoicePdf(invoice, client, businessInfo, showReceipt) {

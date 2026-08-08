@@ -5,12 +5,15 @@ import {
     BRAND_PRESETS,
     REGISTER_INITIAL_FORM,
     REGISTER_STEPS,
+    ANALYTICS_EVENTS,
     getPasswordStrength,
     validateRegisterStep,
 } from '@waraqah/shared';
 import { useAuth } from '../../context/AuthContext';
+import { captureEvent } from '../../monitoring/posthog';
 import { useToast } from '../../context/ToastContext';
 import { Button, FieldError, Input, Label, Subtitle, Title } from '../ui';
+import { ReplayMask } from '../ReplayMask';
 import { colors, fontFamily, fontSize, radii, spacing } from '../../theme';
 import { hapticSuccess } from '../../utils/haptics';
 
@@ -56,6 +59,7 @@ export function RegisterWizard({ onComplete }) {
                 paymentAccountNumber: form.paymentAccountNumber,
                 paymentInstructions: form.paymentInstructions,
             });
+            captureEvent(ANALYTICS_EVENTS.USER_SIGNED_UP, { auth_method: 'local' });
             hapticSuccess();
             showToast(data?.message || 'Check your email to verify your account.', 'success');
             onComplete?.({ email: form.email.trim().toLowerCase() });
@@ -83,6 +87,7 @@ export function RegisterWizard({ onComplete }) {
             <Title>{current.title}</Title>
             <Subtitle>{current.subtitle}</Subtitle>
 
+            <ReplayMask>
             {step === 1 ? (
                 <View style={styles.fields}>
                     <Label required>Email</Label>
@@ -152,6 +157,7 @@ export function RegisterWizard({ onComplete }) {
                     </View>
                 </View>
             ) : null}
+            </ReplayMask>
 
             <View style={styles.actions}>
                 {step > 1 ? <Button title="Back" variant="secondary" onPress={goBack} style={{ flex: 1 }} /> : null}

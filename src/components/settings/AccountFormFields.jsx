@@ -1,11 +1,12 @@
 import FieldValidationMessage from '../FieldValidationMessage';
 import { inputClass } from '../../utils/formFieldValidation';
+import { REPLAY_MASK } from '@waraqah/shared';
 
 export default function AccountFormFields({ formData, errors, onChange, idPrefix = 'settings-' }) {
     const paymentFieldId = (suffix) => `${idPrefix}payment-${suffix}`;
 
     return (
-        <div className="space-y-5">
+        <div className={`space-y-5 ${REPLAY_MASK.NO_CAPTURE}`}>
             <p className="text-sm text-zinc-500">
                 Bank details appear on invoice PDFs so clients know where to pay you.
             </p>

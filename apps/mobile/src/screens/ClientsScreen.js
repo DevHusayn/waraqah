@@ -22,6 +22,7 @@ import { usePagedList } from '../hooks/usePagedList';
 import { apiFetch } from '../api/client';
 import { buildListQuery } from '../utils/pagination';
 import { colors, fontFamily, fontSize, shadows, spacing } from '../theme';
+import { ReplayMask } from '../components/ReplayMask';
 
 const EMPTY = { name: '', business: '', email: '', phone: '', address: '' };
 const mapClient = (c) => ({ ...c, id: c._id || c.id });
@@ -182,6 +183,7 @@ export function ClientsScreen() {
                             index === 0 && shadows.soft,
                         ]}
                     >
+                        <ReplayMask>
                         <ListRow
                             title={item.name}
                             subtitle={[item.business || item.company, item.email].filter(Boolean).join(' · ')}
@@ -190,10 +192,12 @@ export function ClientsScreen() {
                             left={<AvatarInitials initials={getBusinessInitials(item.name)} />}
                             last={index === clients.length - 1}
                         />
+                        </ReplayMask>
                     </View>
                 )}
             />
             <BottomSheet ref={sheetRef} snapPoints={['72%']} onClose={() => setForm(EMPTY)}>
+                <ReplayMask>
                 <Text style={styles.sheetTitle}>{editing ? 'Edit client' : 'New client'}</Text>
                 <Label required>Name</Label>
                 <Input value={form.name} onChangeText={(v) => setForm((f) => ({ ...f, name: v }))} />
@@ -225,6 +229,7 @@ export function ClientsScreen() {
                 />
                 <Button title="Save" onPress={handleSave} loading={saving} style={{ marginTop: spacing.xxl }} />
                 <Button title="Cancel" variant="secondary" onPress={closeSheet} style={{ marginTop: spacing.sm }} />
+                </ReplayMask>
             </BottomSheet>
             <ConfirmModal
                 visible={Boolean(deleteId)}

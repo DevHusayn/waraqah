@@ -13,6 +13,7 @@ import {
 } from '../utils/authHint';
 import { clearUserQueryCache } from '../lib/queryClient';
 import { clearBusinessSetupCoachmarkFlag } from '../utils/businessSetupCoachmark';
+import { resetUser } from '../monitoring/posthog';
 
 const AuthContext = createContext(null);
 const AUTH_PROBE_TIMEOUT_MS = 8000;
@@ -38,6 +39,7 @@ export function AuthProvider({ children }) {
     }
 
     const clearSession = useCallback(() => {
+        resetUser();
         clearCsrfToken();
         clearAccessToken();
         clearAuthSessionHint();

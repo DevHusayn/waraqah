@@ -1,5 +1,6 @@
 import { ScrollView, StyleSheet } from 'react-native';
 import { Button, Card, FieldError, Input, Label } from '../../components/ui';
+import { ReplayMask } from '../../components/ReplayMask';
 import { useSettingsForm } from '../../hooks/useSettingsForm';
 import { colors, spacing } from '../../theme';
 
@@ -10,6 +11,7 @@ export function CompanyProfileSettingsScreen() {
 
     return (
         <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+            <ReplayMask>
             <Card style={styles.block} elevated>
                 <Label required>Business name</Label>
                 <Input value={form.name} onChangeText={(v) => setField('name', v)} error={errors.name} />
@@ -26,6 +28,7 @@ export function CompanyProfileSettingsScreen() {
                 <Label>Website</Label>
                 <Input value={form.website || ''} onChangeText={(v) => setField('website', v)} autoCapitalize="none" />
             </Card>
+            </ReplayMask>
             <Button title="Save" onPress={save} loading={saving} />
         </ScrollView>
     );

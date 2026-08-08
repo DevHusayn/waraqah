@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { GoogleLogin, useGoogleOAuth } from '@react-oauth/google';
 import { authFetch, applyLoginResponse, prepareForLogin } from '../../utils/api';
 import { clearGoogleAuthSession } from '../../utils/googleAuth';
+import { ANALYTICS_EVENTS } from '@waraqah/shared';
+import { captureEvent } from '../../monitoring/posthog';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 const GOOGLE_BUTTON_HEIGHT = 40;
@@ -152,6 +154,10 @@ export default function SocialAuthButtons({
             body: JSON.stringify(body),
         });
         applyLoginResponse(data);
+        captureEvent(ANALYTICS_EVENTS.USER_LOGGED_IN, {
+            auth_method: 'google',
+            is_new_user: Boolean(data.isNewUser),
+        });
         onSuccess(data);
     };
 

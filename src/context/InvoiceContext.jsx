@@ -5,6 +5,8 @@ import { useAuth } from './AuthContext';
 import { shouldPrefetchUserData } from '../utils/authHint';
 import { isDraft } from '../utils/invoiceHelpers';
 import { buildListQuery, PICKER_PAGE_SIZE, unwrapListResponse } from '../utils/pagination';
+import { ANALYTICS_EVENTS } from '@waraqah/shared';
+import { captureEvent } from '../monitoring/posthog';
 import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
 import { invalidateDashboardQueries, invalidateInvoiceListQueries } from '../lib/queryClient';
 
@@ -225,6 +227,9 @@ export const InvoiceProvider = ({ children }) => {
             body: JSON.stringify(invoice),
         });
         const mapped = mapInvoice(newInvoice);
+        if (!isDraft(mapped)) {
+            captureEvent(ANALYTICS_EVENTS.INVOICE_CREATED);
+        }
         if (options.skipRefresh) {
             if (isDraft(mapped)) {
                 setDrafts((prev) => [mapped, ...prev.filter((inv) => inv.id !== mapped.id)]);

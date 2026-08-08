@@ -13,6 +13,8 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, forgotPasswordSchema } from '../schemas/auth';
 import { useAuth } from '../context/AuthContext';
+import { captureEvent } from '../monitoring/posthog';
+import { ANALYTICS_EVENTS } from '@waraqah/shared';
 import { useToast } from '../context/ToastContext';
 import { WaraqahLogo } from '../components/WaraqahLogo';
 import { Button, FieldError, Input, Label } from '../components/ui';
@@ -44,6 +46,7 @@ export function LoginScreen({ navigation }) {
         setLoading(true);
         try {
             await login(values.email, values.password);
+            captureEvent(ANALYTICS_EVENTS.USER_LOGGED_IN, { auth_method: 'local' });
             hapticSuccess();
             showToast('Welcome back!', 'success');
         } catch (err) {

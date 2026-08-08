@@ -23,6 +23,8 @@ Use this before announcing publicly or turning on live Paystack billing.
 |----------|----------|------------------|
 | `VITE_API_URL` | Yes | `https://api.mywaraqah.com/api` |
 | `VITE_SENTRY_DSN` | No | Your Sentry DSN (recommended) |
+| `VITE_POSTHOG_KEY` | No | PostHog project API key (`phc_...`) |
+| `VITE_POSTHOG_HOST` | No | PostHog ingest host (e.g. `https://us.i.posthog.com`) |
 | `VITE_GOOGLE_CLIENT_ID` | No | Same as backend `GOOGLE_CLIENT_ID` if using Google sign-in |
 | `VITE_APPLE_CLIENT_ID` | No | Same as backend `APPLE_CLIENT_ID` if using Apple sign-in |
 

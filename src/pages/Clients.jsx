@@ -16,6 +16,7 @@ import { ListPageSkeleton } from '../components/Skeleton';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 import { getClientBusiness } from '../utils/clientHelpers';
+import { REPLAY_MASK } from '@waraqah/shared';
 
 function safeReturnPath(path) {
     if (!path || !path.startsWith('/') || path.startsWith('//')) return null;
@@ -233,21 +234,23 @@ const Clients = () => {
                                 {clients.map((client) => (
                                     <DataTableRow key={client.id}>
                                         <DataTableCell>
-                                            <span className="font-medium text-zinc-950">
+                                            <span className={`font-medium text-zinc-950 ${REPLAY_MASK.SENSITIVE}`}>
                                                 {client.name}
                                             </span>
                                         </DataTableCell>
                                         <DataTableCell>
-                                            <span className="text-zinc-600 truncate max-w-[160px] block">
+                                            <span className={`text-zinc-600 truncate max-w-[160px] block ${REPLAY_MASK.SENSITIVE}`}>
                                                 {getClientBusiness(client) || '—'}
                                             </span>
                                         </DataTableCell>
                                         <DataTableCell>
-                                            <span className="text-zinc-600 truncate max-w-[180px] block">
+                                            <span className={`text-zinc-600 truncate max-w-[180px] block ${REPLAY_MASK.SENSITIVE}`}>
                                                 {client.email || '—'}
                                             </span>
                                         </DataTableCell>
-                                        <DataTableCell>{client.phone || '—'}</DataTableCell>
+                                        <DataTableCell>
+                                            <span className={REPLAY_MASK.SENSITIVE}>{client.phone || '—'}</span>
+                                        </DataTableCell>
                                         <DataTableCell className="text-right">
                                             <div className="flex items-center justify-end gap-1">
                                                 <button

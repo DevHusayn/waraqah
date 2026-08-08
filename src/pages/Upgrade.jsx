@@ -20,6 +20,8 @@ import Spinner from '../components/Spinner';
 import DevPlanToggle from '../components/DevPlanToggle';
 import { usePaystackReturnSync } from '../hooks/usePaystackReturnSync';
 import { setPendingPaymentReference } from '../utils/pendingPayment';
+import { ANALYTICS_EVENTS } from '@waraqah/shared';
+import { captureEvent } from '../monitoring/posthog';
 
 export default function Upgrade() {
     const { showToast } = useToast();
@@ -56,6 +58,7 @@ export default function Upgrade() {
                 }),
             });
             setPendingPaymentReference(reference);
+            captureEvent(ANALYTICS_EVENTS.UPGRADE_STARTED, { billing_interval: billingInterval });
             window.location.assign(authorization_url);
         } catch (err) {
             showToast(err.message, 'error');

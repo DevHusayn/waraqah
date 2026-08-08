@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { apiFetch } from '../api/client';
 import { clearAuth, getIsAdmin, getToken, setIsAdmin, setToken } from '../api/storage';
 import { getNetworkErrorMessage } from '../api/config';
+import { identifyUser, resetUser } from '../monitoring/posthog';
 
 const AuthContext = createContext(null);
 
@@ -47,8 +48,12 @@ export function AuthProvider({ children }) {
             setTokenState(nextToken);
             setIsAdminState(Boolean(nextUser?.isAdmin));
             setUser(nextUser || null);
+            if (nextUser) {
+                identifyUser(nextUser);
+            }
         } else {
             await clearAuth();
+            resetUser();
             setTokenState(null);
             setIsAdminState(false);
             setUser(null);
@@ -73,6 +78,7 @@ export function AuthProvider({ children }) {
             const data = await apiFetch('/auth/me');
             if (!data?.user) {
                 await clearAuth();
+                resetUser();
                 setTokenState(null);
                 setUser(null);
                 setIsAdminState(false);
@@ -81,6 +87,7 @@ export function AuthProvider({ children }) {
             setUser(data.user);
             setIsAdminState(Boolean(data.user.isAdmin));
             await setIsAdmin(Boolean(data.user.isAdmin));
+            identifyUser(data.user);
             return true;
         } catch {
             // Keep local token if offline; clear only on explicit 401 via interceptor

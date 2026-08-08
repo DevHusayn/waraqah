@@ -4,6 +4,8 @@ import { getToken } from '../api/storage';
 import { useAuth } from './AuthContext';
 import { useInvoice } from './InvoiceContext';
 import { buildListQuery, PICKER_PAGE_SIZE, unwrapListResponse } from '../utils/pagination';
+import { isDraft, ANALYTICS_EVENTS } from '@waraqah/shared';
+import { captureEvent } from '../monitoring/posthog';
 
 const QuotationContext = createContext(null);
 
@@ -72,6 +74,9 @@ export function QuotationProvider({ children }) {
             body: JSON.stringify(quotation),
         });
         const mapped = mapQuotation(created);
+        if (!isDraft(mapped)) {
+            captureEvent(ANALYTICS_EVENTS.QUOTATION_CREATED);
+        }
         if (options.skipRefresh) {
             setQuotations((prev) => [mapped, ...prev.filter((q) => q.id !== mapped.id)]);
             quotationsFetchedRef.current = true;

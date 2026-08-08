@@ -11,6 +11,7 @@ import { SettingsProvider } from '../context/SettingsContext';
 import { ToastProvider } from '../context/ToastContext';
 import { useAppStore } from '../stores/appStore';
 import { OfflineBanner } from '../components/OfflineBanner';
+import { PostHogClientProvider } from '../monitoring/posthog';
 
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -38,6 +39,7 @@ function NetworkWatcher({ children }) {
 
 export function AppProviders({ children }) {
     return (
+        <PostHogClientProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
             <SafeAreaProvider>
                 <QueryClientProvider client={queryClient}>
@@ -60,6 +62,7 @@ export function AppProviders({ children }) {
                 </QueryClientProvider>
             </SafeAreaProvider>
         </GestureHandlerRootView>
+        </PostHogClientProvider>
     );
 }
 

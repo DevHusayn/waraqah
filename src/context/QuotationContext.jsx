@@ -8,6 +8,9 @@ import {
     invalidateInvoiceListQueries,
     invalidateQuotationListQueries,
 } from '../lib/queryClient';
+import { isDraft } from '../utils/invoiceHelpers';
+import { ANALYTICS_EVENTS } from '@waraqah/shared';
+import { captureEvent } from '../monitoring/posthog';
 
 const QuotationContext = createContext();
 
@@ -110,6 +113,9 @@ export const QuotationProvider = ({ children }) => {
             body: JSON.stringify(quotation),
         });
         const mapped = mapQuotation(created);
+        if (!isDraft(mapped)) {
+            captureEvent(ANALYTICS_EVENTS.QUOTATION_CREATED);
+        }
         if (options.skipRefresh) {
             setQuotations((prev) => [mapped, ...prev.filter((q) => q.id !== mapped.id)]);
             quotationsFetchedRef.current = true;

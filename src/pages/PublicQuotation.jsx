@@ -4,6 +4,7 @@ import { Download, Printer } from 'lucide-react';
 import { publicFetch } from '../utils/publicApi';
 import { getDownloadLabel } from '../utils/receiptHelpers';
 import { downloadPdfBlob, printPdfBlob } from '../utils/shareInvoicePdf';
+import { PDF_DOCUMENT_TYPES } from '@waraqah/shared';
 import InvoiceDocumentPreview from '../components/InvoiceDocumentPreview';
 import WaraqahLogo from '../components/WaraqahLogo';
 import Spinner from '../components/Spinner';
@@ -57,7 +58,7 @@ export default function PublicQuotation() {
                 business,
                 { mode: pdfMode }
             );
-            downloadPdfBlob(blob, filename);
+            downloadPdfBlob(blob, filename, { documentType: PDF_DOCUMENT_TYPES.QUOTATION });
         } catch (err) {
             setPdfError(err.message || 'Failed to download PDF.');
         } finally {

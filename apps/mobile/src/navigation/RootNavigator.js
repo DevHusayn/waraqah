@@ -6,6 +6,7 @@ import * as Linking from 'expo-linking';
 import { useAuth } from '../context/AuthContext';
 import { setUnauthorizedHandler } from '../api/client';
 import { useAppStore } from '../stores/appStore';
+import { captureScreen, getActiveRouteName } from '../monitoring/posthog';
 import { SplashScreen } from '../screens/SplashScreen';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { WelcomeScreen } from '../screens/WelcomeScreen';
@@ -100,7 +101,12 @@ export function RootNavigator() {
     }
 
     return (
-        <NavigationContainer linking={linking}>
+        <NavigationContainer
+            linking={linking}
+            onStateChange={(state) => {
+                captureScreen(getActiveRouteName(state));
+            }}
+        >
             <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
                 {isAuthenticated ? (
                     <Stack.Screen name="Main" component={MainTabs} />

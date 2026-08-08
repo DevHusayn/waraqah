@@ -5,6 +5,8 @@ import { getCurrencySymbol } from './currency';
 import { drawPdfGeometricBackground } from './pdfBackground';
 import { PAGE_H } from './pdfLogo';
 import { printPdfBlob } from './shareInvoicePdf';
+import { ANALYTICS_EVENTS, PDF_ACTIONS, PDF_DOCUMENT_TYPES } from '@waraqah/shared';
+import { captureEvent } from '../monitoring/posthog';
 
 const FOOTER_RESERVE = 22;
 
@@ -213,6 +215,10 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
         anchor.download = fileName;
         anchor.click();
         URL.revokeObjectURL(url);
+        captureEvent(ANALYTICS_EVENTS.PDF_DOWNLOADED, {
+            document_type: PDF_DOCUMENT_TYPES.STATEMENT,
+            action: PDF_ACTIONS.DOWNLOAD,
+        });
     }
 }
 

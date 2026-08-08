@@ -1,5 +1,6 @@
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { Button, Card, FieldError, Input, Label } from '../../components/ui';
+import { ReplayMask } from '../../components/ReplayMask';
 import { useSettingsForm } from '../../hooks/useSettingsForm';
 import { colors, fontFamily, fontSize, spacing } from '../../theme';
 
@@ -11,6 +12,7 @@ export function AccountDetailsSettingsScreen() {
     return (
         <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
             <Text style={styles.hint}>Optional — shown on invoices so clients know how to pay you.</Text>
+            <ReplayMask>
             <Card style={styles.block} elevated>
                 <Label>Account name</Label>
                 <Input value={form.paymentAccountName || ''} onChangeText={(v) => setField('paymentAccountName', v)} error={errors.paymentAccountName} />
@@ -24,6 +26,7 @@ export function AccountDetailsSettingsScreen() {
                 <Label>Payment instructions</Label>
                 <Input value={form.paymentInstructions || ''} onChangeText={(v) => setField('paymentInstructions', v)} multiline style={{ minHeight: 80, textAlignVertical: 'top' }} />
             </Card>
+            </ReplayMask>
             <Button title="Save" onPress={save} loading={saving} />
         </ScrollView>
     );

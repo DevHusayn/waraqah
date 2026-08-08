@@ -16,6 +16,7 @@ import {
 } from '../utils/brandAssets';
 import { isPremiumUser } from '../utils/premium';
 import { getDocumentNumber, getPaymentMethodLabel, resolvePdfMode, getReceiptDisplayStatus, isPartialReceipt } from '../utils/receiptHelpers';
+import { REPLAY_MASK } from '@waraqah/shared';
 
 function lightenHex(hex, amount = 0.88) {
     const match = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '');
@@ -139,7 +140,7 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
     }
 
     return (
-        <div className="invoice-document-preview bg-white text-zinc-800 print-color-exact">
+        <div className={`invoice-document-preview bg-white text-zinc-800 print-color-exact ${REPLAY_MASK.NO_CAPTURE}`}>
             <div className="px-4 py-6 sm:px-8 sm:py-8">
                 <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">

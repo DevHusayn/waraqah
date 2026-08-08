@@ -13,6 +13,8 @@ import WaraqahLogo from '../components/WaraqahLogo';
 import RequiredLabel from '../components/RequiredLabel';
 import { getNetworkErrorMessage } from '../utils/apiConfig';
 import { authFetch, apiFetch, applyLoginResponse, prepareForLogin } from '../utils/api';
+import { ANALYTICS_EVENTS } from '@waraqah/shared';
+import { captureEvent } from '../monitoring/posthog';
 import SocialAuthButtons from '../components/auth/SocialAuthButtons';
 import { markBusinessSetupCoachmark, clearBusinessSetupCoachmarkFlag } from '../utils/businessSetupCoachmark';
 import {
@@ -190,6 +192,7 @@ function Auth() {
             });
             applyLoginResponse(data);
             setSession(data.user);
+            captureEvent(ANALYTICS_EVENTS.USER_LOGGED_IN, { auth_method: 'local' });
             clearBusinessSetupCoachmarkFlag();
             await fetchUserData();
             try {

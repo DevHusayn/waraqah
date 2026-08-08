@@ -31,6 +31,7 @@ import FormSection from '../components/FormSection';
 import StatusBadge from '../components/StatusBadge';
 import ActionMenu from '../components/ActionMenu';
 import { shareInvoicePdf, getShareFallbackHint, downloadPdfBlob, printPdfBlob } from '../utils/shareInvoicePdf';
+import { PDF_DOCUMENT_TYPES } from '@waraqah/shared';
 import { getCachedPdf, setCachedPdf, clearCachedPdf } from '../utils/pdfCache';
 import { formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
@@ -536,7 +537,9 @@ const InvoiceDetails = () => {
     const handleDownloadPdf = async (mode) => {
         try {
             const cached = await getPdfForMode(mode);
-            downloadPdfBlob(cached.blob, cached.filename);
+            downloadPdfBlob(cached.blob, cached.filename, {
+                documentType: mode === 'receipt' ? PDF_DOCUMENT_TYPES.RECEIPT : PDF_DOCUMENT_TYPES.INVOICE,
+            });
             showToast('PDF downloaded', 'success');
         } catch (err) {
             setAlert({ open: true, message: err.message || 'Failed to download PDF.' });

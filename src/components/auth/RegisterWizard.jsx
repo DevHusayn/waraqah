@@ -11,6 +11,8 @@ import { useQuotation } from '../../context/QuotationContext';
 import { APP_CURRENCY } from '../../utils/currency';
 import { getNetworkErrorMessage } from '../../utils/apiConfig';
 import { authFetch } from '../../utils/api';
+import { captureEvent } from '../../monitoring/posthog';
+import { ANALYTICS_EVENTS, REPLAY_MASK } from '@waraqah/shared';
 import {
     inputClass,
     focusFieldById,
@@ -277,6 +279,8 @@ export default function RegisterWizard({
                 body: JSON.stringify(body),
             });
 
+            captureEvent(ANALYTICS_EVENTS.USER_SIGNED_UP, { auth_method: 'local' });
+
             clearRegisterDraft();
             resetAll();
             resetQuotations();
@@ -330,7 +334,7 @@ export default function RegisterWizard({
 
             <StepIndicator currentStep={step} />
 
-            <div className="space-y-4">
+            <div className={`space-y-4 ${REPLAY_MASK.NO_CAPTURE}`}>
                 {step === 1 && (
                     <>
                         <div>

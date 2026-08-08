@@ -9,6 +9,7 @@ import {
     View,
 } from 'react-native';
 import { Button } from './ui';
+import { ReplayMask } from './ReplayMask';
 import { colors, fontFamily, fontSize, radii, spacing } from '../theme';
 
 const EMPTY_DETAILS = {
@@ -49,6 +50,7 @@ export function ClientDetailsModal({ visible, initialData = EMPTY_DETAILS, onClo
                     <Text style={styles.title}>Client details</Text>
                     <Text style={styles.subtitle}>Optional — shown on the PDF when provided.</Text>
                     <ScrollView style={styles.form} keyboardShouldPersistTaps="handled">
+                        <ReplayMask>
                         <Text style={styles.label}>Business name (optional)</Text>
                         <TextInput
                             value={form.business}
@@ -88,6 +90,7 @@ export function ClientDetailsModal({ visible, initialData = EMPTY_DETAILS, onClo
                             numberOfLines={3}
                             textAlignVertical="top"
                         />
+                        </ReplayMask>
                     </ScrollView>
                     <View style={styles.actions}>
                         <Button title="Cancel" variant="secondary" onPress={onClose} style={{ flex: 1 }} />

@@ -12,6 +12,7 @@ import {
     focusFieldById,
     clearFieldError,
 } from '../utils/formFieldValidation';
+import { REPLAY_MASK } from '@waraqah/shared';
 
 const CLIENT_FIELD_ORDER = ['name', 'email'];
 
@@ -104,7 +105,7 @@ export default function ClientFormModal({
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} noValidate className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} noValidate className={`p-6 space-y-4 ${REPLAY_MASK.NO_CAPTURE}`}>
                 <div>
                     <RequiredLabel htmlFor="client-name">Full name</RequiredLabel>
                     <input

@@ -10,6 +10,8 @@ import {
     MAX_POLL_ATTEMPTS,
     pollSubscriptionStatus,
 } from '../utils/paymentVerification';
+import { ANALYTICS_EVENTS } from '@waraqah/shared';
+import { captureEvent } from '../monitoring/posthog';
 
 export default function UpgradeCallback() {
     const [searchParams] = useSearchParams();
@@ -35,6 +37,7 @@ export default function UpgradeCallback() {
 
         if (result.status === 'success') {
             clearPendingPaymentReference();
+            captureEvent(ANALYTICS_EVENTS.UPGRADE_COMPLETED);
             window.dispatchEvent(new Event('app-login'));
             setStatus('success');
             setMessage(result.message);

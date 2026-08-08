@@ -4,6 +4,7 @@ import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import SplashScreen from './components/SplashScreen.jsx'
 import { initMonitoring } from './monitoring/sentry.js'
+import { initAnalytics } from './monitoring/posthog.js'
 import {
     initPwaSessionLifecycle,
     markPwaSessionAlive,
@@ -15,6 +16,7 @@ import { queryClient } from './lib/queryClient.js'
 import './index.css'
 
 initMonitoring()
+initAnalytics()
 initPwaSessionLifecycle()
 
 registerSW({ immediate: true })

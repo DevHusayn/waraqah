@@ -11,6 +11,7 @@ import { ReceiptProvider } from './context/ReceiptContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
+import { AnalyticsProvider, PostHogAuthSync, PostHogPageView } from './components/analytics/PostHogTracker';
 import BrandTheme from './components/BrandTheme';
 import { PublicPageSpinner } from './components/Spinner';
 import {
@@ -93,6 +94,7 @@ function AppProviders({ children }) {
 
 function App() {
     return (
+        <AnalyticsProvider>
         <ToastProvider>
             <AuthProvider>
                 <SettingsProvider>
@@ -102,6 +104,8 @@ function App() {
                         <ReceiptProvider>
                         <AppProviders>
                         <Router>
+                        <PostHogPageView />
+                        <PostHogAuthSync />
                         <Routes>
                             <Route path="/" element={<Home />} />
                             <Route path="/auth" element={<AuthPage><Auth /></AuthPage>} />
@@ -174,6 +178,7 @@ function App() {
                 </SettingsProvider>
             </AuthProvider>
         </ToastProvider>
+        </AnalyticsProvider>
     );
 }
 

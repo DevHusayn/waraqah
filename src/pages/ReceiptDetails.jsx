@@ -24,6 +24,7 @@ import {
     downloadPdfBlob,
     printPdfBlob,
 } from '../utils/shareInvoicePdf';
+import { PDF_DOCUMENT_TYPES } from '@waraqah/shared';
 import { getCachedPdf, setCachedPdf, clearCachedPdf } from '../utils/pdfCache';
 import { formatCurrency } from '../utils/currency';
 import {
@@ -269,7 +270,7 @@ const ReceiptDetails = () => {
     const handleDownload = async () => {
         try {
             const cached = await getPdf();
-            downloadPdfBlob(cached.blob, cached.filename);
+            downloadPdfBlob(cached.blob, cached.filename, { documentType: PDF_DOCUMENT_TYPES.RECEIPT });
             showToast('PDF downloaded', 'success');
         } catch (err) {
             setAlert({ open: true, message: err.message || 'Failed to download PDF.' });

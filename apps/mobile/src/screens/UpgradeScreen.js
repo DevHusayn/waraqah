@@ -7,8 +7,10 @@ import {
     PREMIUM_PRICE_NGN,
     premiumPriceLabel,
     isPremiumUser,
+    ANALYTICS_EVENTS,
 } from '@waraqah/shared';
 import { apiFetch } from '../api/client';
+import { captureEvent } from '../monitoring/posthog';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { Button, Card, PageHeader, PageLoader } from '../components/ui';
@@ -42,6 +44,7 @@ export function UpgradeScreen() {
             try {
                 await apiFetch(`/payments/verify/${reference}`);
                 await refreshBusinessInfo();
+                captureEvent(ANALYTICS_EVENTS.UPGRADE_COMPLETED);
                 showToast('Premium activated!', 'success');
             } catch (err) {
                 showToast(err.message, 'error');
@@ -57,6 +60,7 @@ export function UpgradeScreen() {
                 method: 'POST',
                 body: JSON.stringify({ callbackOrigin: CALLBACK_SCHEME }),
             });
+            captureEvent(ANALYTICS_EVENTS.UPGRADE_STARTED);
             await WebBrowser.openAuthSessionAsync(authorization_url, CALLBACK_SCHEME);
         } catch (err) {
             showToast(err.message, 'error');

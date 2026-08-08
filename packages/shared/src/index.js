@@ -24,3 +24,5 @@ export * from './registerValidation.js';
 export * from './paymentReminders.js';
 export * from './pdfFooterLayout.js';
 export * from './pdfPageFormat.js';
+export * from './analyticsEvents.js';
+export * from './replayMasking.js';

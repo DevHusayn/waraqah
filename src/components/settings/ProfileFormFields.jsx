@@ -1,6 +1,7 @@
 import FieldValidationMessage from '../FieldValidationMessage';
 import RequiredLabel from '../RequiredLabel';
 import { inputClass } from '../../utils/formFieldValidation';
+import { REPLAY_MASK } from '@waraqah/shared';
 
 const DEFAULT_REQUIRED_FIELDS = ['name', 'address', 'email', 'phone'];
 
@@ -37,7 +38,7 @@ export default function ProfileFormFields({
     };
 
     return (
-        <div className="space-y-5">
+        <div className={`space-y-5 ${REPLAY_MASK.NO_CAPTURE}`}>
             <div>
                 <ProfileFieldLabel htmlFor={fieldId('name')} required={isRequired('name')}>
                     Business name

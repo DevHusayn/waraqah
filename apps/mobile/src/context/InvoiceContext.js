@@ -1,8 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { apiFetch } from '../api/client';
 import { getToken } from '../api/storage';
-import { isDraft } from '@waraqah/shared';
+import { isDraft, ANALYTICS_EVENTS } from '@waraqah/shared';
 import { useAuth } from './AuthContext';
+import { captureEvent } from '../monitoring/posthog';
 import { buildListQuery, PICKER_PAGE_SIZE, unwrapListResponse } from '../utils/pagination';
 
 const InvoiceContext = createContext(null);
@@ -194,6 +195,9 @@ export function InvoiceProvider({ children }) {
             body: JSON.stringify(invoice),
         });
         const mapped = mapInvoice(newInvoice);
+        if (!isDraft(mapped)) {
+            captureEvent(ANALYTICS_EVENTS.INVOICE_CREATED);
+        }
         if (options.skipRefresh) {
             if (isDraft(mapped)) {
                 setDrafts((prev) => [mapped, ...prev.filter((inv) => inv.id !== mapped.id)]);
