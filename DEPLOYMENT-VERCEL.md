@@ -17,11 +17,15 @@ Vite bakes env vars in at **build time**. If this is missing, the app calls `htt
 
 Use your **real backend URL** + `/api` at the end. Must be **HTTPS**.
 
-Optional — error monitoring:
+Optional — error monitoring and analytics:
 
 | Name | Value |
 |------|--------|
 | `VITE_SENTRY_DSN` | Your Sentry project DSN (from [sentry.io](https://sentry.io)) |
+| `VITE_POSTHOG_KEY` | PostHog project API key (`phc_...`) |
+| `VITE_POSTHOG_HOST` | PostHog ingest host — use `https://eu.i.posthog.com` for EU projects, or `https://us.i.posthog.com` for US |
+
+Without `VITE_POSTHOG_KEY`, PostHog is **disabled** in the production build (you will only see localhost events from local dev). After adding any `VITE_*` variable, you **must redeploy** — Vite bakes them in at build time.
 
 3. **Redeploy** the frontend (Deployments → … → Redeploy). Changing env vars does not update old builds until you redeploy.
 
@@ -134,6 +138,7 @@ Quick version:
 
 - [ ] `VITE_API_URL` set on **frontend** Vercel project → **redeploy frontend**
 - [ ] `VITE_SENTRY_DSN` set (optional) for production error monitoring
+- [ ] `VITE_POSTHOG_KEY` + `VITE_POSTHOG_HOST` set (optional) for production analytics — then redeploy
 - [ ] `MONGO_URI` is Atlas, not localhost
 - [ ] `FRONTEND_URL` matches your Vercel app URL
 - [ ] `https://your-backend.vercel.app/api/health` works on your phone
