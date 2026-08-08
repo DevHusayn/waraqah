@@ -92,11 +92,14 @@ export function ListPageSkeleton({ rows = 6, columns = 4, withToolbar = true, wi
     );
 }
 
-export function StatsCardsSkeleton({ count = 3, className = 'grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6' }) {
+export function StatsCardsSkeleton({ count = 3, className = 'grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6', fullWidthLast = false }) {
     return (
         <div className={className}>
             {Array.from({ length: count }).map((_, i) => (
-                <div key={i} className="stat-card">
+                <div
+                    key={i}
+                    className={`stat-card${fullWidthLast && i === count - 1 ? ' col-span-2 lg:col-span-1' : ''}`}
+                >
                     <div className="flex items-center gap-2.5 min-w-0">
                         <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
                         <Skeleton className="h-3 w-20" />

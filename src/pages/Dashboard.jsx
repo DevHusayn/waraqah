@@ -104,18 +104,19 @@ const Dashboard = () => {
                         iconColor: 'text-teal-600',
                     },
                     {
-                        name: 'Paid Revenue',
-                        value: formatCurrency(stats.paidRevenue),
-                        icon: Wallet,
-                        iconBg: 'bg-green-50',
-                        iconColor: 'text-green-600',
-                    },
-                    {
                         name: 'Pending Revenue',
                         value: formatCurrency(stats.pendingRevenue),
                         icon: Clock,
                         iconBg: 'bg-amber-50',
                         iconColor: 'text-amber-600',
+                    },
+                    {
+                        name: 'Paid Revenue',
+                        value: formatCurrency(stats.paidRevenue),
+                        icon: Wallet,
+                        iconBg: 'bg-green-50',
+                        iconColor: 'text-green-600',
+                        fullWidthMobile: true,
                     },
                 ]
                 : [],
@@ -173,6 +174,7 @@ const Dashboard = () => {
             {statsLoading ? (
                 <StatsCardsSkeleton
                     count={5}
+                    fullWidthLast
                     className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6"
                 />
             ) : (
@@ -180,7 +182,10 @@ const Dashboard = () => {
                     {statCards.map((stat) => {
                         const Icon = stat.icon;
                         return (
-                            <div key={stat.name} className="stat-card">
+                            <div
+                                key={stat.name}
+                                className={`stat-card${stat.fullWidthMobile ? ' col-span-2 lg:col-span-1' : ''}`}
+                            >
                                 <div className="flex items-center gap-2.5 min-w-0">
                                     <div className={`stat-card-icon ${stat.iconBg}`}>
                                         <Icon className={`h-4 w-4 ${stat.iconColor}`} />
