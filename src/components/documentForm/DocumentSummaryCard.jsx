@@ -41,51 +41,51 @@ export default function DocumentSummaryCard({
             )}
 
             <dl className="space-y-2 text-sm">
-                <div className="flex justify-between">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 items-baseline">
                     <dt className="text-zinc-500">Subtotal</dt>
-                    <dd className="font-medium text-zinc-900">
+                    <dd className="font-medium text-zinc-900 text-right whitespace-nowrap tabular-nums shrink-0">
                         {formatCurrency(totals.subtotal, formData.currency)}
                     </dd>
                 </div>
                 {totals.discount > 0 && (
-                    <div className="flex justify-between">
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 items-baseline">
                         <dt className="text-zinc-500">{discountLabel}</dt>
-                        <dd className="font-medium text-red-600">
+                        <dd className="font-medium text-red-600 text-right whitespace-nowrap tabular-nums shrink-0">
                             −{formatCurrency(totals.discount, formData.currency)}
                         </dd>
                     </div>
                 )}
-                <div className="flex justify-between">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 items-baseline">
                     <dt className="text-zinc-500">Tax ({formData.taxRate}%)</dt>
-                    <dd className="font-medium text-zinc-900">
+                    <dd className="font-medium text-zinc-900 text-right whitespace-nowrap tabular-nums shrink-0">
                         {formatCurrency(totals.tax, formData.currency)}
                     </dd>
                 </div>
                 {isPartial ? (
                     <>
-                        <div className="pt-3 border-t border-zinc-200 flex justify-between items-center">
+                        <div className="pt-3 border-t border-zinc-200 grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 items-center">
                             <dt className="font-semibold text-zinc-900">Total</dt>
-                            <dd className="text-lg font-bold text-zinc-900">
+                            <dd className="text-lg font-bold text-zinc-900 text-right whitespace-nowrap tabular-nums shrink-0">
                                 {formatCurrency(totals.total, formData.currency)}
                             </dd>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 items-baseline">
                             <dt className="text-zinc-500">Amount received</dt>
-                            <dd className="font-medium text-zinc-900">
+                            <dd className="font-medium text-zinc-900 text-right whitespace-nowrap tabular-nums shrink-0">
                                 {formatCurrency(received, formData.currency)}
                             </dd>
                         </div>
-                        <div className="pt-2 border-t border-zinc-100 flex justify-between items-center">
+                        <div className="pt-2 border-t border-zinc-100 grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 items-center">
                             <dt className="font-semibold text-zinc-900">Balance remaining</dt>
-                            <dd className="text-xl font-bold text-brand">
+                            <dd className="text-xl font-bold text-brand text-right whitespace-nowrap tabular-nums shrink-0">
                                 {formatCurrency(balanceRemaining, formData.currency)}
                             </dd>
                         </div>
                     </>
                 ) : (
-                    <div className="pt-3 border-t border-zinc-200 flex justify-between items-center">
+                    <div className="pt-3 border-t border-zinc-200 grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 items-center">
                         <dt className="font-semibold text-zinc-900">{totalLabel}</dt>
-                        <dd className="text-2xl font-bold text-brand">
+                        <dd className="text-2xl font-bold text-brand text-right whitespace-nowrap tabular-nums shrink-0">
                             {formatCurrency(
                                 received != null && received > 0 ? received : totals.total,
                                 formData.currency

@@ -1,44 +1,21 @@
-import {
-    PREMIUM_PRICE_NGN,
-    PREMIUM_LIST_PRICE_NGN,
-    PREMIUM_LAUNCH_LABEL,
-    formatPremiumPrice,
-} from '../constants/pricing';
+import { PREMIUM_PRICE_NGN, formatPremiumPrice } from '../constants/pricing';
 
 /**
- * Premium price with optional launch strikethrough.
+ * Premium price display.
  * @param {'lg'|'sm'} size
  */
 export default function PremiumPrice({
     amount = PREMIUM_PRICE_NGN,
-    listAmount = PREMIUM_LIST_PRICE_NGN,
     size = 'lg',
-    showLaunchBadge = true,
-    showStrikethrough = true,
     suffix = '/month',
     savingsLabel = '',
     className = '',
 }) {
     const isLarge = size === 'lg';
-    const showStrike = showStrikethrough && listAmount > amount;
 
     return (
         <div className={className}>
-            {showLaunchBadge && (
-                <span className="inline-flex rounded-full bg-green-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-800 mb-2">
-                    {PREMIUM_LAUNCH_LABEL}
-                </span>
-            )}
-            <div className={`flex items-baseline gap-2 flex-wrap ${showLaunchBadge ? '' : 'mt-2'}`}>
-                {showStrike && (
-                    <span
-                        className={`${
-                            isLarge ? 'text-xl' : 'text-base'
-                        } font-semibold text-zinc-400 line-through`}
-                    >
-                        ₦{formatPremiumPrice(listAmount)}
-                    </span>
-                )}
+            <div className="flex items-baseline gap-2 flex-wrap mt-2">
                 <span
                     className={`${
                         isLarge ? 'text-4xl' : 'text-2xl'

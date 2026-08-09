@@ -63,6 +63,49 @@ function setPdfBodyFont(doc) {
     doc.setFont(undefined, 'bold');
 }
 
+const PDF_TOTALS_LABEL_X = 130;
+const PDF_TOTALS_VALUE_X = 195;
+const PDF_TOTALS_GAP = 3;
+
+function drawPdfTotalsRow(doc, label, amountText, y, options = {}) {
+    const {
+        labelFontSize = 8,
+        amountFontSize = 8,
+        labelColor = [113, 113, 122],
+        amountColor = [24, 24, 27],
+        labelBold = false,
+        amountBold = false,
+    } = options;
+
+    doc.setFontSize(labelFontSize);
+    doc.setFont(undefined, labelBold ? 'bold' : 'normal');
+    doc.setTextColor(...labelColor);
+    doc.text(label, PDF_TOTALS_LABEL_X, y);
+    const labelWidth = doc.getTextWidth(label);
+
+    doc.setFont(undefined, amountBold ? 'bold' : 'normal');
+    let fontSize = amountFontSize;
+    doc.setFontSize(fontSize);
+    doc.setTextColor(...amountColor);
+
+    const rowWidth = PDF_TOTALS_VALUE_X - PDF_TOTALS_LABEL_X;
+    let amountWidth = doc.getTextWidth(amountText);
+    while (fontSize > 7 && labelWidth + PDF_TOTALS_GAP + amountWidth > rowWidth) {
+        fontSize -= 0.5;
+        doc.setFontSize(fontSize);
+        amountWidth = doc.getTextWidth(amountText);
+    }
+
+    if (labelWidth + PDF_TOTALS_GAP + amountWidth > rowWidth) {
+        const amountY = y + Math.max(4.5, labelFontSize * 0.45);
+        doc.text(amountText, PDF_TOTALS_VALUE_X, amountY, { align: 'right' });
+        return amountY + 2;
+    }
+
+    doc.text(amountText, PDF_TOTALS_VALUE_X, y, { align: 'right' });
+    return y;
+}
+
 function drawStatusBadge(doc, status, x, y) {
     const statusColors = {
         paid: [22, 163, 74],
@@ -782,82 +825,81 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         hasRecordedPayments(invoice) &&
         invoice.status !== 'paid';
     let currentY = ensureSpace(doc.lastAutoTable.finalY + 10, mayShowPartialPayment ? 72 : 48);
-    const totalsX = 130;
+    const totalsX = PDF_TOTALS_LABEL_X;
+    const money = (amount) => `${currencySymbol}${formatMoney(amount)}`;
 
-    doc.setFontSize(8);
-    doc.setTextColor(...grayColor);
-    setPdfBodyFont(doc);
-    doc.text('Subtotal', totalsX, currentY);
-    doc.setTextColor(...textColor);
-    doc.text(`${currencySymbol}${formatMoney(invoice.subtotal)}`, 195, currentY, { align: 'right' });
+    let rowY = currentY;
+    rowY = drawPdfTotalsRow(doc, 'Subtotal', money(invoice.subtotal), rowY, {
+        labelColor: grayColor,
+        amountColor: textColor,
+        labelBold: true,
+        amountBold: true,
+    });
 
-    let totalsOffset = 7;
     if (Number(invoice.discount) > 0) {
         const discountLabel =
             invoice.discountType === 'percent' && invoice.discountValue
                 ? `Discount (${invoice.discountValue}%)`
                 : 'Discount';
-        doc.setTextColor(...grayColor);
-        doc.text(discountLabel, totalsX, currentY + totalsOffset);
-        doc.setTextColor(220, 38, 38);
-        doc.text(`-${currencySymbol}${formatMoney(invoice.discount)}`, 195, currentY + totalsOffset, {
-            align: 'right',
+        rowY += 7;
+        rowY = drawPdfTotalsRow(doc, discountLabel, `-${money(invoice.discount)}`, rowY, {
+            labelColor: grayColor,
+            amountColor: [220, 38, 38],
+            labelBold: true,
+            amountBold: true,
         });
-        totalsOffset += 7;
     }
 
-    doc.setTextColor(...grayColor);
-    doc.text(`Tax (${invoice.taxRate ?? 0}%)`, totalsX, currentY + totalsOffset);
-    doc.setTextColor(...textColor);
-    doc.text(`${currencySymbol}${formatMoney(invoice.tax)}`, 195, currentY + totalsOffset, {
-        align: 'right',
+    rowY += 7;
+    rowY = drawPdfTotalsRow(doc, `Tax (${invoice.taxRate ?? 0}%)`, money(invoice.tax), rowY, {
+        labelColor: grayColor,
+        amountColor: textColor,
+        labelBold: true,
+        amountBold: true,
     });
 
-    currentY += totalsOffset + 7;
+    currentY = rowY + 7;
     doc.setDrawColor(...lightGray);
     doc.setLineWidth(0.5);
-    doc.line(totalsX, currentY, 195, currentY);
+    doc.line(totalsX, currentY, PDF_TOTALS_VALUE_X, currentY);
 
     const amountPaidValue = getInvoiceAmountPaid(invoice);
     const balanceDueValue = getInvoiceBalanceDue(invoice);
 
     if (mayShowPartialPayment) {
         currentY += 8;
-        doc.setFontSize(8);
-        setPdfBodyFont(doc);
-        doc.setTextColor(...grayColor);
-        doc.text('Total', totalsX, currentY);
-        doc.setTextColor(...textColor);
-        doc.text(`${currencySymbol}${formatMoney(invoice.total)}`, 195, currentY, { align: 'right' });
-
-        currentY += 7;
-        doc.setTextColor(...grayColor);
-        doc.text('Amount paid', totalsX, currentY);
-        doc.setTextColor(...textColor);
-        doc.text(`${currencySymbol}${formatMoney(amountPaidValue)}`, 195, currentY, {
-            align: 'right',
+        rowY = drawPdfTotalsRow(doc, 'Total', money(invoice.total), currentY, {
+            labelColor: grayColor,
+            amountColor: textColor,
+            labelBold: true,
+            amountBold: true,
         });
 
-        currentY += 7;
+        rowY += 7;
+        rowY = drawPdfTotalsRow(doc, 'Amount paid', money(amountPaidValue), rowY, {
+            labelColor: grayColor,
+            amountColor: textColor,
+            labelBold: true,
+            amountBold: true,
+        });
+
+        currentY = rowY + 7;
         doc.setDrawColor(...lightGray);
         doc.setLineWidth(0.4);
-        doc.line(totalsX, currentY, 195, currentY);
+        doc.line(totalsX, currentY, PDF_TOTALS_VALUE_X, currentY);
 
         currentY += 8;
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'bold');
-        doc.setTextColor(...textColor);
-        doc.text('BALANCE DUE', totalsX, currentY);
-        doc.setFontSize(12);
-        doc.setTextColor(...primaryColor);
-        doc.text(`${currencySymbol}${formatMoney(balanceDueValue)}`, 195, currentY, {
-            align: 'right',
+        rowY = drawPdfTotalsRow(doc, 'BALANCE DUE', money(balanceDueValue), currentY, {
+            labelFontSize: 9,
+            amountFontSize: 12,
+            labelColor: textColor,
+            amountColor: primaryColor,
+            labelBold: true,
+            amountBold: true,
         });
+        currentY = rowY;
     } else {
         currentY += 8;
-        doc.setFontSize(9);
-        doc.setFont(undefined, 'bold');
-        doc.setTextColor(...textColor);
         const receiptPaid =
             isReceiptDoc && amountPaidValue > 0 ? amountPaidValue : invoice.total;
         const isPartialReceipt =
@@ -866,50 +908,51 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
             amountPaidValue + 0.009 < Number(invoice.total);
 
         if (isPartialReceipt) {
-            doc.setFontSize(8);
-            setPdfBodyFont(doc);
-            doc.setTextColor(...grayColor);
-            doc.text('Total', totalsX, currentY);
-            doc.setTextColor(...textColor);
-            doc.text(`${currencySymbol}${formatMoney(invoice.total)}`, 195, currentY, {
-                align: 'right',
+            rowY = drawPdfTotalsRow(doc, 'Total', money(invoice.total), currentY, {
+                labelColor: grayColor,
+                amountColor: textColor,
+                labelBold: true,
+                amountBold: true,
             });
 
-            currentY += 7;
-            doc.setTextColor(...grayColor);
-            doc.text('Amount received', totalsX, currentY);
-            doc.setTextColor(...textColor);
-            doc.text(`${currencySymbol}${formatMoney(amountPaidValue)}`, 195, currentY, {
-                align: 'right',
+            rowY += 7;
+            rowY = drawPdfTotalsRow(doc, 'Amount received', money(amountPaidValue), rowY, {
+                labelColor: grayColor,
+                amountColor: textColor,
+                labelBold: true,
+                amountBold: true,
             });
 
-            currentY += 7;
+            currentY = rowY + 7;
             doc.setDrawColor(...lightGray);
             doc.setLineWidth(0.4);
-            doc.line(totalsX, currentY, 195, currentY);
+            doc.line(totalsX, currentY, PDF_TOTALS_VALUE_X, currentY);
 
             currentY += 8;
-            doc.setFontSize(9);
-            doc.setFont(undefined, 'bold');
-            doc.setTextColor(...textColor);
-            doc.text('BALANCE REMAINING', totalsX, currentY);
-            doc.setFontSize(12);
-            doc.setTextColor(...primaryColor);
-            doc.text(`${currencySymbol}${formatMoney(balanceDueValue)}`, 195, currentY, {
-                align: 'right',
+            rowY = drawPdfTotalsRow(doc, 'BALANCE REMAINING', money(balanceDueValue), currentY, {
+                labelFontSize: 9,
+                amountFontSize: 12,
+                labelColor: textColor,
+                amountColor: primaryColor,
+                labelBold: true,
+                amountBold: true,
             });
+            currentY = rowY;
         } else {
             const totalLabel = isReceiptDoc
                 ? 'TOTAL PAID'
                 : isQuotationDoc
                   ? 'ESTIMATED TOTAL'
                   : 'TOTAL DUE';
-            doc.text(totalLabel, totalsX, currentY);
-            doc.setFontSize(12);
-            doc.setTextColor(...primaryColor);
-            doc.text(`${currencySymbol}${formatMoney(receiptPaid)}`, 195, currentY, {
-                align: 'right',
+            rowY = drawPdfTotalsRow(doc, totalLabel, money(receiptPaid), currentY, {
+                labelFontSize: 9,
+                amountFontSize: 12,
+                labelColor: textColor,
+                amountColor: primaryColor,
+                labelBold: true,
+                amountBold: true,
             });
+            currentY = rowY;
         }
     }
 

@@ -213,6 +213,10 @@ function Auth() {
                 setError(
                     'Please verify your email before signing in. Check your inbox for the verification link, or register again to receive a new one.',
                 );
+            } else if (err.status === 503 || /database unavailable/i.test(err.message || '')) {
+                setError(
+                    'The server cannot reach the database right now. Check your internet connection, ensure the backend is running, and try again in a moment.',
+                );
             } else {
                 setError(err.message === 'Failed to fetch' ? getNetworkErrorMessage() : err.message);
             }

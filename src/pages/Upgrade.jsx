@@ -9,9 +9,7 @@ import { formatCurrency } from '../utils/currency';
 import { PREMIUM_PLAN_FEATURES } from '../constants/planFeatures';
 import {
     PREMIUM_PRICE_NGN,
-    PREMIUM_LIST_PRICE_NGN,
     PREMIUM_PRICE_YEARLY_NGN,
-    PREMIUM_LIST_PRICE_YEARLY_NGN,
     PREMIUM_YEARLY_SAVINGS_NGN,
     premiumIntervalSuffix,
 } from '../constants/pricing';
@@ -34,7 +32,6 @@ export default function Upgrade() {
     const isYearly = billingInterval === 'yearly';
     const selectedPlan = plan?.plans?.[billingInterval];
     const amount = selectedPlan?.amount ?? (isYearly ? PREMIUM_PRICE_YEARLY_NGN : PREMIUM_PRICE_NGN);
-    const listAmount = selectedPlan?.listAmount ?? (isYearly ? PREMIUM_LIST_PRICE_YEARLY_NGN : PREMIUM_LIST_PRICE_NGN);
     const savings = selectedPlan?.savings ?? PREMIUM_YEARLY_SAVINGS_NGN;
 
     usePaystackReturnSync(() => setPaying(false));
@@ -125,7 +122,6 @@ export default function Upgrade() {
 
                     <PremiumPrice
                         amount={amount}
-                        listAmount={listAmount}
                         size="sm"
                         className="mt-1"
                         suffix={premiumIntervalSuffix(billingInterval)}

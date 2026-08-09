@@ -72,10 +72,16 @@ export function clearClientAuthState() {
 export async function prepareForLogin() {
     clearClientAuthState();
     try {
-        await fetch(`${API_BASE}/auth/logout`, {
-            method: 'POST',
-            credentials: 'include',
-        });
+        const { signal, cancelTimeout } = createFetchSignal({ timeoutMs: DEFAULT_TIMEOUT_MS });
+        try {
+            await fetch(`${API_BASE}/auth/logout`, {
+                method: 'POST',
+                credentials: 'include',
+                signal,
+            });
+        } finally {
+            cancelTimeout();
+        }
     } catch {
         /* best effort */
     }

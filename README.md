@@ -15,7 +15,7 @@ Professional business records for sales and billing: quotations, invoices, recei
 - **Dashboard** — Revenue, pending amounts, recent documents, overdue alerts
 - **PDF export** — Branded quotations, invoices, and receipts (premium: logo, stamp, signature)
 - **Settings** — Company profile, bank details, branding, plan & billing history
-- **Premium** — Paystack subscription (launch price **₦2,000/month**; list price ₦5,000)
+- **Premium** — Paystack subscription (**₦5,000/month** or **₦50,000/year**)
 - **Admin** — User management (suspend, plan override)
 
 ---
@@ -87,7 +87,7 @@ See `InvoicePro-backend/.env.example`. Key vars: `MONGO_URI`, `JWT_SECRET`, `FRO
 
 See **[DEPLOYMENT-VERCEL.md](./DEPLOYMENT-VERCEL.md)** for Vercel frontend + backend setup (env vars, CORS, health checks).
 
-Paystack setup: **[PAYSTACK-SETUP.md](./PAYSTACK-SETUP.md)** (₦2,000/month launch pricing).
+Paystack setup: **[PAYSTACK-SETUP.md](./PAYSTACK-SETUP.md)** (₦5,000/month or ₦50,000/year).
 
 ---
 

@@ -28,9 +28,7 @@ import { FREE_MONTHLY_INVOICE_LIMIT } from '../utils/invoiceLimits';
 import { FREE_PLAN_FEATURES, PREMIUM_PLAN_FEATURES } from '../constants/planFeatures';
 import {
     PREMIUM_PRICE_NGN,
-    PREMIUM_LIST_PRICE_NGN,
     PREMIUM_PRICE_YEARLY_NGN,
-    PREMIUM_LIST_PRICE_YEARLY_NGN,
     PREMIUM_YEARLY_SAVINGS_NGN,
     formatPremiumPrice,
     premiumIntervalSuffix,
@@ -196,7 +194,6 @@ function LandingPremiumCard() {
     const [billingInterval, setBillingInterval] = useState('monthly');
     const isYearly = billingInterval === 'yearly';
     const amount = isYearly ? PREMIUM_PRICE_YEARLY_NGN : PREMIUM_PRICE_NGN;
-    const listAmount = isYearly ? PREMIUM_LIST_PRICE_YEARLY_NGN : PREMIUM_LIST_PRICE_NGN;
 
     return (
         <div className="premium-card p-8 h-full flex flex-col relative overflow-hidden landing-premium-glow">
@@ -238,7 +235,6 @@ function LandingPremiumCard() {
 
             <PremiumPrice
                 amount={amount}
-                listAmount={listAmount}
                 suffix={premiumIntervalSuffix(billingInterval)}
                 savingsLabel={isYearly ? '2 months free' : ''}
             />
@@ -290,7 +286,7 @@ export default function Landing() {
                             <p className="text-sm font-bold uppercase tracking-[0.14em] text-zinc-500">
                                 {APP_TAGLINE}
                             </p>
-                            <h1 className="mt-6 text-3xl sm:text-4xl lg:text-[3.25rem] font-bold tracking-tight text-zinc-950 leading-[1.1]">
+                            <h1 className="mt-6 text-3xl sm:text-4xl lg:text-4xl font-bold tracking-tight text-zinc-950 leading-[1.1]">
                                 Every sale.{' '}
                                 <span className="whitespace-nowrap">Every client.</span>{' '}
                                 <span className="landing-text-shimmer">One record.</span>

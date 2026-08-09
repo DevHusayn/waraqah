@@ -41,6 +41,20 @@ const STATUS_COLORS = {
     converted: '#7c3aed',
 };
 
+function TotalsRow({ label, value, labelClassName = 'text-zinc-500', valueClassName = 'font-bold text-zinc-800', valueStyle }) {
+    return (
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 items-baseline">
+            <dt className={`min-w-0 ${labelClassName}`}>{label}</dt>
+            <dd
+                className={`text-right whitespace-nowrap tabular-nums shrink-0 ${valueClassName}`}
+                style={valueStyle}
+            >
+                {value}
+            </dd>
+        </div>
+    );
+}
+
 function StatusBadge({ status }) {
     const key = (status || 'pending').toLowerCase();
     const label = key.toUpperCase();
@@ -298,58 +312,57 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                 </div>
 
                 <div className="mt-6 flex justify-end">
-                    <dl className="w-full max-w-xs space-y-2 text-sm">
-                        <div className="flex justify-between gap-4">
-                            <dt className="text-zinc-500">Subtotal</dt>
-                            <dd className="font-bold text-zinc-800">
-                                {formatCurrency(invoice.subtotal, invoice.currency)}
-                            </dd>
-                        </div>
+                    <dl className="w-full min-w-[16rem] max-w-md sm:max-w-lg space-y-2 text-sm">
+                        <TotalsRow
+                            label="Subtotal"
+                            value={formatCurrency(invoice.subtotal, invoice.currency)}
+                        />
                         {Number(invoice.discount) > 0 && (
-                            <div className="flex justify-between gap-4">
-                                <dt className="text-zinc-500">
-                                    {invoice.discountType === 'percent' && invoice.discountValue
+                            <TotalsRow
+                                label={
+                                    invoice.discountType === 'percent' && invoice.discountValue
                                         ? `Discount (${invoice.discountValue}%)`
-                                        : 'Discount'}
-                                </dt>
-                                <dd className="font-bold text-red-600">
-                                    −{formatCurrency(invoice.discount, invoice.currency)}
-                                </dd>
-                            </div>
+                                        : 'Discount'
+                                }
+                                value={`−${formatCurrency(invoice.discount, invoice.currency)}`}
+                                valueClassName="font-bold text-red-600"
+                            />
                         )}
-                        <div className="flex justify-between gap-4">
-                            <dt className="text-zinc-500">Tax ({invoice.taxRate ?? 0}%)</dt>
-                            <dd className="font-bold text-zinc-800">
-                                {formatCurrency(invoice.tax, invoice.currency)}
-                            </dd>
-                        </div>
+                        <TotalsRow
+                            label={`Tax (${invoice.taxRate ?? 0}%)`}
+                            value={formatCurrency(invoice.tax, invoice.currency)}
+                        />
                         {showPartialPayment ? (
                             <>
-                                <div className="flex justify-between gap-4 pt-2 border-t border-zinc-200">
-                                    <dt className="text-zinc-500">Total</dt>
-                                    <dd className="font-bold text-zinc-800">
-                                        {formatCurrency(invoice.total, invoice.currency)}
-                                    </dd>
+                                <div className="pt-2 border-t border-zinc-200">
+                                    <TotalsRow
+                                        label="Total"
+                                        value={formatCurrency(invoice.total, invoice.currency)}
+                                    />
                                 </div>
-                                <div className="flex justify-between gap-4">
-                                    <dt className="text-zinc-500">{amountPaidRowLabel}</dt>
-                                    <dd className="font-bold text-zinc-800">
-                                        {formatCurrency(amountPaidValue, invoice.currency)}
-                                    </dd>
-                                </div>
-                                <div className="flex justify-between gap-4 pt-2 border-t border-zinc-200">
-                                    <dt className="font-bold text-zinc-800">{totalLabel}</dt>
-                                    <dd className="text-lg font-bold" style={{ color: brandColor }}>
-                                        {formatCurrency(emphasizedTotal, invoice.currency)}
-                                    </dd>
+                                <TotalsRow
+                                    label={amountPaidRowLabel}
+                                    value={formatCurrency(amountPaidValue, invoice.currency)}
+                                />
+                                <div className="pt-2 border-t border-zinc-200">
+                                    <TotalsRow
+                                        label={totalLabel}
+                                        value={formatCurrency(emphasizedTotal, invoice.currency)}
+                                        labelClassName="font-bold text-zinc-800"
+                                        valueClassName="text-base sm:text-lg font-bold"
+                                        valueStyle={{ color: brandColor }}
+                                    />
                                 </div>
                             </>
                         ) : (
-                            <div className="flex justify-between gap-4 pt-2 border-t border-zinc-200">
-                                <dt className="font-bold text-zinc-800">{totalLabel}</dt>
-                                <dd className="text-lg font-bold" style={{ color: brandColor }}>
-                                    {formatCurrency(emphasizedTotal, invoice.currency)}
-                                </dd>
+                            <div className="pt-2 border-t border-zinc-200">
+                                <TotalsRow
+                                    label={totalLabel}
+                                    value={formatCurrency(emphasizedTotal, invoice.currency)}
+                                    labelClassName="font-bold text-zinc-800"
+                                    valueClassName="text-base sm:text-lg font-bold"
+                                    valueStyle={{ color: brandColor }}
+                                />
                             </div>
                         )}
                     </dl>

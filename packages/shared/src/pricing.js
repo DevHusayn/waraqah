@@ -1,9 +1,6 @@
-export const PREMIUM_PRICE_NGN = 2000;
-export const PREMIUM_LIST_PRICE_NGN = 5000;
-export const PREMIUM_PRICE_YEARLY_NGN = 20000;
-export const PREMIUM_LIST_PRICE_YEARLY_NGN = 24000;
-export const PREMIUM_YEARLY_SAVINGS_NGN = 4000;
-export const PREMIUM_LAUNCH_LABEL = 'Launch price';
+export const PREMIUM_PRICE_NGN = 5000;
+export const PREMIUM_PRICE_YEARLY_NGN = 50000;
+export const PREMIUM_YEARLY_SAVINGS_NGN = PREMIUM_PRICE_NGN * 12 - PREMIUM_PRICE_YEARLY_NGN;
 
 export const BILLING_INTERVALS = ['monthly', 'yearly'];
 
