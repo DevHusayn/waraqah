@@ -22,7 +22,9 @@ import { ListPageSkeleton, ListSummaryStatsSkeleton } from '../components/Skelet
 import PaginationBar from '../components/PaginationBar';
 import ListSummaryStats from '../components/ListSummaryStats';
 import { usePagedQuery } from '../hooks/usePagedQuery';
-import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
+import { useListSummaryQuery } from '../hooks/useListSummaryQuery';
+import { useListMonthFilter } from '../hooks/useListMonthFilter';
+import ListMonthToolbarFilter from '../components/ListMonthToolbarFilter';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 
@@ -58,10 +60,16 @@ const Quotations = () => {
         monthInputValue,
         setMonthInputValue,
         periodLabel,
-    } = useSummaryPeriod();
+        listYear,
+        listMonth,
+        allTime,
+        setAllTime,
+        listMonthInputValue,
+        setListMonthInputValue,
+    } = useListMonthFilter();
 
     const fetcher = useCallback(
-        ({ page, limit, search, status, sort, summaryYear: year, summaryMonth: month }) =>
+        ({ page, limit, search, status, sort, year, month }) =>
             apiFetch(
                 `/quotations?${buildListQuery({
                     page,
@@ -69,12 +77,14 @@ const Quotations = () => {
                     search,
                     status,
                     sort,
-                    summaryYear: year,
-                    summaryMonth: month,
+                    year,
+                    month,
                 })}`
             ),
         []
     );
+
+    const { summary, summaryLoading } = useListSummaryQuery('quotations', summaryYear, summaryMonth);
 
     const {
         page,
@@ -84,20 +94,23 @@ const Quotations = () => {
         data,
         pagination,
         statusCounts,
-        summary,
-        summaryLoading,
         loading,
     } = usePagedQuery({
         queryKeyBase: 'quotations',
         fetcher,
-        extraParams: { status: filter, sort: sortBy, summaryYear, summaryMonth },
+        extraParams: {
+            status: filter,
+            sort: sortBy,
+            year: listYear,
+            month: listMonth,
+        },
     });
 
     const quotations = useMemo(() => data.map(mapQuotation), [data]);
 
     useEffect(() => {
         setPage(1);
-    }, [filter, sortBy, setPage]);
+    }, [filter, sortBy, listYear, listMonth, setPage]);
 
     const handleFilterChange = useCallback(
         (next) => {
@@ -167,6 +180,12 @@ const Quotations = () => {
                         aria-label="Search quotations"
                     />
                     <ToolbarActions>
+                        <ListMonthToolbarFilter
+                            monthInputValue={listMonthInputValue}
+                            onMonthChange={setListMonthInputValue}
+                            allTime={allTime}
+                            onShowAllTime={setAllTime}
+                        />
                         <div className="w-full sm:w-44">
                             <CustomSelect
                                 value={sortBy}

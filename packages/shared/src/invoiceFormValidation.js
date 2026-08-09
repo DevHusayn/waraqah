@@ -54,29 +54,43 @@ export function buildInvoiceFieldErrors(formData) {
     }
 
     (formData.items || []).forEach((item, index) => {
-        const descKey = `item-${index}-description`;
-        const qtyKey = `item-${index}-quantity`;
-        const rateKey = `item-${index}-rate`;
-
-        const descErr = validateRequired(item.description, 'Please enter a description.');
-        if (descErr) errors[descKey] = descErr;
-
-        const qty = Number(item.quantity);
-        if (!item.quantity && item.quantity !== 0) {
-            errors[qtyKey] = 'Please enter a quantity.';
-        } else if (Number.isNaN(qty) || qty < 1) {
-            errors[qtyKey] = 'Quantity must be at least 1.';
-        }
-
-        const rate = Number(item.rate);
-        if (item.rate === '' || item.rate === null || item.rate === undefined) {
-            errors[rateKey] = 'Please enter a rate.';
-        } else if (Number.isNaN(rate) || rate < 0) {
-            errors[rateKey] = 'Rate cannot be negative.';
-        }
+        Object.assign(errors, buildLineItemFieldErrors(item, index));
     });
 
     return errors;
+}
+
+export function buildLineItemFieldErrors(item, index, { requirePositiveRate = false } = {}) {
+    const errors = {};
+    const descKey = `item-${index}-description`;
+    const qtyKey = `item-${index}-quantity`;
+    const rateKey = `item-${index}-rate`;
+
+    const descErr = validateRequired(item.description, 'Please enter a description.');
+    if (descErr) errors[descKey] = descErr;
+
+    const qty = Number(item.quantity);
+    if (!item.quantity && item.quantity !== 0) {
+        errors[qtyKey] = 'Please enter a quantity.';
+    } else if (Number.isNaN(qty) || qty < 1) {
+        errors[qtyKey] = 'Quantity must be at least 1.';
+    }
+
+    const rate = Number(item.rate);
+    if (item.rate === '' || item.rate === null || item.rate === undefined) {
+        errors[rateKey] = 'Please enter a rate.';
+    } else if (Number.isNaN(rate) || rate < 0) {
+        errors[rateKey] = 'Rate cannot be negative.';
+    } else if (requirePositiveRate && rate <= 0) {
+        errors[rateKey] = 'Please enter a rate.';
+    }
+
+    return errors;
+}
+
+/** Stricter validation before adding a line item to the saved list (rate must be > 0). */
+export function buildLineItemAddFieldErrors(item, index) {
+    return buildLineItemFieldErrors(item, index, { requirePositiveRate: true });
 }
 
 export function buildDraftFieldErrors(formData) {

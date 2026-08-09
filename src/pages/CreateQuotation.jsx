@@ -34,7 +34,7 @@ import DocumentActionButtons from '../components/documentForm/DocumentActionButt
 import DocumentPreviewOverlay from '../components/documentForm/DocumentPreviewOverlay';
 import { DocumentNotesSection, DocumentTermsSection } from '../components/documentForm/DocumentNotesSection';
 import { buildDocumentPreviewFromForm } from '../utils/buildDocumentPreviewData';
-import { hasDraftContent } from '../utils/documentFormHelpers';
+import { hasDraftContent, hasAutoSaveDraftContent, resolvePersistClientId } from '../utils/documentFormHelpers';
 import { DEFAULT_QUOTATION_TERMS } from '../utils/documentHelpers';
 import { DEFAULT_INVOICE_UNIT, normalizeInvoiceUnit } from '@waraqah/shared';
 
@@ -271,9 +271,9 @@ const CreateQuotation = () => {
             if (!silent) setSaving(true);
 
             try {
-                const clientId = String(current.clientName || '').trim()
-                    ? await handlers.resolveClientId(current)
-                    : current.clientId || null;
+                const clientId = await resolvePersistClientId(current, handlers, {
+                    createIfMissing: false,
+                });
                 const payload = buildQuotationPayload({ ...current, clientId }, 'draft');
                 const draftId = id || draftIdRef.current;
                 let saved;
@@ -306,7 +306,7 @@ const CreateQuotation = () => {
         return () => {
             if (!isDraftFlow) return;
             if (!isDirtyRef.current) return;
-            if (!hasDraftContent(formDataRef.current, { extraCheck: quotationDraftContentCheck })) return;
+            if (!hasAutoSaveDraftContent(formDataRef.current, { extraCheck: quotationDraftContentCheck })) return;
             persistDraft({ silent: true, redirectAfterCreate: false });
         };
     }, [isDraftFlow, persistDraft]);
@@ -530,7 +530,7 @@ const CreateQuotation = () => {
         if (
             isDraftFlow &&
             isDirtyRef.current &&
-            hasDraftContent(formDataRef.current, { extraCheck: quotationDraftContentCheck })
+            hasAutoSaveDraftContent(formDataRef.current, { extraCheck: quotationDraftContentCheck })
         ) {
             try {
                 await persistDraft({ silent: true, redirectAfterCreate: false });
@@ -662,7 +662,7 @@ const CreateQuotation = () => {
                             clients={clients}
                             onNameChange={handlers.handleClientNameChange}
                             onEmailChange={handlers.handleClientEmailChange}
-                            onSelectSavedClient={handlers.handleSelectSavedClient}
+                            onSelectClient={handlers.handleSelectClient}
                             onOpenDetailsModal={() => setClientDetailsModalOpen(true)}
                         />
 
@@ -671,6 +671,7 @@ const CreateQuotation = () => {
                             docLabel="quotation"
                             formData={formData}
                             fieldErrors={fieldErrors}
+                            setFieldErrors={setFieldErrors}
                             products={products}
                             onItemChange={handlers.handleItemChange}
                             onUnitChange={handlers.handleUnitChange}

@@ -66,7 +66,7 @@ const Dashboard = () => {
         monthInputValue,
         setMonthInputValue,
     } = useSummaryPeriod();
-    const { data, isLoading, isFetching } = useDashboardQuery(summaryYear, summaryMonth);
+    const { data, isPending, isFetching } = useDashboardQuery(summaryYear, summaryMonth);
     const [createModalOpen, setCreateModalOpen] = useState(false);
 
     const businessInfo = data?.businessInfo || settingsBusinessInfo;
@@ -86,7 +86,7 @@ const Dashboard = () => {
     const usageLabel = formatInvoiceUsageLabel(effectiveUsage);
     const premium = isPremiumUser(businessInfo);
 
-    const dashboardLoading = isLoading || (isFetching && !data);
+    const dashboardLoading = isPending;
 
     const resolveDocumentStatusBadge = (doc) => {
         if (isReceiptDocument(doc) || doc.documentType === 'receipt') {
@@ -135,6 +135,7 @@ const Dashboard = () => {
                 analytics={data?.analytics}
                 periodSummary={data?.periodSummary}
                 loading={dashboardLoading}
+                fetching={isFetching && !isPending}
                 summaryYear={summaryYear}
                 summaryMonth={summaryMonth}
                 monthInputValue={monthInputValue}

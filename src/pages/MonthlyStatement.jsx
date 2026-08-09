@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Crown, Download, Printer, FileBarChart } from 'lucide-react';
 import { useInvoice } from '../context/InvoiceContext';
+import { useReceipt } from '../context/ReceiptContext';
 import { useSettings } from '../context/SettingsContext';
 import PageHeader from '../components/PageHeader';
 import { StatementContentSkeleton } from '../components/Skeleton';
@@ -17,37 +18,45 @@ import MonthPickerField from '../components/MonthPickerField';
 import EmptyState from '../components/EmptyState';
 import { format } from 'date-fns';
 
-const STATUS_COLS = ['paid', 'pending', 'overdue', 'cancelled'];
+const STATUS_COLS = ['paid', 'partial', 'pending', 'overdue', 'cancelled'];
 
 export default function MonthlyStatement() {
     const { clients, fetchInvoices } = useInvoice();
+    const { fetchReceipts } = useReceipt();
     const { businessInfo } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const [monthValue, setMonthValue] = useState(getDefaultStatementMonth);
     const [exporting, setExporting] = useState(false);
     const [invoices, setInvoices] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [receipts, setReceipts] = useState([]);
+    const [initialLoading, setInitialLoading] = useState(true);
+    const [fetching, setFetching] = useState(true);
 
     const { year, month } = parseStatementMonth(monthValue);
 
     useEffect(() => {
         let cancelled = false;
-        setLoading(true);
+        setFetching(true);
         (async () => {
-            const list = await fetchInvoices({ force: true, year, month, limit: 100 });
+            const [invoiceList, receiptList] = await Promise.all([
+                fetchInvoices({ force: true, year, month, limit: 100 }),
+                fetchReceipts({ force: true, year, month, limit: 100 }),
+            ]);
             if (!cancelled) {
-                setInvoices(list);
-                setLoading(false);
+                setInvoices(invoiceList);
+                setReceipts(receiptList);
+                setFetching(false);
+                setInitialLoading(false);
             }
         })();
         return () => {
             cancelled = true;
         };
-    }, [fetchInvoices, year, month]);
+    }, [fetchInvoices, fetchReceipts, year, month]);
 
     const statement = useMemo(
-        () => buildMonthlyStatement({ invoices, clients, year, month }),
-        [invoices, clients, year, month]
+        () => buildMonthlyStatement({ invoices, receipts, clients, year, month }),
+        [invoices, receipts, clients, year, month]
     );
 
     const periodLabel = useMemo(() => {
@@ -56,7 +65,7 @@ export default function MonthlyStatement() {
     }, [clients, year, month]);
 
     const handlePdf = async (print = false) => {
-        if (loading) return;
+        if (fetching) return;
         setExporting(true);
         try {
             await generateMonthlyStatementPdf(statement, businessInfo, { print });
@@ -114,25 +123,29 @@ export default function MonthlyStatement() {
                         max={format(new Date(), 'yyyy-MM')}
                     />
                     <p className="mt-2 text-xs text-zinc-500">
-                        Based on invoice issue dates in {periodLabel}.
+                        Based on document issue dates in {periodLabel}.
                     </p>
                 </div>
-                {!loading ? (
-                    <div className="flex items-center gap-2 text-sm text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3">
+                {!initialLoading ? (
+                    <div
+                        className={`flex items-center gap-2 text-sm text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 transition-opacity ${
+                            fetching ? 'opacity-60' : ''
+                        }`}
+                    >
                         <FileBarChart className="h-5 w-5 text-brand shrink-0" />
                         <span>
-                            <strong className="text-zinc-900">{statement.totals.invoiceCount}</strong>{' '}
-                            invoice{statement.totals.invoiceCount === 1 ? '' : 's'} this month
+                            <strong className="text-zinc-900">{statement.totals.documentCount}</strong>{' '}
+                            document{statement.totals.documentCount === 1 ? '' : 's'} this month
                         </span>
                     </div>
                 ) : null}
             </div>
 
-            {loading ? (
+            {initialLoading ? (
                 <StatementContentSkeleton />
             ) : (
-                <>
-                    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mb-6">
+                <div className={fetching ? 'opacity-60 pointer-events-none transition-opacity' : 'transition-opacity'}>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
                         {STATUS_COLS.map((status) => (
                             <div key={status} className="card !p-4 min-w-0">
                                 <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
@@ -143,7 +156,7 @@ export default function MonthlyStatement() {
                                 </p>
                             </div>
                         ))}
-                        <div className="card !p-4 min-w-0 col-span-2 sm:col-span-2 lg:col-span-3 xl:col-span-1 border-2 border-amber-300/80 bg-amber-50">
+                        <div className="card !p-4 min-w-0 col-span-2 sm:col-span-3 lg:col-span-6 border-2 border-amber-300/80 bg-amber-50">
                             <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide">
                                 Total billed
                             </p>
@@ -164,32 +177,28 @@ export default function MonthlyStatement() {
                         {!statement.hasData ? (
                             <div className="text-center py-16 px-6">
                                 <FileBarChart className="mx-auto h-12 w-12 text-zinc-300" />
-                                <p className="mt-3 font-medium text-zinc-900">No invoices this month</p>
+                                <p className="mt-3 font-medium text-zinc-900">No documents this month</p>
                                 <p className="text-sm text-zinc-500 mt-1">
-                                    Create invoices with an issue date in {statement.periodLabel} to see
-                                    them here.
+                                    Create invoices or receipts with an issue date in {statement.periodLabel}{' '}
+                                    to see them here.
                                 </p>
                             </div>
                         ) : (
                             <div className="overflow-x-auto scroll-x-touch">
-                                <table className="w-full min-w-[640px] text-sm">
+                                <table className="w-full min-w-[720px] text-sm">
                                     <thead>
                                         <tr className="border-b border-zinc-200 bg-white text-left">
                                             <th className="px-6 py-3 font-semibold text-zinc-700">
                                                 Client
                                             </th>
-                                            <th className="px-4 py-3 font-semibold text-zinc-700 text-center">
-                                                Paid
-                                            </th>
-                                            <th className="px-4 py-3 font-semibold text-zinc-700 text-center">
-                                                Pending
-                                            </th>
-                                            <th className="px-4 py-3 font-semibold text-zinc-700 text-center">
-                                                Overdue
-                                            </th>
-                                            <th className="px-4 py-3 font-semibold text-zinc-700 text-center">
-                                                Cancelled
-                                            </th>
+                                            {STATUS_COLS.map((status) => (
+                                                <th
+                                                    key={status}
+                                                    className="px-4 py-3 font-semibold text-zinc-700 text-center"
+                                                >
+                                                    {statusLabel(status)}
+                                                </th>
+                                            ))}
                                             <th className="px-6 py-3 font-semibold text-zinc-900 text-center">
                                                 Total
                                             </th>
@@ -247,29 +256,31 @@ export default function MonthlyStatement() {
                             </div>
                         )}
                     </div>
-                </>
+                </div>
             )}
 
-            <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full mt-6">
-                <button
-                    type="button"
-                    onClick={() => handlePdf(false)}
-                    disabled={exporting || loading}
-                    className="btn-primary w-full text-sm py-2.5 px-4 gap-2 min-h-[44px]"
-                >
-                    <Download className="h-4 w-4" />
-                    {exporting ? 'Preparing…' : 'Download PDF'}
-                </button>
-                <button
-                    type="button"
-                    onClick={() => handlePdf(true)}
-                    disabled={exporting || loading}
-                    className="btn-secondary w-full text-sm py-2.5 px-4 gap-2 min-h-[44px]"
-                >
-                    <Printer className="h-4 w-4" />
-                    Print
-                </button>
-            </div>
+            {!initialLoading ? (
+                <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full mt-6">
+                    <button
+                        type="button"
+                        onClick={() => handlePdf(false)}
+                        disabled={exporting || fetching}
+                        className="btn-primary w-full text-sm py-2.5 px-4 gap-2 min-h-[44px]"
+                    >
+                        <Download className="h-4 w-4" />
+                        {exporting ? 'Preparing…' : 'Download PDF'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => handlePdf(true)}
+                        disabled={exporting || fetching}
+                        className="btn-secondary w-full text-sm py-2.5 px-4 gap-2 min-h-[44px]"
+                    >
+                        <Printer className="h-4 w-4" />
+                        Print
+                    </button>
+                </div>
+            ) : null}
         </div>
     );
 }

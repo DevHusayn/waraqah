@@ -118,6 +118,38 @@
         box-shadow: 0 0 0 3px rgb(239 68 68 / 0.08);
     }
 
+    @keyframes field-shake {
+        0%,
+        100% {
+            transform: translateX(0);
+        }
+
+        15% {
+            transform: translateX(-5px);
+        }
+
+        30% {
+            transform: translateX(5px);
+        }
+
+        45% {
+            transform: translateX(-4px);
+        }
+
+        60% {
+            transform: translateX(4px);
+        }
+
+        75% {
+            transform: translateX(-2px);
+        }
+    }
+
+    .input-field--shake {
+        animation: field-shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+        border-color: rgb(248 113 113) !important;
+    }
+
     @keyframes fade-in {
         from {
             opacity: 0;

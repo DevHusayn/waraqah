@@ -41,7 +41,7 @@ function clientDetailsMatch(existing, details) {
 export async function ensureInvoiceClient(
     { clientId, clientName, clientEmail, clientBusiness, clientPhone, clientAddress },
     clients,
-    { addClient, updateClient }
+    { addClient, updateClient, createIfMissing = true } = {}
 ) {
     const name = String(clientName || '').trim();
     const email = String(clientEmail || '').trim();
@@ -72,6 +72,8 @@ export async function ensureInvoiceClient(
         }
         return match.id;
     }
+
+    if (!createIfMissing) return null;
 
     const newClient = await addClient(payload);
     return newClient.id;

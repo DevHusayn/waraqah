@@ -34,7 +34,7 @@ import DocumentActionButtons from '../components/documentForm/DocumentActionButt
 import DocumentPreviewOverlay from '../components/documentForm/DocumentPreviewOverlay';
 import { DocumentNotesSection } from '../components/documentForm/DocumentNotesSection';
 import { buildDocumentPreviewFromForm } from '../utils/buildDocumentPreviewData';
-import { hasDraftContent } from '../utils/documentFormHelpers';
+import { hasDraftContent, hasAutoSaveDraftContent, resolvePersistClientId } from '../utils/documentFormHelpers';
 import { DEFAULT_INVOICE_UNIT, normalizeInvoiceUnit } from '@waraqah/shared';
 import FormSection from '../components/FormSection';
 import RequiredLabel from '../components/RequiredLabel';
@@ -273,9 +273,9 @@ const CreateReceipt = () => {
             if (!silent) setSaving(true);
 
             try {
-                const clientId = String(current.clientName || '').trim()
-                    ? await handlers.resolveClientId(current)
-                    : current.clientId || null;
+                const clientId = await resolvePersistClientId(current, handlers, {
+                    createIfMissing: false,
+                });
                 const payload = buildReceiptPayload({ ...current, clientId }, 'draft');
                 const draftId = id || draftIdRef.current;
                 let saved;
@@ -306,7 +306,7 @@ const CreateReceipt = () => {
         return () => {
             if (!isDraftFlow) return;
             if (!isDirtyRef.current) return;
-            if (!hasDraftContent(formDataRef.current)) return;
+            if (!hasAutoSaveDraftContent(formDataRef.current)) return;
             persistDraft({ silent: true, redirectAfterCreate: false });
         };
     }, [isDraftFlow, persistDraft]);
@@ -517,7 +517,7 @@ const CreateReceipt = () => {
             : 'Discount';
 
     const handleLeavePage = async () => {
-        if (isDraftFlow && isDirtyRef.current && hasDraftContent(formDataRef.current)) {
+        if (isDraftFlow && isDirtyRef.current && hasAutoSaveDraftContent(formDataRef.current)) {
             try {
                 await persistDraft({ silent: true, redirectAfterCreate: false });
             } catch {
@@ -638,7 +638,7 @@ const CreateReceipt = () => {
                             clients={clients}
                             onNameChange={handlers.handleClientNameChange}
                             onEmailChange={handlers.handleClientEmailChange}
-                            onSelectSavedClient={handlers.handleSelectSavedClient}
+                            onSelectClient={handlers.handleSelectClient}
                             onOpenDetailsModal={() => setClientDetailsModalOpen(true)}
                         />
 
@@ -647,6 +647,7 @@ const CreateReceipt = () => {
                             docLabel="receipt"
                             formData={formData}
                             fieldErrors={fieldErrors}
+                            setFieldErrors={setFieldErrors}
                             products={products}
                             onItemChange={handlers.handleItemChange}
                             onUnitChange={handlers.handleUnitChange}

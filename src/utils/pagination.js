@@ -43,6 +43,7 @@ export function buildListQuery({
     month,
     summaryYear,
     summaryMonth,
+    summaryOnly,
 } = {}) {
     const params = new URLSearchParams();
     params.set('page', String(page));
@@ -56,6 +57,7 @@ export function buildListQuery({
     if (month != null && month !== '') params.set('month', String(month));
     if (summaryYear != null && summaryYear !== '') params.set('summaryYear', String(summaryYear));
     if (summaryMonth != null && summaryMonth !== '') params.set('summaryMonth', String(summaryMonth));
+    if (summaryOnly) params.set('summaryOnly', '1');
     return params.toString();
 }
 

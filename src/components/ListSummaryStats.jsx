@@ -1,6 +1,20 @@
 import { FilePlus } from 'lucide-react';
 import MonthPickerField from './MonthPickerField';
 
+function StatLoadingDots() {
+    return (
+        <span className="inline-flex items-center gap-1" aria-hidden>
+            {[0, 1, 2].map((index) => (
+                <span
+                    key={index}
+                    className="h-1.5 w-1.5 rounded-full bg-zinc-400 animate-pulse"
+                    style={{ animationDelay: `${index * 150}ms` }}
+                />
+            ))}
+        </span>
+    );
+}
+
 export default function ListSummaryStats({
     visible = true,
     totalLabel,
@@ -43,8 +57,11 @@ export default function ListSummaryStats({
                         />
                     </p>
                 </div>
-                <p className={`stat-card-value${summaryLoading ? ' text-zinc-400 animate-pulse' : ''}`}>
-                    {summaryLoading ? '…' : (newInPeriod ?? '—')}
+                <p
+                    className="stat-card-value min-h-[1.75rem] flex items-center"
+                    aria-busy={summaryLoading}
+                >
+                    {summaryLoading ? <StatLoadingDots /> : (newInPeriod ?? '—')}
                 </p>
             </div>
         </div>

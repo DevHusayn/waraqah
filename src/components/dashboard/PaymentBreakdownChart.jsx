@@ -42,7 +42,7 @@ export default function PaymentBreakdownChart({ breakdown, periodLabel }) {
             title="Payment breakdown"
             subtitle={
                 hasData
-                    ? `Issued in ${periodLabel || 'selected month'} — ${total} total`
+                    ? `Issued in ${periodLabel || 'selected month'} — ${total} total · fully paid shown above`
                     : periodLabel
                       ? `Issued in ${periodLabel}`
                       : 'Documents issued in the selected month'

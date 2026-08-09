@@ -2,9 +2,8 @@ import { Plus, Check, Users } from 'lucide-react';
 import FormSection from '../FormSection';
 import RequiredLabel from '../RequiredLabel';
 import FieldValidationMessage from '../FieldValidationMessage';
-import CustomSelect from '../CustomSelect';
+import ClientNameCombobox from './ClientNameCombobox';
 import { inputClass } from '../../utils/formFieldValidation';
-import { getClientBusiness } from '../../utils/clientHelpers';
 import { hasClientDetails } from '../../utils/documentFormHelpers';
 
 export default function DocumentClientSection({
@@ -15,7 +14,7 @@ export default function DocumentClientSection({
     clients,
     onNameChange,
     onEmailChange,
-    onSelectSavedClient,
+    onSelectClient,
     onOpenDetailsModal,
 }) {
     return (
@@ -23,15 +22,14 @@ export default function DocumentClientSection({
             <div className="space-y-4">
                 <div>
                     <RequiredLabel htmlFor={`${idPrefix}-client-name`}>Client name</RequiredLabel>
-                    <input
+                    <ClientNameCombobox
                         id={`${idPrefix}-client-name`}
-                        type="text"
-                        name="clientName"
                         value={formData.clientName}
-                        onChange={onNameChange}
-                        className={inputClass(Boolean(fieldErrors.clientName || fieldErrors.clientId))}
-                        placeholder="John Doe"
-                        aria-invalid={Boolean(fieldErrors.clientName || fieldErrors.clientId)}
+                        clients={clients}
+                        selectedClientId={formData.clientId}
+                        onNameChange={onNameChange}
+                        onSelectClient={onSelectClient}
+                        error={Boolean(fieldErrors.clientName || fieldErrors.clientId)}
                     />
                     <FieldValidationMessage message={fieldErrors.clientName || fieldErrors.clientId} />
                 </div>
@@ -78,23 +76,6 @@ export default function DocumentClientSection({
                         )}
                     </button>
                 </div>
-                {clients.length > 0 && (
-                    <div>
-                        <label htmlFor={`${idPrefix}-saved-client`} className="label">
-                            Fill from saved client
-                        </label>
-                        <CustomSelect
-                            id={`${idPrefix}-saved-client`}
-                            value={formData.clientId}
-                            onChange={onSelectSavedClient}
-                            options={clients.map((client) => ({
-                                value: client.id,
-                                label: `${client.name}${getClientBusiness(client) ? ` — ${getClientBusiness(client)}` : ''}`,
-                            }))}
-                            placeholder="Choose a saved client"
-                        />
-                    </div>
-                )}
             </div>
         </FormSection>
     );

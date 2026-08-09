@@ -124,7 +124,7 @@ export default function DashboardPeriodStats({ summary, loading = false }) {
                 positiveDirection="down"
             />
             <PeriodStatCard
-                title="Payments Received"
+                title="Payments received fully"
                 value={String(current?.paymentsReceived ?? 0)}
                 icon={CheckCircle}
                 iconBg="bg-green-50"

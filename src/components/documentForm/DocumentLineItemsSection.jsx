@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, List, Package } from 'lucide-react';
+import { buildLineItemAddFieldErrors } from '@waraqah/shared';
 import FormSection from '../FormSection';
 import LineItemEditor from './LineItemEditor';
 import LineItemSummaryCard from './LineItemSummaryCard';
 import CustomSelect from '../CustomSelect';
 import { formatCurrency } from '../../utils/currency';
+import { focusFieldById } from '../../utils/formFieldValidation';
+
+const ADD_ITEM_FIELD_ORDER = ['description', 'quantity', 'rate'];
 
 function firstItemErrorIndex(fieldErrors) {
     const match = Object.keys(fieldErrors).find((key) => key.startsWith('item-'));
@@ -19,6 +23,7 @@ export default function DocumentLineItemsSection({
     docLabel,
     formData,
     fieldErrors,
+    setFieldErrors,
     products,
     onItemChange,
     onUnitChange,
@@ -32,6 +37,7 @@ export default function DocumentLineItemsSection({
     const prevItemsLengthRef = useRef(itemsLength);
 
     const [activeIndex, setActiveIndex] = useState(() => Math.max(0, itemsLength - 1));
+    const [errorPulse, setErrorPulse] = useState(0);
 
     useEffect(() => {
         if (itemsLength > prevItemsLengthRef.current) {
@@ -49,9 +55,31 @@ export default function DocumentLineItemsSection({
         }
     }, [fieldErrors, activeIndex]);
 
+    const savedItemIndices = items
+        .map((_, index) => index)
+        .filter((index) => index !== activeIndex);
+
+    const activeItem = items[activeIndex];
+
     const handleAddItem = useCallback(() => {
+        if (!activeItem) return;
+
+        const itemErrors = buildLineItemAddFieldErrors(activeItem, activeIndex);
+        if (Object.keys(itemErrors).length > 0) {
+            setFieldErrors((prev) => ({ ...prev, ...itemErrors }));
+            setErrorPulse((pulse) => pulse + 1);
+
+            const firstField = ADD_ITEM_FIELD_ORDER.find(
+                (field) => itemErrors[`item-${activeIndex}-${field}`]
+            );
+            if (firstField) {
+                focusFieldById(`${idPrefix}-item-${activeIndex}-${firstField}`);
+            }
+            return;
+        }
+
         onAddItem();
-    }, [onAddItem]);
+    }, [activeIndex, activeItem, idPrefix, onAddItem, setFieldErrors]);
 
     const handleRemoveItem = useCallback(
         (index) => {
@@ -71,11 +99,6 @@ export default function DocumentLineItemsSection({
         setActiveIndex(index);
     }, []);
 
-    const savedItemIndices = items
-        .map((_, index) => index)
-        .filter((index) => index !== activeIndex);
-
-    const activeItem = items[activeIndex];
     const showSavedItems = savedItemIndices.length > 0;
 
     return (
@@ -97,6 +120,7 @@ export default function DocumentLineItemsSection({
                         item={activeItem}
                         currency={formData.currency}
                         fieldErrors={fieldErrors}
+                        errorPulse={errorPulse}
                         onItemChange={onItemChange}
                         onUnitChange={onUnitChange}
                         onCurrencyChange={onCurrencyChange}

@@ -7,12 +7,27 @@ import {
     isWithinInterval,
 } from 'date-fns';
 import { getClientBusiness } from './clientHelpers.js';
+import { isPartialReceipt, isReceiptOnly } from './receiptHelpers.js';
+import { getInvoiceAmountPaid, getInvoiceBalanceDue } from './invoicePayments.js';
 
-const STATUSES = ['paid', 'pending', 'overdue', 'cancelled'];
+const STATUSES = ['paid', 'partial', 'pending', 'overdue', 'cancelled'];
 
-function normalizeStatus(status) {
-    if (status === 'canceled') return 'cancelled';
-    return STATUSES.includes(status) ? status : 'pending';
+function emptyBucketTotals() {
+    return {
+        paid: 0,
+        partial: 0,
+        pending: 0,
+        overdue: 0,
+        cancelled: 0,
+    };
+}
+
+function emptyTotals() {
+    return {
+        ...emptyBucketTotals(),
+        total: 0,
+        documentCount: 0,
+    };
 }
 
 function parseInvoiceDate(dateStr) {
@@ -22,31 +37,72 @@ function parseInvoiceDate(dateStr) {
     return isValid(d) ? d : null;
 }
 
-function emptyTotals() {
-    return {
-        paid: 0,
-        pending: 0,
-        overdue: 0,
-        cancelled: 0,
-        total: 0,
-        invoiceCount: 0,
-    };
+function normalizeInvoiceStatus(status) {
+    if (status === 'canceled') return 'cancelled';
+    if (status === 'partial') return 'partial';
+    if (STATUSES.includes(status)) return status;
+    return 'pending';
 }
 
-export function buildMonthlyStatement({ invoices = [], clients = [], year, month }) {
+/** Split document totals across statement buckets by payment progress. */
+export function allocateStatementAmounts(doc) {
+    const buckets = emptyBucketTotals();
+    const total = Number(doc?.total) || 0;
+    if (total <= 0) return buckets;
+
+    if (doc.status === 'cancelled' || doc.status === 'canceled') {
+        buckets.cancelled = total;
+        return buckets;
+    }
+
+    if (doc.status === 'draft') {
+        return buckets;
+    }
+
+    if (isReceiptOnly(doc)) {
+        if (isPartialReceipt(doc)) {
+            buckets.paid = getInvoiceAmountPaid(doc);
+            buckets.partial = getInvoiceBalanceDue(doc);
+        } else {
+            buckets.paid = total;
+        }
+        return buckets;
+    }
+
+    const status = normalizeInvoiceStatus(doc.status);
+    if (status === 'partial') {
+        buckets.paid = getInvoiceAmountPaid(doc);
+        buckets.partial = getInvoiceBalanceDue(doc);
+        return buckets;
+    }
+
+    buckets[status] = total;
+    return buckets;
+}
+
+export function buildMonthlyStatement({
+    invoices = [],
+    receipts = [],
+    clients = [],
+    year,
+    month,
+}) {
     const periodStart = startOfMonth(new Date(year, month - 1, 1));
     const periodEnd = endOfMonth(periodStart);
     const clientById = Object.fromEntries(clients.map((c) => [c.id, c]));
+    const documents = [...invoices, ...receipts];
 
-    const inPeriod = invoices.filter((inv) => {
-        const d = parseInvoiceDate(inv.date);
+    const inPeriod = documents.filter((doc) => {
+        const d = parseInvoiceDate(doc.date);
         return d && isWithinInterval(d, { start: periodStart, end: periodEnd });
     });
 
     const byClientId = {};
 
-    for (const inv of inPeriod) {
-        const clientId = inv.clientId;
+    for (const doc of inPeriod) {
+        if (doc.status === 'draft') continue;
+
+        const clientId = doc.clientId;
         const client = clientById[clientId];
         if (!byClientId[clientId]) {
             const business = getClientBusiness(client);
@@ -54,21 +110,21 @@ export function buildMonthlyStatement({ invoices = [], clients = [], year, month
                 clientId,
                 clientName: client?.name || 'Unknown client',
                 clientSubtitle: business || client?.email || '',
-                paid: 0,
-                pending: 0,
-                overdue: 0,
-                cancelled: 0,
+                ...emptyBucketTotals(),
                 total: 0,
-                invoiceCount: 0,
+                documentCount: 0,
             };
         }
 
         const row = byClientId[clientId];
-        const status = normalizeStatus(inv.status);
-        const amount = Number(inv.total) || 0;
-        row[status] += amount;
-        row.total += amount;
-        row.invoiceCount += 1;
+        const allocation = allocateStatementAmounts(doc);
+        const docTotal = Number(doc.total) || 0;
+
+        for (const status of STATUSES) {
+            row[status] += allocation[status];
+        }
+        row.total += docTotal;
+        row.documentCount += 1;
     }
 
     const rows = Object.values(byClientId).sort((a, b) =>
@@ -76,9 +132,9 @@ export function buildMonthlyStatement({ invoices = [], clients = [], year, month
     );
 
     const totals = emptyTotals();
-    totals.invoiceCount = inPeriod.length;
+    totals.documentCount = inPeriod.filter((doc) => doc.status !== 'draft').length;
     for (const row of rows) {
-        for (const s of STATUSES) totals[s] += row[s];
+        for (const status of STATUSES) totals[status] += row[status];
         totals.total += row.total;
     }
 

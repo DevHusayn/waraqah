@@ -10,10 +10,12 @@ import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
-import Toolbar, { ToolbarSearch } from '../components/Toolbar';
+import Toolbar, { ToolbarSearch, ToolbarActions } from '../components/Toolbar';
 import PaginationBar from '../components/PaginationBar';
 import { usePagedQuery } from '../hooks/usePagedQuery';
-import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
+import { useListSummaryQuery } from '../hooks/useListSummaryQuery';
+import { useListMonthFilter } from '../hooks/useListMonthFilter';
+import ListMonthToolbarFilter from '../components/ListMonthToolbarFilter';
 import { ListPageSkeleton, ListSummaryStatsSkeleton } from '../components/Skeleton';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
@@ -56,21 +58,29 @@ const Clients = () => {
         monthInputValue,
         setMonthInputValue,
         periodLabel,
-    } = useSummaryPeriod();
+        listYear,
+        listMonth,
+        allTime,
+        setAllTime,
+        listMonthInputValue,
+        setListMonthInputValue,
+    } = useListMonthFilter();
 
     const fetcher = useCallback(
-        ({ page, limit, search, summaryYear: year, summaryMonth: month }) =>
+        ({ page, limit, search, year, month }) =>
             apiFetch(
                 `/clients?${buildListQuery({
                     page,
                     limit,
                     search,
-                    summaryYear: year,
-                    summaryMonth: month,
+                    year,
+                    month,
                 })}`
             ),
         []
     );
+
+    const { summary, summaryLoading, refreshSummary } = useListSummaryQuery('clients', summaryYear, summaryMonth);
 
     const {
         setPage,
@@ -78,17 +88,19 @@ const Clients = () => {
         setSearch,
         data,
         pagination,
-        summary,
-        summaryLoading,
         loading,
         refresh,
     } = usePagedQuery({
         queryKeyBase: 'clients',
         fetcher,
-        extraParams: { summaryYear, summaryMonth },
+        extraParams: { year: listYear, month: listMonth },
     });
 
     const clients = data.map(mapClient);
+
+    useEffect(() => {
+        setPage(1);
+    }, [listYear, listMonth, setPage]);
 
     useEffect(() => {
         if (shouldOpenAdd && !openedAddModal.current) {
@@ -129,6 +141,7 @@ const Clients = () => {
                 showToast('Client updated successfully', 'success');
                 closeModal();
                 await refresh();
+                await refreshSummary();
             } else {
                 const newClient = await addClient(formData);
                 showToast('Client added successfully', 'success');
@@ -138,6 +151,7 @@ const Clients = () => {
                     navigate(`${returnTo}${join}clientId=${encodeURIComponent(newClient.id)}`);
                 } else {
                     await refresh();
+                    await refreshSummary();
                 }
             }
         } catch (err) {
@@ -160,6 +174,7 @@ const Clients = () => {
             showToast('Client deleted successfully', 'success');
             setConfirm({ open: false, clientId: null });
             await refresh();
+            await refreshSummary();
         } catch (err) {
             setAlert({
                 open: true,
@@ -255,7 +270,15 @@ const Clients = () => {
                             placeholder="Search clients..."
                             aria-label="Search clients"
                         />
-                    </Toolbar>
+                        <ToolbarActions>
+                        <ListMonthToolbarFilter
+                            monthInputValue={listMonthInputValue}
+                            onMonthChange={setListMonthInputValue}
+                            allTime={allTime}
+                            onShowAllTime={setAllTime}
+                        />
+                    </ToolbarActions>
+                </Toolbar>
 
                     {clients.length === 0 ? (
                         <div className="data-table-wrap">

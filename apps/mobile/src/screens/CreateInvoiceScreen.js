@@ -10,6 +10,7 @@ import {
     Text,
     TextInput,
     View,
+    Animated,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
@@ -18,13 +19,13 @@ import {
     APP_CURRENCY,
     buildInvoiceFieldErrors,
     buildDraftFieldErrors,
+    buildLineItemAddFieldErrors,
     buildUnitSelectOptions,
     calculateInvoiceTotals,
     CUSTOM_UNIT_OPTION,
     DEFAULT_INVOICE_UNIT,
     DRAFT_STATUS,
     formatCurrency,
-    getClientBusiness,
     isDraft,
     normalizeCurrency,
     normalizeInvoiceUnit,
@@ -33,6 +34,7 @@ import {
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
 import { InvoiceLimitModal } from '../components/InvoiceLimitModal';
+import { ClientNameCombobox } from '../components/ClientNameCombobox';
 import { ClientDetailsModal } from '../components/ClientDetailsModal';
 import {
     BottomSheet,
@@ -43,6 +45,7 @@ import {
     ListRow,
 } from '../components/ui';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
+import { useShakeAnimation } from '../hooks/useShakeAnimation';
 import { ensureInvoiceClient, clientDetailsFromRecord } from '../utils/ensureInvoiceClient';
 import { colors, fontFamily, fontSize, lineHeight, radii, spacing, touchTarget } from '../theme';
 
@@ -112,7 +115,6 @@ export function CreateInvoiceScreen({ route, navigation }) {
     } = useInvoice();
     const { showToast } = useToast();
     const limitModalRef = useRef(null);
-    const clientSheetRef = useRef(null);
     const productSheetRef = useRef(null);
     const unitSheetRef = useRef(null);
     const currencySheetRef = useRef(null);
@@ -134,6 +136,8 @@ export function CreateInvoiceScreen({ route, navigation }) {
     const isDraftFlow = !editId || isDraft(existing);
     const [saving, setSaving] = useState(false);
     const [fieldErrors, setFieldErrors] = useState({});
+    const [itemErrorPulse, setItemErrorPulse] = useState(0);
+    const itemShakeAnim = useShakeAnimation(itemErrorPulse);
     const [form, setForm] = useState({
         invoiceNumber: '',
         clientId: '',
@@ -228,7 +232,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
         clearError('clientId');
     };
 
-    const handleSelectSavedClient = (client) => {
+    const handleSelectClient = (client) => {
         if (!client) return;
         setForm((prev) => ({
             ...prev,
@@ -241,7 +245,6 @@ export function CreateInvoiceScreen({ route, navigation }) {
         clearError('clientName');
         clearError('clientId');
         clearError('clientEmail');
-        clientSheetRef.current?.close();
     };
 
     const setItem = (index, key, value) => {
@@ -253,7 +256,17 @@ export function CreateInvoiceScreen({ route, navigation }) {
         clearError(`item-${index}-${key}`);
     };
 
-    const addItem = () => setForm((f) => ({ ...f, items: [...f.items, emptyItem()] }));
+    const addItem = () => {
+        const lastIndex = form.items.length - 1;
+        const item = form.items[lastIndex];
+        const errors = buildLineItemAddFieldErrors(item, lastIndex);
+        if (Object.keys(errors).length > 0) {
+            setFieldErrors((prev) => ({ ...prev, ...errors }));
+            setItemErrorPulse((pulse) => pulse + 1);
+            return;
+        }
+        setForm((f) => ({ ...f, items: [...f.items, emptyItem()] }));
+    };
     const removeItem = (index) =>
         setForm((f) => ({ ...f, items: f.items.filter((_, i) => i !== index) }));
 
@@ -317,7 +330,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
                         clientAddress: form.clientAddress,
                     },
                     clients,
-                    { addClient, updateClient }
+                    { addClient, updateClient, createIfMissing: !asDraft }
                 );
             }
 
@@ -497,14 +510,15 @@ export function CreateInvoiceScreen({ route, navigation }) {
                 <Text style={styles.section}>Client</Text>
                 <View style={styles.fieldBlock}>
                     <Label required>Client name</Label>
-                    <Input
+                    <ClientNameCombobox
                         value={form.clientName}
                         onChangeText={handleClientNameChange}
+                        onSelectClient={handleSelectClient}
+                        clients={clients}
+                        selectedClientId={form.clientId}
                         error={Boolean(fieldErrors.clientName || fieldErrors.clientId)}
-                        placeholder="John Doe"
-                        autoCapitalize="words"
+                        fieldError={fieldErrors.clientName || fieldErrors.clientId}
                     />
-                    <FieldError message={fieldErrors.clientName || fieldErrors.clientId} />
                 </View>
                 <View style={styles.fieldBlock}>
                     <Label>Email (optional)</Label>
@@ -540,35 +554,6 @@ export function CreateInvoiceScreen({ route, navigation }) {
                         </>
                     )}
                 </Pressable>
-                {clients.length > 0 ? (
-                    <View style={styles.fieldBlock}>
-                        <Label>Fill from saved client</Label>
-                        <Pressable
-                            onPress={() => clientSheetRef.current?.snapToIndex(0)}
-                            style={styles.selectTrigger}
-                            accessibilityRole="button"
-                            accessibilityLabel="Choose a saved client"
-                        >
-                            <Text
-                                style={[
-                                    styles.selectText,
-                                    !form.clientId && styles.selectPlaceholder,
-                                ]}
-                                numberOfLines={1}
-                            >
-                                {form.clientId
-                                    ? (() => {
-                                          const c = clients.find((x) => x.id === form.clientId);
-                                          if (!c) return 'Choose a saved client';
-                                          const biz = getClientBusiness(c);
-                                          return biz ? `${c.name} — ${biz}` : c.name;
-                                      })()
-                                    : 'Choose a saved client'}
-                            </Text>
-                            <ChevronDown size={18} color={colors.slate400} strokeWidth={2} />
-                        </Pressable>
-                    </View>
-                ) : null}
 
                 {/* Items */}
                 <View style={styles.itemsHeader}>
@@ -585,8 +570,15 @@ export function CreateInvoiceScreen({ route, navigation }) {
                     </View>
                 </View>
 
-                {form.items.map((item, index) => (
-                    <View key={index} style={styles.itemCard}>
+                {form.items.map((item, index) => {
+                    const isLastItem = index === form.items.length - 1;
+                    const ItemShell = isLastItem ? Animated.View : View;
+                    const itemShellStyle = isLastItem
+                        ? [styles.itemCard, { transform: [{ translateX: itemShakeAnim }] }]
+                        : styles.itemCard;
+
+                    return (
+                    <ItemShell key={index} style={itemShellStyle}>
                         <View style={styles.itemTop}>
                             <Text style={styles.itemIndex}>Item {index + 1}</Text>
                             {form.items.length > 1 ? (
@@ -663,8 +655,9 @@ export function CreateInvoiceScreen({ route, navigation }) {
                                 form.currency
                             )}
                         </Text>
-                    </View>
-                ))}
+                    </ItemShell>
+                    );
+                })}
 
                 {/* Notes */}
                 <Text style={styles.section}>Notes</Text>
@@ -717,22 +710,6 @@ export function CreateInvoiceScreen({ route, navigation }) {
                     style={styles.actionBtn}
                 />
             </View>
-
-            <BottomSheet ref={clientSheetRef} snapPoints={['55%']}>
-                <Text style={styles.sheetTitle}>Saved clients</Text>
-                <ScrollView>
-                    {clients.map((c, i) => (
-                        <ListRow
-                            key={c.id}
-                            title={c.name}
-                            subtitle={[getClientBusiness(c), c.email].filter(Boolean).join(' · ')}
-                            onPress={() => handleSelectSavedClient(c)}
-                            last={i === clients.length - 1}
-                            dense
-                        />
-                    ))}
-                </ScrollView>
-            </BottomSheet>
 
             <BottomSheet ref={productSheetRef} snapPoints={['50%']}>
                 <Text style={styles.sheetTitle}>Add from products</Text>

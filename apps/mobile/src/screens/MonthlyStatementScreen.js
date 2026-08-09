@@ -10,6 +10,8 @@ import {
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
+import { apiFetch } from '../api/client';
+import { buildListQuery, unwrapListResponse } from '../utils/pagination';
 import { Button, Card, Input, Label, PageHeader } from '../components/ui';
 import { colors, spacing } from '../theme';
 
@@ -20,6 +22,7 @@ export function MonthlyStatementScreen({ navigation }) {
     const [monthValue, setMonthValue] = useState(getDefaultStatementMonth());
     const [pdfLoading, setPdfLoading] = useState(false);
     const [invoices, setInvoices] = useState([]);
+    const [receipts, setReceipts] = useState([]);
 
     const premium = isPremiumUser(businessInfo);
     const { year, month } = parseStatementMonth(monthValue);
@@ -27,8 +30,22 @@ export function MonthlyStatementScreen({ navigation }) {
     useEffect(() => {
         let cancelled = false;
         (async () => {
-            const list = await fetchInvoices({ force: true, year, month, limit: 100 });
-            if (!cancelled) setInvoices(list);
+            const [invoiceList, receiptPayload] = await Promise.all([
+                fetchInvoices({ force: true, year, month, limit: 100 }),
+                apiFetch(
+                    `/receipts?${buildListQuery({ page: 1, limit: 100, year, month })}`
+                ).catch(() => ({ data: [] })),
+            ]);
+            const { data: receiptData } = unwrapListResponse(receiptPayload);
+            if (!cancelled) {
+                setInvoices(invoiceList);
+                setReceipts(
+                    receiptData.map((receipt) => ({
+                        ...receipt,
+                        id: receipt._id || receipt.id,
+                    }))
+                );
+            }
         })();
         return () => {
             cancelled = true;
@@ -36,8 +53,8 @@ export function MonthlyStatementScreen({ navigation }) {
     }, [fetchInvoices, year, month]);
 
     const statement = useMemo(
-        () => buildMonthlyStatement({ invoices, clients, year, month }),
-        [invoices, clients, year, month]
+        () => buildMonthlyStatement({ invoices, receipts, clients, year, month }),
+        [invoices, receipts, clients, year, month]
     );
 
     const handlePdf = async () => {
@@ -74,6 +91,7 @@ export function MonthlyStatementScreen({ navigation }) {
             <Card style={styles.block}>
                 <Text style={styles.section}>Totals</Text>
                 <Row label="Paid" value={formatCurrency(statement.totals.paid)} />
+                <Row label="Partial" value={formatCurrency(statement.totals.partial)} />
                 <Row label="Pending" value={formatCurrency(statement.totals.pending)} />
                 <Row label="Overdue" value={formatCurrency(statement.totals.overdue)} />
                 <Row label="Total billed" value={formatCurrency(statement.totals.total)} bold />
@@ -83,6 +101,7 @@ export function MonthlyStatementScreen({ navigation }) {
                 <Card key={row.clientId} style={styles.block}>
                     <Text style={styles.clientName}>{row.clientName}</Text>
                     <Row label="Paid" value={formatCurrency(row.paid)} />
+                    <Row label="Partial" value={formatCurrency(row.partial)} />
                     <Row label="Pending" value={formatCurrency(row.pending)} />
                     <Row label="Total" value={formatCurrency(row.total)} bold />
                 </Card>

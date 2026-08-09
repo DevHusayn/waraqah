@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import RequiredLabel from '../RequiredLabel';
 import FieldValidationMessage from '../FieldValidationMessage';
 import CustomSelect from '../CustomSelect';
@@ -19,11 +20,25 @@ export default function LineItemEditor({
     item,
     currency,
     fieldErrors,
+    errorPulse = 0,
     onItemChange,
     onUnitChange,
     onCurrencyChange,
 }) {
     const normalizedCurrency = normalizeCurrency(currency || APP_CURRENCY);
+    const [shake, setShake] = useState(false);
+
+    const descError = Boolean(fieldErrors[`item-${index}-description`]);
+    const qtyError = Boolean(fieldErrors[`item-${index}-quantity`]);
+    const rateError = Boolean(fieldErrors[`item-${index}-rate`]);
+    const hasItemError = descError || qtyError || rateError;
+
+    useEffect(() => {
+        if (!errorPulse || !hasItemError) return undefined;
+        setShake(true);
+        const timer = setTimeout(() => setShake(false), 450);
+        return () => clearTimeout(timer);
+    }, [errorPulse, hasItemError]);
 
     return (
         <div className="space-y-4">
@@ -35,13 +50,12 @@ export default function LineItemEditor({
                     id={`${idPrefix}-item-${index}-description`}
                     value={item.description}
                     onChange={(e) => onItemChange(index, 'description', e.target.value)}
-                    className={inputClass(
-                        Boolean(fieldErrors[`item-${index}-description`]),
-                        'resize-none min-h-[72px]'
-                    )}
+                    className={inputClass(descError, 'resize-none min-h-[72px]', {
+                        shake: shake && descError,
+                    })}
                     rows={2}
                     placeholder="Service or product"
-                    aria-invalid={Boolean(fieldErrors[`item-${index}-description`])}
+                    aria-invalid={descError}
                 />
                 <FieldValidationMessage message={fieldErrors[`item-${index}-description`]} />
             </div>
@@ -64,12 +78,12 @@ export default function LineItemEditor({
                             type="number"
                             value={item.quantity}
                             onChange={(e) => onItemChange(index, 'quantity', e.target.value)}
-                            className={`${inputClass(
-                                Boolean(fieldErrors[`item-${index}-quantity`])
-                            )} w-[4.75rem] shrink-0`}
+                            className={inputClass(qtyError, 'w-[4.75rem] shrink-0', {
+                                shake: shake && qtyError,
+                            })}
                             min="1"
                             aria-label={`${normalizeInvoiceUnit(item.unit)} for item ${index + 1}`}
-                            aria-invalid={Boolean(fieldErrors[`item-${index}-quantity`])}
+                            aria-invalid={qtyError}
                         />
                     </div>
                     <FieldValidationMessage message={fieldErrors[`item-${index}-quantity`]} />
@@ -92,12 +106,12 @@ export default function LineItemEditor({
                             type="number"
                             value={item.rate}
                             onChange={(e) => onItemChange(index, 'rate', e.target.value)}
-                            className={`${inputClass(
-                                Boolean(fieldErrors[`item-${index}-rate`])
-                            )} min-w-0 flex-1`}
+                            className={inputClass(rateError, 'min-w-0 flex-1', {
+                                shake: shake && rateError,
+                            })}
                             min="0"
                             step="0.01"
-                            aria-invalid={Boolean(fieldErrors[`item-${index}-rate`])}
+                            aria-invalid={rateError}
                         />
                     </div>
                     <FieldValidationMessage message={fieldErrors[`item-${index}-rate`]} />

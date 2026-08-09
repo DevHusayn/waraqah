@@ -7,9 +7,11 @@ export {
 } from '@waraqah/shared';
 
 /** Standard app input with optional error state */
-export function inputClass(hasError, extra = '') {
+export function inputClass(hasError, extra = '', { shake = false } = {}) {
     const base = hasError ? 'input-field input-field--error' : 'input-field';
-    return extra ? `${base} ${extra}`.trim() : base;
+    const shakeClass = hasError && shake ? ' input-field--shake' : '';
+    const combined = `${base}${shakeClass}`;
+    return extra ? `${combined} ${extra}`.trim() : combined;
 }
 
 /** Add error border to any existing input class string */

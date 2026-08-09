@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
@@ -31,7 +31,7 @@ export function useDashboardQuery(summaryYear, summaryMonth) {
         placeholderData: (previousData, previousQuery) => {
             const [, prevUserId] = previousQuery?.queryKey ?? [];
             if (prevUserId !== userId) return undefined;
-            return previousData;
+            return keepPreviousData(previousData);
         },
     });
 }

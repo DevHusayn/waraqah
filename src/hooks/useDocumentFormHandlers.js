@@ -19,8 +19,8 @@ export function useDocumentFormHandlers({
     markDirty,
 }) {
     const resolveClientId = useCallback(
-        async (data) =>
-            ensureInvoiceClient(data, clients, { addClient, updateClient }),
+        async (data, { createIfMissing = true } = {}) =>
+            ensureInvoiceClient(data, clients, { addClient, updateClient, createIfMissing }),
         [clients, addClient, updateClient]
     );
 
@@ -47,23 +47,37 @@ export function useDocumentFormHandlers({
         clearFieldError(setFieldErrors, 'clientEmail');
     }, [markDirty, setFormData, setFieldErrors]);
 
-    const handleSelectSavedClient = useCallback((clientId) => {
-        if (!clientId) return;
-        const client = clients.find((c) => c.id === clientId);
-        if (!client) return;
-        markDirty();
-        setFormData((prev) => ({
-            ...prev,
-            clientId,
-            clientName: client.name || '',
-            clientEmail: client.email || '',
-            ...clientDetailsFromRecord(client),
-            clientAdditionalInfo: '',
-        }));
-        clearFieldError(setFieldErrors, 'clientName');
-        clearFieldError(setFieldErrors, 'clientId');
-        clearFieldError(setFieldErrors, 'clientEmail');
-    }, [markDirty, setFormData, clients, setFieldErrors]);
+    const applySelectedClient = useCallback(
+        (client) => {
+            if (!client) return;
+            markDirty();
+            setFormData((prev) => ({
+                ...prev,
+                clientId: client.id,
+                clientName: client.name || '',
+                clientEmail: client.email || '',
+                ...clientDetailsFromRecord(client),
+                clientAdditionalInfo: '',
+            }));
+            clearFieldError(setFieldErrors, 'clientName');
+            clearFieldError(setFieldErrors, 'clientId');
+            clearFieldError(setFieldErrors, 'clientEmail');
+        },
+        [markDirty, setFormData, setFieldErrors]
+    );
+
+    const handleSelectClient = useCallback(
+        (clientOrId) => {
+            const client =
+                typeof clientOrId === 'string'
+                    ? clients.find((c) => c.id === clientOrId)
+                    : clientOrId;
+            applySelectedClient(client);
+        },
+        [applySelectedClient, clients]
+    );
+
+    const handleSelectSavedClient = handleSelectClient;
 
     const handleSaveClientDetails = useCallback((details) => {
         markDirty();
@@ -214,6 +228,7 @@ export function useDocumentFormHandlers({
         resolveClientId,
         handleClientNameChange,
         handleClientEmailChange,
+        handleSelectClient,
         handleSelectSavedClient,
         handleSaveClientDetails,
         handleChange,

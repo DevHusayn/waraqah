@@ -45,22 +45,30 @@ export const ReceiptProvider = ({ children }) => {
     }, [invalidateListCaches]);
 
     const fetchReceipts = useCallback(
-        async ({ force = false, limit = PICKER_PAGE_SIZE } = {}) => {
+        async ({ force = false, year, month, limit = PICKER_PAGE_SIZE } = {}) => {
             if (!shouldFetch && !isAuthenticated) return [];
-            if (receiptsFetchedRef.current && !force) return receipts;
+            const forMonth = year != null && month != null;
+            if (!forMonth && receiptsFetchedRef.current && !force) return receipts;
 
             setReceiptsLoading(true);
             try {
                 const payload = await apiFetch(
-                    `/receipts?${buildListQuery({ page: 1, limit })}`
+                    `/receipts?${buildListQuery({
+                        page: 1,
+                        limit,
+                        year: forMonth ? year : undefined,
+                        month: forMonth ? month : undefined,
+                    })}`
                 );
                 const { data } = unwrapListResponse(payload);
                 const mapped = data.map(mapReceipt);
-                setReceipts(mapped);
-                receiptsFetchedRef.current = true;
+                if (!forMonth) {
+                    setReceipts(mapped);
+                    receiptsFetchedRef.current = true;
+                }
                 return mapped;
             } catch {
-                setReceipts([]);
+                if (!forMonth) setReceipts([]);
                 return [];
             } finally {
                 setReceiptsLoading(false);

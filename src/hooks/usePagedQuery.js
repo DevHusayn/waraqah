@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { clampPage, DEFAULT_PAGE_SIZE, unwrapListResponse } from '../utils/pagination';
 import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
@@ -24,11 +24,11 @@ export function usePagedQuery({
     const fetcherRef = useRef(fetcher);
     fetcherRef.current = fetcher;
     const lastStatusCountsRef = useRef(null);
-    const lastSummaryRef = useRef(null);
+    const lastListRef = useRef([]);
 
     useEffect(() => {
         lastStatusCountsRef.current = null;
-        lastSummaryRef.current = null;
+        lastListRef.current = [];
     }, [userId]);
 
     useEffect(() => {
@@ -44,7 +44,7 @@ export function usePagedQuery({
         ? queryKeys[queryKeyBase](userId, queryParams)
         : [queryKeyBase, userId, queryParams];
 
-    const { data, isLoading, isFetching, error, refetch } = useQuery({
+    const { data, isPending, isFetching, error, refetch } = useQuery({
         queryKey,
         queryFn: async () => {
             const payload = await fetcherRef.current({
@@ -64,56 +64,19 @@ export function usePagedQuery({
         staleTime: STALE_TIMES.lists,
         placeholderData: (prev, previousQuery) => {
             if (previousQuery?.queryKey?.[1] !== userId) return undefined;
-            const prevParams = previousQuery?.queryKey?.[2];
-            if (!prevParams || typeof prevParams !== 'object') return undefined;
-
-            const sameListContent =
-                prevParams.status === queryParams.status &&
-                prevParams.plan === queryParams.plan &&
-                prevParams.activity === queryParams.activity &&
-                prevParams.sort === queryParams.sort &&
-                prevParams.search === queryParams.search &&
-                prevParams.year === queryParams.year &&
-                prevParams.month === queryParams.month &&
-                prevParams.page === queryParams.page &&
-                prevParams.limit === queryParams.limit;
-
-            return sameListContent && prev ? prev : undefined;
+            return keepPreviousData(prev);
         },
     });
 
+    if (data?.data !== undefined) {
+        lastListRef.current = data.data;
+    }
     if (data?.statusCounts) {
         lastStatusCountsRef.current = data.statusCounts;
     }
-    if (data?.summary) {
-        lastSummaryRef.current = data.summary;
-    }
 
-    const hasSummaryPeriod = Boolean(queryParams.summaryYear && queryParams.summaryMonth);
-
-    const summaryFromCache =
-        hasSummaryPeriod &&
-        lastSummaryRef.current &&
-        lastSummaryRef.current.period?.year === queryParams.summaryYear &&
-        lastSummaryRef.current.period?.month === queryParams.summaryMonth
-            ? lastSummaryRef.current
-            : null;
-
-    const summaryMatchesPeriod = (summary) =>
-        hasSummaryPeriod &&
-        summary?.period?.year === queryParams.summaryYear &&
-        summary?.period?.month === queryParams.summaryMonth;
-
-    const resolvedSummary = summaryMatchesPeriod(data?.summary)
-        ? data?.summary ?? null
-        : summaryFromCache;
-
-    const summaryLoading =
-        isFetching &&
-        hasSummaryPeriod &&
-        !summaryMatchesPeriod(data?.summary);
-
-    const initialLoading = isLoading && !(data?.data?.length > 0);
+    const resolvedList =
+        data?.data !== undefined ? data.data : isFetching ? lastListRef.current : [];
 
     const setData = useCallback(
         (updater) => {
@@ -152,13 +115,11 @@ export function usePagedQuery({
         search,
         setSearch,
         debouncedSearch,
-        data: data?.data ?? [],
+        data: resolvedList,
         setData,
         pagination: data?.pagination ?? { page: 1, limit, total: 0, totalPages: 0 },
         statusCounts: data?.statusCounts ?? lastStatusCountsRef.current,
-        summary: resolvedSummary,
-        summaryLoading,
-        loading: initialLoading,
+        loading: isPending,
         fetching: isFetching,
         error: error?.message || '',
         refresh,

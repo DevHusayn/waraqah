@@ -74,11 +74,12 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
 
     const summaryBody = [
         ['Paid', formatMoney(statement.totals.paid, currencySymbol)],
+        ['Partial', formatMoney(statement.totals.partial, currencySymbol)],
         ['Pending', formatMoney(statement.totals.pending, currencySymbol)],
         ['Overdue', formatMoney(statement.totals.overdue, currencySymbol)],
         ['Cancelled', formatMoney(statement.totals.cancelled, currencySymbol)],
         ['Total billed', formatMoney(statement.totals.total, currencySymbol)],
-        ['Invoices in period', String(statement.totals.invoiceCount)],
+        ['Documents in period', String(statement.totals.documentCount)],
     ];
 
     autoTable(doc, {
@@ -112,11 +113,12 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
         doc.setFontSize(9);
         doc.setFont(undefined, 'normal');
         doc.setTextColor(...grayColor);
-        doc.text('No invoices were issued during this period.', 15, tableY + 8);
+        doc.text('No documents were issued during this period.', 15, tableY + 8);
     } else {
         const tableHead = [
             'Client',
             'Paid',
+            'Partial',
             'Pending',
             'Overdue',
             'Cancelled',
@@ -128,6 +130,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
                 ? `${row.clientName}\n${row.clientSubtitle}`
                 : row.clientName,
             formatMoney(row.paid, currencySymbol),
+            formatMoney(row.partial, currencySymbol),
             formatMoney(row.pending, currencySymbol),
             formatMoney(row.overdue, currencySymbol),
             formatMoney(row.cancelled, currencySymbol),
@@ -137,13 +140,14 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
         const footRow = [
             'Total',
             formatMoney(statement.totals.paid, currencySymbol),
+            formatMoney(statement.totals.partial, currencySymbol),
             formatMoney(statement.totals.pending, currencySymbol),
             formatMoney(statement.totals.overdue, currencySymbol),
             formatMoney(statement.totals.cancelled, currencySymbol),
             formatMoney(statement.totals.total, currencySymbol),
         ];
 
-        const clientAlign = ['left', 'center', 'center', 'center', 'center', 'center'];
+        const clientAlign = ['left', 'center', 'center', 'center', 'center', 'center', 'center'];
 
         autoTable(doc, {
             startY: tableY + 4,
@@ -165,12 +169,13 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
                 fontStyle: 'bold',
             },
             columnStyles: {
-                0: { cellWidth: 40, halign: 'left' },
-                1: { cellWidth: 28, halign: 'center' },
-                2: { cellWidth: 28, halign: 'center' },
-                3: { cellWidth: 28, halign: 'center' },
-                4: { cellWidth: 28, halign: 'center' },
-                5: { cellWidth: 28, halign: 'center' },
+                0: { cellWidth: 36, halign: 'left' },
+                1: { cellWidth: 24, halign: 'center' },
+                2: { cellWidth: 24, halign: 'center' },
+                3: { cellWidth: 24, halign: 'center' },
+                4: { cellWidth: 24, halign: 'center' },
+                5: { cellWidth: 24, halign: 'center' },
+                6: { cellWidth: 24, halign: 'center' },
             },
             didParseCell: (data) => applyColumnAlignment(data, clientAlign),
             margin: { left: 15, right: 15, bottom: FOOTER_RESERVE + 4 },
@@ -187,7 +192,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
     doc.setFontSize(7);
     doc.setTextColor(...grayColor);
     doc.text(
-        `Amounts grouped by invoice status for ${statement.periodLabel}. Issue dates determine the billing period.`,
+        `Amounts grouped by document status for ${statement.periodLabel}. Issue dates determine the billing period.`,
         105,
         footerLineY + 2,
         { align: 'center', maxWidth: 170 }

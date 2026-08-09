@@ -67,6 +67,7 @@ export default function DashboardAnalytics({
     analytics,
     periodSummary,
     loading = false,
+    fetching = false,
     summaryYear,
     summaryMonth,
     monthInputValue,
@@ -79,7 +80,7 @@ export default function DashboardAnalytics({
     const maxMonth = format(new Date(), 'yyyy-MM');
 
     return (
-        <div className="mb-6">
+        <div className={`mb-6 transition-opacity ${fetching ? 'opacity-80' : ''}`}>
             <div className="mb-4 flex justify-end">
                 <MonthPickerField
                     id="dashboard-analytics-month"

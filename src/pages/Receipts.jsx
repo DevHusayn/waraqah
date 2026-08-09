@@ -22,7 +22,9 @@ import { ListPageSkeleton, ListSummaryStatsSkeleton } from '../components/Skelet
 import PaginationBar from '../components/PaginationBar';
 import ListSummaryStats from '../components/ListSummaryStats';
 import { usePagedQuery } from '../hooks/usePagedQuery';
-import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
+import { useListSummaryQuery } from '../hooks/useListSummaryQuery';
+import { useListMonthFilter } from '../hooks/useListMonthFilter';
+import ListMonthToolbarFilter from '../components/ListMonthToolbarFilter';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 
@@ -64,10 +66,16 @@ const Receipts = () => {
         monthInputValue,
         setMonthInputValue,
         periodLabel,
-    } = useSummaryPeriod();
+        listYear,
+        listMonth,
+        allTime,
+        setAllTime,
+        listMonthInputValue,
+        setListMonthInputValue,
+    } = useListMonthFilter();
 
     const fetcher = useCallback(
-        ({ page, limit, search, status, sort, summaryYear: year, summaryMonth: month }) =>
+        ({ page, limit, search, status, sort, year, month }) =>
             apiFetch(
                 `/receipts?${buildListQuery({
                     page,
@@ -75,12 +83,14 @@ const Receipts = () => {
                     search,
                     status,
                     sort,
-                    summaryYear: year,
-                    summaryMonth: month,
+                    year,
+                    month,
                 })}`
             ),
         []
     );
+
+    const { summary, summaryLoading } = useListSummaryQuery('receipts', summaryYear, summaryMonth);
 
     const {
         page,
@@ -90,20 +100,23 @@ const Receipts = () => {
         data,
         pagination,
         statusCounts,
-        summary,
-        summaryLoading,
         loading,
     } = usePagedQuery({
         queryKeyBase: 'receipts',
         fetcher,
-        extraParams: { status: filter, sort: sortBy, summaryYear, summaryMonth },
+        extraParams: {
+            status: filter,
+            sort: sortBy,
+            year: listYear,
+            month: listMonth,
+        },
     });
 
     const receipts = useMemo(() => data.map(mapReceipt), [data]);
 
     useEffect(() => {
         setPage(1);
-    }, [filter, sortBy, setPage]);
+    }, [filter, sortBy, listYear, listMonth, setPage]);
 
     const handleFilterChange = useCallback(
         (next) => {
@@ -176,6 +189,12 @@ const Receipts = () => {
                         aria-label="Search receipts"
                     />
                     <ToolbarActions>
+                        <ListMonthToolbarFilter
+                            monthInputValue={listMonthInputValue}
+                            onMonthChange={setListMonthInputValue}
+                            allTime={allTime}
+                            onShowAllTime={setAllTime}
+                        />
                         <CustomSelect
                             value={sortBy}
                             onChange={setSortBy}

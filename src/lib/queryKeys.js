@@ -16,12 +16,20 @@ export const queryKeys = {
     products: (userId, params) => ['products', userId, params],
     drafts: (userId, params) => ['drafts', userId, params],
     receipts: (userId, params) => ['receipts', userId, params],
+    listSummary: (userId, resource, summaryYear, summaryMonth) => [
+        'listSummary',
+        userId,
+        resource,
+        summaryYear,
+        summaryMonth,
+    ],
     adminUsers: (userId, params) => ['adminUsers', userId, params],
 };
 
 export const STALE_TIMES = {
     dashboard: 30_000,
     lists: 2 * 60_000,
+    listSummary: 5 * 60_000,
     businessInfo: 5 * 60_000,
     meta: 60_000,
 };

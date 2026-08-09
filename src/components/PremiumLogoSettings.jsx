@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Crown, ImagePlus, Trash2, Lock, Stamp, PenLine } from 'lucide-react';
+import ConfirmModal from './ConfirmModal';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import {
@@ -22,15 +23,17 @@ function AssetUploadCard({
     title,
     description,
     value,
-    isEditing,
-    saving,
+    canManage,
+    uploading,
+    removing,
     onUpload,
-    onRemove,
+    onRemoveRequest,
     icon: Icon,
     parseFile,
     formatHint = BRAND_IMAGE_HINT,
 }) {
     const fileRef = useRef(null);
+    const busy = uploading || removing;
 
     return (
         <div className="rounded-xl border border-zinc-200 bg-white p-4 flex flex-col h-full">
@@ -49,29 +52,29 @@ function AssetUploadCard({
                     <div className="relative w-full aspect-[4/3] flex items-center justify-center bg-zinc-50 rounded-lg border border-zinc-100 overflow-hidden">
                         <img src={value} alt={title} className="max-w-full max-h-full object-contain p-3" />
                     </div>
-                    {isEditing && (
+                    {canManage && (
                         <div className="flex flex-wrap gap-2 justify-center w-full">
                             <button
                                 type="button"
-                                disabled={saving}
+                                disabled={busy}
                                 onClick={() => fileRef.current?.click()}
                                 className="btn-secondary text-xs py-2 px-3 flex-1 sm:flex-none"
                             >
                                 <ImagePlus size={14} aria-hidden />
-                                {saving ? 'Saving…' : 'Replace'}
+                                {uploading ? 'Saving…' : 'Replace'}
                             </button>
                             <button
                                 type="button"
-                                disabled={saving}
-                                onClick={onRemove}
+                                disabled={busy}
+                                onClick={onRemoveRequest}
                                 className="btn-secondary text-xs py-2 px-3 text-red-600 border-red-200 hover:bg-red-50 flex-1 sm:flex-none"
                             >
                                 <Trash2 size={14} aria-hidden />
-                                Remove
+                                {removing ? 'Removing…' : 'Remove'}
                             </button>
                         </div>
                     )}
-                    {!isEditing && (
+                    {!canManage && (
                         <p className="text-xs text-green-700 font-medium flex items-center gap-1">
                             <span className="h-1.5 w-1.5 rounded-full bg-green-500" aria-hidden />
                             Uploaded
@@ -81,15 +84,15 @@ function AssetUploadCard({
             ) : (
                 <div className="flex-1 flex flex-col justify-center">
                     <div className="rounded-lg border-2 border-dashed border-zinc-200 p-5 text-center bg-zinc-50/50 min-h-[120px] flex flex-col items-center justify-center">
-                        {isEditing ? (
+                        {canManage ? (
                             <button
                                 type="button"
-                                disabled={saving}
+                                disabled={busy}
                                 onClick={() => fileRef.current?.click()}
                                 className="btn-secondary text-xs py-2"
                             >
                                 <ImagePlus size={14} aria-hidden />
-                                {saving ? 'Saving…' : 'Upload image'}
+                                {uploading ? 'Saving…' : 'Upload image'}
                             </button>
                         ) : (
                             <p className="text-xs text-zinc-500">Not uploaded</p>
@@ -122,11 +125,24 @@ function AssetUploadCard({
     );
 }
 
-export default function PremiumLogoSettings({ formData, setFormData, isEditing, embedded = false }) {
+export default function PremiumLogoSettings({
+    formData,
+    setFormData,
+    canManage = false,
+    standalone = false,
+    /** @deprecated Use canManage — kept for callers still passing isEditing */
+    isEditing,
+    embedded = false,
+}) {
+    const manageAssets = canManage || Boolean(isEditing);
     const { businessInfo, saveBusinessAsset, saveCompanyLogo, fetchBusinessAssets } = useSettings();
     const { showToast } = useToast();
-    const [savingField, setSavingField] = useState(null);
+    const [pending, setPending] = useState(null);
+    const [removeConfirm, setRemoveConfirm] = useState(null);
     const premium = isPremiumUser(businessInfo);
+
+    const isPending = (field, action) =>
+        pending?.field === field && pending?.action === action;
 
     useEffect(() => {
         if (premium) {
@@ -146,12 +162,12 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
         ''
     ).trim();
 
-    const persistAsset = async (field, dataUrl, label) => {
+    const persistAsset = async (field, dataUrl, label, action) => {
         if (!premium) {
             showToast('Enable Premium before uploading brand assets.', 'error');
             return false;
         }
-        setSavingField(field);
+        setPending({ field, action });
         try {
             await saveBusinessAsset(field, dataUrl || '');
             setFormData((prev) => ({ ...prev, [field]: dataUrl || '', plan: PLANS.PREMIUM }));
@@ -161,7 +177,7 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
             showToast(err.message || `Failed to save ${label.toLowerCase()}`, 'error');
             return false;
         } finally {
-            setSavingField(null);
+            setPending(null);
         }
     };
 
@@ -174,7 +190,7 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
             showToast('Enable Premium before uploading brand assets.', 'error');
             return;
         }
-        setSavingField('companyLogoUrl');
+        setPending({ field: 'companyLogoUrl', action: 'upload' });
         try {
             await saveCompanyLogo(result);
             setFormData((prev) => ({
@@ -188,13 +204,13 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
         } catch (err) {
             showToast(err.message || 'Failed to save logo', 'error');
         } finally {
-            setSavingField(null);
+            setPending(null);
         }
     };
 
     const handleLogoRemove = async () => {
         if (!premium) return;
-        setSavingField('companyLogoUrl');
+        setPending({ field: 'companyLogoUrl', action: 'remove' });
         try {
             await saveCompanyLogo({ companyLogoUrl: '', companyLogoAvatarUrl: '' });
             setFormData((prev) => ({
@@ -207,7 +223,7 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
         } catch (err) {
             showToast(err.message || 'Failed to remove logo', 'error');
         } finally {
-            setSavingField(null);
+            setPending(null);
         }
     };
 
@@ -217,17 +233,36 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
             return;
         }
         setFormData((prev) => ({ ...prev, [field]: dataUrl }));
-        await persistAsset(field, dataUrl, label);
+        await persistAsset(field, dataUrl, label, 'upload');
     };
 
     const handleRemove = (field, label) => async () => {
-        setFormData((prev) => ({ ...prev, [field]: '' }));
-        await persistAsset(field, '', label);
+        await persistAsset(field, '', label, 'remove');
     };
 
-    const wrapperClass = embedded
-        ? 'mt-8 pt-8 border-t border-zinc-100'
-        : 'pt-6 border-t border-zinc-200 scroll-mt-6';
+    const requestRemove = (assetLabel, performRemove) => {
+        setRemoveConfirm({
+            assetLabel,
+            performRemove,
+        });
+    };
+
+    const confirmRemove = async () => {
+        if (!removeConfirm) return;
+        try {
+            await removeConfirm.performRemove();
+        } finally {
+            setRemoveConfirm(null);
+        }
+    };
+
+    const wrapperClass = standalone
+        ? 'scroll-mt-6'
+        : embedded
+            ? 'mt-8 pt-8 border-t border-zinc-100'
+            : 'pt-6 border-t border-zinc-200 scroll-mt-6';
+
+    const removingActive = pending?.action === 'remove';
 
     return (
         <div id="premium" className={wrapperClass}>
@@ -240,6 +275,11 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
                     <p className="text-sm text-zinc-500 mt-0.5">
                         Logo, stamp, and signature on PDF invoices and receipts
                     </p>
+                    {premium && manageAssets ? (
+                        <p className="text-sm text-amber-900/90 mt-3 rounded-lg bg-amber-50 border border-amber-200/80 px-3 py-2 leading-relaxed">
+                            Uploads and removals save immediately and apply to new PDFs.
+                        </p>
+                    ) : null}
                     <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
                         PNG (transparent background recommended), JPG, or SVG · max 2 MB · images are auto-resized
                     </p>
@@ -264,35 +304,67 @@ export default function PremiumLogoSettings({ formData, setFormData, isEditing, 
                         title="Company logo"
                         description="Appears on PDF invoices and receipts · PNG with transparent background recommended"
                         value={logo}
-                        isEditing={isEditing}
-                        saving={savingField === 'companyLogoUrl'}
+                        canManage={manageAssets}
+                        uploading={isPending('companyLogoUrl', 'upload')}
+                        removing={isPending('companyLogoUrl', 'remove')}
                         icon={ImagePlus}
                         parseFile={prepareBrandLogoUpload}
                         onUpload={handleLogoUpload}
-                        onRemove={handleLogoRemove}
+                        onRemoveRequest={() =>
+                            requestRemove('company logo', handleLogoRemove)
+                        }
                     />
                     <AssetUploadCard
                         title="Company stamp"
                         description="Shown near the signature on paid receipt PDFs"
                         value={stamp}
-                        isEditing={isEditing}
-                        saving={savingField === 'companyStampUrl'}
+                        canManage={manageAssets}
+                        uploading={isPending('companyStampUrl', 'upload')}
+                        removing={isPending('companyStampUrl', 'remove')}
                         icon={Stamp}
                         onUpload={handleUpload('companyStampUrl', 'Stamp')}
-                        onRemove={() => handleRemove('companyStampUrl', 'Stamp')()}
+                        onRemoveRequest={() =>
+                            requestRemove('company stamp', handleRemove('companyStampUrl', 'Stamp'))
+                        }
                     />
                     <AssetUploadCard
                         title="Authorized signature"
                         description="Placed under totals on PDF invoices and receipts"
                         value={signature}
-                        isEditing={isEditing}
-                        saving={savingField === 'authorizedSignatureUrl'}
+                        canManage={manageAssets}
+                        uploading={isPending('authorizedSignatureUrl', 'upload')}
+                        removing={isPending('authorizedSignatureUrl', 'remove')}
                         icon={PenLine}
                         onUpload={handleUpload('authorizedSignatureUrl', 'Signature')}
-                        onRemove={() => handleRemove('authorizedSignatureUrl', 'Signature')()}
+                        onRemoveRequest={() =>
+                            requestRemove(
+                                'authorized signature',
+                                handleRemove('authorizedSignatureUrl', 'Signature')
+                            )
+                        }
                     />
                 </div>
             )}
+
+            <ConfirmModal
+                open={Boolean(removeConfirm)}
+                title={
+                    removeConfirm
+                        ? `Remove ${removeConfirm.assetLabel}?`
+                        : 'Remove brand asset?'
+                }
+                description={
+                    removeConfirm
+                        ? `This will remove your ${removeConfirm.assetLabel} from PDF invoices and receipts. The change saves immediately and cannot be undone.`
+                        : undefined
+                }
+                confirmLabel="Yes, remove"
+                cancelLabel="No, keep it"
+                variant="danger"
+                loading={removingActive}
+                onConfirm={confirmRemove}
+                onCancel={() => !removingActive && setRemoveConfirm(null)}
+            />
         </div>
     );
 }
