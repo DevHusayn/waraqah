@@ -100,7 +100,7 @@ export default function ProductFormModal({
                             {isEdit ? 'Edit product' : 'Add product'}
                         </h2>
                         <p className="text-sm text-zinc-500 mt-0.5">
-                            Saved to your catalog for quick invoice line items
+                            Saved to your catalog for quick line items on any document
                         </p>
                     </div>
                 </div>

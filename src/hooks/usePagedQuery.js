@@ -89,7 +89,10 @@ export function usePagedQuery({
         lastSummaryRef.current = data.summary;
     }
 
+    const hasSummaryPeriod = Boolean(queryParams.summaryYear && queryParams.summaryMonth);
+
     const summaryFromCache =
+        hasSummaryPeriod &&
         lastSummaryRef.current &&
         lastSummaryRef.current.period?.year === queryParams.summaryYear &&
         lastSummaryRef.current.period?.month === queryParams.summaryMonth
@@ -97,16 +100,17 @@ export function usePagedQuery({
             : null;
 
     const summaryMatchesPeriod = (summary) =>
+        hasSummaryPeriod &&
         summary?.period?.year === queryParams.summaryYear &&
         summary?.period?.month === queryParams.summaryMonth;
 
     const resolvedSummary = summaryMatchesPeriod(data?.summary)
-        ? data.summary
+        ? data?.summary ?? null
         : summaryFromCache;
 
     const summaryLoading =
         isFetching &&
-        Boolean(queryParams.summaryYear && queryParams.summaryMonth) &&
+        hasSummaryPeriod &&
         !summaryMatchesPeriod(data?.summary);
 
     const initialLoading = isLoading && !(data?.data?.length > 0);

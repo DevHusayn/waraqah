@@ -202,7 +202,7 @@ const CreateInvoice = () => {
                 } catch {
                     if (!cancelled) {
                         setInvoiceLoading(false);
-                        navigate('/invoices/drafts', { replace: true });
+                        navigate('/drafts', { replace: true });
                     }
                     return;
                 }
@@ -213,7 +213,7 @@ const CreateInvoice = () => {
                 } catch {
                     if (!cancelled) {
                         setInvoiceLoading(false);
-                        navigate('/invoices/drafts', { replace: true });
+                        navigate('/drafts', { replace: true });
                     }
                     return;
                 }
@@ -288,7 +288,7 @@ const CreateInvoice = () => {
                 } else {
                     saved = await addInvoice(payload);
                     draftIdRef.current = saved.id;
-                    if (redirectAfterCreate) navigate('/invoices/drafts');
+                    if (redirectAfterCreate) navigate('/drafts');
                 }
 
                 isDirtyRef.current = false;
@@ -518,7 +518,7 @@ const CreateInvoice = () => {
 
     const selectedClient = clients.find((c) => c.id === formData.clientId);
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
-    const backHref = isDraftEdit ? '/invoices/drafts' : id ? `/invoices/${id}` : '/invoices';
+    const backHref = isDraftEdit ? '/drafts' : id ? `/invoices/${id}` : '/invoices';
     const totals = getTotals();
     const discountLabel =
         Number(formData.discountValue) > 0

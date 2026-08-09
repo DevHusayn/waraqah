@@ -39,7 +39,7 @@ const NAV_ITEMS = [
     { name: 'Invoices', href: '/invoices', icon: FileText },
     { name: 'Receipts', href: '/receipts', icon: Receipt },
     { name: 'Quotations', href: '/quotations', icon: ClipboardList },
-    { name: 'Drafts', href: '/invoices/drafts', icon: PenLine, badgeKey: 'drafts' },
+    { name: 'Drafts', href: '/drafts', icon: PenLine, badgeKey: 'drafts' },
     { name: 'Statements', href: '/statements', icon: FileBarChart, premiumFeature: true },
     { name: 'Clients', href: '/clients', icon: Users },
     { name: 'Products', href: '/products', icon: Package },
@@ -120,11 +120,7 @@ const Layout = ({ children }) => {
     const isActive = (path) => {
         if (path === '/') return location.pathname === '/';
         if (path === '/invoices') {
-            if (location.pathname.startsWith('/invoices/drafts')) return false;
             return location.pathname === '/invoices' || location.pathname.startsWith('/invoices/');
-        }
-        if (path === '/invoices/drafts') {
-            return location.pathname.startsWith('/invoices/drafts');
         }
         return location.pathname.startsWith(path);
     };

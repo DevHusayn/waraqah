@@ -133,8 +133,9 @@ function App() {
                                 element={
                                     <AppLayout>
                                         <Routes>
+                                            <Route path="/drafts" element={<PrivateRoute><ListRoute><Drafts /></ListRoute></PrivateRoute>} />
+                                            <Route path="/invoices/drafts" element={<Navigate to="/drafts" replace />} />
                                             <Route path="/invoices" element={<PrivateRoute><ListRoute><Invoices /></ListRoute></PrivateRoute>} />
-                                            <Route path="/invoices/drafts" element={<PrivateRoute><ListRoute><Drafts /></ListRoute></PrivateRoute>} />
                                             <Route path="/invoices/create" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><CreateInvoice /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/invoices/edit/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><CreateInvoice /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/invoices/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><InvoiceDetails /></RouteSuspense></PrivateRoute>} />

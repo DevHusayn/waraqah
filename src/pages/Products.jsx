@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Plus, Edit, Trash2, Package, Search } from 'lucide-react';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
@@ -145,7 +144,7 @@ export default function Products() {
                 initialData={modalInitialData}
             />
 
-            <PageHeader title="Products" subtitle="Catalog items for quick invoice line entries">
+            <PageHeader title="Products" subtitle="Catalog items for quick line entries on any document">
                 <button type="button" onClick={() => openModal()} className="btn-primary">
                     <Plus size={16} aria-hidden />
                     Add product
@@ -159,7 +158,7 @@ export default function Products() {
                     <EmptyState
                         icon={Package}
                         title="No products yet"
-                        description="Build your catalog once, then pick items in seconds when invoicing."
+                        description="Build your catalog once, then pick items in seconds when creating documents."
                         action={
                             <button type="button" onClick={() => openModal()} className="btn-primary">
                                 Add product
@@ -240,11 +239,8 @@ export default function Products() {
             )}
 
             <p className="mt-6 text-xs text-zinc-500">
-                Products appear in the{' '}
-                <Link to="/invoices/create" className="text-zinc-950 font-medium hover:underline">
-                    invoice creator
-                </Link>{' '}
-                for one-click line items.
+                Products appear when creating invoices, receipts, and quotations for one-click line
+                items.
             </p>
         </>
     );

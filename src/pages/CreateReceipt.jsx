@@ -197,7 +197,7 @@ const CreateReceipt = () => {
             } catch {
                 if (!cancelled) {
                     setReceiptLoading(false);
-                    navigate('/invoices/drafts', { replace: true });
+                    navigate('/drafts', { replace: true });
                 }
             }
         };
@@ -285,7 +285,7 @@ const CreateReceipt = () => {
                 } else {
                     saved = await addReceipt(payload);
                     draftIdRef.current = saved.id;
-                    if (redirectAfterCreate) navigate('/invoices/drafts');
+                    if (redirectAfterCreate) navigate('/drafts');
                 }
 
                 isDirtyRef.current = false;
@@ -510,7 +510,7 @@ const CreateReceipt = () => {
     const selectedClient = clients.find((c) => c.id === formData.clientId);
 
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
-    const backHref = isDraftEdit ? '/invoices/drafts' : id ? `/receipts/${id}` : '/receipts';
+    const backHref = isDraftEdit ? '/drafts' : id ? `/receipts/${id}` : '/receipts';
     const discountLabel =
         Number(formData.discountValue) > 0
             ? `Discount (${formData.discountValue}%)`

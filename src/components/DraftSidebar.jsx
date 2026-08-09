@@ -60,7 +60,7 @@ export default function DraftSidebar({
                 <div className="flex items-center justify-between gap-2">
                     <h3 className="text-sm font-semibold text-zinc-900">Your drafts</h3>
                     {drafts.length > 0 ? (
-                        <Link to="/invoices/drafts" className="text-xs font-medium text-brand hover:underline">
+                        <Link to="/drafts" className="text-xs font-medium text-brand hover:underline">
                             View all
                         </Link>
                     ) : null}
