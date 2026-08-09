@@ -1,7 +1,7 @@
 import { ExternalLink, Facebook, Instagram, Linkedin } from 'lucide-react';
 import SettingsPageShell from '../../components/settings/SettingsPageShell';
+import WaraqahLogo from '../../components/WaraqahLogo';
 import {
-    APP_NAME,
     APP_TAGLINE,
     APP_VERSION,
     APP_DESCRIPTION,
@@ -44,8 +44,8 @@ export default function AboutSettings() {
         >
             <div className="card space-y-6">
                 <div>
-                    <h2 className="text-lg font-brand font-semibold text-brand-hover tracking-tight">{APP_NAME}</h2>
-                    <p className="text-sm text-zinc-500 mt-1">{APP_TAGLINE}</p>
+                    <WaraqahLogo size="lg" />
+                    <p className="text-sm text-zinc-500 mt-2">{APP_TAGLINE}</p>
                     <p className="text-xs text-zinc-400 mt-2">Version {APP_VERSION}</p>
                 </div>
 

@@ -17,10 +17,10 @@ export const queryClient = new QueryClient({
 });
 
 /** Seed related query caches from aggregated dashboard response. */
-export function seedDashboardCache(userId, data) {
+export function seedDashboardCache(userId, summaryYear, summaryMonth, data) {
     if (!data || !userId) return;
 
-    queryClient.setQueryData(queryKeys.dashboard(userId), data);
+    queryClient.setQueryData(queryKeys.dashboard(userId, summaryYear, summaryMonth), data);
 
     if (data.businessInfo) {
         if (!needsBusinessSetup(data.businessInfo)) {
@@ -42,7 +42,7 @@ export function seedDashboardCache(userId, data) {
 
 export function invalidateDashboardQueries(userId) {
     if (userId) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.dashboard(userId) });
+        queryClient.invalidateQueries({ queryKey: ['dashboard', userId] });
     } else {
         queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     }

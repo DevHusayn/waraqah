@@ -4,30 +4,41 @@ import { useAuth } from '../context/AuthContext';
 import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
 import { seedDashboardCache } from '../lib/queryClient';
 
+function buildDashboardQuery(summaryYear, summaryMonth) {
+    const params = new URLSearchParams();
+    if (summaryYear) params.set('summaryYear', String(summaryYear));
+    if (summaryMonth) params.set('summaryMonth', String(summaryMonth));
+    const query = params.toString();
+    return query ? `/dashboard?${query}` : '/dashboard';
+}
+
 /**
- * Aggregated dashboard query — stats, recent docs, alerts, subscription, business info.
+ * Aggregated dashboard query — stats, period summary, analytics, recent docs, alerts.
  */
-export function useDashboardQuery() {
+export function useDashboardQuery(summaryYear, summaryMonth) {
     const { isAuthenticated, user } = useAuth();
     const userId = user?.id;
 
     return useQuery({
-        queryKey: queryKeys.dashboard(userId),
+        queryKey: queryKeys.dashboard(userId, summaryYear, summaryMonth),
         queryFn: async () => {
-            const data = await apiFetch('/dashboard');
-            seedDashboardCache(userId, data);
+            const data = await apiFetch(buildDashboardQuery(summaryYear, summaryMonth));
+            seedDashboardCache(userId, summaryYear, summaryMonth, data);
             return data;
         },
-        enabled: isAuthenticated && Boolean(userId),
+        enabled: isAuthenticated && Boolean(userId) && Boolean(summaryYear) && Boolean(summaryMonth),
         staleTime: STALE_TIMES.dashboard,
-        placeholderData: (prev, previousQuery) =>
-            previousQuery?.queryKey?.[1] === userId ? prev : undefined,
+        placeholderData: (previousData, previousQuery) => {
+            const [, prevUserId] = previousQuery?.queryKey ?? [];
+            if (prevUserId !== userId) return undefined;
+            return previousData;
+        },
     });
 }
 
 /** @deprecated Use useDashboardQuery — kept for backward compatibility. */
-export function useDashboardStats() {
-    const { data, isLoading, isFetching, refetch } = useDashboardQuery();
+export function useDashboardStats(summaryYear, summaryMonth) {
+    const { data, isLoading, isFetching, refetch } = useDashboardQuery(summaryYear, summaryMonth);
 
     return {
         data,

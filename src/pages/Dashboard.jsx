@@ -1,10 +1,8 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     FileText,
     Receipt,
-    Wallet,
-    Clock,
     TrendingUp,
     CheckCircle,
     FileBarChart,
@@ -20,6 +18,7 @@ import PageHeader from '../components/PageHeader';
 import InvoiceLimitModal from '../components/InvoiceLimitModal';
 import CreateDocumentModal from '../components/CreateDocumentModal';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
+import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
 import { useDashboardQuery } from '../hooks/useDashboardStats';
 import { prefetchFrequentRoutes } from '../utils/prefetchRoutes';
 import { formatInvoiceUsageLabel } from '../utils/invoiceLimits';
@@ -30,7 +29,8 @@ import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable'
 import StatusBadge from '../components/StatusBadge';
 import EmptyState from '../components/EmptyState';
 import InvoiceUsageBanner from '../components/InvoiceUsageBanner';
-import { StatsCardsSkeleton, TableSkeleton } from '../components/Skeleton';
+import DashboardAnalytics from '../components/dashboard/DashboardAnalytics';
+import { TableSkeleton } from '../components/Skeleton';
 
 const RECENT_COLUMNS = [
     { key: 'number', label: 'Document' },
@@ -60,7 +60,13 @@ const Dashboard = () => {
     const { businessInfo: settingsBusinessInfo } = useSettings();
     const navigate = useNavigate();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen } = useInvoiceCreateGuard();
-    const { data, isLoading, isFetching } = useDashboardQuery();
+    const {
+        summaryYear,
+        summaryMonth,
+        monthInputValue,
+        setMonthInputValue,
+    } = useSummaryPeriod();
+    const { data, isLoading, isFetching } = useDashboardQuery(summaryYear, summaryMonth);
     const [createModalOpen, setCreateModalOpen] = useState(false);
 
     const businessInfo = data?.businessInfo || settingsBusinessInfo;
@@ -74,59 +80,13 @@ const Dashboard = () => {
         }
     }, [data]);
 
-    const stats = data?.stats;
     const recentDocuments = data?.recentDocuments || data?.recentInvoices || [];
     const overdueInvoices = data?.overdueInvoices || [];
-
-    const statCards = useMemo(
-        () =>
-            stats
-                ? [
-                    {
-                        name: 'Total Quotations',
-                        value: stats.totalQuotations ?? 0,
-                        icon: ClipboardList,
-                        iconBg: 'bg-sky-50',
-                        iconColor: 'text-sky-600',
-                    },
-                    {
-                        name: 'Total Invoices',
-                        value: stats.totalInvoices,
-                        icon: FileText,
-                        iconBg: 'bg-brand-light',
-                        iconColor: 'text-brand',
-                    },
-                    {
-                        name: 'Total Receipts',
-                        value: stats.totalReceipts ?? 0,
-                        icon: Receipt,
-                        iconBg: 'bg-teal-50',
-                        iconColor: 'text-teal-600',
-                    },
-                    {
-                        name: 'Pending Revenue',
-                        value: formatCurrency(stats.pendingRevenue),
-                        icon: Clock,
-                        iconBg: 'bg-amber-50',
-                        iconColor: 'text-amber-600',
-                    },
-                    {
-                        name: 'Paid Revenue',
-                        value: formatCurrency(stats.paidRevenue),
-                        icon: Wallet,
-                        iconBg: 'bg-green-50',
-                        iconColor: 'text-green-600',
-                        fullWidthMobile: true,
-                    },
-                ]
-                : [],
-        [stats]
-    );
 
     const usageLabel = formatInvoiceUsageLabel(effectiveUsage);
     const premium = isPremiumUser(businessInfo);
 
-    const statsLoading = isLoading || (isFetching && !stats);
+    const dashboardLoading = isLoading || (isFetching && !data);
 
     const resolveDocumentStatusBadge = (doc) => {
         if (isReceiptDocument(doc) || doc.documentType === 'receipt') {
@@ -171,37 +131,15 @@ const Dashboard = () => {
                 <InvoiceUsageBanner label={usageLabel} className="mb-4" />
             ) : null}
 
-            {statsLoading ? (
-                <StatsCardsSkeleton
-                    count={5}
-                    fullWidthLast
-                    className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6"
-                />
-            ) : (
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-                    {statCards.map((stat) => {
-                        const Icon = stat.icon;
-                        return (
-                            <div
-                                key={stat.name}
-                                className={`stat-card${stat.fullWidthMobile ? ' col-span-2 lg:col-span-1' : ''}`}
-                            >
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                    <div className={`stat-card-icon ${stat.iconBg}`}>
-                                        <Icon className={`h-4 w-4 ${stat.iconColor}`} />
-                                    </div>
-                                    <p className="text-xs text-zinc-500 font-medium leading-snug truncate">
-                                        {stat.name}
-                                    </p>
-                                </div>
-                                <p className="stat-card-value" title={String(stat.value)}>
-                                    {stat.value}
-                                </p>
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
+            <DashboardAnalytics
+                analytics={data?.analytics}
+                periodSummary={data?.periodSummary}
+                loading={dashboardLoading}
+                summaryYear={summaryYear}
+                summaryMonth={summaryMonth}
+                monthInputValue={monthInputValue}
+                onMonthChange={setMonthInputValue}
+            />
 
             <div className="card mb-6">
                 <h2 className="text-sm font-semibold text-zinc-950 mb-3">Quick actions</h2>
@@ -240,7 +178,7 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {statsLoading ? (
+            {dashboardLoading ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
                         <h2 className="text-sm font-semibold text-zinc-950 mb-3">Recent documents</h2>

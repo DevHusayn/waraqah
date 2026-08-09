@@ -205,6 +205,7 @@ export default function MonthPickerField({
     );
 
     const isInline = variant === 'inline';
+    const isCompact = variant === 'compact';
 
     useEffect(() => {
         if (selected) setViewYear(selected.getFullYear());
@@ -270,7 +271,8 @@ export default function MonthPickerField({
     }, [open, portal]);
 
     const formattedLabel = selected ? format(selected, 'MMMM yyyy') : 'Select month';
-    const triggerText = displayLabel || formattedLabel;
+    const compactLabel = selected ? format(selected, 'MMM yyyy') : 'Select month';
+    const triggerText = displayLabel || (variant === 'compact' ? compactLabel : formattedLabel);
 
     const yearOptions = useMemo(
         () => buildYearOptions(viewYear, max, min),
@@ -330,8 +332,27 @@ export default function MonthPickerField({
     ) : null;
 
     return (
-        <div ref={rootRef} className={`relative ${isInline ? 'inline' : ''} ${className}`.trim()}>
-            {isInline ? (
+        <div ref={rootRef} className={`relative ${isInline || isCompact ? 'inline' : ''} ${className}`.trim()}>
+            {isCompact ? (
+                <button
+                    ref={triggerRef}
+                    id={id}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => setOpen((prev) => !prev)}
+                    aria-haspopup="dialog"
+                    aria-expanded={open}
+                    aria-label={triggerAriaLabel || `Select month, currently ${triggerText}`}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 shadow-soft transition-colors hover:bg-zinc-50 disabled:opacity-50"
+                >
+                    <span className="tabular-nums">{triggerText}</span>
+                    <ChevronDown
+                        size={16}
+                        className={`shrink-0 text-zinc-400 transition-transform ${open ? 'rotate-180' : ''}`}
+                        aria-hidden
+                    />
+                </button>
+            ) : isInline ? (
                 <button
                     ref={triggerRef}
                     id={id}

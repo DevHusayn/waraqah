@@ -1,6 +1,11 @@
 /** TanStack Query keys — scoped by userId to prevent cross-account cache bleed. */
 export const queryKeys = {
-    dashboard: (userId) => ['dashboard', userId],
+    dashboard: (userId, summaryYear, summaryMonth) => [
+        'dashboard',
+        userId,
+        summaryYear,
+        summaryMonth,
+    ],
     businessInfo: (userId) => ['businessInfo', userId],
     businessAssets: (userId) => ['businessAssets', userId],
     invoiceUsage: (userId) => ['invoiceUsage', userId],

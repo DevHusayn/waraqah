@@ -9,7 +9,7 @@ const DOCUMENT_OPTIONS = [
     {
         id: 'invoice',
         label: 'Invoice',
-        description: 'Bill a client for work done',
+        description: 'Bill a client for goods or services',
         icon: FileText,
         tone: 'bg-brand-subtle text-brand',
     },

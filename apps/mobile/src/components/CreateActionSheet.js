@@ -7,7 +7,7 @@ const OPTIONS = [
     {
         id: 'invoice',
         label: 'Invoice',
-        subtitle: 'Bill a client for work done',
+        subtitle: 'Bill a client for goods or services',
         icon: FileText,
         iconColor: colors.brand,
     },

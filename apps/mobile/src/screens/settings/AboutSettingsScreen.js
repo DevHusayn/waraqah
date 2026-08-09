@@ -2,10 +2,10 @@ import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-na
 import { Facebook, Instagram, Linkedin } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Card } from '../../components/ui';
+import { WaraqahLogo } from '../../components/WaraqahLogo';
 import {
     APP_DESCRIPTION,
     APP_DOMAIN,
-    APP_NAME,
     APP_SOCIAL_LINKS,
     APP_SUPPORT_EMAIL,
     APP_TAGLINE,
@@ -36,7 +36,7 @@ export function AboutSettingsScreen() {
     return (
         <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
             <Card elevated>
-                <Text style={styles.title}>{APP_NAME}</Text>
+                <WaraqahLogo size="lg" />
                 <Text style={styles.tagline}>{APP_TAGLINE}</Text>
                 <Text style={styles.version}>Version {APP_VERSION}</Text>
                 <Text style={styles.body}>{APP_DESCRIPTION}</Text>
@@ -73,12 +73,7 @@ export function AboutSettingsScreen() {
 const styles = StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.surfaceMuted },
     content: { padding: spacing.lg, paddingBottom: spacing.xxl },
-    title: {
-        fontFamily: fontFamily.brand,
-        fontSize: fontSize.lg,
-        color: colors.brandDark,
-    },
-    tagline: { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.muted, marginTop: 4 },
+    tagline: { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.muted, marginTop: spacing.sm },
     version: { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.slate400, marginTop: spacing.sm },
     body: { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.slate600, lineHeight: 22, marginTop: spacing.lg },
     label: { fontFamily: fontFamily.semibold, fontSize: fontSize.xs, color: colors.muted, textTransform: 'uppercase', marginTop: spacing.lg },
