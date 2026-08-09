@@ -10,6 +10,7 @@ import { useQuotation } from '../context/QuotationContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import WaraqahLogo from '../components/WaraqahLogo';
+import { APP_TAGLINE } from '../constants/brand';
 import RequiredLabel from '../components/RequiredLabel';
 import { getNetworkErrorMessage } from '../utils/apiConfig';
 import { authFetch, apiFetch, applyLoginResponse, prepareForLogin } from '../utils/api';
@@ -290,7 +291,10 @@ function Auth() {
             <div className="min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col bg-zinc-50/80">
                 <div className="flex-1 flex flex-col justify-center px-5 py-8 sm:px-8 sm:py-10">
                     <div className="w-full max-w-[420px] mx-auto">
-                        <div className="mb-6">
+                        <div className="mb-6 flex justify-center lg:hidden">
+                            <WaraqahLogo size="md" subtitle={APP_TAGLINE} align="center" />
+                        </div>
+                        <div className="mb-6 hidden lg:block">
                             <WaraqahLogo size="md" />
                         </div>
 

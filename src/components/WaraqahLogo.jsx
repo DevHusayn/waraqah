@@ -72,22 +72,28 @@ export default function WaraqahLogo({
     className = '',
     iconStyle,
     showIcon = true,
+    align = 'start',
 }) {
     const s = SIZES[size] || SIZES.md;
     const withIcon = showIcon !== false;
+    const centered = align === 'center';
 
     return (
-        <span className={`inline-flex min-w-0 flex-col items-start justify-center ${className}`}>
+        <span
+            className={`inline-flex min-w-0 flex-col ${
+                centered ? 'items-center' : 'items-start'
+            } justify-center ${className}`}
+        >
             <span className="inline-flex min-w-0 items-center gap-1">
                 {withIcon ? <WaraqahIcon size={size} inverted={inverted} /> : null}
                 <WaraqahWordmark size={size} inverted={inverted} />
             </span>
             {subtitle?.trim() ? (
                 <span
-                    className={`mt-1 block w-full truncate font-sans leading-tight ${s.subtitle} ${
+                    className={`mt-2 block w-full truncate font-sans leading-tight ${s.subtitle} ${
                         inverted ? 'text-zinc-300' : 'text-zinc-500'
-                    }`}
-                    style={withIcon ? { paddingLeft: `${s.icon + LOCKUP_GAP_PX}px` } : undefined}
+                    } ${centered ? 'text-center' : ''}`}
+                    style={withIcon && !centered ? { paddingLeft: `${s.icon + LOCKUP_GAP_PX}px` } : undefined}
                     title={subtitle}
                 >
                     {subtitle}
