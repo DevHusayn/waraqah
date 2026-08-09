@@ -1,5 +1,6 @@
 import { FilePlus } from 'lucide-react';
 import MonthPickerField from './MonthPickerField';
+import MonthComparisonTrend from './MonthComparisonTrend';
 
 function StatLoadingDots() {
     return (
@@ -20,6 +21,8 @@ export default function ListSummaryStats({
     totalLabel,
     total,
     newInPeriod,
+    newComparison,
+    comparisonLabel = 'vs last month',
     summaryLoading = false,
     totalIcon: TotalIcon,
     newIcon: NewIcon = FilePlus,
@@ -63,6 +66,9 @@ export default function ListSummaryStats({
                 >
                     {summaryLoading ? <StatLoadingDots /> : (newInPeriod ?? '—')}
                 </p>
+                {!summaryLoading ? (
+                    <MonthComparisonTrend comparison={newComparison} label={comparisonLabel} />
+                ) : null}
             </div>
         </div>
     );

@@ -92,6 +92,7 @@ export function ListSummaryStatsSkeleton({ className = 'mb-6' }) {
                         <Skeleton className={`h-3 ${index === 0 ? 'w-[5.5rem]' : 'w-[7.5rem]'}`} />
                     </div>
                     <Skeleton className="h-6 w-10" />
+                    {index === 1 ? <Skeleton className="h-3 w-24" /> : null}
                 </div>
             ))}
         </div>

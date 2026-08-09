@@ -7,6 +7,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import ClientFormModal, { EMPTY_CLIENT } from '../components/ClientFormModal';
 import PageHeader from '../components/PageHeader';
 import { useInvoice } from '../context/InvoiceContext';
+import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
@@ -16,6 +17,7 @@ import { usePagedQuery } from '../hooks/usePagedQuery';
 import { useListSummaryQuery } from '../hooks/useListSummaryQuery';
 import { useListMonthFilter } from '../hooks/useListMonthFilter';
 import ListMonthToolbarFilter from '../components/ListMonthToolbarFilter';
+import ListExportButton from '../components/ListExportButton';
 import { ListPageSkeleton, ListSummaryStatsSkeleton } from '../components/Skeleton';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
@@ -39,6 +41,7 @@ const mapClient = (c) => ({ ...c, id: c._id || c.id });
 
 const Clients = () => {
     const { addClient, updateClient, deleteClient } = useInvoice();
+    const { businessInfo } = useSettings();
     const { showToast } = useToast();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -58,6 +61,7 @@ const Clients = () => {
         monthInputValue,
         setMonthInputValue,
         periodLabel,
+        isCurrentPeriod,
         listYear,
         listMonth,
         allTime,
@@ -86,6 +90,7 @@ const Clients = () => {
         setPage,
         search,
         setSearch,
+        debouncedSearch,
         data,
         pagination,
         loading,
@@ -232,6 +237,8 @@ const Clients = () => {
                     totalLabel="Total clients"
                     total={totalClients}
                     newInPeriod={newInPeriod}
+                    newComparison={summary?.comparison?.newInPeriod}
+                    comparisonLabel={isCurrentPeriod ? 'vs last month' : 'vs previous month'}
                     totalIcon={Users}
                     newIcon={UserPlus}
                     periodLabel={periodLabel}
@@ -276,6 +283,19 @@ const Clients = () => {
                             onMonthChange={setListMonthInputValue}
                             allTime={allTime}
                             onShowAllTime={setAllTime}
+                        />
+                        <ListExportButton
+                            path="/clients/export"
+                            resource="clients"
+                            companyName={businessInfo?.name}
+                            filters={{
+                                search: debouncedSearch,
+                                year: listYear,
+                                month: listMonth,
+                            }}
+                            disabled={pagination.total === 0}
+                            onExported={() => showToast('Clients exported successfully.', 'success')}
+                            onError={(err) => showToast(err.message || 'Export failed.', 'error')}
                         />
                     </ToolbarActions>
                 </Toolbar>

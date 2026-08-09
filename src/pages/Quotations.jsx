@@ -25,6 +25,8 @@ import { usePagedQuery } from '../hooks/usePagedQuery';
 import { useListSummaryQuery } from '../hooks/useListSummaryQuery';
 import { useListMonthFilter } from '../hooks/useListMonthFilter';
 import ListMonthToolbarFilter from '../components/ListMonthToolbarFilter';
+import ListExportButton from '../components/ListExportButton';
+import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 
@@ -52,6 +54,7 @@ const Quotations = () => {
     const { invoiceUsage, limitModalOpen, setLimitModalOpen, tryNavigateToCreate } =
         useQuotationCreateGuard();
     const { businessInfo } = useSettings();
+    const { showToast } = useToast();
     const [filter, setFilter] = useState('all');
     const [sortBy, setSortBy] = useState('newest');
     const {
@@ -60,6 +63,7 @@ const Quotations = () => {
         monthInputValue,
         setMonthInputValue,
         periodLabel,
+        isCurrentPeriod,
         listYear,
         listMonth,
         allTime,
@@ -91,6 +95,7 @@ const Quotations = () => {
         setPage,
         search,
         setSearch,
+        debouncedSearch,
         data,
         pagination,
         statusCounts,
@@ -160,6 +165,8 @@ const Quotations = () => {
                         totalLabel="Total quotations"
                         total={summary?.totalQuotations}
                         newInPeriod={summary?.newInPeriod ?? summary?.newThisMonth}
+                        newComparison={summary?.comparison?.newInPeriod}
+                        comparisonLabel={isCurrentPeriod ? 'vs last month' : 'vs previous month'}
                         totalIcon={ClipboardList}
                         periodLabel={periodLabel}
                         monthInputValue={monthInputValue}
@@ -185,6 +192,21 @@ const Quotations = () => {
                             onMonthChange={setListMonthInputValue}
                             allTime={allTime}
                             onShowAllTime={setAllTime}
+                        />
+                        <ListExportButton
+                            path="/quotations/export"
+                            resource="quotations"
+                            companyName={businessInfo?.name}
+                            filters={{
+                                search: debouncedSearch,
+                                status: filter,
+                                sort: sortBy,
+                                year: listYear,
+                                month: listMonth,
+                            }}
+                            disabled={pagination.total === 0}
+                            onExported={() => showToast('Quotations exported successfully.', 'success')}
+                            onError={(err) => showToast(err.message || 'Export failed.', 'error')}
                         />
                         <div className="w-full sm:w-44">
                             <CustomSelect

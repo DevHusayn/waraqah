@@ -1,51 +1,11 @@
 import { CheckCircle, Clock, FileText } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
+import MonthComparisonTrend from '../MonthComparisonTrend';
 
 function formatDocumentCounts(invoices, receipts) {
     const invoiceLabel = invoices === 1 ? 'invoice' : 'invoices';
     const receiptLabel = receipts === 1 ? 'receipt' : 'receipts';
     return `${invoices} ${invoiceLabel} · ${receipts} ${receiptLabel}`;
-}
-
-function TrendIndicator({ comparison, positiveDirection = 'up' }) {
-    if (!comparison) return null;
-
-    if (comparison.kind === 'unavailable') {
-        return (
-            <p className="text-xs font-medium text-zinc-500">
-                — vs last month
-            </p>
-        );
-    }
-
-    if (comparison.kind === 'flat' || comparison.direction === 'flat') {
-        return (
-            <p className="text-xs font-medium text-zinc-500">
-                No change vs last month
-            </p>
-        );
-    }
-
-    if (comparison.kind === 'new') {
-        const isPositive = comparison.direction === positiveDirection;
-        return (
-            <p className={`text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-500'}`}>
-                <span aria-hidden>↗</span> New vs last month
-            </p>
-        );
-    }
-
-    const isUp = comparison.direction === 'up';
-    const isPositive = comparison.direction === positiveDirection;
-    const isCapped = comparison.kind === 'capped';
-    const percentLabel = isCapped ? `${comparison.value}%+` : `${comparison.value}%`;
-
-    return (
-        <p className={`text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-500'}`}>
-            <span aria-hidden>{isUp ? '↗' : '↘'}</span>{' '}
-            {percentLabel} vs last month
-        </p>
-    );
 }
 
 function PeriodStatCard({
@@ -71,7 +31,7 @@ function PeriodStatCard({
                 {value}
             </p>
             <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-3 min-h-[1rem]">
-                <TrendIndicator comparison={comparison} positiveDirection={positiveDirection} />
+                <MonthComparisonTrend comparison={comparison} positiveDirection={positiveDirection} />
                 {detail ? (
                     <p className="text-[11px] text-zinc-500 sm:whitespace-nowrap sm:shrink-0">{detail}</p>
                 ) : null}

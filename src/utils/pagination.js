@@ -61,6 +61,52 @@ export function buildListQuery({
     return params.toString();
 }
 
+/** Build query string for filtered list CSV export (no pagination). */
+export function buildListExportQuery({ search, status, sort, year, month } = {}) {
+    const params = new URLSearchParams();
+    if (search && String(search).trim()) params.set('search', String(search).trim());
+    if (status && status !== 'all') params.set('status', status);
+    if (sort) params.set('sort', sort);
+    if (year != null && year !== '') params.set('year', String(year));
+    if (month != null && month !== '') params.set('month', String(month));
+    return params.toString();
+}
+
+export function slugifyFilenamePart(value, fallback = 'export') {
+    const slug = String(value ?? '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 50);
+    return slug || fallback;
+}
+
+export function buildListExportFilename(companyName, resource, { status = 'all', year, month, search } = {}) {
+    const parts = [
+        slugifyFilenamePart(companyName, 'business'),
+        slugifyFilenamePart(resource, 'export'),
+    ];
+
+    const filterParts = [];
+    if (year != null && year !== '' && month != null && month !== '') {
+        filterParts.push(`${year}-${String(month).padStart(2, '0')}`);
+    }
+    if (status && status !== 'all') {
+        filterParts.push(status);
+    }
+    if (search && String(search).trim()) {
+        filterParts.push('search');
+    }
+    if (filterParts.length > 0) {
+        parts.push(filterParts.join('-'));
+    }
+    parts.push('filtered');
+    parts.push(new Date().toISOString().slice(0, 10));
+
+    return `${parts.join('-')}.csv`;
+}
+
 /** Build query string for admin user export (no pagination). */
 export function buildAdminUsersExportQuery({ search, status, plan, activity } = {}) {
     const params = new URLSearchParams();

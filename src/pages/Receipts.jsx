@@ -25,6 +25,8 @@ import { usePagedQuery } from '../hooks/usePagedQuery';
 import { useListSummaryQuery } from '../hooks/useListSummaryQuery';
 import { useListMonthFilter } from '../hooks/useListMonthFilter';
 import ListMonthToolbarFilter from '../components/ListMonthToolbarFilter';
+import ListExportButton from '../components/ListExportButton';
+import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 
@@ -58,6 +60,7 @@ const Receipts = () => {
     const { invoiceUsage, limitModalOpen, setLimitModalOpen, tryNavigateToCreate } =
         useReceiptCreateGuard();
     const { businessInfo } = useSettings();
+    const { showToast } = useToast();
     const [filter, setFilter] = useState('all');
     const [sortBy, setSortBy] = useState('newest');
     const {
@@ -66,6 +69,7 @@ const Receipts = () => {
         monthInputValue,
         setMonthInputValue,
         periodLabel,
+        isCurrentPeriod,
         listYear,
         listMonth,
         allTime,
@@ -97,6 +101,7 @@ const Receipts = () => {
         setPage,
         search,
         setSearch,
+        debouncedSearch,
         data,
         pagination,
         statusCounts,
@@ -169,6 +174,8 @@ const Receipts = () => {
                         totalLabel="Total receipts"
                         total={summary?.totalReceipts}
                         newInPeriod={summary?.newInPeriod ?? summary?.newThisMonth}
+                        newComparison={summary?.comparison?.newInPeriod}
+                        comparisonLabel={isCurrentPeriod ? 'vs last month' : 'vs previous month'}
                         totalIcon={Receipt}
                         periodLabel={periodLabel}
                         monthInputValue={monthInputValue}
@@ -194,6 +201,21 @@ const Receipts = () => {
                             onMonthChange={setListMonthInputValue}
                             allTime={allTime}
                             onShowAllTime={setAllTime}
+                        />
+                        <ListExportButton
+                            path="/receipts/export"
+                            resource="receipts"
+                            companyName={businessInfo?.name}
+                            filters={{
+                                search: debouncedSearch,
+                                status: filter,
+                                sort: sortBy,
+                                year: listYear,
+                                month: listMonth,
+                            }}
+                            disabled={pagination.total === 0}
+                            onExported={() => showToast('Receipts exported successfully.', 'success')}
+                            onError={(err) => showToast(err.message || 'Export failed.', 'error')}
                         />
                         <CustomSelect
                             value={sortBy}
