@@ -6,6 +6,7 @@ import { AUTH_LOGIN_PATH, AUTH_REGISTER_PATH } from '../constants/authRoutes';
 
 const NAV_LINKS = [
     { label: 'Home', href: '#top' },
+    { label: 'Pricing', href: '#pricing' },
     { label: 'FAQ', href: '#faq' },
 ];
 
