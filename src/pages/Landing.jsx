@@ -10,10 +10,12 @@ import {
     ArrowRight,
     TrendingUp,
     Smartphone,
-    Mail,
     Instagram,
     Facebook,
     Linkedin,
+    Users,
+    Package,
+    FileBarChart,
 } from 'lucide-react';
 import LandingNav from '../components/LandingNav';
 import LandingInvoicePreview from '../components/LandingInvoicePreview';
@@ -87,6 +89,29 @@ const WHY_ITEMS = [
     },
 ];
 
+const MANAGE_TODAY_ITEMS = [
+    {
+        icon: ClipboardList,
+        title: 'Sales',
+        text: 'Quotations, invoices, and receipts, from first quote to proof of payment, including partial payments and client emails.',
+    },
+    {
+        icon: Users,
+        title: 'Clients',
+        text: 'Save contact details once and reuse them on every document. Export your client list to CSV anytime.',
+    },
+    {
+        icon: Package,
+        title: 'Products',
+        text: 'Build a product catalog for quick line items, with optional inventory tracking and low-stock alerts.',
+    },
+    {
+        icon: FileBarChart,
+        title: 'Reports & exports',
+        text: 'Dashboard analytics, overdue tracking, monthly billing statements (Premium), and CSV exports for invoices, quotations, receipts, and clients.',
+    },
+];
+
 const STEPS = [
     { step: '01', title: 'Add your business', text: 'Set your profile, bank account details, and brand color. Premium adds your logo, stamp, and signature on PDFs.' },
     { step: '02', title: 'Quote, invoice, or receipt', text: 'Build a quotation for new work, bill with an invoice, or issue a receipt when payment arrives, without an invoice. Reuse clients and products either way.' },
@@ -96,7 +121,7 @@ const STEPS = [
 const FAQ_ITEMS = [
     {
         q: 'Who is Waraqah for?',
-        a: 'Freelancers and businesses in Nigeria who want one place for quotations, invoices, receipts, client records, and payment tracking, without spreadsheets or scattered paperwork.',
+        a: 'Businesses and solo operators who want one place for quotations, invoices, receipts, clients, products, and payment tracking, without spreadsheets or scattered paperwork. Paystack billing and NGN are supported today.',
     },
     {
         q: 'What is the difference between a quotation and an invoice?',
@@ -117,6 +142,10 @@ const FAQ_ITEMS = [
     {
         q: 'How does Premium billing work?',
         a: `Premium is ₦${formatPremiumPrice(PREMIUM_PRICE_NGN)}/month or ₦${formatPremiumPrice(PREMIUM_PRICE_YEARLY_NGN)}/year (2 months free) through Paystack. You can cancel auto-renewal and keep access until the period ends.`,
+    },
+    {
+        q: 'Can I export my data?',
+        a: 'Yes. Export filtered lists of invoices, quotations, receipts, and clients to CSV from each list page. Handy for spreadsheets, accounting, or backup.',
     },
     {
         q: 'Can Waraqah email my clients?',
@@ -267,9 +296,9 @@ export default function Landing() {
                                 <span className="landing-text-shimmer">One record.</span>
                             </h1>
                             <p className="mt-6 text-lg text-zinc-600 max-w-xl leading-relaxed">
-                                {APP_NAME} helps freelancers and businesses send quotations and invoices,
-                                issue receipts (including partial payments), email clients, and track what&apos;s
-                                paid, all in one workspace, without spreadsheets.
+                                Run sales from quote to receipt. Manage clients and products, email documents,
+                                export PDFs and CSV reports, and track what&apos;s paid, all in one workspace,
+                                without spreadsheets.
                             </p>
                             <div className="mt-8 flex flex-col sm:flex-row gap-3">
                                 <CtaButton className="py-3.5 px-8 text-base shadow-soft shadow-brand/20 hover:shadow-card hover:shadow-brand/25" />
@@ -305,7 +334,7 @@ export default function Landing() {
                             Why you need {APP_NAME}
                         </h2>
                         <p className="mt-4 text-zinc-600 text-lg">
-                            Quotes, bills, and receipts shouldn&apos;t slow down your work. Here is what changes when your business records live in one place.
+                            Quotes, bills, and receipts shouldn&apos;t slow down your business. Here is what changes when your records live in one place.
                         </p>
                     </SectionReveal>
                     <SectionReveal className="mt-14">
@@ -314,6 +343,36 @@ export default function Landing() {
                     <SectionReveal className="mt-12 text-center">
                         <CtaButton className="inline-flex" />
                     </SectionReveal>
+                </div>
+            </section>
+
+            {/* What you can manage today */}
+            <section className="py-20 sm:py-24 bg-zinc-50/80 border-y border-zinc-200/80">
+                <div className="mx-auto max-w-6xl px-4 sm:px-6">
+                    <SectionReveal className="text-center max-w-2xl mx-auto">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900 tracking-tight">
+                            What you can manage today
+                        </h2>
+                        <p className="mt-4 text-zinc-600 text-lg">
+                            Everything your business needs to sell, record, and report, in one workspace.
+                        </p>
+                    </SectionReveal>
+                    <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {MANAGE_TODAY_ITEMS.map((item, i) => {
+                            const Icon = item.icon;
+                            return (
+                                <SectionReveal key={item.title} delay={i + 1}>
+                                    <article className="h-full rounded-xl border border-zinc-200/80 bg-white p-6 shadow-sm">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand/10 text-brand">
+                                            <Icon className="h-5 w-5" aria-hidden />
+                                        </div>
+                                        <h3 className="mt-4 text-lg font-semibold text-zinc-900">{item.title}</h3>
+                                        <p className="mt-2 text-sm text-zinc-600 leading-relaxed">{item.text}</p>
+                                    </article>
+                                </SectionReveal>
+                            );
+                        })}
+                    </div>
                 </div>
             </section>
 
@@ -393,8 +452,8 @@ export default function Landing() {
                         {[
                             { icon: ClipboardList, label: 'Quotations' },
                             { icon: FileText, label: 'Invoices & receipts' },
-                            { icon: Mail, label: 'Client emails' },
-                            { icon: Crown, label: 'Premium branding' },
+                            { icon: Users, label: 'Clients & products' },
+                            { icon: FileBarChart, label: 'Dashboard & CSV' },
                         ].map(({ icon: Icon, label }) => (
                             <div key={label} className="flex flex-col items-center gap-3">
                                 <Icon className="h-8 w-8 text-green-400" />
@@ -434,7 +493,7 @@ export default function Landing() {
                             Ready to keep records and get paid?
                         </h2>
                         <p className="mt-4 text-lg text-zinc-600">
-                            Join {APP_NAME} today and send your next quotation, invoice, or receipt in seconds.
+                            Join {APP_NAME} today. Send your next quotation, invoice, or receipt in seconds.
                         </p>
                         <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
                             <Link

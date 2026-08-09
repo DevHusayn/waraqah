@@ -1,6 +1,6 @@
 # Waraqah
 
-Professional quotations and invoicing for freelancers and businesses in Nigeria — create estimates and invoices, convert accepted quotes, manage clients and products, export PDFs, and track payments. Includes free and premium tiers with Paystack subscriptions.
+Professional business records for sales and billing: quotations, invoices, receipts, clients, products, dashboard analytics, PDF and CSV exports, and payment tracking. Includes free and premium tiers with Paystack subscriptions (NGN).
 
 **Stack:** React 18 + Vite (web), Express + MongoDB (API), Expo (mobile app in `apps/mobile`).
 

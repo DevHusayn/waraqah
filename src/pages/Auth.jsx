@@ -30,8 +30,8 @@ const LOGIN_FIELD_ORDER = ['email', 'password'];
 
 const FEATURES = [
     { id: 'pdf', icon: FileText, text: 'Quotations, invoices & receipt PDFs' },
-    { id: 'track', icon: Zap, text: 'Record payments and track what\'s paid' },
-    { id: 'storage', icon: Shield, text: 'Secure cloud storage for your records' },
+    { id: 'track', icon: Zap, text: 'Clients, products, and payment tracking' },
+    { id: 'storage', icon: Shield, text: 'CSV exports and secure cloud records' },
 ];
 
 function buildLoginFieldErrors(form) {
@@ -270,8 +270,8 @@ function Auth() {
                         Get paid. Keep records.
                     </h2>
                     <p className="mt-4 text-white/80 text-base leading-relaxed max-w-md">
-                        Send quotations and invoices, issue receipts, track payments, and manage
-                        clients—all in one workspace.
+                        Send quotations and invoices, issue receipts, manage clients and products,
+                        export PDFs and CSV reports, and track payments, all in one workspace.
                     </p>
                     <ul className="mt-10 space-y-4">
                         {FEATURES.map(({ id, icon: Icon, text }) => (

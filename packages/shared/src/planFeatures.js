@@ -11,6 +11,7 @@ export const FREE_PLAN_FEATURES = [
     'Email invoices, reminders, and receipts',
     'Mark paid with PDF receipts',
     'Dashboard and status tracking',
+    'CSV export for invoices, quotations, receipts, and clients',
 ];
 
 export const PREMIUM_PLAN_FEATURES = [

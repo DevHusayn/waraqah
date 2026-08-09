@@ -9,6 +9,6 @@ export const APP_TAGLINE = 'Get Paid. Keep Records.';
 export const APP_VERSION = '1.0.0';
 export const APP_SUPPORT_EMAIL = 'support@mywaraqah.com';
 export const APP_DESCRIPTION =
-    'Waraqah helps freelancers and businesses send quotations and invoices, issue receipts, track payments, and export polished PDFs—all in one workspace.';
+    'Waraqah helps businesses send quotations and invoices, issue receipts, manage clients and products, track payments, export polished PDFs and CSV reports, all in one workspace.';
 
 export { APP_SOCIAL_LINKS, BRAND_COLORS, DEFAULT_BRAND_COLOR };

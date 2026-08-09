@@ -4,9 +4,9 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 const APP_NAME = 'Waraqah'
-const APP_TAGLINE = 'Invoice. Get Paid. Grow.'
+const APP_TAGLINE = 'Get Paid. Keep Records.'
 const APP_DESCRIPTION =
-    'Waraqah helps freelancers and businesses create professional invoices in seconds, email clients with invoices and receipts, manage payments, and export polished PDFs.'
+    'Waraqah helps businesses send quotations and invoices, issue receipts, manage clients and products, track payments, export polished PDFs and CSV reports, all in one workspace.'
 
 export default defineConfig({
     plugins: [
@@ -15,7 +15,7 @@ export default defineConfig({
             registerType: 'autoUpdate',
             includeAssets: ['favicon-16.png', 'favicon-32.png', 'brand/waraqah-logo.svg', 'brand/waraqah-logo-light.svg', 'pwa/apple-touch-icon.png'],
             manifest: {
-                name: `${APP_NAME} — ${APP_TAGLINE}`,
+                name: `${APP_NAME}. ${APP_TAGLINE}`,
                 short_name: APP_NAME,
                 description: APP_DESCRIPTION,
                 theme_color: '#16A34A',
