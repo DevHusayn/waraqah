@@ -1,8 +1,9 @@
 import { useCallback, useState } from 'react';
-import { Plus, Edit, Trash2, Package, Search } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, Search, PackagePlus } from 'lucide-react';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import ProductFormModal, { EMPTY_PRODUCT } from '../components/ProductFormModal';
+import ProductStockAdjustModal from '../components/ProductStockAdjustModal';
 import PageHeader from '../components/PageHeader';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
@@ -15,22 +16,25 @@ import { usePagedQuery } from '../hooks/usePagedQuery';
 import { ListPageSkeleton } from '../components/Skeleton';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
+import { isLowStock } from '../utils/stockWarnings';
 
 const COLUMNS = [
-    { key: 'name', label: 'Product' },
-    { key: 'price', label: 'Price', className: 'text-right' },
-    { key: 'description', label: 'Description' },
-    { key: 'actions', label: '', className: 'text-right w-24' },
+    { key: 'name', label: 'Product', width: '22%' },
+    { key: 'price', label: 'Price', className: 'text-right', width: '18%' },
+    { key: 'stock', label: 'In stock', className: 'text-right', width: '14%' },
+    { key: 'description', label: 'Description', width: '36%' },
+    { key: 'actions', label: '', className: 'text-right', width: '10%' },
 ];
 
 const mapProduct = (p) => ({ ...p, id: p._id || p.id });
 
 export default function Products() {
-    const { addProduct, updateProduct, deleteProduct } = useInvoice();
+    const { addProduct, updateProduct, deleteProduct, adjustProductStock } = useInvoice();
     const { showToast } = useToast();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
     const [modalInitialData, setModalInitialData] = useState(EMPTY_PRODUCT);
+    const [stockAdjustProduct, setStockAdjustProduct] = useState(null);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [confirm, setConfirm] = useState({ open: false, productId: null });
     const [deleting, setDeleting] = useState(false);
@@ -62,6 +66,10 @@ export default function Products() {
                 name: product.name || '',
                 description: product.description || '',
                 unitPrice: product.unitPrice ?? '',
+                trackInventory: Boolean(product.trackInventory),
+                quantityOnHand: product.trackInventory ? (product.quantityOnHand ?? 0) : '',
+                lowStockThreshold:
+                    product.lowStockThreshold == null ? '' : product.lowStockThreshold,
             });
         } else {
             setEditingProduct(null);
@@ -98,6 +106,23 @@ export default function Products() {
     };
 
     const handleDelete = (id) => setConfirm({ open: true, productId: id });
+
+    const handleAdjustStock = async (delta) => {
+        if (!stockAdjustProduct) return;
+        try {
+            await adjustProductStock(stockAdjustProduct.id, delta);
+            showToast('Stock updated successfully', 'success');
+            setStockAdjustProduct(null);
+            await refresh();
+        } catch (err) {
+            setAlert({
+                open: true,
+                message: err.message || 'Failed to adjust stock.',
+                type: 'error',
+            });
+            throw err;
+        }
+    };
 
     const confirmDelete = async () => {
         const id = confirm.productId;
@@ -143,6 +168,12 @@ export default function Products() {
                 editingProduct={editingProduct}
                 initialData={modalInitialData}
             />
+            <ProductStockAdjustModal
+                open={Boolean(stockAdjustProduct)}
+                onClose={() => setStockAdjustProduct(null)}
+                product={stockAdjustProduct}
+                onSubmit={handleAdjustStock}
+            />
 
             <PageHeader title="Products" subtitle="Catalog items for quick line entries on any document">
                 <button type="button" onClick={() => openModal()} className="btn-primary">
@@ -185,7 +216,7 @@ export default function Products() {
                         </div>
                     ) : (
                         <>
-                            <DataTable columns={COLUMNS}>
+                            <DataTable columns={COLUMNS} fixedLayout>
                                 {products.map((product) => (
                                     <DataTableRow key={product.id}>
                                         <DataTableCell>
@@ -198,13 +229,39 @@ export default function Products() {
                                                 {formatCurrency(product.unitPrice || 0)}
                                             </span>
                                         </DataTableCell>
-                                        <DataTableCell>
-                                            <span className="text-zinc-500 truncate max-w-[280px] block">
+                                        <DataTableCell className="text-right">
+                                            {product.trackInventory ? (
+                                                <div className="flex flex-col items-end gap-1">
+                                                    <span className="font-medium tabular-nums">
+                                                        {product.quantityOnHand ?? 0}
+                                                    </span>
+                                                    {isLowStock(product) ? (
+                                                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                                                            Low stock
+                                                        </span>
+                                                    ) : null}
+                                                </div>
+                                            ) : (
+                                                <span className="text-zinc-400">—</span>
+                                            )}
+                                        </DataTableCell>
+                                        <DataTableCell className="max-w-0">
+                                            <span className="text-zinc-500 truncate block">
                                                 {product.description || '—'}
                                             </span>
                                         </DataTableCell>
                                         <DataTableCell className="text-right">
                                             <div className="flex items-center justify-end gap-1">
+                                                {product.trackInventory ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setStockAdjustProduct(product)}
+                                                        className="btn-ghost text-xs py-1 px-2"
+                                                        aria-label="Adjust stock"
+                                                    >
+                                                        <PackagePlus size={14} />
+                                                    </button>
+                                                ) : null}
                                                 <button
                                                     type="button"
                                                     onClick={() => openModal(product)}
@@ -240,7 +297,7 @@ export default function Products() {
 
             <p className="mt-6 text-xs text-zinc-500">
                 Products appear when creating invoices, receipts, and quotations for one-click line
-                items.
+                items. Enable inventory tracking to deduct stock when linked items are issued.
             </p>
         </>
     );

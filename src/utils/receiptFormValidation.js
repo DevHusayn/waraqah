@@ -4,12 +4,14 @@ import {
     getInvoiceFieldFocusOrder,
 } from './invoiceFormValidation';
 import { calculateInvoiceTotals } from './invoiceTotals';
+import { parseAmountInput } from './numberInput';
 
 const MONEY_EPS = 0.009;
 
 function parsePaymentAmount(value) {
-    const n = Number(String(value ?? '').replace(/,/g, '').trim());
-    return Number.isFinite(n) ? n : NaN;
+    const parsed = parseAmountInput(value);
+    if (value === '' || value == null) return NaN;
+    return Number.isFinite(parsed) ? parsed : NaN;
 }
 
 function getReceiptTotal(formData) {

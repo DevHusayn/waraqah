@@ -621,10 +621,9 @@ const CreateQuotation = () => {
                     <InvoiceUsageBanner
                         className="mt-3 inline-block"
                         label={
-                            usageLabel +
-                            (invoiceUsage.remaining > 0
-                                ? ` — ${invoiceUsage.remaining} remaining this month`
-                                : ' — upgrade for unlimited documents')
+                            invoiceUsage.remaining > 0
+                                ? `${usageLabel} — ${invoiceUsage.remaining} remaining this month`
+                                : usageLabel
                         }
                     />
                 ) : null}

@@ -152,6 +152,7 @@ export function useDocumentFormHandlers({
             quantity: 1,
             rate: product.unitPrice || 0,
             unit: DEFAULT_INVOICE_UNIT,
+            productId: product.id,
         };
 
         const resolveTargetIndex = (items) => {

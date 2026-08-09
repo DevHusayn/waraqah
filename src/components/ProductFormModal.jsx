@@ -11,6 +11,8 @@ import {
     focusFieldById,
     clearFieldError,
 } from '../utils/formFieldValidation';
+import { parseAmountInput } from '../utils/numberInput';
+import AmountInput from './AmountInput';
 
 const PRODUCT_FIELD_ORDER = ['name'];
 
@@ -18,6 +20,9 @@ export const EMPTY_PRODUCT = {
     name: '',
     description: '',
     unitPrice: '',
+    trackInventory: false,
+    quantityOnHand: '',
+    lowStockThreshold: '',
 };
 
 function buildProductFieldErrors(formData) {
@@ -46,9 +51,17 @@ export default function ProductFormModal({
     }, [open, initialData]);
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        const { name, value, type, checked } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value,
+        }));
         clearFieldError(setFieldErrors, name);
+    };
+
+    const handleUnitPriceChange = (value) => {
+        setFormData((prev) => ({ ...prev, unitPrice: value }));
+        clearFieldError(setFieldErrors, 'unitPrice');
     };
 
     const handleSubmit = async (e) => {
@@ -66,7 +79,15 @@ export default function ProductFormModal({
             await onSubmit(
                 {
                     ...formData,
-                    unitPrice: Number(formData.unitPrice) || 0,
+                    unitPrice: parseAmountInput(formData.unitPrice),
+                    trackInventory: Boolean(formData.trackInventory),
+                    quantityOnHand: formData.trackInventory
+                        ? Number(formData.quantityOnHand) || 0
+                        : 0,
+                    lowStockThreshold:
+                        formData.trackInventory && formData.lowStockThreshold !== ''
+                            ? Number(formData.lowStockThreshold)
+                            : null,
                 },
                 editingProduct
             );
@@ -139,17 +160,68 @@ export default function ProductFormModal({
                     <label htmlFor="product-unitPrice" className="label">
                         Unit price (NGN)
                     </label>
-                    <input
+                    <AmountInput
                         id="product-unitPrice"
-                        type="number"
                         name="unitPrice"
-                        min="0"
-                        step="0.01"
                         value={formData.unitPrice}
-                        onChange={handleChange}
-                        className="input-field"
+                        onChange={handleUnitPriceChange}
                         placeholder="0.00"
                     />
+                </div>
+
+                <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4 space-y-4">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            name="trackInventory"
+                            checked={Boolean(formData.trackInventory)}
+                            onChange={handleChange}
+                            className="mt-1 h-4 w-4 rounded border-zinc-300 text-brand focus:ring-brand"
+                        />
+                        <span>
+                            <span className="block text-sm font-medium text-zinc-900">Track inventory</span>
+                            <span className="block text-sm text-zinc-500 mt-0.5">
+                                Reduce stock automatically when linked items are issued on invoices or receipts.
+                            </span>
+                        </span>
+                    </label>
+
+                    {formData.trackInventory ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label htmlFor="product-quantityOnHand" className="label">
+                                    Quantity on hand
+                                </label>
+                                <input
+                                    id="product-quantityOnHand"
+                                    type="number"
+                                    name="quantityOnHand"
+                                    min="0"
+                                    step="1"
+                                    value={formData.quantityOnHand}
+                                    onChange={handleChange}
+                                    className="input-field"
+                                    placeholder="0"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="product-lowStockThreshold" className="label">
+                                    Low stock alert <span className="text-zinc-400 font-normal">(optional)</span>
+                                </label>
+                                <input
+                                    id="product-lowStockThreshold"
+                                    type="number"
+                                    name="lowStockThreshold"
+                                    min="0"
+                                    step="1"
+                                    value={formData.lowStockThreshold}
+                                    onChange={handleChange}
+                                    className="input-field"
+                                    placeholder="e.g. 5"
+                                />
+                            </div>
+                        </div>
+                    ) : null}
                 </div>
                 <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
                     <button type="button" onClick={onClose} disabled={saving} className="btn-secondary flex-1">

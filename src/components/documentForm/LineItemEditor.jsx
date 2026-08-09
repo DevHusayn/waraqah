@@ -3,6 +3,7 @@ import RequiredLabel from '../RequiredLabel';
 import FieldValidationMessage from '../FieldValidationMessage';
 import CustomSelect from '../CustomSelect';
 import { inputClass } from '../../utils/formFieldValidation';
+import AmountInput from '../AmountInput';
 import {
     APP_CURRENCY,
     formatCurrency,
@@ -13,6 +14,7 @@ import {
     buildUnitSelectOptions,
     normalizeInvoiceUnit,
 } from '@waraqah/shared';
+import { getLineItemStockWarning } from '../../utils/stockWarnings';
 
 export default function LineItemEditor({
     idPrefix,
@@ -21,6 +23,7 @@ export default function LineItemEditor({
     currency,
     fieldErrors,
     errorPulse = 0,
+    products = [],
     onItemChange,
     onUnitChange,
     onCurrencyChange,
@@ -32,6 +35,7 @@ export default function LineItemEditor({
     const qtyError = Boolean(fieldErrors[`item-${index}-quantity`]);
     const rateError = Boolean(fieldErrors[`item-${index}-rate`]);
     const hasItemError = descError || qtyError || rateError;
+    const stockWarning = getLineItemStockWarning(item, products);
 
     useEffect(() => {
         if (!errorPulse || !hasItemError) return undefined;
@@ -87,6 +91,9 @@ export default function LineItemEditor({
                         />
                     </div>
                     <FieldValidationMessage message={fieldErrors[`item-${index}-quantity`]} />
+                    {stockWarning ? (
+                        <p className="mt-1.5 text-xs text-amber-700">{stockWarning}</p>
+                    ) : null}
                 </div>
                 <div>
                     <RequiredLabel htmlFor={`${idPrefix}-item-${index}-rate`}>
@@ -101,17 +108,14 @@ export default function LineItemEditor({
                             aria-label={`Currency for rate on item ${index + 1}`}
                             className="w-[5.75rem] shrink-0"
                         />
-                        <input
+                        <AmountInput
                             id={`${idPrefix}-item-${index}-rate`}
-                            type="number"
                             value={item.rate}
-                            onChange={(e) => onItemChange(index, 'rate', e.target.value)}
-                            className={inputClass(rateError, 'min-w-0 flex-1', {
-                                shake: shake && rateError,
-                            })}
-                            min="0"
-                            step="0.01"
-                            aria-invalid={rateError}
+                            onChange={(value) => onItemChange(index, 'rate', value)}
+                            numeric
+                            error={rateError}
+                            shake={shake}
+                            className="min-w-0 flex-1"
                         />
                     </div>
                     <FieldValidationMessage message={fieldErrors[`item-${index}-rate`]} />

@@ -22,6 +22,7 @@ import {
 } from '../utils/receiptFormValidation';
 import { calculateInvoiceTotals } from '../utils/invoiceTotals';
 import { buildReceiptPayload, prepareReceiptPdf } from '../utils/sendReceiptFlow';
+import { notifyStockWarnings } from '../utils/stockWarnings';
 import { shareInvoicePdf, getShareFallbackHint } from '../utils/shareInvoicePdf';
 import { clientDetailsFromRecord } from '../utils/ensureInvoiceClient';
 import ClientDetailsModal from '../components/ClientDetailsModal';
@@ -43,12 +44,15 @@ import CustomSelect from '../components/CustomSelect';
 import DatePickerField from '../components/DatePickerField';
 import { MARK_PAID_METHODS } from '../utils/receiptHelpers';
 import { inputClass } from '../utils/formFieldValidation';
+import AmountInput from '../components/AmountInput';
+import { parseAmountInput } from '../utils/numberInput';
 
 const MONEY_EPS = 0.009;
 
 function parsePaymentAmount(value) {
-    const n = Number(String(value ?? '').replace(/,/g, '').trim());
-    return Number.isFinite(n) ? n : NaN;
+    const parsed = parseAmountInput(value);
+    if (value === '' || value == null) return NaN;
+    return Number.isFinite(parsed) ? parsed : NaN;
 }
 
 function amountsMatch(a, b) {
@@ -246,7 +250,7 @@ const CreateReceipt = () => {
         if (!formData.paidInFull) return;
         setFormData((prev) => ({
             ...prev,
-            paymentAmount: totals.total > 0 ? String(totals.total) : '',
+            paymentAmount: totals.total > 0 ? totals.total : '',
         }));
     }, [formData.paidInFull, totals.total]);
 
@@ -351,6 +355,11 @@ const CreateReceipt = () => {
                 saved = await updateReceipt(draftId, payload);
             } else {
                 saved = await addReceipt(payload, { skipRefresh: true });
+            }
+
+            notifyStockWarnings(showToast, saved);
+            if (saved?.stockWarnings?.length) {
+                fetchProducts({ force: true }).catch(() => {});
             }
 
             draftIdRef.current = saved.id;
@@ -471,7 +480,7 @@ const CreateReceipt = () => {
         setFormData((prev) => ({
             ...prev,
             paidInFull: checked,
-            paymentAmount: checked && totals.total > 0 ? String(totals.total) : prev.paymentAmount,
+            paymentAmount: checked && totals.total > 0 ? totals.total : prev.paymentAmount,
         }));
         setFieldErrors((prev) => ({ ...prev, paymentAmount: undefined }));
     };
@@ -605,10 +614,9 @@ const CreateReceipt = () => {
                     <InvoiceUsageBanner
                         className="mt-3 inline-block"
                         label={
-                            usageLabel +
-                            (invoiceUsage?.remaining > 0
-                                ? ` — ${invoiceUsage.remaining} remaining this month`
-                                : ' — upgrade for unlimited documents')
+                            invoiceUsage?.remaining > 0
+                                ? `${usageLabel} — ${invoiceUsage.remaining} remaining this month`
+                                : usageLabel
                         }
                     />
                 ) : null}
@@ -667,27 +675,19 @@ const CreateReceipt = () => {
                                     <RequiredLabel htmlFor="receipt-payment-amount">
                                         Amount received
                                     </RequiredLabel>
-                                    <input
+                                    <AmountInput
                                         id="receipt-payment-amount"
-                                        type="number"
-                                        inputMode="decimal"
-                                        min="0"
-                                        step="0.01"
-                                        max={totals.total || undefined}
                                         value={
                                             formData.paidInFull
                                                 ? totals.total > 0
-                                                    ? String(totals.total)
+                                                    ? totals.total
                                                     : ''
                                                 : formData.paymentAmount
                                         }
-                                        onChange={(e) => handlePaymentAmountChange(e.target.value)}
-                                        className={inputClass(
-                                            Boolean(fieldErrors.paymentAmount),
-                                            'disabled:bg-zinc-50 disabled:text-zinc-600'
-                                        )}
+                                        onChange={handlePaymentAmountChange}
+                                        error={Boolean(fieldErrors.paymentAmount)}
                                         disabled={formData.paidInFull}
-                                        aria-invalid={Boolean(fieldErrors.paymentAmount)}
+                                        className="disabled:bg-zinc-50 disabled:text-zinc-600"
                                     />
                                     <label
                                         htmlFor="receipt-paid-in-full"

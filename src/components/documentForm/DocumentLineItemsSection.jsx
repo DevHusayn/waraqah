@@ -8,6 +8,7 @@ import LineItemSummaryCard from './LineItemSummaryCard';
 import CustomSelect from '../CustomSelect';
 import { formatCurrency } from '../../utils/currency';
 import { focusFieldById } from '../../utils/formFieldValidation';
+import { formatStockLabel } from '../../utils/stockWarnings';
 
 const ADD_ITEM_FIELD_ORDER = ['description', 'quantity', 'rate'];
 
@@ -121,6 +122,7 @@ export default function DocumentLineItemsSection({
                         currency={formData.currency}
                         fieldErrors={fieldErrors}
                         errorPulse={errorPulse}
+                        products={products}
                         onItemChange={onItemChange}
                         onUnitChange={onUnitChange}
                         onCurrencyChange={onCurrencyChange}
@@ -151,10 +153,19 @@ export default function DocumentLineItemsSection({
                             onChange={(productId) => {
                                 if (productId) onAddProductItem(productId, activeIndex);
                             }}
-                            options={products.map((product) => ({
-                                value: product.id,
-                                label: `${product.name} — ${formatCurrency(product.unitPrice || 0, formData.currency)}`,
-                            }))}
+                            options={products.map((product) => {
+                                const stockLabel = formatStockLabel(product);
+                                const priceLabel = formatCurrency(
+                                    product.unitPrice || 0,
+                                    formData.currency
+                                );
+                                return {
+                                    value: product.id,
+                                    label: stockLabel
+                                        ? `${product.name} — ${priceLabel} — ${stockLabel}`
+                                        : `${product.name} — ${priceLabel}`,
+                                };
+                            })}
                             placeholder="Select a saved product…"
                             leadingIcon={<Package size={18} aria-hidden />}
                             aria-label="Add line item from saved product"

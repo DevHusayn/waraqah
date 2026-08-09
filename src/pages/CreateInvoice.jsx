@@ -21,6 +21,7 @@ import {
 } from '../utils/invoiceFormValidation';
 import { calculateInvoiceTotals } from '../utils/invoiceTotals';
 import { buildInvoicePayload, prepareInvoicePdf } from '../utils/sendInvoiceFlow';
+import { notifyStockWarnings } from '../utils/stockWarnings';
 import { clientDetailsFromRecord } from '../utils/ensureInvoiceClient';
 import ClientDetailsModal from '../components/ClientDetailsModal';
 import { shareInvoicePdf, getShareFallbackHint } from '../utils/shareInvoicePdf';
@@ -356,6 +357,11 @@ const CreateInvoice = () => {
                 saved = await addInvoice(payload, { skipRefresh: true });
             }
 
+            notifyStockWarnings(showToast, saved);
+            if (saved?.stockWarnings?.length) {
+                fetchProducts({ force: true }).catch(() => {});
+            }
+
             const nextStatus = saved.status || 'pending';
             setResolvedStatus(nextStatus);
             draftIdRef.current = saved.id;
@@ -496,7 +502,11 @@ const CreateInvoice = () => {
             delete invoiceData.clientEmail;
             delete invoiceData.hasDueDate;
 
-            await updateInvoice(id, invoiceData);
+            const saved = await updateInvoice(id, invoiceData);
+            notifyStockWarnings(showToast, saved);
+            if (saved?.stockWarnings?.length) {
+                fetchProducts({ force: true }).catch(() => {});
+            }
             showToast('Invoice updated successfully', 'success');
             navigate(`/invoices/${id}`);
         } catch (err) {
@@ -618,10 +628,9 @@ const CreateInvoice = () => {
                     <InvoiceUsageBanner
                         className="mt-3 inline-block"
                         label={
-                            usageLabel +
-                            (invoiceUsage.remaining > 0
-                                ? ` — ${invoiceUsage.remaining} remaining this month`
-                                : ' — upgrade for unlimited invoices & quotations')
+                            invoiceUsage.remaining > 0
+                                ? `${usageLabel} — ${invoiceUsage.remaining} remaining this month`
+                                : usageLabel
                         }
                     />
                 ) : null}

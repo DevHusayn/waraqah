@@ -249,12 +249,11 @@ function ReceiptActionsPanel({
                 <ActionMenu items={menuItems} disabled={saving} ariaLabel="Receipt actions" />
             </div>
             {contactResolved && receipt?.status === 'paid' && !canEmailClient && canEditClient ? (
-                <p className="mt-3 text-xs leading-relaxed text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
-                    <span className="font-medium">Email Receipt</span> is unavailable until this client has an
-                    email.{' '}
+                <p className="mt-3 text-sm text-zinc-500">
+                    No email on file.{' '}
                     <button
                         type="button"
-                        className="font-semibold text-brand hover:underline"
+                        className="font-medium text-brand hover:underline"
                         onClick={onEditClient}
                     >
                         Edit client

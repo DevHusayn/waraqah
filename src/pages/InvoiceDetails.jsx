@@ -27,6 +27,7 @@ import { PageSpinner } from '../components/Spinner';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import MarkAsPaidModal from '../components/MarkAsPaidModal';
+import ClientFormModal, { EMPTY_CLIENT } from '../components/ClientFormModal';
 import FormSection from '../components/FormSection';
 import StatusBadge from '../components/StatusBadge';
 import ActionMenu from '../components/ActionMenu';
@@ -62,6 +63,15 @@ import { DocumentNotesDisplay } from '../components/documentDetails/DocumentText
 
 function mapInvoiceRecord(invoice) {
     return { ...invoice, id: invoice._id || invoice.id };
+}
+
+function normalizeDocumentClientId(value) {
+    if (value == null || value === '') return null;
+    if (typeof value === 'object') {
+        const id = value._id || value.id;
+        return id ? String(id) : null;
+    }
+    return String(value);
 }
 
 function invoiceHasLineItems(invoice) {
@@ -147,6 +157,8 @@ function InvoiceActionsPanel({
     canSendReminderNow,
     reminderContext,
     canResendReceipt,
+    canEditClient,
+    contactResolved,
     saving,
     emailing,
     onMarkPaid,
@@ -160,6 +172,7 @@ function InvoiceActionsPanel({
     onDownloadPdf,
     onPrintPdf,
     onEdit,
+    onEditClient,
     initialView,
 }) {
     const resolveDocumentMode = (paidState) => {
@@ -334,6 +347,19 @@ function InvoiceActionsPanel({
                 ) : null}
 
                 {reminderContext ? <PaymentReminderInfo reminderContext={reminderContext} /> : null}
+
+                {contactResolved && paid && !canEmailClient && canEditClient ? (
+                    <p className="text-sm text-zinc-500">
+                        No email on file.{' '}
+                        <button
+                            type="button"
+                            className="font-medium text-brand hover:underline"
+                            onClick={onEditClient}
+                        >
+                            Edit client
+                        </button>
+                    </p>
+                ) : null}
             </div>
         </div>
     );
@@ -356,6 +382,8 @@ const InvoiceDetails = () => {
         sendPaymentReminderToClient,
         markInvoiceReminderSent,
         sendReceiptEmailToClient,
+        updateClient,
+        fetchUserData,
     } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
@@ -370,6 +398,8 @@ const InvoiceDetails = () => {
     const [emailing, setEmailing] = useState(false);
     const [fetchedInvoice, setFetchedInvoice] = useState(null);
     const [resolving, setResolving] = useState(false);
+    const [clientEditOpen, setClientEditOpen] = useState(false);
+    const [clientOverride, setClientOverride] = useState(null);
 
     const invoiceFromList = useMemo(
         () => invoices.find((inv) => String(inv.id) === String(id) || String(inv._id) === String(id)),
@@ -380,10 +410,20 @@ const InvoiceDetails = () => {
         if (invoiceHasLineItems(fetchedInvoice)) return fetchedInvoice;
         return fetchedInvoice || invoiceFromList || null;
     }, [invoiceFromList, fetchedInvoice]);
-    const client = useMemo(
-        () => clients.find((c) => c.id === invoice?.clientId || c._id === invoice?.clientId),
-        [clients, invoice?.clientId]
-    );
+    const client = useMemo(() => {
+        const clientId = normalizeDocumentClientId(invoice?.clientId);
+        const fromList = clientId
+            ? clients.find(
+                  (c) => String(c.id) === clientId || String(c._id) === clientId
+              ) || null
+            : null;
+        if (!clientOverride) return fromList;
+        return {
+            ...(fromList || {}),
+            ...clientOverride,
+            id: normalizeDocumentClientId(clientOverride.id || clientId),
+        };
+    }, [clients, invoice?.clientId, clientOverride]);
 
     const paid = invoice ? isReceipt(invoice) : false;
     const cancelled = invoice?.status === 'cancelled';
@@ -399,6 +439,18 @@ const InvoiceDetails = () => {
     const paymentHistory = invoice ? getInvoicePayments(invoice) : [];
     const canSendReminderNow = canSendReminder && canSendPaymentReminderNow(invoice?.lastPaymentReminderAt);
     const canResendReceipt = paid && clientHasEmail;
+    const clientRecordId = normalizeDocumentClientId(client?.id || invoice?.clientId);
+    const canEditClient = Boolean(clientRecordId);
+    const contactResolved = Boolean(invoice && !loading && !resolving);
+    const clientEditInitialData = client
+        ? {
+              name: client.name || '',
+              business: getClientBusiness(client) || '',
+              email: client.email || '',
+              phone: client.phone || '',
+              address: client.address || '',
+          }
+        : EMPTY_CLIENT;
     const autoRemindersOn = isAutoPaymentRemindersEnabled(businessInfo);
 
     const reminderContext = useMemo(() => {
@@ -418,6 +470,10 @@ const InvoiceDetails = () => {
             autoRemindersOn,
         };
     }, [canSendReminder, canSendReminderNow, invoice?.lastPaymentReminderAt, autoRemindersOn]);
+
+    useEffect(() => {
+        setClientOverride(null);
+    }, [id]);
 
     useEffect(() => {
         if (!id) {
@@ -658,6 +714,34 @@ const InvoiceDetails = () => {
         }
     };
 
+    const handleEditClient = () => {
+        if (!canEditClient) return;
+        setClientEditOpen(true);
+    };
+
+    const handleClientSubmit = async (formData, editing) => {
+        const clientId = normalizeDocumentClientId(editing?.id || clientRecordId);
+        if (!clientId) {
+            setAlert({ open: true, message: 'Client record not found for this invoice.' });
+            return;
+        }
+        try {
+            const updatedClient = await updateClient(clientId, formData);
+            setClientOverride({
+                ...updatedClient,
+                id: normalizeDocumentClientId(updatedClient.id || updatedClient._id),
+                email: String(updatedClient.email ?? formData.email ?? '').trim(),
+            });
+            await fetchUserData();
+            clearCachedPdf(id);
+            clearCachedPdf(id, 'receipt');
+            setClientEditOpen(false);
+            showToast('Client updated', 'success');
+        } catch (err) {
+            setAlert({ open: true, message: err.message || 'Failed to update client.' });
+        }
+    };
+
     const waitingForFullInvoice =
         Boolean(invoiceFromList) && !invoiceHasLineItems(invoiceFromList) && !invoiceHasLineItems(fetchedInvoice);
 
@@ -680,6 +764,8 @@ const InvoiceDetails = () => {
         canSendReminderNow,
         reminderContext,
         canResendReceipt,
+        canEditClient,
+        contactResolved,
         saving,
         emailing,
         onMarkPaid: () => setMarkPaidOpen(true),
@@ -693,6 +779,7 @@ const InvoiceDetails = () => {
         onDownloadPdf: handleDownloadPdf,
         onPrintPdf: handlePrintPdf,
         onEdit: () => navigate(`/invoices/edit/${id}`),
+        onEditClient: handleEditClient,
         initialView,
     };
 
@@ -741,6 +828,13 @@ const InvoiceDetails = () => {
                 onCancel={() => setMarkPaidOpen(false)}
                 saving={saving}
             />
+            <ClientFormModal
+                open={clientEditOpen}
+                onClose={() => setClientEditOpen(false)}
+                onSubmit={handleClientSubmit}
+                editingClient={clientRecordId ? { id: clientRecordId } : null}
+                initialData={clientEditInitialData}
+            />
 
             <div className="max-w-6xl mx-auto pb-8">
                 <Link
@@ -769,7 +863,9 @@ const InvoiceDetails = () => {
                     <div className="xl:col-span-2 space-y-6 order-2 xl:order-1">
                         <DocumentClientDisplay
                             client={client}
+                            contactResolved={contactResolved}
                             additionalInfo={invoice.clientAdditionalInfo}
+                            onEditClient={canEditClient ? handleEditClient : undefined}
                         />
 
                         <DocumentLineItemsTable items={invoice.items} currency={invoice.currency} />

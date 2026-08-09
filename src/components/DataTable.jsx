@@ -1,7 +1,16 @@
-export default function DataTable({ columns, children, className = '' }) {
+export default function DataTable({ columns, children, className = '', fixedLayout = false }) {
+    const hasColumnWidths = fixedLayout || columns.some((col) => col.width);
+
     return (
         <div className={`data-table-wrap ${className}`.trim()}>
-            <table className="data-table">
+            <table className={`data-table${hasColumnWidths ? ' table-fixed' : ''}`}>
+                {hasColumnWidths ? (
+                    <colgroup>
+                        {columns.map((col) => (
+                            <col key={col.key} style={col.width ? { width: col.width } : undefined} />
+                        ))}
+                    </colgroup>
+                ) : null}
                 <thead>
                     <tr>
                         {columns.map((col) => (

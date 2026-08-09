@@ -282,6 +282,11 @@
         @apply px-4 py-2.5 text-left text-[11px] font-medium text-zinc-500 tracking-normal whitespace-nowrap first:pl-5 last:pr-5;
     }
 
+    .data-table th.text-right,
+    .data-table td.text-right {
+        text-align: right;
+    }
+
     .data-table td {
         @apply px-4 py-3 text-zinc-600 whitespace-nowrap first:pl-5 last:pr-5;
     }

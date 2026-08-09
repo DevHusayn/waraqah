@@ -382,6 +382,16 @@ export const InvoiceProvider = ({ children }) => {
         setProducts((prev) => prev.filter((product) => product.id !== id));
     }, []);
 
+    const adjustProductStock = useCallback(async (id, delta) => {
+        const updated = await apiFetch(`/products/${id}/adjust-stock`, {
+            method: 'POST',
+            body: JSON.stringify({ delta }),
+        });
+        const mapped = mapProduct(updated);
+        setProducts((prev) => prev.map((product) => (product.id === id ? mapped : product)));
+        return mapped;
+    }, []);
+
     const draftInvoices = useMemo(() => {
         const source =
             drafts.length > 0 ? drafts : invoices.filter(isDraft);
@@ -435,6 +445,7 @@ export const InvoiceProvider = ({ children }) => {
         addProduct,
         updateProduct,
         deleteProduct,
+        adjustProductStock,
         fetchUserData,
         fetchInvoices,
         fetchDrafts,
@@ -468,6 +479,7 @@ export const InvoiceProvider = ({ children }) => {
         addProduct,
         updateProduct,
         deleteProduct,
+        adjustProductStock,
         fetchUserData,
         fetchInvoices,
         fetchDrafts,

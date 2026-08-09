@@ -9,12 +9,15 @@ import RequiredLabel from './RequiredLabel';
 import FieldValidationMessage from './FieldValidationMessage';
 import CustomSelect from './CustomSelect';
 import DatePickerField from './DatePickerField';
+import AmountInput from './AmountInput';
+import { parseAmountInput } from '../utils/numberInput';
 
 const MONEY_EPS = 0.009;
 
-function parseAmountInput(value) {
-    const n = Number(String(value).replace(/,/g, '').trim());
-    return Number.isFinite(n) ? n : NaN;
+function parseAmount(value) {
+    const parsed = parseAmountInput(value);
+    if (value === '' || value == null) return NaN;
+    return Number.isFinite(parsed) ? parsed : NaN;
 }
 
 function amountsMatch(a, b) {
@@ -44,12 +47,12 @@ export default function MarkAsPaidModal({
             setPaymentMethod('');
             setDatePaid(format(new Date(), 'yyyy-MM-dd'));
             setPaidFully(true);
-            setAmount(balanceDue > 0 ? String(balanceDue) : '');
+            setAmount(balanceDue > 0 ? balanceDue : '');
             setError('');
         }
     }, [open, balanceDue]);
 
-    const amountNumber = paidFully ? balanceDue : parseAmountInput(amount);
+    const amountNumber = paidFully ? balanceDue : parseAmount(amount);
     const isFullPayment = paidFully || amountsMatch(amountNumber, balanceDue);
     const balanceAfter =
         Number.isFinite(amountNumber) && amountNumber > 0
@@ -60,14 +63,14 @@ export default function MarkAsPaidModal({
         setPaidFully(checked);
         setError('');
         if (checked) {
-            setAmount(balanceDue > 0 ? String(balanceDue) : '');
+            setAmount(balanceDue > 0 ? balanceDue : '');
         }
     };
 
     const handleAmountChange = (value) => {
         setAmount(value);
         setError('');
-        const parsed = parseAmountInput(value);
+        const parsed = parseAmount(value);
         setPaidFully(amountsMatch(parsed, balanceDue));
     };
 
@@ -128,17 +131,13 @@ export default function MarkAsPaidModal({
             <div className="p-6 space-y-5">
                 <div>
                     <RequiredLabel htmlFor="record-payment-amount">Amount paid</RequiredLabel>
-                    <input
+                    <AmountInput
                         id="record-payment-amount"
-                        type="number"
-                        inputMode="decimal"
-                        min="0"
-                        step="0.01"
-                        max={balanceDue}
-                        value={paidFully ? String(balanceDue) : amount}
-                        onChange={(e) => handleAmountChange(e.target.value)}
-                        className="input-field disabled:bg-zinc-50 disabled:text-zinc-600"
+                        value={paidFully ? balanceDue : amount}
+                        onChange={handleAmountChange}
+                        numeric
                         disabled={saving || paidFully}
+                        className="disabled:bg-zinc-50 disabled:text-zinc-600"
                     />
                     <label
                         htmlFor="record-payment-paid-fully"
