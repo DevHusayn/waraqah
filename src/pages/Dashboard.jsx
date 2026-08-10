@@ -5,8 +5,7 @@ import {
     Receipt,
     TrendingUp,
     CheckCircle,
-    FileBarChart,
-    Crown,
+    Package,
     ClipboardList,
     Plus,
 } from 'lucide-react';
@@ -170,10 +169,9 @@ const Dashboard = () => {
                             <Receipt size={16} />
                             Receipts
                         </button>
-                        <button type="button" onClick={() => navigate('/statements')} className="btn-secondary w-full justify-center">
-                            <FileBarChart size={16} />
-                            Statements
-                            {!premium ? <Crown className="h-3.5 w-3.5 text-amber-500" aria-hidden /> : null}
+                        <button type="button" onClick={() => navigate('/products')} className="btn-secondary w-full justify-center">
+                            <Package size={16} />
+                            Products
                         </button>
                     </div>
                 </div>

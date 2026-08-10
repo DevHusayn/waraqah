@@ -11,7 +11,6 @@ export const brandDir = path.join(root, 'public', 'brand');
 export const brandSources = {
     default: path.join(brandDir, 'waraqah-logo.svg'),
     light: path.join(brandDir, 'waraqah-logo-light.svg'),
-    appIcon: path.join(brandDir, 'waraqah-app-icon.svg'),
 };
 
 const BRAND_GREEN = { r: 22, g: 163, b: 74, alpha: 1 };
@@ -22,34 +21,44 @@ export function assertBrandSources() {
     }
 }
 
-/**
- * Rasterize a brand SVG to PNG.
- * @param {'transparent'|'green'} options.background - green fills the canvas so PWA splash matches theme_color
- * @param {number} options.scale - icon size relative to canvas (lower = smaller on splash)
- */
-export async function renderBrandIcon(sourcePath, size, outputPath, options = {}) {
-    const {
-        maskable = false,
-        background = 'transparent',
-        scale = maskable ? 0.5 : 0.88,
-    } = options;
-
-    const innerSize = Math.round(size * scale);
-    const padding = Math.round((size - innerSize) / 2);
+export async function renderBrandIcon(sourcePath, size, outputPath, { maskable = false } = {}) {
+    const innerSize = maskable ? Math.round(size * 0.82) : size;
+    const padding = maskable ? Math.round((size - innerSize) / 2) : 0;
 
     const icon = await sharp(sourcePath).resize(innerSize, innerSize).png().toBuffer();
 
-    const canvasBackground = background === 'green' ? BRAND_GREEN : { r: 0, g: 0, b: 0, alpha: 0 };
+    if (maskable) {
+        await sharp({
+            create: {
+                width: size,
+                height: size,
+                channels: 4,
+                background: { r: 0, g: 0, b: 0, alpha: 0 },
+            },
+        })
+            .composite([{ input: icon, top: padding, left: padding }])
+            .png()
+            .toFile(outputPath);
+    } else {
+        await sharp(icon).toFile(outputPath);
+    }
+
+    console.log(`Wrote ${path.relative(root, outputPath)}`);
+}
+
+/** iOS PWA splash only — full-size logo on brand-green (no transparent corners). */
+export async function renderAppleTouchSplashIcon(sourcePath, size, outputPath) {
+    const icon = await sharp(sourcePath).resize(size, size).png().toBuffer();
 
     await sharp({
         create: {
             width: size,
             height: size,
             channels: 4,
-            background: canvasBackground,
+            background: BRAND_GREEN,
         },
     })
-        .composite([{ input: icon, top: padding, left: padding }])
+        .composite([{ input: icon, top: 0, left: 0 }])
         .png()
         .toFile(outputPath);
 
