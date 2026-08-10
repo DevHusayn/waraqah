@@ -1,100 +1,108 @@
-import { useCallback, useState } from 'react';
-import { Plus, Edit, Trash2, Package, Search, PackagePlus } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Package, Search, PackagePlus } from 'lucide-react';
+import ListSummaryStats from '../components/ListSummaryStats';
 import AlertModal from '../components/AlertModal';
-import ConfirmModal from '../components/ConfirmModal';
 import ProductFormModal, { EMPTY_PRODUCT } from '../components/ProductFormModal';
-import ProductStockAdjustModal from '../components/ProductStockAdjustModal';
+import ProductStockStatusBadge from '../components/ProductStockStatusBadge';
+import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import PageHeader from '../components/PageHeader';
 import { useInvoice } from '../context/InvoiceContext';
+import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
-import { formatCurrency } from '../utils/currency';
-import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
-import Toolbar, { ToolbarSearch } from '../components/Toolbar';
+import Toolbar, { ToolbarSearch, ToolbarActions } from '../components/Toolbar';
 import PaginationBar from '../components/PaginationBar';
 import { usePagedQuery } from '../hooks/usePagedQuery';
-import { ListPageSkeleton } from '../components/Skeleton';
+import { useListSummaryQuery } from '../hooks/useListSummaryQuery';
+import { useListMonthFilter } from '../hooks/useListMonthFilter';
+import ListMonthToolbarFilter from '../components/ListMonthToolbarFilter';
+import ListExportButton from '../components/ListExportButton';
+import { ListPageSkeleton, ListSummaryStatsSkeleton, ToolbarSkeleton } from '../components/Skeleton';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
-import { isLowStock } from '../utils/stockWarnings';
-
-const COLUMNS = [
-    { key: 'name', label: 'Product', width: '22%' },
-    { key: 'price', label: 'Price', className: 'text-right', width: '18%' },
-    { key: 'stock', label: 'In stock', className: 'text-right', width: '14%' },
-    { key: 'description', label: 'Description', width: '36%' },
-    { key: 'actions', label: '', className: 'text-right', width: '10%' },
-];
+import { formatCurrency } from '../utils/currency';
 
 const mapProduct = (p) => ({ ...p, id: p._id || p.id });
 
+const TABLE_COLUMNS = [
+    { key: 'product', label: 'Product' },
+    { key: 'price', label: 'Price', className: 'text-right' },
+    { key: 'inStock', label: 'In stock', className: 'text-right' },
+    { key: 'status', label: 'Status' },
+];
+
 export default function Products() {
-    const { addProduct, updateProduct, deleteProduct, adjustProductStock } = useInvoice();
+    const navigate = useNavigate();
+    const { addProduct } = useInvoice();
+    const { businessInfo } = useSettings();
     const { showToast } = useToast();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingProduct, setEditingProduct] = useState(null);
-    const [modalInitialData, setModalInitialData] = useState(EMPTY_PRODUCT);
-    const [stockAdjustProduct, setStockAdjustProduct] = useState(null);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
-    const [confirm, setConfirm] = useState({ open: false, productId: null });
-    const [deleting, setDeleting] = useState(false);
+
+    const {
+        summaryYear,
+        summaryMonth,
+        monthInputValue,
+        setMonthInputValue,
+        periodLabel,
+        isCurrentPeriod,
+        listYear,
+        listMonth,
+        allTime,
+        setAllTime,
+        listMonthInputValue,
+        setListMonthInputValue,
+    } = useListMonthFilter();
 
     const fetcher = useCallback(
-        ({ page, limit, search }) =>
-            apiFetch(`/products?${buildListQuery({ page, limit, search })}`),
+        ({ page, limit, search, year, month }) =>
+            apiFetch(
+                `/products?${buildListQuery({
+                    page,
+                    limit,
+                    search,
+                    year,
+                    month,
+                })}`
+            ),
         []
     );
 
+    const { summary, summaryLoading, refreshSummary } = useListSummaryQuery(
+        'products',
+        summaryYear,
+        summaryMonth
+    );
+
     const {
-        page,
         setPage,
         search,
         setSearch,
+        debouncedSearch,
         data,
         pagination,
         loading,
         refresh,
-    } = usePagedQuery({ queryKeyBase: 'products', fetcher });
+    } = usePagedQuery({
+        queryKeyBase: 'products',
+        fetcher,
+        extraParams: { year: listYear, month: listMonth },
+    });
 
     const products = data.map(mapProduct);
-    const hasNoProductsAtAll = !loading && pagination.total === 0 && !search;
 
-    const openModal = (product = null) => {
-        if (product) {
-            setEditingProduct(product);
-            setModalInitialData({
-                name: product.name || '',
-                description: product.description || '',
-                unitPrice: product.unitPrice ?? '',
-                trackInventory: Boolean(product.trackInventory),
-                quantityOnHand: product.trackInventory ? (product.quantityOnHand ?? 0) : '',
-                lowStockThreshold:
-                    product.lowStockThreshold == null ? '' : product.lowStockThreshold,
-            });
-        } else {
-            setEditingProduct(null);
-            setModalInitialData(EMPTY_PRODUCT);
-        }
-        setIsModalOpen(true);
-    };
+    useEffect(() => {
+        setPage(1);
+    }, [listYear, listMonth, setPage]);
 
-    const closeModal = () => {
-        setIsModalOpen(false);
-        setEditingProduct(null);
-        setModalInitialData(EMPTY_PRODUCT);
-    };
-
-    const handleSubmit = async (formData, editing) => {
+    const handleSubmit = async (formData) => {
         try {
-            if (editing) {
-                await updateProduct(editing.id, formData);
-                showToast('Product updated successfully', 'success');
-            } else {
-                await addProduct(formData);
-                showToast('Product added successfully', 'success');
-            }
-            closeModal();
+            await addProduct(formData);
+            showToast('Product added successfully', 'success');
+            setIsModalOpen(false);
             await refresh();
+            await refreshSummary();
         } catch (err) {
             setAlert({
                 open: true,
@@ -105,43 +113,11 @@ export default function Products() {
         }
     };
 
-    const handleDelete = (id) => setConfirm({ open: true, productId: id });
-
-    const handleAdjustStock = async (delta) => {
-        if (!stockAdjustProduct) return;
-        try {
-            await adjustProductStock(stockAdjustProduct.id, delta);
-            showToast('Stock updated successfully', 'success');
-            setStockAdjustProduct(null);
-            await refresh();
-        } catch (err) {
-            setAlert({
-                open: true,
-                message: err.message || 'Failed to adjust stock.',
-                type: 'error',
-            });
-            throw err;
-        }
-    };
-
-    const confirmDelete = async () => {
-        const id = confirm.productId;
-        setDeleting(true);
-        try {
-            await deleteProduct(id);
-            showToast('Product deleted successfully', 'success');
-            setConfirm({ open: false, productId: null });
-            await refresh();
-        } catch (err) {
-            setAlert({
-                open: true,
-                message: err.message || 'Failed to delete product.',
-                type: 'error',
-            });
-        } finally {
-            setDeleting(false);
-        }
-    };
+    const hasNoProductsAtAll =
+        !loading && !search && allTime && (summary ? summary.totalProducts === 0 : pagination.total === 0);
+    const showProductStats = !(loading && products.length === 0 && !search);
+    const totalProducts = summary?.totalProducts;
+    const newInPeriod = summary?.newInPeriod ?? summary?.newThisMonth;
 
     return (
         <>
@@ -151,47 +127,53 @@ export default function Products() {
                 type={alert.type}
                 onClose={() => setAlert({ open: false, message: '', type: 'error' })}
             />
-            <ConfirmModal
-                open={confirm.open}
-                title="Delete product?"
-                description="This product will be removed from your catalog. Existing invoices are not affected."
-                confirmLabel="Delete product"
-                cancelLabel="Keep product"
-                loading={deleting}
-                onConfirm={confirmDelete}
-                onCancel={() => setConfirm({ open: false, productId: null })}
-            />
             <ProductFormModal
                 open={isModalOpen}
-                onClose={closeModal}
+                onClose={() => setIsModalOpen(false)}
                 onSubmit={handleSubmit}
-                editingProduct={editingProduct}
-                initialData={modalInitialData}
-            />
-            <ProductStockAdjustModal
-                open={Boolean(stockAdjustProduct)}
-                onClose={() => setStockAdjustProduct(null)}
-                product={stockAdjustProduct}
-                onSubmit={handleAdjustStock}
+                editingProduct={null}
+                initialData={EMPTY_PRODUCT}
             />
 
             <PageHeader title="Products" subtitle="Catalog items for quick line entries on any document">
-                <button type="button" onClick={() => openModal()} className="btn-primary">
+                <button type="button" onClick={() => setIsModalOpen(true)} className="btn-primary">
                     <Plus size={16} aria-hidden />
                     Add product
                 </button>
             </PageHeader>
 
+            {showProductStats ? (
+                <ListSummaryStats
+                    visible
+                    totalLabel="Total products"
+                    total={totalProducts}
+                    newInPeriod={newInPeriod}
+                    newComparison={summary?.comparison?.newInPeriod}
+                    comparisonLabel={isCurrentPeriod ? 'vs last month' : 'vs previous month'}
+                    totalIcon={Package}
+                    newIcon={PackagePlus}
+                    periodLabel={periodLabel}
+                    monthInputValue={monthInputValue}
+                    onPeriodChange={setMonthInputValue}
+                    summaryLoading={summaryLoading}
+                />
+            ) : loading && products.length === 0 && !search ? (
+                <ListSummaryStatsSkeleton />
+            ) : null}
+
             {loading && products.length === 0 && !search ? (
-                <ListPageSkeleton rows={8} columns={5} />
+                <>
+                    <ToolbarSkeleton />
+                    <ListPageSkeleton rows={8} columns={4} withAction={false} />
+                </>
             ) : hasNoProductsAtAll ? (
-                <div className="data-table-wrap">
+                <div className="card">
                     <EmptyState
                         icon={Package}
                         title="No products yet"
                         description="Build your catalog once, then pick items in seconds when creating documents."
                         action={
-                            <button type="button" onClick={() => openModal()} className="btn-primary">
+                            <button type="button" onClick={() => setIsModalOpen(true)} className="btn-primary">
                                 Add product
                             </button>
                         }
@@ -208,77 +190,68 @@ export default function Products() {
                             placeholder="Search products..."
                             aria-label="Search products"
                         />
+                        <ToolbarActions>
+                            <ListMonthToolbarFilter
+                                monthInputValue={listMonthInputValue}
+                                onMonthChange={setListMonthInputValue}
+                                allTime={allTime}
+                                onShowAllTime={setAllTime}
+                            />
+                            <ListExportButton
+                                path="/products/export"
+                                resource="products"
+                                companyName={businessInfo?.name}
+                                filters={{
+                                    search: debouncedSearch,
+                                    year: listYear,
+                                    month: listMonth,
+                                }}
+                                disabled={pagination.total === 0}
+                                onExported={() => showToast('Products exported successfully.', 'success')}
+                                onError={(err) => showToast(err.message || 'Export failed.', 'error')}
+                            />
+                        </ToolbarActions>
                     </Toolbar>
 
                     {products.length === 0 ? (
                         <div className="data-table-wrap">
-                            <EmptyState title="No matches" description="Try a different search term." />
+                            <EmptyState
+                                title="No matches"
+                                description={
+                                    search || !allTime
+                                        ? 'Try a different search term or month filter.'
+                                        : 'Try a different search term.'
+                                }
+                            />
                         </div>
                     ) : (
                         <>
-                            <DataTable columns={COLUMNS} fixedLayout>
+                            <DataTable columns={TABLE_COLUMNS}>
                                 {products.map((product) => (
-                                    <DataTableRow key={product.id}>
+                                    <DataTableRow
+                                        key={product.id}
+                                        onClick={() => navigate(`/products/${product.id}`)}
+                                        className="cursor-pointer"
+                                    >
                                         <DataTableCell>
                                             <span className="font-medium text-zinc-950">
                                                 {product.name}
                                             </span>
                                         </DataTableCell>
                                         <DataTableCell className="text-right">
-                                            <span className="font-medium tabular-nums">
+                                            <span className="font-medium tabular-nums text-zinc-900">
                                                 {formatCurrency(product.unitPrice || 0)}
                                             </span>
                                         </DataTableCell>
                                         <DataTableCell className="text-right">
-                                            {product.trackInventory ? (
-                                                <div className="flex flex-col items-end gap-1">
-                                                    <span className="font-medium tabular-nums">
-                                                        {product.quantityOnHand ?? 0}
-                                                    </span>
-                                                    {isLowStock(product) ? (
-                                                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
-                                                            Low stock
-                                                        </span>
-                                                    ) : null}
-                                                </div>
-                                            ) : (
-                                                <span className="text-zinc-400">—</span>
-                                            )}
-                                        </DataTableCell>
-                                        <DataTableCell className="max-w-0">
-                                            <span className="text-zinc-500 truncate block">
-                                                {product.description || '—'}
+                                            <span className="tabular-nums text-zinc-700">
+                                                {product.trackInventory
+                                                    ? (product.quantityOnHand ?? 0)
+                                                    : '—'}
                                             </span>
                                         </DataTableCell>
-                                        <DataTableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-1">
-                                                {product.trackInventory ? (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setStockAdjustProduct(product)}
-                                                        className="btn-ghost text-xs py-1 px-2"
-                                                        aria-label="Adjust stock"
-                                                    >
-                                                        <PackagePlus size={14} />
-                                                    </button>
-                                                ) : null}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openModal(product)}
-                                                    className="btn-ghost text-xs py-1 px-2"
-                                                    aria-label="Edit product"
-                                                >
-                                                    <Edit size={14} />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDelete(product.id)}
-                                                    className="btn-ghost text-xs py-1 px-2 text-red-600 hover:bg-red-50"
-                                                    aria-label="Delete product"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
+                                        <DataTableCell>
+                                            <ProductStockStatusBadge product={product} />
                                         </DataTableCell>
                                     </DataTableRow>
                                 ))}

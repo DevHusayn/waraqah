@@ -86,16 +86,42 @@ export function ListSummaryStatsSkeleton({ className = 'mb-6' }) {
     return (
         <div className={`grid grid-cols-2 gap-3 max-w-lg ${className}`.trim()} aria-hidden>
             {[0, 1].map((index) => (
-                <div key={index} className="stat-card">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                        <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
+                <div key={index} className="stat-card stat-card-compact">
+                    <div className="flex items-center gap-2 min-w-0">
+                        <Skeleton className="h-7 w-7 rounded-lg shrink-0" />
                         <Skeleton className={`h-3 ${index === 0 ? 'w-[5.5rem]' : 'w-[7.5rem]'}`} />
                     </div>
-                    <Skeleton className="h-6 w-10" />
+                    <Skeleton className="h-5 w-10" />
                     {index === 1 ? <Skeleton className="h-3 w-24" /> : null}
                 </div>
             ))}
         </div>
+    );
+}
+
+export function ProductListSkeleton({ count = 6, className = '' }) {
+    return (
+        <LoadingStatus label="Loading products">
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 ${className}`.trim()} aria-hidden>
+                {Array.from({ length: count }).map((_, index) => (
+                    <div key={index} className="card !p-4 sm:!p-5 space-y-4">
+                        <div className="space-y-2">
+                            <Skeleton className="h-5 w-32" />
+                            <Skeleton className="h-4 w-full max-w-sm" />
+                        </div>
+                        <div className="flex gap-5">
+                            <Skeleton className="h-10 w-20" />
+                            <Skeleton className="h-10 w-16" />
+                        </div>
+                        <div className="flex gap-2 pt-3 border-t border-zinc-100">
+                            <Skeleton className="h-8 w-20 rounded-md" />
+                            <Skeleton className="h-8 w-16 rounded-md" />
+                            <Skeleton className="h-8 w-20 rounded-md" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </LoadingStatus>
     );
 }
 

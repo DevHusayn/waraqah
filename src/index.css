@@ -119,6 +119,7 @@
     }
 
     @keyframes field-shake {
+
         0%,
         100% {
             transform: translateX(0);
@@ -242,6 +243,18 @@
 
     .stat-card-value {
         @apply text-lg font-semibold text-zinc-950 tabular-nums tracking-[-0.02em] leading-tight whitespace-nowrap overflow-hidden text-ellipsis;
+    }
+
+    .stat-card-compact {
+        @apply gap-1.5 !p-3 hover:shadow-soft;
+    }
+
+    .stat-card-compact .stat-card-icon {
+        @apply p-1.5;
+    }
+
+    .stat-card-compact .stat-card-value {
+        @apply text-base whitespace-normal overflow-visible;
     }
 
     .filter-tab {

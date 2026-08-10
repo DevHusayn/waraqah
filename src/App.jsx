@@ -43,6 +43,7 @@ const CreateReceipt = lazy(() => import('./pages/CreateReceipt'));
 const ReceiptDetails = lazy(() => import('./pages/ReceiptDetails'));
 const Clients = lazy(() => import('./pages/Clients'));
 const Products = lazy(() => import('./pages/Products'));
+const ProductDetails = lazy(() => import('./pages/ProductDetails'));
 const SettingsLayout = lazy(() => import('./pages/settings/SettingsLayout'));
 const SettingsIndex = lazy(() => import('./pages/settings/SettingsIndex'));
 const BusinessSettingsIndex = lazy(() => import('./pages/settings/BusinessSettingsIndex'));
@@ -149,6 +150,7 @@ function App() {
                                             <Route path="/receipts/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><ReceiptDetails /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/clients" element={<PrivateRoute><ListRoute><Clients /></ListRoute></PrivateRoute>} />
                                             <Route path="/products" element={<PrivateRoute><ListRoute><Products /></ListRoute></PrivateRoute>} />
+                                            <Route path="/products/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><ProductDetails /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/settings" element={<PrivateRoute><RouteSuspense fallback={null}><SettingsLayout /></RouteSuspense></PrivateRoute>}>
                                                 <Route index element={<SettingsIndex />} />
                                                 <Route path="business" element={<BusinessSettingsIndex />} />

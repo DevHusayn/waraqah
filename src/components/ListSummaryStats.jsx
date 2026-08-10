@@ -34,19 +34,19 @@ export default function ListSummaryStats({
 
     return (
         <div className="grid grid-cols-2 gap-3 mb-6 max-w-lg">
-            <div className="stat-card">
-                <div className="flex items-center gap-2.5 min-w-0">
+            <div className="stat-card stat-card-compact">
+                <div className="flex items-center gap-2 min-w-0">
                     <div className="stat-card-icon bg-brand-light">
-                        <TotalIcon className="h-4 w-4 text-brand" aria-hidden />
+                        <TotalIcon className="h-3.5 w-3.5 text-brand" aria-hidden />
                     </div>
                     <p className="text-xs text-zinc-500 font-medium leading-snug">{totalLabel}</p>
                 </div>
                 <p className="stat-card-value">{total ?? '—'}</p>
             </div>
-            <div className="stat-card overflow-visible">
-                <div className="flex items-center gap-2.5 min-w-0">
+            <div className="stat-card stat-card-compact overflow-visible">
+                <div className="flex items-center gap-2 min-w-0">
                     <div className="stat-card-icon bg-sky-50">
-                        <NewIcon className="h-4 w-4 text-sky-600" aria-hidden />
+                        <NewIcon className="h-3.5 w-3.5 text-sky-600" aria-hidden />
                     </div>
                     <p className="text-xs text-zinc-500 font-medium leading-snug min-w-0">
                         <span>New this </span>
@@ -61,7 +61,7 @@ export default function ListSummaryStats({
                     </p>
                 </div>
                 <p
-                    className="stat-card-value min-h-[1.75rem] flex items-center"
+                    className="stat-card-value min-h-[1.5rem] flex items-center"
                     aria-busy={summaryLoading}
                 >
                     {summaryLoading ? <StatLoadingDots /> : (newInPeriod ?? '—')}

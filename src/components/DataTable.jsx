@@ -1,9 +1,15 @@
-export default function DataTable({ columns, children, className = '', fixedLayout = false }) {
+export default function DataTable({ columns, children, className = '', fixedLayout = false, minWidth }) {
     const hasColumnWidths = fixedLayout || columns.some((col) => col.width);
+    const tableStyle = minWidth
+        ? { minWidth: typeof minWidth === 'number' ? `${minWidth}px` : minWidth }
+        : undefined;
 
     return (
         <div className={`data-table-wrap ${className}`.trim()}>
-            <table className={`data-table${hasColumnWidths ? ' table-fixed' : ''}`}>
+            <table
+                className={`data-table${hasColumnWidths ? ' table-fixed' : ''}`}
+                style={tableStyle}
+            >
                 {hasColumnWidths ? (
                     <colgroup>
                         {columns.map((col) => (
