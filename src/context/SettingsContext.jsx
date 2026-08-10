@@ -35,6 +35,8 @@ const EMPTY_BUSINESS = {
     invoiceTemplateId: 'classic',
     autoEmailInvoices: false,
     autoPaymentReminders: true,
+    lowStockEmailAlerts: false,
+    autoEmailMonthlyStatements: true,
 };
 
 function businessPlaceholder(userId) {

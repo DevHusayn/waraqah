@@ -2,8 +2,12 @@ import { useState } from 'react';
 import SettingsPageShell from '../../components/settings/SettingsPageShell';
 import { useSettings } from '../../context/SettingsContext';
 import { useToast } from '../../context/ToastContext';
+import { isPremiumUser } from '../../utils/premium';
 import {
     isAutoPaymentRemindersEnabled,
+    isAutoMonthlyStatementsEnabled,
+    isLowStockEmailAlertsEnabled,
+    LOW_STOCK_EMAIL_COOLDOWN_HOURS,
     PAYMENT_REMINDER_DUE_WINDOW_DAYS,
     PAYMENT_REMINDER_MIN_DAYS_BETWEEN,
 } from '@waraqah/shared';
@@ -50,9 +54,14 @@ export default function NotificationSettings() {
     const { showToast } = useToast();
     const [savingInvoiceEmails, setSavingInvoiceEmails] = useState(false);
     const [savingReminderEmails, setSavingReminderEmails] = useState(false);
+    const [savingLowStockEmails, setSavingLowStockEmails] = useState(false);
+    const [savingMonthlyStatements, setSavingMonthlyStatements] = useState(false);
 
+    const premium = isPremiumUser(businessInfo);
     const invoiceEmailsEnabled = Boolean(businessInfo.autoEmailInvoices);
     const reminderEmailsEnabled = isAutoPaymentRemindersEnabled(businessInfo);
+    const lowStockEmailsEnabled = isLowStockEmailAlertsEnabled(businessInfo);
+    const monthlyStatementsEnabled = isAutoMonthlyStatementsEnabled(businessInfo);
 
     const handleInvoiceEmailToggle = async () => {
         setSavingInvoiceEmails(true);
@@ -88,10 +97,44 @@ export default function NotificationSettings() {
         }
     };
 
+    const handleLowStockEmailToggle = async () => {
+        setSavingLowStockEmails(true);
+        try {
+            await updateBusinessInfo({ lowStockEmailAlerts: !lowStockEmailsEnabled });
+            showToast(
+                !lowStockEmailsEnabled
+                    ? 'Daily low-stock email alerts are on.'
+                    : 'Low-stock email alerts turned off.',
+                'success',
+            );
+        } catch (err) {
+            showToast(err.message || 'Could not save notification settings.', 'error');
+        } finally {
+            setSavingLowStockEmails(false);
+        }
+    };
+
+    const handleMonthlyStatementToggle = async () => {
+        setSavingMonthlyStatements(true);
+        try {
+            await updateBusinessInfo({ autoEmailMonthlyStatements: !monthlyStatementsEnabled });
+            showToast(
+                !monthlyStatementsEnabled
+                    ? 'Monthly statement emails are on.'
+                    : 'Monthly statement emails turned off.',
+                'success',
+            );
+        } catch (err) {
+            showToast(err.message || 'Could not save notification settings.', 'error');
+        } finally {
+            setSavingMonthlyStatements(false);
+        }
+    };
+
     return (
         <SettingsPageShell
             title="Notifications"
-            subtitle="Control when Waraqah emails your clients"
+            subtitle="Control when Waraqah sends emails to you and your clients"
             backTo="/settings"
             backLabel="Settings"
             breadcrumbs={[
@@ -134,6 +177,41 @@ export default function NotificationSettings() {
                     saving={savingReminderEmails}
                     onToggle={handleReminderEmailToggle}
                 />
+
+                <NotificationToggle
+                    title="Email me when products are low on stock"
+                    description={
+                        'When enabled, Waraqah sends you a daily summary of tracked products that have reached '
+                        + 'their low-stock threshold. Only products with inventory tracking and a threshold set are included. '
+                        + 'You can still see low-stock badges on the Products page anytime.'
+                    }
+                    statusText={
+                        lowStockEmailsEnabled
+                            ? `Daily low-stock alerts are on (at most once every ${LOW_STOCK_EMAIL_COOLDOWN_HOURS} hours).`
+                            : 'Daily low-stock alerts are off.'
+                    }
+                    enabled={lowStockEmailsEnabled}
+                    saving={savingLowStockEmails}
+                    onToggle={handleLowStockEmailToggle}
+                />
+
+                {premium ? (
+                    <NotificationToggle
+                        title="Email me my monthly billing statement"
+                        description={
+                            'When enabled, Waraqah emails you a PDF summary of the previous month on the 1st of each month. '
+                            + 'Only months with issued invoices or receipts are included. You can also download statements anytime from the Statements page.'
+                        }
+                        statusText={
+                            monthlyStatementsEnabled
+                                ? 'Monthly statement emails are on (sent on the 1st for the previous month).'
+                                : 'Monthly statement emails are off.'
+                        }
+                        enabled={monthlyStatementsEnabled}
+                        saving={savingMonthlyStatements}
+                        onToggle={handleMonthlyStatementToggle}
+                    />
+                ) : null}
             </div>
         </SettingsPageShell>
     );

@@ -17,6 +17,8 @@ const SCALAR_FIELDS = [
     'paymentInstructions',
     'autoEmailInvoices',
     'autoPaymentReminders',
+    'lowStockEmailAlerts',
+    'autoEmailMonthlyStatements',
     'plan',
 ];
 

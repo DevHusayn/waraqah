@@ -28,7 +28,7 @@ export default function InvoiceLimitModal({ open, onClose, usage }) {
                     Monthly document limit reached
                 </h2>
                 <p className="text-zinc-600 text-center text-sm mb-6">
-                    You have used all <strong>{limit}</strong> free invoices and quotations for this month
+                    You have used all <strong>{limit}</strong> free documents for this month
                     ({used}/{limit}). Upgrade to Premium for unlimited documents, custom logos, and more.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">

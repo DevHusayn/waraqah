@@ -46,6 +46,18 @@ test('buildBusinessInfoPayload sends only toggled notification field', () => {
     assert.deepEqual(payload, { autoEmailInvoices: true });
 });
 
+test('buildBusinessInfoPayload includes low stock and monthly statement toggles', () => {
+    const payload = buildBusinessInfoPayload({
+        lowStockEmailAlerts: true,
+        autoEmailMonthlyStatements: false,
+    });
+
+    assert.deepEqual(payload, {
+        lowStockEmailAlerts: true,
+        autoEmailMonthlyStatements: false,
+    });
+});
+
 test('buildBusinessInfoPayload includes only updated logo assets', () => {
     const businessInfo = {
         plan: 'premium',
