@@ -18,7 +18,7 @@ import {
     FileBarChart,
 } from 'lucide-react';
 import LandingNav from '../components/LandingNav';
-import LandingInvoicePreview from '../components/LandingInvoicePreview';
+import LandingDashboardPreview from '../components/LandingDashboardPreview';
 import FeatureCarousel from '../components/FeatureCarousel';
 import WaraqahLogo from '../components/WaraqahLogo';
 import { APP_NAME, APP_SOCIAL_LINKS, APP_TAGLINE } from '../constants/brand';
@@ -101,7 +101,7 @@ const MANAGE_TODAY_ITEMS = [
     {
         icon: Package,
         title: 'Products',
-        text: 'Build a product catalog for quick line items, with optional inventory tracking and low-stock alerts.',
+        text: 'Build a product catalog for quick line items. Track stocks, which update automatically when you issue documents, and manually adjust levels, with stock history and low-stock alerts.',
     },
     {
         icon: FileBarChart,
@@ -119,7 +119,7 @@ const STEPS = [
 const FAQ_ITEMS = [
     {
         q: 'Who is Waraqah for?',
-        a: 'Businesses and solo operators who want one place for quotations, invoices, receipts, clients, products, and payment tracking, without spreadsheets or scattered paperwork. Paystack billing and NGN are supported today.',
+        a: 'Businesses and solo operators who want one place for quotations, invoices, receipts, clients, products, payment tracking, and inventory, without spreadsheets or scattered paperwork. Paystack billing and NGN are supported today.',
     },
     {
         q: 'What is the difference between a quotation and an invoice?',
@@ -130,8 +130,12 @@ const FAQ_ITEMS = [
         a: 'Yes. Create a standalone receipt when you receive payment and do not need an invoice. For example, a deposit or walk-in sale. You can record partial payments and follow-up instalments on the same receipt.',
     },
     {
+        q: 'Can Waraqah track inventory?',
+        a: 'Yes. Turn on inventory tracking per product to record stock on hand, deduct automatically when invoices or receipts are issued, adjust levels manually, and review a full stock history. Low-stock email alerts are available in Settings → Notifications. Products can stay untracked if you only need a price list.',
+    },
+    {
         q: 'What happens on the Free plan?',
-        a: `You can create up to ${FREE_MONTHLY_INVOICE_LIMIT} invoices, quotations, and receipts combined per calendar month, manage clients and products, add bank details to invoices, mark invoices paid, and download PDFs. Deleting a document does not reset your monthly allowance.`,
+        a: `You can create up to ${FREE_MONTHLY_INVOICE_LIMIT} invoices, quotations, and receipts combined per calendar month, manage clients and products (including optional inventory tracking), add bank details to invoices, mark invoices paid, and download PDFs. Deleting a document does not reset your monthly allowance.`,
     },
     {
         q: 'What does Premium include?',
@@ -165,15 +169,13 @@ function FaqItem({ item, open, onToggle }) {
             >
                 <span className="font-medium text-zinc-950">{item.q}</span>
                 <ChevronDown
-                    className={`h-4 w-4 flex-shrink-0 text-zinc-400 transition-transform duration-200 ${
-                        open ? 'rotate-180' : ''
-                    }`}
+                    className={`h-4 w-4 flex-shrink-0 text-zinc-400 transition-transform duration-200 ${open ? 'rotate-180' : ''
+                        }`}
                 />
             </button>
             <div
-                className={`overflow-hidden transition-all duration-200 ${
-                    open ? 'max-h-64 pb-4 opacity-100' : 'max-h-0 opacity-0'
-                }`}
+                className={`overflow-hidden transition-all duration-200 ${open ? 'max-h-80 pb-4 opacity-100' : 'max-h-0 opacity-0'
+                    }`}
             >
                 <p className="text-zinc-500 text-sm leading-relaxed pr-8">{item.a}</p>
             </div>
@@ -224,22 +226,20 @@ function LandingPremiumCard() {
                 <button
                     type="button"
                     onClick={() => setBillingInterval('monthly')}
-                    className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
-                        billingInterval === 'monthly'
-                            ? 'bg-white text-zinc-900 shadow-sm'
-                            : 'text-zinc-600 hover:text-zinc-900'
-                    }`}
+                    className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${billingInterval === 'monthly'
+                        ? 'bg-white text-zinc-900 shadow-sm'
+                        : 'text-zinc-600 hover:text-zinc-900'
+                        }`}
                 >
                     Monthly
                 </button>
                 <button
                     type="button"
                     onClick={() => setBillingInterval('yearly')}
-                    className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
-                        billingInterval === 'yearly'
-                            ? 'bg-white text-zinc-900 shadow-sm'
-                            : 'text-zinc-600 hover:text-zinc-900'
-                    }`}
+                    className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${billingInterval === 'yearly'
+                        ? 'bg-white text-zinc-900 shadow-sm'
+                        : 'text-zinc-600 hover:text-zinc-900'
+                        }`}
                 >
                     Yearly
                     <span className="ml-1 text-[10px] font-bold uppercase text-green-700">
@@ -323,14 +323,11 @@ export default function Landing() {
                         </div>
 
                         <div className="relative">
-                            <div className="landing-paper-stack">
-                                <div className="landing-paper landing-paper--back" aria-hidden />
-                                <div className="landing-paper landing-paper--front">
-                                    <LandingInvoicePreview />
-                                </div>
+                            <div className="landing-dashboard-frame">
+                                <LandingDashboardPreview />
                             </div>
                             <p className="mt-4 text-right text-xs text-zinc-400 pr-1">
-                                Sample PDF layout
+                                Dashboard snapshot
                             </p>
                         </div>
                     </div>

@@ -27,6 +27,7 @@ export default function ListSummaryStats({
     totalIcon: TotalIcon,
     newIcon: NewIcon = FilePlus,
     periodLabel,
+    periodPrefix = 'New this',
     monthInputValue,
     onPeriodChange,
 }) {
@@ -49,14 +50,14 @@ export default function ListSummaryStats({
                         <NewIcon className="h-3.5 w-3.5 text-sky-600" aria-hidden />
                     </div>
                     <p className="text-xs text-zinc-500 font-medium leading-snug min-w-0">
-                        <span>New this </span>
+                        <span>{periodPrefix} </span>
                         <MonthPickerField
                             variant="inline"
                             portal
                             value={monthInputValue}
                             onChange={onPeriodChange}
                             displayLabel={periodLabel}
-                            triggerAriaLabel={`New this ${periodLabel}. Change month.`}
+                            triggerAriaLabel={`${periodPrefix} ${periodLabel}. Change month.`}
                         />
                     </p>
                 </div>

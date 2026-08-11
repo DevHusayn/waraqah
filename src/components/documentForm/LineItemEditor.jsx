@@ -15,6 +15,7 @@ import {
     normalizeInvoiceUnit,
 } from '@waraqah/shared';
 import { getLineItemStockWarning } from '../../utils/stockWarnings';
+import { isOversellingAllowed } from '@waraqah/shared';
 
 export default function LineItemEditor({
     idPrefix,
@@ -24,6 +25,7 @@ export default function LineItemEditor({
     fieldErrors,
     errorPulse = 0,
     products = [],
+    businessInfo,
     onItemChange,
     onUnitChange,
     onCurrencyChange,
@@ -35,7 +37,8 @@ export default function LineItemEditor({
     const qtyError = Boolean(fieldErrors[`item-${index}-quantity`]);
     const rateError = Boolean(fieldErrors[`item-${index}-rate`]);
     const hasItemError = descError || qtyError || rateError;
-    const stockWarning = getLineItemStockWarning(item, products);
+    const stockWarning = getLineItemStockWarning(item, products, businessInfo);
+    const stockBlocksIssue = stockWarning && !isOversellingAllowed(businessInfo);
 
     useEffect(() => {
         if (!errorPulse || !hasItemError) return undefined;
@@ -92,7 +95,9 @@ export default function LineItemEditor({
                     </div>
                     <FieldValidationMessage message={fieldErrors[`item-${index}-quantity`]} />
                     {stockWarning ? (
-                        <p className="mt-1.5 text-xs text-amber-700">{stockWarning}</p>
+                        <p className={`mt-1.5 text-xs ${stockBlocksIssue ? 'text-red-700' : 'text-amber-700'}`}>
+                            {stockWarning}
+                        </p>
                     ) : null}
                 </div>
                 <div>

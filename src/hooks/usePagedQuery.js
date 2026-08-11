@@ -2,7 +2,10 @@ import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-quer
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { clampPage, DEFAULT_PAGE_SIZE, unwrapListResponse } from '../utils/pagination';
 import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
+import { invalidateListSummaryQueries } from '../lib/queryClient';
 import { useAuth } from '../context/AuthContext';
+
+const SUMMARY_RESOURCES = new Set(['invoices', 'quotations', 'receipts', 'products', 'clients']);
 
 /**
  * Paginated list backed by TanStack Query — caches pages and avoids refetch on back-navigation.
@@ -24,10 +27,12 @@ export function usePagedQuery({
     const fetcherRef = useRef(fetcher);
     fetcherRef.current = fetcher;
     const lastStatusCountsRef = useRef(null);
+    const lastSummaryRef = useRef(null);
     const lastListRef = useRef([]);
 
     useEffect(() => {
         lastStatusCountsRef.current = null;
+        lastSummaryRef.current = null;
         lastListRef.current = [];
     }, [userId]);
 
@@ -74,6 +79,9 @@ export function usePagedQuery({
     if (data?.statusCounts) {
         lastStatusCountsRef.current = data.statusCounts;
     }
+    if (data?.summary) {
+        lastSummaryRef.current = data.summary;
+    }
 
     const resolvedList =
         data?.data !== undefined ? data.data : isFetching ? lastListRef.current : [];
@@ -107,6 +115,9 @@ export function usePagedQuery({
     const invalidateList = useCallback(() => {
         if (!userId) return;
         queryClient.invalidateQueries({ queryKey: [queryKeyBase, userId] });
+        if (SUMMARY_RESOURCES.has(queryKeyBase)) {
+            invalidateListSummaryQueries(userId, queryKeyBase);
+        }
     }, [queryClient, queryKeyBase, userId]);
 
     return {
@@ -119,6 +130,7 @@ export function usePagedQuery({
         setData,
         pagination: data?.pagination ?? { page: 1, limit, total: 0, totalPages: 0 },
         statusCounts: data?.statusCounts ?? lastStatusCountsRef.current,
+        summary: data?.summary ?? lastSummaryRef.current,
         loading: isPending,
         fetching: isFetching,
         error: error?.message || '',

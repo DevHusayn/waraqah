@@ -145,7 +145,7 @@ const CreateQuotation = () => {
     }, [id]);
 
     useEffect(() => {
-        fetchProducts().catch(() => {});
+        fetchProducts({ force: true }).catch(() => {});
     }, [fetchProducts]);
 
     useEffect(() => {
@@ -672,6 +672,7 @@ const CreateQuotation = () => {
                             fieldErrors={fieldErrors}
                             setFieldErrors={setFieldErrors}
                             products={products}
+                            businessInfo={businessInfo}
                             onItemChange={handlers.handleItemChange}
                             onUnitChange={handlers.handleUnitChange}
                             onCurrencyChange={handlers.handleCurrencyChange}

@@ -28,7 +28,7 @@
                 }
 
                 document.documentElement.classList.add('pwa-cold-start');
-            } catch (_) {}
+            } catch (_) { }
         })();
     </script>
     <meta name="color-scheme" content="light" />
@@ -55,10 +55,26 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600&display=swap" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <!-- Brand wordmark (Bodoni Moda 600): sync + preload to avoid Georgia fallback flashing bold -->
+    <link
+        rel="preload"
+        as="font"
+        type="font/woff2"
+        crossorigin
+        href="https://fonts.gstatic.com/s/bodonimoda/v28/aFTH7PxzY382XsXX63LUYL6GYFksw-NIrKp-cv31KOxQ.woff2" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,600&display=block"
+        rel="stylesheet" />
+    <!-- UI body text: async load is fine -->
+    <link rel="preload" as="style"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet" media="print" onload="this.media='all'" />
     <noscript>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600&display=swap" rel="stylesheet" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+            rel="stylesheet" />
     </noscript>
     <title>Waraqah. Get Paid. Keep Records.</title>
     <meta name="description"

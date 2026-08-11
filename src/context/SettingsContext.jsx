@@ -36,6 +36,7 @@ const EMPTY_BUSINESS = {
     autoEmailInvoices: false,
     autoPaymentReminders: true,
     lowStockEmailAlerts: false,
+    allowOverselling: false,
     autoEmailMonthlyStatements: true,
 };
 

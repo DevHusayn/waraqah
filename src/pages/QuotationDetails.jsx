@@ -26,6 +26,7 @@ import { useQuotation } from '../context/QuotationContext';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
+import { validateDocumentStock } from '../utils/stockWarnings';
 import { PageSpinner } from '../components/Spinner';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
@@ -221,7 +222,7 @@ const QuotationDetails = () => {
         sendQuotationEmailToClient,
         convertQuotation,
     } = useQuotation();
-    const { clients, upsertInvoice } = useInvoice();
+    const { clients, upsertInvoice, products } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
 
@@ -420,6 +421,17 @@ const QuotationDetails = () => {
     };
 
     const handleConvert = async () => {
+        const stockError = validateDocumentStock({
+            items: quotation?.items,
+            products,
+            businessInfo,
+        });
+        if (stockError) {
+            setAlert({ open: true, message: stockError, type: 'error' });
+            setConfirmConvert(false);
+            return;
+        }
+
         setConverting(true);
         try {
             const { invoice } = await convertQuotation(id);

@@ -21,7 +21,7 @@ import {
 } from '../utils/invoiceFormValidation';
 import { calculateInvoiceTotals } from '../utils/invoiceTotals';
 import { buildInvoicePayload, prepareInvoicePdf } from '../utils/sendInvoiceFlow';
-import { notifyStockWarnings } from '../utils/stockWarnings';
+import { notifyStockWarnings, validateDocumentStock, aggregateCatalogQuantities } from '../utils/stockWarnings';
 import { clientDetailsFromRecord } from '../utils/ensureInvoiceClient';
 import ClientDetailsModal from '../components/ClientDetailsModal';
 import { shareInvoicePdf, getShareFallbackHint } from '../utils/shareInvoicePdf';
@@ -74,6 +74,7 @@ const CreateInvoice = () => {
     const formDataRef = useRef(null);
     const sharePdfRef = useRef(null);
     const loadedInvoiceIdRef = useRef(null);
+    const committedCatalogQuantitiesRef = useRef(null);
     const [resolvedStatus, setResolvedStatus] = useState(id ? null : 'draft');
     const [invoiceLoading, setInvoiceLoading] = useState(Boolean(id));
 
@@ -145,7 +146,7 @@ const CreateInvoice = () => {
     }, [id]);
 
     useEffect(() => {
-        fetchProducts().catch(() => {});
+        fetchProducts({ force: true }).catch(() => {});
     }, [fetchProducts]);
 
     useEffect(() => {
@@ -184,6 +185,10 @@ const CreateInvoice = () => {
                     unit: normalizeInvoiceUnit(item.unit),
                 })),
             });
+            committedCatalogQuantitiesRef.current =
+                invoice.status && invoice.status !== 'draft' && invoice.status !== 'cancelled'
+                    ? aggregateCatalogQuantities(invoice.items)
+                    : null;
             isDirtyRef.current = false;
             setInvoiceLoading(false);
         };
@@ -336,6 +341,17 @@ const CreateInvoice = () => {
 
         if (!canCreateInvoice(invoiceUsage)) {
             setLimitModalOpen(true);
+            return;
+        }
+
+        const stockError = validateDocumentStock({
+            items: formData.items,
+            products,
+            businessInfo,
+            prevCommitted: committedCatalogQuantitiesRef.current,
+        });
+        if (stockError) {
+            showToast(stockError, 'error');
             return;
         }
 
@@ -679,6 +695,7 @@ const CreateInvoice = () => {
                             fieldErrors={fieldErrors}
                             setFieldErrors={setFieldErrors}
                             products={products}
+                            businessInfo={businessInfo}
                             onItemChange={handlers.handleItemChange}
                             onUnitChange={handlers.handleUnitChange}
                             onCurrencyChange={handlers.handleCurrencyChange}

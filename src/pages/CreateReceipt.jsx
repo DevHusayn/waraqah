@@ -22,7 +22,7 @@ import {
 } from '../utils/receiptFormValidation';
 import { calculateInvoiceTotals } from '../utils/invoiceTotals';
 import { buildReceiptPayload, prepareReceiptPdf } from '../utils/sendReceiptFlow';
-import { notifyStockWarnings } from '../utils/stockWarnings';
+import { notifyStockWarnings, validateDocumentStock } from '../utils/stockWarnings';
 import { shareInvoicePdf, getShareFallbackHint } from '../utils/shareInvoicePdf';
 import { clientDetailsFromRecord } from '../utils/ensureInvoiceClient';
 import ClientDetailsModal from '../components/ClientDetailsModal';
@@ -153,7 +153,7 @@ const CreateReceipt = () => {
     }, [id]);
 
     useEffect(() => {
-        fetchProducts().catch(() => {});
+        fetchProducts({ force: true }).catch(() => {});
     }, [fetchProducts]);
 
     useEffect(() => {
@@ -336,6 +336,16 @@ const CreateReceipt = () => {
 
         if (!canCreateInvoice(invoiceUsage)) {
             setLimitModalOpen(true);
+            return;
+        }
+
+        const stockError = validateDocumentStock({
+            items: formData.items,
+            products,
+            businessInfo,
+        });
+        if (stockError) {
+            showToast(stockError, 'error');
             return;
         }
 
@@ -657,6 +667,7 @@ const CreateReceipt = () => {
                             fieldErrors={fieldErrors}
                             setFieldErrors={setFieldErrors}
                             products={products}
+                            businessInfo={businessInfo}
                             onItemChange={handlers.handleItemChange}
                             onUnitChange={handlers.handleUnitChange}
                             onCurrencyChange={handlers.handleCurrencyChange}

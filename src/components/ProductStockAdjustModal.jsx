@@ -10,6 +10,7 @@ export default function ProductStockAdjustModal({
     open,
     onClose,
     product,
+    allowOverselling = false,
     onSubmit,
 }) {
     const [delta, setDelta] = useState('');
@@ -31,6 +32,14 @@ export default function ProductStockAdjustModal({
             setError('Enter a non-zero adjustment amount.');
             focusFieldById('product-stock-delta');
             return;
+        }
+        if (!allowOverselling && parsed < 0) {
+            const nextQty = Number(product.quantityOnHand ?? 0) + parsed;
+            if (nextQty < 0) {
+                setError(`Cannot remove more than ${product.quantityOnHand ?? 0} units.`);
+                focusFieldById('product-stock-delta');
+                return;
+            }
         }
         setError('');
         setSaving(true);
@@ -84,7 +93,9 @@ export default function ProductStockAdjustModal({
                         aria-invalid={Boolean(error)}
                     />
                     <p className="text-xs text-zinc-500 mt-1.5">
-                        Use positive numbers to add stock and negative numbers to remove stock.
+                        {allowOverselling
+                            ? 'Use positive numbers to add stock and negative numbers to remove stock.'
+                            : 'Use positive numbers to add stock. Removals cannot exceed the current quantity.'}
                     </p>
                     <FieldValidationMessage message={error} />
                 </div>

@@ -48,11 +48,20 @@ export function invalidateDashboardQueries(userId) {
     }
 }
 
+/** Invalidate list page stat-card summary caches after mutations. */
+export function invalidateListSummaryQueries(userId, resource) {
+    if (!userId) return;
+    queryClient.invalidateQueries({
+        queryKey: resource ? ['listSummary', userId, resource] : ['listSummary', userId],
+    });
+}
+
 /** Invalidate paginated invoice/draft list caches after mutations. */
 export function invalidateInvoiceListQueries(userId) {
     if (!userId) return;
     queryClient.invalidateQueries({ queryKey: ['invoices', userId] });
     queryClient.invalidateQueries({ queryKey: ['drafts', userId] });
+    invalidateListSummaryQueries(userId, 'invoices');
 }
 
 /** Invalidate paginated quotation/draft list caches after mutations. */
@@ -60,6 +69,7 @@ export function invalidateQuotationListQueries(userId) {
     if (!userId) return;
     queryClient.invalidateQueries({ queryKey: ['quotations', userId] });
     queryClient.invalidateQueries({ queryKey: ['drafts', userId] });
+    invalidateListSummaryQueries(userId, 'quotations');
 }
 
 /** Invalidate paginated receipt/draft list caches after mutations. */
@@ -67,6 +77,21 @@ export function invalidateReceiptListQueries(userId) {
     if (!userId) return;
     queryClient.invalidateQueries({ queryKey: ['receipts', userId] });
     queryClient.invalidateQueries({ queryKey: ['drafts', userId] });
+    invalidateListSummaryQueries(userId, 'receipts');
+}
+
+/** Invalidate paginated product list caches after mutations. */
+export function invalidateProductListQueries(userId) {
+    if (!userId) return;
+    queryClient.invalidateQueries({ queryKey: ['products', userId] });
+    invalidateListSummaryQueries(userId, 'products');
+}
+
+/** Invalidate paginated client list caches after mutations. */
+export function invalidateClientListQueries(userId) {
+    if (!userId) return;
+    queryClient.invalidateQueries({ queryKey: ['clients', userId] });
+    invalidateListSummaryQueries(userId, 'clients');
 }
 
 /** Wipe all cached server state — call on logout / account switch. */

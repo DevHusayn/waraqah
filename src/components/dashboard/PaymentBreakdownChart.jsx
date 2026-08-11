@@ -1,14 +1,12 @@
 import { useMemo } from 'react';
-import { Wallet } from 'lucide-react';
 import ChartCard from './ChartCard';
-import EmptyState from '../EmptyState';
 import { PAYMENT_BREAKDOWN_ROWS } from './chartColors';
 
-function BreakdownRow({ label, value, max, barClass }) {
+function BreakdownRow({ label, value, max, barClass, muted = false }) {
     const widthPercent = max > 0 ? Math.round((value / max) * 100) : 0;
 
     return (
-        <div className="space-y-1.5">
+        <div className={`space-y-1.5 ${muted ? 'opacity-70' : ''}`}>
             <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="text-zinc-700">{label}</span>
                 <span className="font-semibold text-zinc-950 tabular-nums">{value}</span>
@@ -48,27 +46,23 @@ export default function PaymentBreakdownChart({ breakdown, periodLabel }) {
                       : 'Documents issued in the selected month'
             }
         >
-            {!hasData ? (
-                <div className="flex h-[220px] items-center justify-center">
-                    <EmptyState
-                        icon={Wallet}
-                        title="No payment data yet"
-                        description="Create invoices or receipts to see your payment breakdown."
+            <div className="flex h-[220px] flex-col justify-center gap-4 py-1">
+                {rows.map((row) => (
+                    <BreakdownRow
+                        key={row.key}
+                        label={row.label}
+                        value={row.value}
+                        max={maxValue}
+                        barClass={row.barClass}
+                        muted={!hasData}
                     />
-                </div>
-            ) : (
-                <div className="flex h-[220px] flex-col justify-center gap-4 py-1">
-                    {rows.map((row) => (
-                        <BreakdownRow
-                            key={row.key}
-                            label={row.label}
-                            value={row.value}
-                            max={maxValue}
-                            barClass={row.barClass}
-                        />
-                    ))}
-                </div>
-            )}
+                ))}
+            </div>
+            {!hasData ? (
+                <p className="mt-1 text-center text-xs text-zinc-500">
+                    Create invoices or receipts to see your payment breakdown.
+                </p>
+            ) : null}
         </ChartCard>
     );
 }

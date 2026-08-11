@@ -1,4 +1,4 @@
-import { Building2, Bell, Crown, FileText, Info, Landmark, Palette, Shield } from 'lucide-react';
+import { Building2, Bell, Crown, FileText, Info, Landmark, Package, Palette, Shield } from 'lucide-react';
 
 export const SETTINGS_INDEX = [
     {
@@ -12,6 +12,12 @@ export const SETTINGS_INDEX = [
         to: '/settings/notifications',
         icon: Bell,
         description: 'Email clients automatically and notification preferences',
+    },
+    {
+        title: 'Inventory',
+        to: '/settings/inventory',
+        icon: Package,
+        description: 'Stock enforcement and overselling preferences',
     },
     {
         title: 'Plan and Billing',

@@ -141,7 +141,8 @@ export function useDocumentFormHandlers({
     }, [markDirty, setFormData]);
 
     const addProductItem = useCallback((productId, preferredIndex) => {
-        const product = products.find((p) => p.id === productId);
+        const targetId = String(productId);
+        const product = products.find((p) => String(p.id) === targetId);
         if (!product) return;
         markDirty();
         const description = product.description

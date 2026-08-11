@@ -11,26 +11,33 @@ import {
     TrendingUp,
     ShoppingBag,
     ClipboardList,
+    History,
 } from 'lucide-react';
 import { PageSpinner } from '../components/Spinner';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import ProductFormModal, { EMPTY_PRODUCT } from '../components/ProductFormModal';
 import ProductStockAdjustModal from '../components/ProductStockAdjustModal';
-import LowStockBadge from '../components/LowStockBadge';
+import ProductStockStatusBadge from '../components/ProductStockStatusBadge';
 import StatusBadge from '../components/StatusBadge';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 import MonthPickerField from '../components/MonthPickerField';
 import MonthComparisonTrend from '../components/MonthComparisonTrend';
+import { useSettings } from '../context/SettingsContext';
+import { isOversellingAllowed } from '@waraqah/shared';
 import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
 import { formatCurrency } from '../utils/currency';
 import { getPaymentMethodLabel } from '../utils/receiptHelpers';
-import { isLowStock } from '../utils/stockWarnings';
 import { getSoldPeriodSummary } from '../utils/productSoldPeriod';
+import {
+    formatStockDelta,
+    formatStockMovementDescription,
+    getStockMovementLink,
+} from '../utils/stockMovementLabels';
 
 const ACTIVITY_COLUMNS = [
     { key: 'date', label: 'Date', width: '14%' },
@@ -48,6 +55,13 @@ const CLIENT_COLUMNS = [
     { key: 'revenue', label: 'Revenue', className: 'text-right', width: '20%' },
     { key: 'last', label: 'Last purchase', width: '18%' },
     { key: 'payment', label: 'Last payment', width: '16%' },
+];
+
+const STOCK_HISTORY_COLUMNS = [
+    { key: 'date', label: 'Date', width: '18%' },
+    { key: 'change', label: 'Change', className: 'text-right', width: '14%' },
+    { key: 'balance', label: 'Balance', className: 'text-right', width: '14%' },
+    { key: 'source', label: 'Source', width: '54%' },
 ];
 
 function formatDisplayDate(value) {
@@ -131,6 +145,7 @@ export default function ProductDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { updateProduct, deleteProduct, adjustProductStock } = useInvoice();
+    const { businessInfo } = useSettings();
     const { showToast } = useToast();
 
     const [activity, setActivity] = useState(null);
@@ -174,8 +189,6 @@ export default function ProductDetails() {
 
     const product = activity?.product;
     const summary = activity?.summary;
-    const lowStock = product ? isLowStock(product) : false;
-
     const soldInPeriod = useMemo(
         () =>
             getSoldPeriodSummary(
@@ -299,6 +312,7 @@ export default function ProductDetails() {
                 open={stockAdjustOpen}
                 onClose={() => setStockAdjustOpen(false)}
                 product={product}
+                allowOverselling={isOversellingAllowed(businessInfo)}
                 onSubmit={handleAdjustStock}
             />
 
@@ -316,7 +330,7 @@ export default function ProductDetails() {
                         <h1 className="text-2xl font-bold tracking-tight text-zinc-950 break-words">
                             {product.name}
                         </h1>
-                        {lowStock ? <LowStockBadge /> : null}
+                        <ProductStockStatusBadge product={product} />
                     </div>
                     {product.description ? (
                         <p className="text-sm leading-relaxed text-zinc-500 max-w-2xl">
@@ -413,7 +427,70 @@ export default function ProductDetails() {
             <p className="mb-6 text-xs text-zinc-500">
                 Sales history includes catalog-linked line items on invoices and receipts. Open
                 quotations show separately and are excluded once converted.
+                {product.trackInventory
+                    ? ' Stock history logs manual adjustments and inventory changes from issued documents.'
+                    : null}
             </p>
+
+            {product.trackInventory ? (
+                <section className="mb-8">
+                    <h2 className="text-sm font-semibold text-zinc-900 mb-3">Stock history</h2>
+                    {activity?.stockHistory?.length ? (
+                        <DataTable
+                            columns={STOCK_HISTORY_COLUMNS}
+                            fixedLayout
+                            minWidth={640}
+                            className="scroll-x-touch"
+                        >
+                            {activity.stockHistory.map((row) => {
+                                const href = getStockMovementLink(row);
+                                const description = formatStockMovementDescription(row);
+                                const delta = Number(row.delta) || 0;
+                                const deltaClass =
+                                    delta > 0
+                                        ? 'text-green-700 font-medium'
+                                        : delta < 0
+                                          ? 'text-red-600 font-medium'
+                                          : 'text-zinc-700';
+
+                                return (
+                                    <DataTableRow key={row.id}>
+                                        <DataTableCell>
+                                            {formatDisplayDate(row.date?.slice(0, 10))}
+                                        </DataTableCell>
+                                        <DataTableCell className={`text-right tabular-nums ${deltaClass}`}>
+                                            {formatStockDelta(delta)}
+                                        </DataTableCell>
+                                        <DataTableCell className="text-right tabular-nums text-zinc-900">
+                                            {row.balanceAfter ?? '—'}
+                                        </DataTableCell>
+                                        <DataTableCell>
+                                            {href ? (
+                                                <Link
+                                                    to={href}
+                                                    className="font-medium text-brand hover:underline"
+                                                >
+                                                    {description}
+                                                </Link>
+                                            ) : (
+                                                <span className="text-zinc-700">{description}</span>
+                                            )}
+                                        </DataTableCell>
+                                    </DataTableRow>
+                                );
+                            })}
+                        </DataTable>
+                    ) : (
+                        <div className="card">
+                            <EmptyState
+                                icon={History}
+                                title="No stock movements yet"
+                                description="Manual adjustments and sales from issued invoices or receipts will appear here."
+                            />
+                        </div>
+                    )}
+                </section>
+            ) : null}
 
             <section className="mb-8">
                 <h2 className="text-sm font-semibold text-zinc-900 mb-3">Clients who bought this</h2>

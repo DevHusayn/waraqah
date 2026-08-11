@@ -26,6 +26,7 @@ export default function DocumentLineItemsSection({
     fieldErrors,
     setFieldErrors,
     products,
+    businessInfo,
     onItemChange,
     onUnitChange,
     onCurrencyChange,
@@ -123,6 +124,7 @@ export default function DocumentLineItemsSection({
                         fieldErrors={fieldErrors}
                         errorPulse={errorPulse}
                         products={products}
+                        businessInfo={businessInfo}
                         onItemChange={onItemChange}
                         onUnitChange={onUnitChange}
                         onCurrencyChange={onCurrencyChange}
@@ -161,9 +163,7 @@ export default function DocumentLineItemsSection({
                                 );
                                 return {
                                     value: product.id,
-                                    label: stockLabel
-                                        ? `${product.name} — ${priceLabel} — ${stockLabel}`
-                                        : `${product.name} — ${priceLabel}`,
+                                    label: `${product.name} — ${priceLabel} — ${stockLabel}`,
                                 };
                             })}
                             placeholder="Select a saved product…"

@@ -49,11 +49,13 @@ test('buildBusinessInfoPayload sends only toggled notification field', () => {
 test('buildBusinessInfoPayload includes low stock and monthly statement toggles', () => {
     const payload = buildBusinessInfoPayload({
         lowStockEmailAlerts: true,
+        allowOverselling: true,
         autoEmailMonthlyStatements: false,
     });
 
     assert.deepEqual(payload, {
         lowStockEmailAlerts: true,
+        allowOverselling: true,
         autoEmailMonthlyStatements: false,
     });
 });

@@ -20,6 +20,8 @@ test('isLowStockProduct respects inventory tracking and threshold', () => {
     assert.equal(isLowStockProduct({ trackInventory: true, quantityOnHand: 5, lowStockThreshold: 5 }), true);
     assert.equal(isLowStockProduct({ trackInventory: true, quantityOnHand: 2, lowStockThreshold: 5 }), true);
     assert.equal(isLowStockProduct({ trackInventory: true, quantityOnHand: 6, lowStockThreshold: 5 }), false);
+    assert.equal(isLowStockProduct({ trackInventory: true, quantityOnHand: 0, lowStockThreshold: 5 }), false);
+    assert.equal(isLowStockProduct({ trackInventory: true, quantityOnHand: -1, lowStockThreshold: 5 }), false);
 });
 
 test('LOW_STOCK_EMAIL_COOLDOWN_HOURS is 24', () => {

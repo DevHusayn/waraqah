@@ -8,5 +8,7 @@ export function isLowStockProduct(product) {
     if (!product?.trackInventory) return false;
     const threshold = product.lowStockThreshold;
     if (threshold == null || threshold === '') return false;
-    return Number(product.quantityOnHand ?? 0) <= Number(threshold);
+    const qty = Number(product.quantityOnHand ?? 0);
+    if (qty <= 0) return false;
+    return qty <= Number(threshold);
 }

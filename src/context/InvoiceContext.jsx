@@ -8,7 +8,12 @@ import { buildListQuery, PICKER_PAGE_SIZE, unwrapListResponse } from '../utils/p
 import { ANALYTICS_EVENTS } from '@waraqah/shared';
 import { captureEvent } from '../monitoring/posthog';
 import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
-import { invalidateDashboardQueries, invalidateInvoiceListQueries } from '../lib/queryClient';
+import {
+    invalidateClientListQueries,
+    invalidateDashboardQueries,
+    invalidateInvoiceListQueries,
+    invalidateProductListQueries,
+} from '../lib/queryClient';
 
 const InvoiceContext = createContext();
 
@@ -61,7 +66,11 @@ export const InvoiceProvider = ({ children }) => {
 
     const mapInvoice = (i) => ({ ...i, id: i._id || i.id });
     const mapClient = (c) => ({ ...c, id: c._id || c.id });
-    const mapProduct = (p) => ({ ...p, id: p._id || p.id });
+    const mapProduct = (p) => ({
+        ...p,
+        id: p._id || p.id,
+        trackInventory: Boolean(p.trackInventory),
+    });
 
     const refreshMeta = useCallback(async () => {
         if (!userId) return;
@@ -331,6 +340,14 @@ export const InvoiceProvider = ({ children }) => {
     const sendReceiptEmailToClient = useCallback(async (id) =>
         apiFetch(`/invoices/${id}/send-receipt`, { method: 'POST' }), []);
 
+    const invalidateProductCaches = useCallback(() => {
+        invalidateProductListQueries(userId);
+    }, [userId]);
+
+    const invalidateClientCaches = useCallback(() => {
+        invalidateClientListQueries(userId);
+    }, [userId]);
+
     const addClient = useCallback(async (client) => {
         const newClient = await apiFetch('/clients', {
             method: 'POST',
@@ -338,8 +355,9 @@ export const InvoiceProvider = ({ children }) => {
         });
         const mapped = mapClient(newClient);
         setClients((prev) => [...prev, mapped]);
+        invalidateClientCaches();
         return mapped;
-    }, []);
+    }, [invalidateClientCaches]);
 
     const updateClient = useCallback(async (id, updatedClient) => {
         const updated = await apiFetch(`/clients/${id}`, {
@@ -348,13 +366,15 @@ export const InvoiceProvider = ({ children }) => {
         });
         const mapped = mapClient(updated);
         setClients((prev) => prev.map((client) => (String(client.id) === String(id) ? mapped : client)));
+        invalidateClientCaches();
         return mapped;
-    }, []);
+    }, [invalidateClientCaches]);
 
     const deleteClient = useCallback(async (id) => {
         await apiFetch(`/clients/${id}`, { method: 'DELETE' });
         setClients((prev) => prev.filter((client) => client.id !== id));
-    }, []);
+        invalidateClientCaches();
+    }, [invalidateClientCaches]);
 
     const addProduct = useCallback(async (product) => {
         const newProduct = await apiFetch('/products', {
@@ -364,8 +384,9 @@ export const InvoiceProvider = ({ children }) => {
         const mapped = mapProduct(newProduct);
         setProducts((prev) => [...prev, mapped]);
         productsFetchedRef.current = true;
+        invalidateProductCaches();
         return mapped;
-    }, []);
+    }, [invalidateProductCaches]);
 
     const updateProduct = useCallback(async (id, updatedProduct) => {
         const updated = await apiFetch(`/products/${id}`, {
@@ -374,13 +395,15 @@ export const InvoiceProvider = ({ children }) => {
         });
         const mapped = mapProduct(updated);
         setProducts((prev) => prev.map((product) => (product.id === id ? mapped : product)));
+        invalidateProductCaches();
         return mapped;
-    }, []);
+    }, [invalidateProductCaches]);
 
     const deleteProduct = useCallback(async (id) => {
         await apiFetch(`/products/${id}`, { method: 'DELETE' });
         setProducts((prev) => prev.filter((product) => product.id !== id));
-    }, []);
+        invalidateProductCaches();
+    }, [invalidateProductCaches]);
 
     const adjustProductStock = useCallback(async (id, delta) => {
         const updated = await apiFetch(`/products/${id}/adjust-stock`, {
@@ -389,8 +412,9 @@ export const InvoiceProvider = ({ children }) => {
         });
         const mapped = mapProduct(updated);
         setProducts((prev) => prev.map((product) => (product.id === id ? mapped : product)));
+        invalidateProductCaches();
         return mapped;
-    }, []);
+    }, [invalidateProductCaches]);
 
     const draftInvoices = useMemo(() => {
         const source =

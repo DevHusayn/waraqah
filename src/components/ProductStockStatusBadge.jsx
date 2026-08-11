@@ -1,5 +1,5 @@
 import LowStockBadge from './LowStockBadge';
-import { isLowStock } from '../utils/stockWarnings';
+import { isInventoryTracked, isLowStock } from '../utils/stockWarnings';
 
 function InStockBadge({ className = '' }) {
     return (
@@ -21,9 +21,19 @@ function OutOfStockBadge({ className = '' }) {
     );
 }
 
+function UntrackedBadge({ className = '' }) {
+    return (
+        <span
+            className={`inline-flex shrink-0 items-center rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600 ${className}`.trim()}
+        >
+            Untracked
+        </span>
+    );
+}
+
 export default function ProductStockStatusBadge({ product, className = '' }) {
-    if (!product?.trackInventory) {
-        return <span className="text-zinc-400">—</span>;
+    if (!isInventoryTracked(product)) {
+        return <UntrackedBadge className={className} />;
     }
 
     const qty = Number(product.quantityOnHand ?? 0);

@@ -23,7 +23,11 @@ import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 import { formatCurrency } from '../utils/currency';
 
-const mapProduct = (p) => ({ ...p, id: p._id || p.id });
+const mapProduct = (p) => ({
+    ...p,
+    id: p._id || p.id,
+    trackInventory: Boolean(p.trackInventory),
+});
 
 const TABLE_COLUMNS = [
     { key: 'product', label: 'Product' },
@@ -150,6 +154,7 @@ export default function Products() {
                     newInPeriod={newInPeriod}
                     newComparison={summary?.comparison?.newInPeriod}
                     comparisonLabel={isCurrentPeriod ? 'vs last month' : 'vs previous month'}
+                    periodPrefix="Added this"
                     totalIcon={Package}
                     newIcon={PackagePlus}
                     periodLabel={periodLabel}

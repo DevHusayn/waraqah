@@ -6,6 +6,7 @@ export const FREE_PLAN_FEATURES = [
     'Convert accepted quotations to invoices',
     'Client management',
     'Product catalog for quick line items',
+    'Inventory tracking with stock history and low-stock alerts',
     'Bank details on invoices',
     'Professional PDF invoices & quotations',
     'Email invoices, reminders, and receipts',
