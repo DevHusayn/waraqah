@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import {
     FileText,
     ClipboardList,
-    Clock,
     Crown,
     Check,
     ChevronDown,
@@ -62,27 +61,27 @@ function formatPrice(amount) {
 
 const WHY_ITEMS = [
     {
-        icon: ClipboardList,
-        title: 'Win work with clear quotations',
-        text: 'Send professional estimates with valid-until dates and terms, then convert accepted quotations into invoices in one click.',
-        stamp: 'Signed',
-    },
-    {
-        icon: Clock,
-        title: 'Stop rebuilding documents from scratch',
-        text: 'Save clients and products once, reuse their details, and send polished quotation, invoice, and receipt PDFs in seconds, not hours.',
-        stamp: 'Reused',
-    },
-    {
         icon: TrendingUp,
-        title: 'Proof of payment, even on deposits',
-        text: 'Issue receipts for full or partial payments, ideal when customers pay in instalments. Branded PDFs and client emails keep every transaction on record.',
-        stamp: 'Paid',
+        title: 'See profit, not just revenue',
+        text: 'Set a unit cost on each product to see catalog margin. Premium adds gross profit on your dashboard and a Profit page with monthly trends and product breakdown, based on what customers have actually paid.',
+        stamp: 'Profit',
+    },
+    {
+        icon: Package,
+        title: 'Inventory that stays in sync',
+        text: 'Track stock per product, deduct automatically when you issue invoices or receipts, review movement history, and get low-stock alerts. Purchase orders can update unit cost when stock arrives.',
+        stamp: 'In stock',
+    },
+    {
+        icon: ClipboardList,
+        title: 'From quote to payment',
+        text: 'Send quotations with valid-until dates, convert accepted quotes to invoices in one click, record partial payments on receipts, and email polished PDFs to clients.',
+        stamp: 'Signed',
     },
     {
         icon: Smartphone,
         title: 'Work from anywhere',
-        text: 'Create quotations, invoices, and receipts, track payments, and download PDFs on your phone or laptop. Your business records travel with you.',
+        text: 'Check your dashboard, manage clients and products, record payments, and download PDFs from your phone or laptop. Your business records travel with you.',
         stamp: 'Synced',
     },
 ];
@@ -101,12 +100,12 @@ const MANAGE_TODAY_ITEMS = [
     {
         icon: Package,
         title: 'Products',
-        text: 'Build a product catalog for quick line items. Track stocks, which update automatically when you issue documents, and manually adjust levels, with stock history and low-stock alerts.',
+        text: 'Build a catalog with unit cost and margin on every product. Track stock that updates when you issue documents, adjust levels manually, and review stock history and low-stock alerts. Purchase orders can update cost when stock arrives.',
     },
     {
         icon: FileBarChart,
         title: 'Reports & exports',
-        text: 'Dashboard analytics, overdue tracking, monthly billing statements (Premium), and CSV exports for invoices, quotations, receipts, and clients.',
+        text: 'Dashboard analytics with gross profit (Premium), a Profit page for trends and product-level margins, overdue tracking, monthly billing statements (Premium), and CSV exports for invoices, quotations, receipts, and clients.',
     },
 ];
 
@@ -134,12 +133,16 @@ const FAQ_ITEMS = [
         a: 'Yes. Turn on inventory tracking per product to record stock on hand, deduct automatically when invoices or receipts are issued, adjust levels manually, and review a full stock history. Low-stock email alerts are available in Settings → Notifications. Products can stay untracked if you only need a price list.',
     },
     {
+        q: 'Can Waraqah track profit and margins?',
+        a: 'Yes. Add a unit cost on each product to see catalog margin on the product page. When you issue invoices and receipts, Waraqah snapshots cost at sale time. Premium adds a gross profit KPI on your dashboard and a Profit page with monthly trends and product-level breakdown, based on paid amounts.',
+    },
+    {
         q: 'What happens on the Free plan?',
         a: `You can create up to ${FREE_MONTHLY_INVOICE_LIMIT} invoices, quotations, and receipts combined per calendar month, manage clients and products (including optional inventory tracking), add bank details to invoices, mark invoices paid, and download PDFs. Deleting a document does not reset your monthly allowance.`,
     },
     {
         q: 'What does Premium include?',
-        a: 'Unlimited invoices, quotations, and receipts, your logo on PDFs, a company stamp on paid receipts, an authorized signature, and monthly billing statements you can print or export.',
+        a: 'Unlimited invoices, quotations, and receipts, gross profit on your dashboard, Profit analytics with trends and product breakdown, your logo on PDFs, a company stamp on paid receipts, an authorized signature, and monthly billing statements you can print or export.',
     },
     {
         q: 'How does Premium billing work?',
@@ -307,9 +310,9 @@ export default function Landing() {
                                 <span className="landing-text-shimmer">One record.</span>
                             </h1>
                             <p className="mt-6 text-lg text-zinc-600 max-w-xl leading-relaxed">
-                                Run sales from quote to receipt. Manage clients and products, email documents,
-                                export PDFs and CSV reports, and track what&apos;s paid, all in one workspace,
-                                without spreadsheets.
+                                Run sales from quote to receipt. Manage clients and products, track unit costs
+                                and margins, email documents, export PDFs and CSV reports, and see what&apos;s
+                                paid and profitable, all in one workspace, without spreadsheets.
                             </p>
                             <div className="mt-8 flex flex-col sm:flex-row gap-3">
                                 <CtaButton className="py-3.5 px-8 text-base shadow-soft shadow-brand/20 hover:shadow-card hover:shadow-brand/25" />
@@ -342,7 +345,7 @@ export default function Landing() {
                             Why you need {APP_NAME}
                         </h2>
                         <p className="mt-4 text-zinc-600 text-lg">
-                            Quotes, bills, and receipts shouldn&apos;t slow down your business. Here is what changes when your records live in one place.
+                            Revenue is only half the picture. Here is what changes when sales, stock, and profit live in one place.
                         </p>
                     </SectionReveal>
                     <SectionReveal className="mt-14">
@@ -422,7 +425,7 @@ export default function Landing() {
                             Free to start. Premium when you scale.
                         </h2>
                         <p className="mt-4 text-zinc-600 text-lg">
-                            Try {APP_NAME} at no cost, then upgrade for unlimited documents, your logo on PDFs, and monthly billing statements.
+                            Try {APP_NAME} at no cost, then upgrade for unlimited documents, profit analytics, your logo on PDFs, and monthly billing statements.
                         </p>
                     </SectionReveal>
                     <div className="mt-14 grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -464,7 +467,7 @@ export default function Landing() {
                             { icon: ClipboardList, label: 'Quotations' },
                             { icon: FileText, label: 'Invoices & receipts' },
                             { icon: Users, label: 'Clients & products' },
-                            { icon: FileBarChart, label: 'Dashboard & CSV' },
+                            { icon: FileBarChart, label: 'Profit & reports' },
                         ].map(({ icon: Icon, label }) => (
                             <div key={label} className="flex flex-col items-center gap-3">
                                 <Icon className="h-8 w-8 text-green-400" />

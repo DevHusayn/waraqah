@@ -22,6 +22,7 @@ import { ListPageSkeleton, ListSummaryStatsSkeleton, ToolbarSkeleton } from '../
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 import { formatCurrency } from '../utils/currency';
+import { formatMarginPercent, computeCatalogMargin } from '../utils/margin';
 
 const mapProduct = (p) => ({
     ...p,
@@ -32,6 +33,7 @@ const mapProduct = (p) => ({
 const TABLE_COLUMNS = [
     { key: 'product', label: 'Product' },
     { key: 'price', label: 'Price', className: 'text-right' },
+    { key: 'margin', label: 'Margin', className: 'text-right' },
     { key: 'inStock', label: 'In stock', className: 'text-right' },
     { key: 'status', label: 'Status' },
 ];
@@ -119,7 +121,7 @@ export default function Products() {
 
     const hasNoProductsAtAll =
         !loading && !search && allTime && (summary ? summary.totalProducts === 0 : pagination.total === 0);
-    const showProductStats = !(loading && products.length === 0 && !search);
+    const showProductStats = !(loading && products.length === 0 && !search && !summary);
     const totalProducts = summary?.totalProducts;
     const newInPeriod = summary?.newInPeriod ?? summary?.newThisMonth;
 
@@ -246,6 +248,16 @@ export default function Products() {
                                         <DataTableCell className="text-right">
                                             <span className="font-medium tabular-nums text-zinc-900">
                                                 {formatCurrency(product.unitPrice || 0)}
+                                            </span>
+                                        </DataTableCell>
+                                        <DataTableCell className="text-right">
+                                            <span className="tabular-nums text-zinc-700">
+                                                {formatMarginPercent(
+                                                    computeCatalogMargin(
+                                                        product.unitPrice,
+                                                        product.unitCost
+                                                    ).marginPercent
+                                                )}
                                             </span>
                                         </DataTableCell>
                                         <DataTableCell className="text-right">

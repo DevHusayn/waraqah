@@ -137,7 +137,7 @@ const Invoices = () => {
 
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
     const premium = isPremiumUser(businessInfo);
-    const showStats = !(loading && invoices.length === 0 && !search);
+    const showStats = !(loading && invoices.length === 0 && !search && !summary);
 
     const clientLabel = (invoice) =>
         invoice.clientName || 'Unknown Client';

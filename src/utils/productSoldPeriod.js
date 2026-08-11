@@ -7,11 +7,13 @@ function isSoldTransaction(documentType) {
 export function sumSoldInPeriod(transactions, year, month, timeZone) {
     let quantity = 0;
     let revenue = 0;
+    let grossProfit = 0;
 
-    if (!Array.isArray(transactions)) return { quantity, revenue };
+    if (!Array.isArray(transactions)) return { quantity, revenue, grossProfit };
 
     for (const row of transactions) {
-        if (!isSoldTransaction(row.documentType) || !row.date) continue;
+        if (!row.countsAsSale) continue;
+        if (!row.date) continue;
 
         const issueDate = new Date(row.date);
         if (Number.isNaN(issueDate.getTime())) continue;
@@ -19,11 +21,12 @@ export function sumSoldInPeriod(transactions, year, month, timeZone) {
         const { year: rowYear, month: rowMonth } = getYearMonthInTimezone(timeZone, issueDate);
         if (rowYear !== year || rowMonth !== month) continue;
 
-        quantity += Number(row.quantity) || 0;
-        revenue += Number(row.lineTotal) || 0;
+        quantity += Number(row.saleQuantity) || 0;
+        revenue += Number(row.saleLineTotal) || 0;
+        grossProfit += Number(row.saleLineProfit) || 0;
     }
 
-    return { quantity, revenue };
+    return { quantity, revenue, grossProfit };
 }
 
 const MAX_COMPARISON_PERCENT = 999;

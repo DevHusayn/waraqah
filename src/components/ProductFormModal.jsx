@@ -13,6 +13,7 @@ import {
 } from '../utils/formFieldValidation';
 import { parseAmountInput } from '../utils/numberInput';
 import AmountInput from './AmountInput';
+import { computeCatalogMargin, formatMarginPercent } from '../utils/margin';
 
 const PRODUCT_FIELD_ORDER = ['name'];
 
@@ -20,6 +21,7 @@ export const EMPTY_PRODUCT = {
     name: '',
     description: '',
     unitPrice: '',
+    unitCost: '',
     trackInventory: false,
     quantityOnHand: '',
     lowStockThreshold: '',
@@ -64,6 +66,16 @@ export default function ProductFormModal({
         clearFieldError(setFieldErrors, 'unitPrice');
     };
 
+    const handleUnitCostChange = (value) => {
+        setFormData((prev) => ({ ...prev, unitCost: value }));
+        clearFieldError(setFieldErrors, 'unitCost');
+    };
+
+    const marginPreview = computeCatalogMargin(
+        parseAmountInput(formData.unitPrice),
+        parseAmountInput(formData.unitCost)
+    );
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         const errors = buildProductFieldErrors(formData);
@@ -80,6 +92,7 @@ export default function ProductFormModal({
                 {
                     ...formData,
                     unitPrice: parseAmountInput(formData.unitPrice),
+                    unitCost: parseAmountInput(formData.unitCost),
                     trackInventory: Boolean(formData.trackInventory),
                     quantityOnHand: formData.trackInventory
                         ? Number(formData.quantityOnHand) || 0
@@ -156,18 +169,39 @@ export default function ProductFormModal({
                         placeholder="Short description for your reference"
                     />
                 </div>
-                <div>
-                    <label htmlFor="product-unitPrice" className="label">
-                        Unit price (NGN)
-                    </label>
-                    <AmountInput
-                        id="product-unitPrice"
-                        name="unitPrice"
-                        value={formData.unitPrice}
-                        onChange={handleUnitPriceChange}
-                        placeholder="0.00"
-                    />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label htmlFor="product-unitPrice" className="label">
+                            Unit price (NGN)
+                        </label>
+                        <AmountInput
+                            id="product-unitPrice"
+                            name="unitPrice"
+                            value={formData.unitPrice}
+                            onChange={handleUnitPriceChange}
+                            placeholder="0.00"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="product-unitCost" className="label">
+                            Unit cost (NGN) <span className="text-zinc-400 font-normal">(optional)</span>
+                        </label>
+                        <AmountInput
+                            id="product-unitCost"
+                            name="unitCost"
+                            value={formData.unitCost}
+                            onChange={handleUnitCostChange}
+                            placeholder="0.00"
+                        />
+                    </div>
                 </div>
+                {marginPreview.marginPercent != null ? (
+                    <p className="text-xs text-zinc-500 -mt-1">
+                        Margin {formatMarginPercent(marginPreview.marginPercent)}
+                        {' · '}
+                        Markup {formatMarginPercent(marginPreview.markupPercent)}
+                    </p>
+                ) : null}
 
                 <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4 space-y-4">
                     <label className="flex items-start gap-3 cursor-pointer">

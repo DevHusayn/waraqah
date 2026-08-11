@@ -135,6 +135,7 @@ const Dashboard = () => {
                 periodSummary={data?.periodSummary}
                 loading={dashboardLoading}
                 fetching={isFetching && !isPending}
+                premium={premium}
                 summaryYear={summaryYear}
                 summaryMonth={summaryMonth}
                 monthInputValue={monthInputValue}

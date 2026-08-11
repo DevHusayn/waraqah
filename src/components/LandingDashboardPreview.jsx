@@ -7,11 +7,11 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
-import { CheckCircle, Clock, FileText } from 'lucide-react';
+import { CheckCircle, Clock, FileText, TrendingUp } from 'lucide-react';
 import { formatCurrency } from '../utils/currency';
 import { PAYMENT_BREAKDOWN_ROWS } from './dashboard/chartColors';
 
-/** Demo trend — Jul paid matches Total Revenue; MoM deltas match stat card comparisons. */
+/** Demo trend: Jul paid matches Total Revenue; MoM deltas match stat card comparisons. */
 const BASE_TREND = [
     { label: 'Feb 2026', paid: 620_000, outstanding: 720_000 },
     { label: 'Mar 2026', paid: 710_000, outstanding: 780_000 },
@@ -33,6 +33,7 @@ const SAMPLE_COMPARISONS = {
     totalRevenue: { kind: 'percent', direction: 'up', value: 18 },
     outstanding: { kind: 'percent', direction: 'down', value: 12 },
     paymentsReceived: { kind: 'percent', direction: 'up', value: 27 },
+    grossProfit: { kind: 'percent', direction: 'up', value: 22 },
 };
 
 /** Y-axis headroom so the peak month is not clipped. */
@@ -44,6 +45,7 @@ const SAMPLE_STATS = {
     paymentsReceived: 14,
     paidInvoices: 9,
     paidReceipts: 5,
+    grossProfit: 412_000,
     monthLabel: 'Jul 2026',
 };
 
@@ -170,7 +172,7 @@ export default function LandingDashboardPreview() {
             </div>
 
             <div className="px-3 pb-3 space-y-2.5 bg-white">
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                     <MiniStat
                         title="Total Revenue"
                         value={formatCurrency(SAMPLE_STATS.totalRevenue)}
@@ -196,6 +198,14 @@ export default function LandingDashboardPreview() {
                         iconColor="text-green-600"
                         comparison={SAMPLE_COMPARISONS.paymentsReceived}
                         detail={`${SAMPLE_STATS.paidInvoices} invoices · ${SAMPLE_STATS.paidReceipts} receipts`}
+                    />
+                    <MiniStat
+                        title="Gross profit"
+                        value={formatCurrency(SAMPLE_STATS.grossProfit)}
+                        icon={TrendingUp}
+                        iconBg="bg-emerald-50"
+                        iconColor="text-emerald-600"
+                        comparison={SAMPLE_COMPARISONS.grossProfit}
                     />
                 </div>
 
@@ -257,7 +267,7 @@ export default function LandingDashboardPreview() {
                         <div className="mb-2">
                             <p className="text-[10px] font-semibold text-zinc-950">Payment breakdown</p>
                             <p className="text-[7px] text-zinc-500 mt-0.5 leading-snug">
-                                Issued in {SAMPLE_STATS.monthLabel} — {SAMPLE_BREAKDOWN.total} total · fully paid shown above
+                                Issued in {SAMPLE_STATS.monthLabel}, {SAMPLE_BREAKDOWN.total} total · fully paid shown above
                             </p>
                         </div>
                         <div className="flex flex-col justify-center gap-2.5 py-0.5">

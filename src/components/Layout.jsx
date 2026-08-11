@@ -13,6 +13,7 @@ import {
     Package,
     Truck,
     ShoppingCart,
+    TrendingUp,
 } from 'lucide-react';
 import { useState, useEffect, memo } from 'react';
 import { useSettings } from '../context/SettingsContext';
@@ -43,6 +44,7 @@ const NAV_ITEMS = [
     { name: 'Quotations', href: '/quotations', icon: ClipboardList },
     { name: 'Drafts', href: '/drafts', icon: PenLine, badgeKey: 'drafts' },
     { name: 'Statements', href: '/statements', icon: FileBarChart, premiumFeature: true },
+    { name: 'Profit', href: '/profit', icon: TrendingUp, premiumFeature: true },
     { name: 'Clients', href: '/clients', icon: Users },
     { name: 'Suppliers', href: '/suppliers', icon: Truck },
     { name: 'Products', href: '/products', icon: Package },

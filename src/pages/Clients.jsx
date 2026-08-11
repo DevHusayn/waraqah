@@ -167,7 +167,7 @@ const Clients = () => {
 
     const hasNoClientsAtAll =
         !loading && !search && (summary ? summary.totalClients === 0 : pagination.total === 0);
-    const showClientStats = !(loading && clients.length === 0 && !search);
+    const showClientStats = !(loading && clients.length === 0 && !search && !summary);
     const totalClients = summary?.totalClients;
     const newInPeriod = summary?.newInPeriod ?? summary?.newThisMonth;
 

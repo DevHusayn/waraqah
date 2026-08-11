@@ -29,8 +29,9 @@ export function useDashboardQuery(summaryYear, summaryMonth) {
         enabled: isAuthenticated && Boolean(userId) && Boolean(summaryYear) && Boolean(summaryMonth),
         staleTime: STALE_TIMES.dashboard,
         placeholderData: (previousData, previousQuery) => {
-            const [, prevUserId] = previousQuery?.queryKey ?? [];
+            const [, prevUserId, prevYear, prevMonth] = previousQuery?.queryKey ?? [];
             if (prevUserId !== userId) return undefined;
+            if (prevYear !== summaryYear || prevMonth !== summaryMonth) return undefined;
             return keepPreviousData(previousData);
         },
     });

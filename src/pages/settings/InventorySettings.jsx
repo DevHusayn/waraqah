@@ -44,12 +44,13 @@ function InventoryToggle({
 export default function InventorySettings() {
     const { businessInfo, updateBusinessInfo } = useSettings();
     const { showToast } = useToast();
-    const [saving, setSaving] = useState(false);
+    const [savingKey, setSavingKey] = useState(null);
 
     const oversellingEnabled = isOversellingAllowed(businessInfo);
+    const autoUpdateCostEnabled = Boolean(businessInfo?.autoUpdateCostFromPO);
 
-    const handleToggle = async () => {
-        setSaving(true);
+    const handleOversellingToggle = async () => {
+        setSavingKey('overselling');
         try {
             await updateBusinessInfo({ allowOverselling: !oversellingEnabled });
             showToast(
@@ -61,7 +62,24 @@ export default function InventorySettings() {
         } catch (err) {
             showToast(err.message || 'Could not save inventory settings.', 'error');
         } finally {
-            setSaving(false);
+            setSavingKey(null);
+        }
+    };
+
+    const handleAutoCostToggle = async () => {
+        setSavingKey('autoCost');
+        try {
+            await updateBusinessInfo({ autoUpdateCostFromPO: !autoUpdateCostEnabled });
+            showToast(
+                !autoUpdateCostEnabled
+                    ? 'Product costs will update when purchase order stock is received.'
+                    : 'Automatic cost updates from purchase orders are off.',
+                'success',
+            );
+        } catch (err) {
+            showToast(err.message || 'Could not save inventory settings.', 'error');
+        } finally {
+            setSavingKey(null);
         }
     };
 
@@ -90,8 +108,23 @@ export default function InventorySettings() {
                             : 'Overselling is blocked. Available stock is enforced on issue.'
                     }
                     enabled={oversellingEnabled}
-                    saving={saving}
-                    onToggle={handleToggle}
+                    saving={savingKey === 'overselling'}
+                    onToggle={handleOversellingToggle}
+                />
+                <InventoryToggle
+                    title="Update cost from purchase orders"
+                    description={
+                        'When enabled, receiving stock on a purchase order updates each linked product\'s unit cost '
+                        + 'using a weighted average of existing stock and the PO line rate.'
+                    }
+                    statusText={
+                        autoUpdateCostEnabled
+                            ? 'Unit costs auto-update when PO stock is received.'
+                            : 'Unit costs stay manual unless you edit them on each product.'
+                    }
+                    enabled={autoUpdateCostEnabled}
+                    saving={savingKey === 'autoCost'}
+                    onToggle={handleAutoCostToggle}
                 />
             </div>
         </SettingsPageShell>

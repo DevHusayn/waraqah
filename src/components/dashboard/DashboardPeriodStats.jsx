@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, FileText } from 'lucide-react';
+import { CheckCircle, Clock, FileText, TrendingUp } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 import MonthComparisonTrend from '../MonthComparisonTrend';
 
@@ -40,14 +40,16 @@ function PeriodStatCard({
     );
 }
 
-export default function DashboardPeriodStats({ summary, loading = false }) {
+export default function DashboardPeriodStats({ summary, loading = false, premium = false }) {
     if (loading) {
         return (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-                {Array.from({ length: 3 }).map((_, index) => (
+            <div className={`grid grid-cols-2 ${premium ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-3 mb-6`}>
+                {Array.from({ length: premium ? 4 : 3 }).map((_, index) => (
                     <div
                         key={index}
-                        className={`stat-card animate-pulse min-w-0${index === 2 ? ' col-span-2 sm:col-span-1' : ''}`}
+                        className={`stat-card animate-pulse min-w-0${
+                            !premium && index === 2 ? ' col-span-2 sm:col-span-1' : ''
+                        }`}
                     >
                         <div className="flex items-start justify-between gap-3">
                             <div className="h-3 w-24 rounded bg-zinc-200/80" />
@@ -65,7 +67,7 @@ export default function DashboardPeriodStats({ summary, loading = false }) {
     const comparison = summary?.comparison;
 
     return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+        <div className={`grid grid-cols-2 ${premium ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-3 mb-6`}>
             <PeriodStatCard
                 title="Total Revenue"
                 value={formatCurrency(current?.totalRevenue ?? 0)}
@@ -94,8 +96,18 @@ export default function DashboardPeriodStats({ summary, loading = false }) {
                     current?.paidInvoices ?? 0,
                     current?.receiptsIssued ?? 0
                 )}
-                className="col-span-2 sm:col-span-1"
+                className={premium ? '' : 'col-span-2 sm:col-span-1'}
             />
+            {premium ? (
+                <PeriodStatCard
+                    title="Gross profit"
+                    value={formatCurrency(current?.grossProfit ?? 0)}
+                    icon={TrendingUp}
+                    iconBg="bg-violet-50"
+                    iconColor="text-violet-600"
+                    comparison={comparison?.grossProfit}
+                />
+            ) : null}
         </div>
     );
 }

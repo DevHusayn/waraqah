@@ -4,14 +4,16 @@ import { format, parseISO } from 'date-fns';
 import {
     ArrowLeft,
     Edit,
+    History,
     Package,
     PackagePlus,
     Trash2,
     Users,
     TrendingUp,
+    TrendingDown,
     ShoppingBag,
-    ClipboardList,
-    History,
+    Clock,
+    FileText,
 } from 'lucide-react';
 import { PageSpinner } from '../components/Spinner';
 import AlertModal from '../components/AlertModal';
@@ -31,8 +33,12 @@ import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
 import { formatCurrency } from '../utils/currency';
+import { computeCatalogMargin, formatMarginPercent } from '../utils/margin';
 import { getPaymentMethodLabel } from '../utils/receiptHelpers';
+import { isPremiumUser } from '../utils/premium';
 import { getSoldPeriodSummary } from '../utils/productSoldPeriod';
+import PaginationBar from '../components/PaginationBar';
+import { useClientPagedList } from '../hooks/useClientPagedList';
 import {
     formatStockDelta,
     formatStockMovementDescription,
@@ -85,58 +91,55 @@ function documentHref(type, id) {
     return `/invoices/${id}`;
 }
 
-function StatCard({ title, value, icon: Icon, iconBg, iconColor, detail, className = '' }) {
-    return (
-        <div className={`stat-card stat-card-compact ${className}`.trim()}>
-            <div className="flex items-center gap-2">
-                <div className={`stat-card-icon shrink-0 ${iconBg}`}>
-                    <Icon className={`h-3.5 w-3.5 ${iconColor}`} aria-hidden />
-                </div>
-                <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
-            </div>
-            <p className="stat-card-value">{value}</p>
-            {detail ? <p className="text-[11px] text-zinc-500 leading-snug">{detail}</p> : null}
-        </div>
-    );
+function formatActivityLineAmount(row) {
+    if (row.countsAsSale && (row.saleLineTotal ?? 0) > 0) {
+        return {
+            amount: row.saleLineTotal,
+            detail:
+                (row.pendingLineTotal ?? 0) > 0
+                    ? `${formatCurrency(row.pendingLineTotal)} unpaid on invoice`
+                    : null,
+        };
+    }
+
+    if ((row.pendingLineTotal ?? 0) > 0) {
+        return {
+            amount: row.pendingLineTotal,
+            detail: 'Awaiting payment',
+        };
+    }
+
+    return {
+        amount: row.adjustedLineTotal ?? row.lineTotal ?? 0,
+        detail: null,
+    };
 }
 
-function SoldInPeriodStatCard({
-    quantity,
-    revenue,
-    comparison,
-    comparisonLabel,
-    monthInputValue,
-    onPeriodChange,
-    periodLabel,
-    isCurrentPeriod,
+function PeriodStatCard({
+    title,
+    value,
     icon: Icon,
     iconBg,
     iconColor,
+    comparison,
+    comparisonLabel,
+    valueClassName = '',
     className = '',
 }) {
     return (
-        <div className={`stat-card stat-card-compact overflow-visible ${className}`.trim()}>
-            <div className="flex items-center gap-2">
+        <div className={`stat-card stat-card-compact min-w-0 ${className}`.trim()}>
+            <div className="flex items-start justify-between gap-2">
+                <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
                 <div className={`stat-card-icon shrink-0 ${iconBg}`}>
                     <Icon className={`h-3.5 w-3.5 ${iconColor}`} aria-hidden />
                 </div>
-                <p className="text-xs text-zinc-500 font-medium leading-snug">
-                    <span>{isCurrentPeriod ? 'Sold this ' : 'Sold in '}</span>
-                    <MonthPickerField
-                        variant="inline"
-                        portal
-                        value={monthInputValue}
-                        onChange={onPeriodChange}
-                        displayLabel={periodLabel}
-                        triggerAriaLabel={`Sold in ${periodLabel}. Change month.`}
-                    />
-                </p>
             </div>
-            <p className="stat-card-value">{quantity}</p>
-            <div className="flex flex-col gap-0.5 min-h-[1rem]">
-                <MonthComparisonTrend comparison={comparison} label={comparisonLabel} />
-                <p className="text-[11px] text-zinc-500">{formatCurrency(revenue || 0)}</p>
-            </div>
+            <p className={`stat-card-value ${valueClassName}`.trim()}>{value}</p>
+            {comparison ? (
+                <div className="min-h-[1rem]">
+                    <MonthComparisonTrend comparison={comparison} label={comparisonLabel} />
+                </div>
+            ) : null}
         </div>
     );
 }
@@ -147,6 +150,7 @@ export default function ProductDetails() {
     const { updateProduct, deleteProduct, adjustProductStock } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
+    const premium = isPremiumUser(businessInfo);
 
     const [activity, setActivity] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -200,12 +204,27 @@ export default function ProductDetails() {
         [activity?.transactions, summaryYear, summaryMonth, timezone]
     );
 
+    const catalogMargin = useMemo(
+        () => computeCatalogMargin(product?.unitPrice, product?.unitCost),
+        [product?.unitPrice, product?.unitCost]
+    );
+
+    const grossProfit = soldInPeriod.grossProfit || 0;
+    const profitPositive = grossProfit >= 0;
+    const pendingQuantity = summary?.pendingQuantity ?? 0;
+    const comparisonLabel = isCurrentPeriod ? 'vs last month' : 'vs previous month';
+
+    const stockHistoryPage = useClientPagedList(activity?.stockHistory, { resetKey: id });
+    const clientsPage = useClientPagedList(activity?.byClient, { resetKey: id });
+    const transactionsPage = useClientPagedList(activity?.transactions, { resetKey: id });
+
     const modalInitialData = useMemo(() => {
         if (!product) return EMPTY_PRODUCT;
         return {
             name: product.name || '',
             description: product.description || '',
             unitPrice: product.unitPrice ?? '',
+            unitCost: product.unitCost ?? '',
             trackInventory: Boolean(product.trackInventory),
             quantityOnHand: product.trackInventory ? (product.quantityOnHand ?? 0) : '',
             lowStockThreshold:
@@ -345,6 +364,20 @@ export default function ProductDetails() {
                             </span>
                         </span>
                         <span>
+                            <span className="text-zinc-400">Cost · </span>
+                            <span className="font-semibold tabular-nums text-zinc-900">
+                                {product.unitCost > 0
+                                    ? formatCurrency(product.unitCost)
+                                    : 'Not set'}
+                            </span>
+                        </span>
+                        <span>
+                            <span className="text-zinc-400">Margin · </span>
+                            <span className="font-semibold tabular-nums text-zinc-900">
+                                {formatMarginPercent(catalogMargin.marginPercent)}
+                            </span>
+                        </span>
+                        <span>
                             <span className="text-zinc-400">In stock · </span>
                             <span className="font-semibold tabular-nums text-zinc-900">
                                 {product.trackInventory ? (product.quantityOnHand ?? 0) : 'Not tracked'}
@@ -379,70 +412,94 @@ export default function ProductDetails() {
                 </div>
             </div>
 
-            <div className="mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
-                <div className="flex gap-3 overflow-x-auto scroll-x-touch pb-0.5 lg:grid lg:max-w-4xl lg:grid-cols-4 lg:gap-3 lg:overflow-visible">
-                    <StatCard
-                        className="shrink-0 snap-start w-max min-w-[8.75rem] lg:w-auto lg:min-w-0"
-                        title="Total sold"
-                        value={summary?.totalQuantitySold ?? 0}
+            <section className="mb-6 max-w-3xl">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <h2 className="text-sm font-semibold text-zinc-900">
+                            {isCurrentPeriod ? 'This month' : periodLabel}
+                        </h2>
+                        <p className="mt-0.5 text-xs text-zinc-500">Paid and partial sales only</p>
+                    </div>
+                    <MonthPickerField
+                        variant="compact"
+                        portal
+                        value={monthInputValue}
+                        onChange={setMonthInputValue}
+                        triggerAriaLabel={`Change period from ${periodLabel}`}
+                    />
+                </div>
+                <div
+                    className={`grid grid-cols-2 gap-3 ${premium ? 'sm:grid-cols-3' : 'max-w-lg'}`}
+                >
+                    <PeriodStatCard
+                        title="Sold"
+                        value={soldInPeriod.quantity}
                         icon={ShoppingBag}
                         iconBg="bg-brand-light"
                         iconColor="text-brand"
-                        detail={formatCurrency(summary?.totalRevenue || 0)}
+                        comparison={soldInPeriod.comparison}
+                        comparisonLabel={comparisonLabel}
                     />
-                    <StatCard
-                        className="shrink-0 snap-start w-max min-w-[8.75rem] lg:w-auto lg:min-w-0"
-                        title="Unique clients"
-                        value={summary?.uniqueClients ?? 0}
-                        icon={Users}
+                    <PeriodStatCard
+                        title="Revenue"
+                        value={formatCurrency(soldInPeriod.revenue || 0)}
+                        icon={FileText}
                         iconBg="bg-sky-50"
                         iconColor="text-sky-600"
                     />
-                    <SoldInPeriodStatCard
-                        className="shrink-0 snap-start w-max min-w-[11rem] lg:w-auto lg:min-w-0"
-                        quantity={soldInPeriod.quantity}
-                        revenue={soldInPeriod.revenue}
-                        comparison={soldInPeriod.comparison}
-                        comparisonLabel={isCurrentPeriod ? 'vs last month' : 'vs previous month'}
-                        monthInputValue={monthInputValue}
-                        onPeriodChange={setMonthInputValue}
-                        periodLabel={periodLabel}
-                        isCurrentPeriod={isCurrentPeriod}
-                        icon={TrendingUp}
-                        iconBg="bg-violet-50"
-                        iconColor="text-violet-600"
-                    />
-                    <StatCard
-                        className="shrink-0 snap-start w-max min-w-[8.75rem] lg:w-auto lg:min-w-0"
-                        title="Quoted (open)"
-                        value={summary?.quotedQuantity ?? 0}
-                        icon={ClipboardList}
-                        iconBg="bg-amber-50"
-                        iconColor="text-amber-700"
-                        detail="Unconverted quotations"
-                    />
+                    {premium ? (
+                        <PeriodStatCard
+                            title="Gross profit"
+                            value={formatCurrency(grossProfit)}
+                            icon={profitPositive ? TrendingUp : TrendingDown}
+                            iconBg={profitPositive ? 'bg-emerald-50' : 'bg-red-50'}
+                            iconColor={profitPositive ? 'text-emerald-600' : 'text-red-600'}
+                            valueClassName={profitPositive ? '' : 'text-red-600'}
+                            className="col-span-2 sm:col-span-1"
+                        />
+                    ) : null}
                 </div>
-            </div>
+            </section>
 
-            <p className="mb-6 text-xs text-zinc-500">
-                Sales history includes catalog-linked line items on invoices and receipts. Open
-                quotations show separately and are excluded once converted.
-                {product.trackInventory
-                    ? ' Stock history logs manual adjustments and inventory changes from issued documents.'
-                    : null}
+            {pendingQuantity > 0 ? (
+                <div className="mb-6 flex max-w-3xl items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3">
+                    <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden />
+                    <div className="text-sm">
+                        <p className="font-medium text-amber-950">Awaiting payment</p>
+                        <p className="text-amber-900/90">
+                            {pendingQuantity} unit{pendingQuantity === 1 ? '' : 's'} ·{' '}
+                            {formatCurrency(summary?.pendingRevenue || 0)} on unpaid and partial
+                            invoices
+                        </p>
+                    </div>
+                </div>
+            ) : null}
+
+            <p className="mb-8 max-w-3xl text-sm text-zinc-600">
+                <span className="text-zinc-400">All time · </span>
+                <span className="tabular-nums">{summary?.totalQuantitySold ?? 0}</span> sold
+                <span className="mx-2 text-zinc-300">·</span>
+                <span className="font-medium tabular-nums text-zinc-800">
+                    {formatCurrency(summary?.totalRevenue || 0)}
+                </span>{' '}
+                revenue
+                <span className="mx-2 text-zinc-300">·</span>
+                <span className="tabular-nums">{summary?.uniqueClients ?? 0}</span> client
+                {(summary?.uniqueClients ?? 0) === 1 ? '' : 's'}
             </p>
 
             {product.trackInventory ? (
                 <section className="mb-8">
                     <h2 className="text-sm font-semibold text-zinc-900 mb-3">Stock history</h2>
                     {activity?.stockHistory?.length ? (
+                        <>
                         <DataTable
                             columns={STOCK_HISTORY_COLUMNS}
                             fixedLayout
                             minWidth={640}
                             className="scroll-x-touch"
                         >
-                            {activity.stockHistory.map((row) => {
+                            {stockHistoryPage.data.map((row) => {
                                 const href = getStockMovementLink(row);
                                 const description = formatStockMovementDescription(row);
                                 const delta = Number(row.delta) || 0;
@@ -480,6 +537,11 @@ export default function ProductDetails() {
                                 );
                             })}
                         </DataTable>
+                        <PaginationBar
+                            pagination={stockHistoryPage.pagination}
+                            onPageChange={stockHistoryPage.setPage}
+                        />
+                        </>
                     ) : (
                         <div className="card">
                             <EmptyState
@@ -495,13 +557,14 @@ export default function ProductDetails() {
             <section className="mb-8">
                 <h2 className="text-sm font-semibold text-zinc-900 mb-3">Clients who bought this</h2>
                 {activity?.byClient?.length ? (
+                    <>
                     <DataTable
                         columns={CLIENT_COLUMNS}
                         fixedLayout
                         minWidth={640}
                         className="scroll-x-touch"
                     >
-                        {activity.byClient.map((row) => (
+                        {clientsPage.data.map((row) => (
                             <DataTableRow key={row.clientId}>
                                 <DataTableCell>
                                     <span className="font-medium text-zinc-950">{row.clientName}</span>
@@ -521,6 +584,11 @@ export default function ProductDetails() {
                             </DataTableRow>
                         ))}
                     </DataTable>
+                    <PaginationBar
+                        pagination={clientsPage.pagination}
+                        onPageChange={clientsPage.setPage}
+                    />
+                    </>
                 ) : (
                     <div className="card">
                         <EmptyState
@@ -535,13 +603,16 @@ export default function ProductDetails() {
             <section>
                 <h2 className="text-sm font-semibold text-zinc-900 mb-3">Activity</h2>
                 {activity?.transactions?.length ? (
+                    <>
                     <DataTable
                         columns={ACTIVITY_COLUMNS}
                         fixedLayout
                         minWidth={840}
                         className="scroll-x-touch"
                     >
-                        {activity.transactions.map((row) => (
+                        {transactionsPage.data.map((row) => {
+                            const lineAmount = formatActivityLineAmount(row);
+                            return (
                             <DataTableRow key={`${row.documentType}-${row.id}`}>
                                 <DataTableCell>{formatDisplayDate(row.date)}</DataTableCell>
                                 <DataTableCell>
@@ -557,7 +628,12 @@ export default function ProductDetails() {
                                     {row.quantity}
                                 </DataTableCell>
                                 <DataTableCell className="text-right tabular-nums font-medium">
-                                    {formatCurrency(row.lineTotal || 0)}
+                                    <span>{formatCurrency(lineAmount.amount || 0)}</span>
+                                    {lineAmount.detail ? (
+                                        <p className="text-[11px] font-normal text-zinc-500 mt-0.5">
+                                            {lineAmount.detail}
+                                        </p>
+                                    ) : null}
                                 </DataTableCell>
                                 <DataTableCell>
                                     <StatusBadge status={row.status} />
@@ -568,8 +644,14 @@ export default function ProductDetails() {
                                         : '—'}
                                 </DataTableCell>
                             </DataTableRow>
-                        ))}
+                            );
+                        })}
                     </DataTable>
+                    <PaginationBar
+                        pagination={transactionsPage.pagination}
+                        onPageChange={transactionsPage.setPage}
+                    />
+                    </>
                 ) : (
                     <div className="card">
                         <EmptyState

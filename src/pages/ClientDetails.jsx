@@ -23,7 +23,8 @@ import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
 import { formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
-import { REPLAY_MASK } from '@waraqah/shared';
+import PaginationBar from '../components/PaginationBar';
+import { useClientPagedList } from '../hooks/useClientPagedList';
 
 const DOCUMENT_COLUMNS = [
     { key: 'type', label: 'Type' },
@@ -112,6 +113,9 @@ export default function ClientDetails() {
 
     const client = activity?.client;
     const summary = activity?.summary;
+
+    const documentsPage = useClientPagedList(activity?.documents, { resetKey: id });
+    const productsPage = useClientPagedList(activity?.byProduct, { resetKey: id });
 
     const modalInitialData = useMemo(() => {
         if (!client) return EMPTY_CLIENT;
@@ -313,8 +317,9 @@ export default function ClientDetails() {
             <section className="card mb-6">
                 <h2 className="text-sm font-semibold text-zinc-950 mb-4">Documents</h2>
                 {activity.documents?.length ? (
+                    <>
                     <DataTable columns={DOCUMENT_COLUMNS}>
-                        {activity.documents.map((doc) => (
+                        {documentsPage.data.map((doc) => (
                             <DataTableRow
                                 key={`${doc.documentType}-${doc.id}`}
                                 onClick={() => navigate(documentHref(doc.documentType, doc.id))}
@@ -341,6 +346,11 @@ export default function ClientDetails() {
                             </DataTableRow>
                         ))}
                     </DataTable>
+                    <PaginationBar
+                        pagination={documentsPage.pagination}
+                        onPageChange={documentsPage.setPage}
+                    />
+                    </>
                 ) : (
                     <EmptyState
                         icon={FileText}
@@ -365,8 +375,9 @@ export default function ClientDetails() {
             <section className="card">
                 <h2 className="text-sm font-semibold text-zinc-950 mb-4">Products sold</h2>
                 {activity.byProduct?.length ? (
+                    <>
                     <DataTable columns={PRODUCT_COLUMNS}>
-                        {activity.byProduct.map((row) => (
+                        {productsPage.data.map((row) => (
                             <DataTableRow key={row.key}>
                                 <DataTableCell>
                                     {row.productId ? (
@@ -391,6 +402,11 @@ export default function ClientDetails() {
                             </DataTableRow>
                         ))}
                     </DataTable>
+                    <PaginationBar
+                        pagination={productsPage.pagination}
+                        onPageChange={productsPage.setPage}
+                    />
+                    </>
                 ) : (
                     <p className="text-sm text-zinc-500 py-4 text-center">
                         Products will appear here once you invoice or receipt this client with line items.

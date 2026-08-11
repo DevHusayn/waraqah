@@ -7,6 +7,12 @@ import { useAuth } from '../context/AuthContext';
 
 const SUMMARY_RESOURCES = new Set(['invoices', 'quotations', 'receipts', 'products', 'clients']);
 
+const LIST_PLACEHOLDER_KEYS = ['year', 'month', 'status', 'sort', 'search'];
+
+function listParamsChanged(prev = {}, curr = {}) {
+    return LIST_PLACEHOLDER_KEYS.some((key) => prev[key] !== curr[key]);
+}
+
 /**
  * Paginated list backed by TanStack Query — caches pages and avoids refetch on back-navigation.
  */
@@ -44,6 +50,18 @@ export function usePagedQuery({
         return () => clearTimeout(timer);
     }, [search, debounceMs]);
 
+    useEffect(() => {
+        lastListRef.current = [];
+        lastStatusCountsRef.current = null;
+        lastSummaryRef.current = null;
+    }, [
+        extraParams.year,
+        extraParams.month,
+        extraParams.status,
+        extraParams.sort,
+        debouncedSearch,
+    ]);
+
     const queryParams = { page, limit, search: debouncedSearch, ...extraParams };
     const queryKey = queryKeys[queryKeyBase]
         ? queryKeys[queryKeyBase](userId, queryParams)
@@ -69,6 +87,8 @@ export function usePagedQuery({
         staleTime: STALE_TIMES.lists,
         placeholderData: (prev, previousQuery) => {
             if (previousQuery?.queryKey?.[1] !== userId) return undefined;
+            const prevParams = previousQuery?.queryKey?.[2];
+            if (listParamsChanged(prevParams, queryParams)) return undefined;
             return keepPreviousData(prev);
         },
     });
@@ -83,8 +103,7 @@ export function usePagedQuery({
         lastSummaryRef.current = data.summary;
     }
 
-    const resolvedList =
-        data?.data !== undefined ? data.data : isFetching ? lastListRef.current : [];
+    const resolvedList = data?.data ?? [];
 
     const setData = useCallback(
         (updater) => {

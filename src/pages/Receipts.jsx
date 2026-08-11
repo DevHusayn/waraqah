@@ -147,7 +147,7 @@ const Receipts = () => {
 
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
     const premium = isPremiumUser(businessInfo);
-    const showStats = !(loading && receipts.length === 0 && !search);
+    const showStats = !(loading && receipts.length === 0 && !search && !summary);
 
     return (
         <>

@@ -5,7 +5,7 @@ export const FREE_PLAN_FEATURES = [
     'Create and send professional invoices',
     'Convert accepted quotations to invoices',
     'Client management',
-    'Product catalog for quick line items',
+    'Product catalog with unit cost and catalog margin',
     'Inventory tracking with stock history and low-stock alerts',
     'Bank details on invoices',
     'Professional PDF invoices & quotations',
@@ -17,6 +17,8 @@ export const FREE_PLAN_FEATURES = [
 
 export const PREMIUM_PLAN_FEATURES = [
     'Unlimited documents every month',
+    'Gross profit on your dashboard',
+    'Profit analytics with trends and product breakdown',
     'Logo on PDF invoices & quotations',
     'Company stamp on paid receipts',
     'Authorized signature on PDFs',

@@ -136,7 +136,7 @@ const Quotations = () => {
 
     const usageLabel = formatInvoiceUsageLabel(invoiceUsage);
     const premium = isPremiumUser(businessInfo);
-    const showStats = !(loading && quotations.length === 0 && !search);
+    const showStats = !(loading && quotations.length === 0 && !search && !summary);
 
     const clientLabel = (quotation) => quotation.clientName || 'Unknown Client';
 

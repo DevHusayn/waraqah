@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Crown, Download, Printer, FileBarChart } from 'lucide-react';
-import { useInvoice } from '../context/InvoiceContext';
-import { useReceipt } from '../context/ReceiptContext';
 import { useSettings } from '../context/SettingsContext';
 import PageHeader from '../components/PageHeader';
 import { StatementContentSkeleton } from '../components/Skeleton';
@@ -15,49 +13,89 @@ import {
 } from '../utils/monthlyStatement';
 import { generateMonthlyStatementPdf, statusLabel } from '../utils/monthlyStatementPdf';
 import MonthPickerField from '../components/MonthPickerField';
+import PaginationBar from '../components/PaginationBar';
+import { useClientPagedList } from '../hooks/useClientPagedList';
 import EmptyState from '../components/EmptyState';
+import { apiFetch } from '../utils/api';
+import { buildListQuery, DEFAULT_PAGE_SIZE, fetchAllListPages } from '../utils/pagination';
 import { format } from 'date-fns';
 
 const STATUS_COLS = ['paid', 'partial', 'pending', 'overdue', 'cancelled'];
 
+const mapDoc = (doc) => ({ ...doc, id: doc._id || doc.id });
+const mapClient = (client) => ({ ...client, id: client._id || client.id });
+
 export default function MonthlyStatement() {
-    const { clients, fetchInvoices } = useInvoice();
-    const { fetchReceipts } = useReceipt();
     const { businessInfo } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const [monthValue, setMonthValue] = useState(getDefaultStatementMonth);
     const [exporting, setExporting] = useState(false);
     const [invoices, setInvoices] = useState([]);
     const [receipts, setReceipts] = useState([]);
-    const [initialLoading, setInitialLoading] = useState(true);
+    const [clients, setClients] = useState([]);
+    const [loadedMonthValue, setLoadedMonthValue] = useState(null);
     const [fetching, setFetching] = useState(true);
 
     const { year, month } = parseStatementMonth(monthValue);
+    const periodLoading = loadedMonthValue !== monthValue;
 
     useEffect(() => {
         let cancelled = false;
         setFetching(true);
         (async () => {
-            const [invoiceList, receiptList] = await Promise.all([
-                fetchInvoices({ force: true, year, month, limit: 100 }),
-                fetchReceipts({ force: true, year, month, limit: 100 }),
-            ]);
-            if (!cancelled) {
-                setInvoices(invoiceList);
-                setReceipts(receiptList);
-                setFetching(false);
-                setInitialLoading(false);
+            try {
+                const [invoiceList, receiptList, clientList] = await Promise.all([
+                    fetchAllListPages(
+                        ({ page, limit }) =>
+                            apiFetch(
+                                `/invoices?${buildListQuery({ page, limit, year, month })}`
+                            ),
+                        { limit: DEFAULT_PAGE_SIZE }
+                    ),
+                    fetchAllListPages(
+                        ({ page, limit }) =>
+                            apiFetch(
+                                `/receipts?${buildListQuery({ page, limit, year, month })}`
+                            ),
+                        { limit: DEFAULT_PAGE_SIZE }
+                    ),
+                    fetchAllListPages(
+                        ({ page, limit }) =>
+                            apiFetch(`/clients?${buildListQuery({ page, limit })}`),
+                        { limit: DEFAULT_PAGE_SIZE }
+                    ),
+                ]);
+                if (!cancelled) {
+                    setInvoices(invoiceList.map(mapDoc));
+                    setReceipts(receiptList.map(mapDoc));
+                    setClients(clientList.map(mapClient));
+                }
+            } catch {
+                if (!cancelled) {
+                    setInvoices([]);
+                    setReceipts([]);
+                    setClients([]);
+                }
+            } finally {
+                if (!cancelled) {
+                    setLoadedMonthValue(monthValue);
+                    setFetching(false);
+                }
             }
         })();
         return () => {
             cancelled = true;
         };
-    }, [fetchInvoices, fetchReceipts, year, month]);
+    }, [year, month, monthValue]);
 
     const statement = useMemo(
-        () => buildMonthlyStatement({ invoices, receipts, clients, year, month }),
-        [invoices, receipts, clients, year, month]
+        () => (periodLoading ? null : buildMonthlyStatement({ invoices, receipts, clients, year, month })),
+        [periodLoading, invoices, receipts, clients, year, month]
     );
+
+    const clientRowsPage = useClientPagedList(statement?.rows ?? [], {
+        resetKey: monthValue,
+    });
 
     const periodLabel = useMemo(() => {
         const stub = buildMonthlyStatement({ invoices: [], clients, year, month });
@@ -65,7 +103,7 @@ export default function MonthlyStatement() {
     }, [clients, year, month]);
 
     const handlePdf = async (print = false) => {
-        if (fetching) return;
+        if (periodLoading || !statement) return;
         setExporting(true);
         try {
             await generateMonthlyStatementPdf(statement, businessInfo, { print });
@@ -126,25 +164,29 @@ export default function MonthlyStatement() {
                         Based on document issue dates in {periodLabel}.
                     </p>
                 </div>
-                {!initialLoading ? (
-                    <div
-                        className={`flex items-center gap-2 text-sm text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 transition-opacity ${
-                            fetching ? 'opacity-60' : ''
-                        }`}
-                    >
+                {!periodLoading && statement ? (
+                    <div className="flex items-center gap-2 text-sm text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3">
                         <FileBarChart className="h-5 w-5 text-brand shrink-0" />
                         <span>
                             <strong className="text-zinc-900">{statement.totals.documentCount}</strong>{' '}
                             document{statement.totals.documentCount === 1 ? '' : 's'} this month
                         </span>
                     </div>
+                ) : periodLoading ? (
+                    <div
+                        className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 animate-pulse"
+                        aria-hidden
+                    >
+                        <div className="h-5 w-5 rounded bg-zinc-200/80 shrink-0" />
+                        <div className="h-4 w-40 rounded bg-zinc-200/80" />
+                    </div>
                 ) : null}
             </div>
 
-            {initialLoading ? (
+            {periodLoading ? (
                 <StatementContentSkeleton />
             ) : (
-                <div className={fetching ? 'opacity-60 pointer-events-none transition-opacity' : 'transition-opacity'}>
+                <div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
                         {STATUS_COLS.map((status) => (
                             <div key={status} className="card !p-4 min-w-0">
@@ -184,6 +226,7 @@ export default function MonthlyStatement() {
                                 </p>
                             </div>
                         ) : (
+                            <>
                             <div className="overflow-x-auto scroll-x-touch">
                                 <table className="w-full min-w-[720px] text-sm">
                                     <thead>
@@ -205,7 +248,7 @@ export default function MonthlyStatement() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {statement.rows.map((row) => (
+                                        {clientRowsPage.data.map((row) => (
                                             <tr
                                                 key={row.clientId}
                                                 className="border-b border-zinc-100 hover:bg-zinc-50/80"
@@ -254,12 +297,18 @@ export default function MonthlyStatement() {
                                     </tfoot>
                                 </table>
                             </div>
+                            <PaginationBar
+                                pagination={clientRowsPage.pagination}
+                                onPageChange={clientRowsPage.setPage}
+                                className="px-6 pb-4"
+                            />
+                            </>
                         )}
                     </div>
                 </div>
             )}
 
-            {!initialLoading ? (
+            {!periodLoading && statement ? (
                 <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full mt-6">
                     <button
                         type="button"

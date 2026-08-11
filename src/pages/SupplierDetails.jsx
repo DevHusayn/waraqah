@@ -21,7 +21,8 @@ import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable'
 import EmptyState from '../components/EmptyState';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
-import { formatCurrency } from '../utils/currency';
+import PaginationBar from '../components/PaginationBar';
+import { useClientPagedList } from '../hooks/useClientPagedList';
 
 const PO_COLUMNS = [
     { key: 'number', label: 'PO #' },
@@ -97,6 +98,9 @@ export default function SupplierDetails() {
 
     const supplier = activity?.supplier;
     const summary = activity?.summary;
+
+    const purchaseOrdersPage = useClientPagedList(activity?.purchaseOrders, { resetKey: id });
+    const productsPage = useClientPagedList(activity?.byProduct, { resetKey: id });
 
     const modalInitialData = useMemo(() => {
         if (!supplier) return EMPTY_SUPPLIER;
@@ -290,8 +294,9 @@ export default function SupplierDetails() {
             <section className="card mb-6">
                 <h2 className="text-sm font-semibold text-zinc-950 mb-4">Purchase orders</h2>
                 {activity.purchaseOrders?.length ? (
+                    <>
                     <DataTable columns={PO_COLUMNS}>
-                        {activity.purchaseOrders.map((order) => (
+                        {purchaseOrdersPage.data.map((order) => (
                             <DataTableRow
                                 key={order.id}
                                 onClick={() => navigate(`/purchase-orders/${order.id}`)}
@@ -310,6 +315,11 @@ export default function SupplierDetails() {
                             </DataTableRow>
                         ))}
                     </DataTable>
+                    <PaginationBar
+                        pagination={purchaseOrdersPage.pagination}
+                        onPageChange={purchaseOrdersPage.setPage}
+                    />
+                    </>
                 ) : (
                     <EmptyState
                         icon={ShoppingCart}
@@ -334,8 +344,9 @@ export default function SupplierDetails() {
             <section className="card">
                 <h2 className="text-sm font-semibold text-zinc-950 mb-4">Products bought</h2>
                 {activity.byProduct?.length ? (
+                    <>
                     <DataTable columns={PRODUCT_COLUMNS}>
-                        {activity.byProduct.map((row) => (
+                        {productsPage.data.map((row) => (
                             <DataTableRow key={row.key}>
                                 <DataTableCell>
                                     {row.productId ? (
@@ -363,6 +374,11 @@ export default function SupplierDetails() {
                             </DataTableRow>
                         ))}
                     </DataTable>
+                    <PaginationBar
+                        pagination={productsPage.pagination}
+                        onPageChange={productsPage.setPage}
+                    />
+                    </>
                 ) : (
                     <p className="text-sm text-zinc-500 py-4 text-center">
                         Products will appear here once you place purchase orders with line items.

@@ -5,13 +5,18 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
  * Hidden when there is at most one page.
  */
 export default function PaginationBar({
-    page = 1,
-    totalPages = 0,
-    total = 0,
+    page: pageProp,
+    totalPages: totalPagesProp,
+    total: totalProp,
+    pagination,
     onPageChange,
     className = '',
     disabled = false,
 }) {
+    const page = pagination?.page ?? pageProp ?? 1;
+    const totalPages = pagination?.totalPages ?? totalPagesProp ?? 0;
+    const total = pagination?.total ?? totalProp ?? 0;
+
     if (!totalPages || totalPages <= 1) return null;
 
     const canPrev = page > 1 && !disabled;

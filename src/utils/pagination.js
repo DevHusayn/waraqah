@@ -134,3 +134,20 @@ export function clampPage(page, totalPages) {
     if (safeTotal === 0) return 1;
     return Math.min(Math.max(1, page), safeTotal);
 }
+
+/** Fetch every page from a paginated list API until all rows are loaded. */
+export async function fetchAllListPages(fetchPage, { limit = DEFAULT_PAGE_SIZE } = {}) {
+    const all = [];
+    let page = 1;
+    let totalPages = 1;
+
+    while (page <= totalPages) {
+        const payload = await fetchPage({ page, limit });
+        const { data, pagination } = unwrapListResponse(payload);
+        all.push(...data);
+        totalPages = Math.max(1, pagination.totalPages || 1);
+        page += 1;
+    }
+
+    return all;
+}

@@ -68,6 +68,7 @@ export default function DashboardAnalytics({
     periodSummary,
     loading = false,
     fetching = false,
+    premium = false,
     summaryYear,
     summaryMonth,
     monthInputValue,
@@ -93,7 +94,7 @@ export default function DashboardAnalytics({
                 />
             </div>
 
-            <DashboardPeriodStats summary={periodSummary} loading={false} />
+            <DashboardPeriodStats summary={periodSummary} loading={false} premium={premium} />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <Suspense fallback={<ChartAreaSkeleton />}>
