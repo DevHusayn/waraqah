@@ -2,9 +2,9 @@ import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Crown } from 'lucide-react';
 
-const NavLinks = memo(function NavLinks({ items, isActive, onNavigate, premium, badges }) {
+const NavLinks = memo(function NavLinks({ items, isActive, onNavigate, premium, badges, className = '' }) {
     return (
-        <div className="flex flex-col gap-0.5">
+        <div className={`flex flex-col gap-0.5 ${className}`.trim()}>
             {items.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.href);

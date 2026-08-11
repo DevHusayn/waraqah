@@ -17,6 +17,7 @@ const ACTION_LABELS = {
     update: 'updated',
     cancel: 'cancelled',
     delete: 'deleted',
+    receive: 'received',
 };
 
 export function formatStockMovementDescription(row) {
@@ -43,15 +44,26 @@ export function formatStockMovementDescription(row) {
         return `${docLabel} ${actionLabel}`;
     }
 
+    if (row.source === 'purchase_order') {
+        const actionLabel = ACTION_LABELS[row.action] || row.action;
+        if (row.documentNumber) {
+            return `PO ${row.documentNumber} ${actionLabel}`;
+        }
+        return `Purchase order ${actionLabel}`;
+    }
+
     return 'Stock change';
 }
 
 export function getStockMovementLink(row) {
-    if (!row?.documentId || (row.source !== 'invoice' && row.source !== 'receipt')) {
-        return null;
+    if (!row?.documentId) return null;
+    if (row.source === 'invoice' || row.source === 'receipt') {
+        return documentHref(row.source, row.documentId);
     }
-
-    return documentHref(row.source, row.documentId);
+    if (row.source === 'purchase_order') {
+        return `/purchase-orders/${row.documentId}`;
+    }
+    return null;
 }
 
 export function formatStockDelta(delta) {

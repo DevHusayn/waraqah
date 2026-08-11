@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { User, Mail, Phone, Building2 } from 'lucide-react';
 import FormSection from '../FormSection';
 import { getClientBusiness } from '../../utils/clientHelpers';
@@ -17,7 +18,16 @@ export default function DocumentClientDisplay({
         <FormSection icon={User} title="Client" description="Bill-to contact">
             {client ? (
                 <div className="space-y-2">
-                    <p className="font-semibold text-zinc-900 text-lg">{client.name}</p>
+                    {client.id ? (
+                        <Link
+                            to={`/clients/${client.id}`}
+                            className="font-semibold text-zinc-900 text-lg hover:text-brand hover:underline"
+                        >
+                            {client.name}
+                        </Link>
+                    ) : (
+                        <p className="font-semibold text-zinc-900 text-lg">{client.name}</p>
+                    )}
                     {getClientBusiness(client) && (
                         <p className="text-sm text-zinc-600 flex items-center gap-1.5">
                             <Building2 size={14} className="text-zinc-400" aria-hidden />

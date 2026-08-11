@@ -29,6 +29,7 @@ export default function LineItemEditor({
     onItemChange,
     onUnitChange,
     onCurrencyChange,
+    showStockWarnings = true,
 }) {
     const normalizedCurrency = normalizeCurrency(currency || APP_CURRENCY);
     const [shake, setShake] = useState(false);
@@ -37,7 +38,9 @@ export default function LineItemEditor({
     const qtyError = Boolean(fieldErrors[`item-${index}-quantity`]);
     const rateError = Boolean(fieldErrors[`item-${index}-rate`]);
     const hasItemError = descError || qtyError || rateError;
-    const stockWarning = getLineItemStockWarning(item, products, businessInfo);
+    const stockWarning = showStockWarnings
+        ? getLineItemStockWarning(item, products, businessInfo)
+        : null;
     const stockBlocksIssue = stockWarning && !isOversellingAllowed(businessInfo);
 
     useEffect(() => {

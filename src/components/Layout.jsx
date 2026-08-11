@@ -11,6 +11,8 @@ import {
     LogOut,
     FileBarChart,
     Package,
+    Truck,
+    ShoppingCart,
 } from 'lucide-react';
 import { useState, useEffect, memo } from 'react';
 import { useSettings } from '../context/SettingsContext';
@@ -42,7 +44,9 @@ const NAV_ITEMS = [
     { name: 'Drafts', href: '/drafts', icon: PenLine, badgeKey: 'drafts' },
     { name: 'Statements', href: '/statements', icon: FileBarChart, premiumFeature: true },
     { name: 'Clients', href: '/clients', icon: Users },
+    { name: 'Suppliers', href: '/suppliers', icon: Truck },
     { name: 'Products', href: '/products', icon: Package },
+    { name: 'Purchase orders', href: '/purchase-orders', icon: ShoppingCart },
 ];
 
 const Layout = ({ children }) => {
@@ -111,6 +115,17 @@ const Layout = ({ children }) => {
         setSidebarOpen(false);
     }, [location.pathname]);
 
+    useEffect(() => {
+        if (!sidebarOpen) return undefined;
+
+        const onKeyDown = (event) => {
+            if (event.key === 'Escape') setSidebarOpen(false);
+        };
+
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [sidebarOpen]);
+
     const adminItem = isAdmin
         ? [{ name: 'Admin', href: '/admin', icon: LayoutDashboard }]
         : [];
@@ -125,7 +140,18 @@ const Layout = ({ children }) => {
         return location.pathname.startsWith(path);
     };
 
-    const sidebarContent = (onNavigate, { showBrand = true } = {}) => (
+    const logoutButton = (
+        <button
+            type="button"
+            onClick={() => setShowLogoutModal(true)}
+            className="nav-link text-red-600 hover:bg-red-50/80 hover:text-red-700 w-full"
+        >
+            <LogOut className="h-4 w-4 flex-shrink-0" strokeWidth={1.75} />
+            Log out
+        </button>
+    );
+
+    const sidebarContent = (onNavigate, { showBrand = true, showLogout = true } = {}) => (
         <>
             {showBrand ? (
                 <div className="px-2 mb-5 min-w-0">
@@ -140,16 +166,9 @@ const Layout = ({ children }) => {
                     premium={premium}
                     badges={{ drafts: draftCount }}
                 />
-                {isAuthenticated ? (
+                {showLogout && isAuthenticated ? (
                     <div className="mt-4 pt-4 border-t border-zinc-200/50">
-                        <button
-                            type="button"
-                            onClick={() => setShowLogoutModal(true)}
-                            className="nav-link text-red-600 hover:bg-red-50/80 hover:text-red-700 w-full"
-                        >
-                            <LogOut className="h-4 w-4 flex-shrink-0" strokeWidth={1.75} />
-                            Log out
-                        </button>
+                        {logoutButton}
                     </div>
                 ) : null}
             </nav>
@@ -174,7 +193,7 @@ const Layout = ({ children }) => {
             </aside>
 
             <div className="md:pl-[15.5rem] md:pt-14 flex flex-col flex-1 min-h-screen min-w-0">
-                <header className="sticky top-0 z-50 flex md:hidden items-center justify-between border-b border-zinc-200/50 bg-white px-4 py-2.5">
+                <header className="sticky top-0 z-50 flex md:hidden h-14 shrink-0 items-center justify-between border-b border-zinc-200/50 bg-white px-4">
                     <div className="flex items-center min-w-0">
                         <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
                     </div>
@@ -197,25 +216,37 @@ const Layout = ({ children }) => {
                 </header>
 
                 <div
-                    className={`fixed inset-x-0 top-14 bottom-0 z-30 bg-zinc-950/40 md:hidden transition-opacity duration-200 ease-out ${
+                    className={`fixed top-14 inset-x-0 bottom-0 z-40 bg-zinc-950/40 md:hidden transition-opacity duration-300 ease-smooth ${
                         sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                     }`}
                     onClick={() => setSidebarOpen(false)}
                     aria-hidden={!sidebarOpen}
                 />
 
-                <div
-                    className={`fixed inset-x-0 top-14 z-40 md:hidden transition-[opacity,transform] duration-200 ease-out ${
-                        sidebarOpen
-                            ? 'opacity-100 translate-y-0 pointer-events-auto'
-                            : 'pointer-events-none opacity-0 -translate-y-1'
+                <aside
+                    className={`fixed z-[45] md:hidden flex w-[min(17.5rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] transition-transform duration-300 ease-smooth will-change-transform top-[calc(3.5rem+0.75rem)] bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-3 ${
+                        sidebarOpen ? 'translate-x-0 pointer-events-auto' : 'translate-x-[calc(100%+0.75rem)] pointer-events-none'
                     }`}
                     aria-hidden={!sidebarOpen}
+                    aria-label="Navigation menu"
                 >
-                    <div className="border-b border-zinc-200/50 bg-white shadow-sm max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain px-4 py-4">
-                        {sidebarContent(() => setSidebarOpen(false), { showBrand: false })}
+                    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 pb-4 pt-4">
+                        <NavLinks
+                            items={navigation}
+                            isActive={isActive}
+                            onNavigate={() => setSidebarOpen(false)}
+                            premium={premium}
+                            badges={{ drafts: draftCount }}
+                            className="gap-1.5 [&_.nav-link]:py-2.5"
+                        />
                     </div>
-                </div>
+
+                    {isAuthenticated ? (
+                        <div className="shrink-0 border-t border-zinc-200/50 px-4 py-4">
+                            {logoutButton}
+                        </div>
+                    ) : null}
+                </aside>
 
                 <main className="flex-1 min-w-0 overflow-x-hidden">
                     <div className="py-6 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full min-w-0">

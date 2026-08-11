@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Edit, Trash2, Search, Users, UserPlus } from 'lucide-react';
+import { Plus, Search, Users, UserPlus } from 'lucide-react';
 import ListSummaryStats from '../components/ListSummaryStats';
 import AlertModal from '../components/AlertModal';
-import ConfirmModal from '../components/ConfirmModal';
 import ClientFormModal, { EMPTY_CLIENT } from '../components/ClientFormModal';
 import PageHeader from '../components/PageHeader';
 import { useInvoice } from '../context/InvoiceContext';
@@ -34,13 +33,12 @@ const COLUMNS = [
     { key: 'business', label: 'Business' },
     { key: 'email', label: 'Email' },
     { key: 'phone', label: 'Phone' },
-    { key: 'actions', label: '', className: 'text-right w-24' },
 ];
 
 const mapClient = (c) => ({ ...c, id: c._id || c.id });
 
 const Clients = () => {
-    const { addClient, updateClient, deleteClient } = useInvoice();
+    const { addClient, updateClient } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
     const navigate = useNavigate();
@@ -53,8 +51,6 @@ const Clients = () => {
     const [editingClient, setEditingClient] = useState(null);
     const [modalInitialData, setModalInitialData] = useState(EMPTY_CLIENT);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
-    const [confirm, setConfirm] = useState({ open: false, clientId: null });
-    const [deleting, setDeleting] = useState(false);
     const {
         summaryYear,
         summaryMonth,
@@ -169,28 +165,6 @@ const Clients = () => {
         }
     };
 
-    const handleDelete = (id) => setConfirm({ open: true, clientId: id });
-
-    const confirmDelete = async () => {
-        const id = confirm.clientId;
-        setDeleting(true);
-        try {
-            await deleteClient(id);
-            showToast('Client deleted successfully', 'success');
-            setConfirm({ open: false, clientId: null });
-            await refresh();
-            await refreshSummary();
-        } catch (err) {
-            setAlert({
-                open: true,
-                message: err.message || 'Failed to delete client.',
-                type: 'error',
-            });
-        } finally {
-            setDeleting(false);
-        }
-    };
-
     const hasNoClientsAtAll =
         !loading && !search && (summary ? summary.totalClients === 0 : pagination.total === 0);
     const showClientStats = !(loading && clients.length === 0 && !search);
@@ -204,17 +178,6 @@ const Clients = () => {
                 message={alert.message}
                 type={alert.type}
                 onClose={() => setAlert({ open: false, message: '', type: 'error' })}
-            />
-            <ConfirmModal
-                open={confirm.open}
-                title="Delete client?"
-                description="This client will be removed from your database. Existing invoices linked to them will not be deleted."
-                confirmLabel="Delete client"
-                cancelLabel="Keep client"
-                variant="danger"
-                loading={deleting}
-                onConfirm={confirmDelete}
-                onCancel={() => !deleting && setConfirm({ open: false, clientId: null })}
             />
             <ClientFormModal
                 open={isModalOpen}
@@ -251,7 +214,7 @@ const Clients = () => {
             ) : null}
 
             {loading && clients.length === 0 && !search ? (
-                <ListPageSkeleton rows={8} columns={5} withHeader={false} />
+                <ListPageSkeleton rows={8} columns={4} withHeader={false} />
             ) : hasNoClientsAtAll ? (
                 <div className="data-table-wrap">
                     <EmptyState
@@ -319,7 +282,11 @@ const Clients = () => {
                         <>
                             <DataTable columns={COLUMNS}>
                                 {clients.map((client) => (
-                                    <DataTableRow key={client.id}>
+                                    <DataTableRow
+                                        key={client.id}
+                                        onClick={() => navigate(`/clients/${client.id}`)}
+                                        className="cursor-pointer"
+                                    >
                                         <DataTableCell>
                                             <span className={`font-medium text-zinc-950 ${REPLAY_MASK.SENSITIVE}`}>
                                                 {client.name}
@@ -337,26 +304,6 @@ const Clients = () => {
                                         </DataTableCell>
                                         <DataTableCell>
                                             <span className={REPLAY_MASK.SENSITIVE}>{client.phone || '—'}</span>
-                                        </DataTableCell>
-                                        <DataTableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-1">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openModal(client)}
-                                                    className="btn-ghost text-xs py-1 px-2"
-                                                    aria-label="Edit client"
-                                                >
-                                                    <Edit size={14} />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDelete(client.id)}
-                                                    className="btn-ghost text-xs py-1 px-2 text-red-600 hover:bg-red-50"
-                                                    aria-label="Delete client"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
                                         </DataTableCell>
                                     </DataTableRow>
                                 ))}

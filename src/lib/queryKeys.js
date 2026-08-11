@@ -16,6 +16,8 @@ export const queryKeys = {
     products: (userId, params) => ['products', userId, params],
     drafts: (userId, params) => ['drafts', userId, params],
     receipts: (userId, params) => ['receipts', userId, params],
+    suppliers: (userId, params) => ['suppliers', userId, params],
+    purchaseOrders: (userId, params) => ['purchaseOrders', userId, params],
     listSummary: (userId, resource, summaryYear, summaryMonth) => [
         'listSummary',
         userId,

@@ -42,8 +42,14 @@ const Receipts = lazy(() => import('./pages/Receipts'));
 const CreateReceipt = lazy(() => import('./pages/CreateReceipt'));
 const ReceiptDetails = lazy(() => import('./pages/ReceiptDetails'));
 const Clients = lazy(() => import('./pages/Clients'));
+const ClientDetails = lazy(() => import('./pages/ClientDetails'));
 const Products = lazy(() => import('./pages/Products'));
 const ProductDetails = lazy(() => import('./pages/ProductDetails'));
+const Suppliers = lazy(() => import('./pages/Suppliers'));
+const SupplierDetails = lazy(() => import('./pages/SupplierDetails'));
+const PurchaseOrders = lazy(() => import('./pages/PurchaseOrders'));
+const CreatePurchaseOrder = lazy(() => import('./pages/CreatePurchaseOrder'));
+const PurchaseOrderDetails = lazy(() => import('./pages/PurchaseOrderDetails'));
 const SettingsLayout = lazy(() => import('./pages/settings/SettingsLayout'));
 const SettingsIndex = lazy(() => import('./pages/settings/SettingsIndex'));
 const BusinessSettingsIndex = lazy(() => import('./pages/settings/BusinessSettingsIndex'));
@@ -150,8 +156,15 @@ function App() {
                                             <Route path="/receipts/edit/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><CreateReceipt /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/receipts/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><ReceiptDetails /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/clients" element={<PrivateRoute><ListRoute><Clients /></ListRoute></PrivateRoute>} />
+                                            <Route path="/clients/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><ClientDetails /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/products" element={<PrivateRoute><ListRoute><Products /></ListRoute></PrivateRoute>} />
                                             <Route path="/products/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><ProductDetails /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/suppliers" element={<PrivateRoute><ListRoute><Suppliers /></ListRoute></PrivateRoute>} />
+                                            <Route path="/suppliers/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><SupplierDetails /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/purchase-orders" element={<PrivateRoute><ListRoute><PurchaseOrders /></ListRoute></PrivateRoute>} />
+                                            <Route path="/purchase-orders/create" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><CreatePurchaseOrder /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/purchase-orders/edit/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><CreatePurchaseOrder /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/purchase-orders/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><PurchaseOrderDetails /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/settings" element={<PrivateRoute><RouteSuspense fallback={null}><SettingsLayout /></RouteSuspense></PrivateRoute>}>
                                                 <Route index element={<SettingsIndex />} />
                                                 <Route path="business" element={<BusinessSettingsIndex />} />

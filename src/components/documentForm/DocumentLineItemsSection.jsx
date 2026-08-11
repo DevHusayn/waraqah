@@ -33,6 +33,7 @@ export default function DocumentLineItemsSection({
     onAddItem,
     onRemoveItem,
     onAddProductItem,
+    showStockWarnings = true,
 }) {
     const items = formData.items || [];
     const itemsLength = items.length;
@@ -128,6 +129,7 @@ export default function DocumentLineItemsSection({
                         onItemChange={onItemChange}
                         onUnitChange={onUnitChange}
                         onCurrencyChange={onCurrencyChange}
+                        showStockWarnings={showStockWarnings}
                     />
                 </div>
             ) : null}
