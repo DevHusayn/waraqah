@@ -15,6 +15,7 @@ import FormSection from '../components/FormSection';
 import RequiredLabel from '../components/RequiredLabel';
 import FieldValidationMessage from '../components/FieldValidationMessage';
 import SupplierFormModal, { EMPTY_SUPPLIER } from '../components/SupplierFormModal';
+import DatePickerField from '../components/DatePickerField';
 import {
     buildPurchaseOrderFieldErrors,
     getFirstPurchaseOrderFieldId,
@@ -274,14 +275,22 @@ export default function CreatePurchaseOrder() {
                         </div>
                         <div>
                             <RequiredLabel htmlFor="po-date">Order date</RequiredLabel>
-                            <input
+                            <DatePickerField
                                 id="po-date"
-                                type="date"
                                 value={formData.date}
-                                onChange={(e) =>
-                                    setFormData((prev) => ({ ...prev, date: e.target.value }))
+                                onChange={(date) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        date,
+                                        expectedDate:
+                                            prev.expectedDate && date && prev.expectedDate < date
+                                                ? date
+                                                : prev.expectedDate,
+                                    }))
                                 }
-                                className={inputClass(Boolean(fieldErrors.date))}
+                                error={Boolean(fieldErrors.date)}
+                                allowClear={false}
+                                placeholder="Order date"
                             />
                             <FieldValidationMessage message={fieldErrors.date} />
                         </div>
@@ -289,14 +298,15 @@ export default function CreatePurchaseOrder() {
                             <label htmlFor="po-expected-date" className="label">
                                 Expected delivery <span className="text-zinc-400 font-normal">(optional)</span>
                             </label>
-                            <input
+                            <DatePickerField
                                 id="po-expected-date"
-                                type="date"
                                 value={formData.expectedDate}
-                                onChange={(e) =>
-                                    setFormData((prev) => ({ ...prev, expectedDate: e.target.value }))
+                                onChange={(expectedDate) =>
+                                    setFormData((prev) => ({ ...prev, expectedDate }))
                                 }
-                                className="input-field"
+                                min={formData.date || undefined}
+                                allowClear
+                                placeholder="Select expected delivery"
                             />
                         </div>
                     </div>
