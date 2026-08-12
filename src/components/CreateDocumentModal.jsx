@@ -1,4 +1,4 @@
-import { FileText, ClipboardList, Receipt, Users, Package } from 'lucide-react';
+import { FileText, ClipboardList, Receipt, Users, Package, ShoppingCart } from 'lucide-react';
 import ModalShell from './ModalShell';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { useQuotationCreateGuard } from '../hooks/useQuotationCreateGuard';
@@ -46,6 +46,14 @@ const ALL_OPTIONS = [
         icon: Package,
         tone: 'bg-amber-50 text-amber-700',
         href: '/products',
+    },
+    {
+        id: 'purchase-order',
+        label: 'Purchase order',
+        description: 'Order stock from a supplier',
+        icon: ShoppingCart,
+        tone: 'bg-indigo-50 text-indigo-700',
+        href: '/purchase-orders/create',
     },
 ];
 

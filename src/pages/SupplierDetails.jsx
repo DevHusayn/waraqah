@@ -21,6 +21,7 @@ import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable'
 import EmptyState from '../components/EmptyState';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
+import { formatCurrency } from '../utils/currency';
 import PaginationBar from '../components/PaginationBar';
 import { useClientPagedList } from '../hooks/useClientPagedList';
 

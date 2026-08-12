@@ -1,3 +1,5 @@
+import { DashboardAnalyticsSkeleton } from './dashboard/DashboardAnalytics';
+
 function Skeleton({ className = '' }) {
     return <div className={`animate-pulse rounded bg-zinc-200/80 ${className}`.trim()} aria-hidden />;
 }
@@ -332,10 +334,7 @@ export function DashboardSkeleton() {
     return (
         <LoadingStatus label="Loading dashboard">
             <PageHeaderSkeleton withAction={false} />
-            <StatsCardsSkeleton
-                count={5}
-                className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6"
-            />
+            <DashboardAnalyticsSkeleton />
             <div className="card mb-6 space-y-3">
                 <Skeleton className="h-4 w-24" />
                 <Skeleton className="h-10 w-full rounded-lg" />

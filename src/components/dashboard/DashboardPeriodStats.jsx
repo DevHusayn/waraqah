@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, FileText, TrendingUp } from 'lucide-react';
+import { CheckCircle, Clock, FileText, TrendingDown, TrendingUp } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 import MonthComparisonTrend from '../MonthComparisonTrend';
 
@@ -17,6 +17,7 @@ function PeriodStatCard({
     comparison,
     positiveDirection = 'up',
     detail,
+    valueClassName = '',
     className = '',
 }) {
     return (
@@ -27,7 +28,7 @@ function PeriodStatCard({
                     <Icon className={`h-4 w-4 ${iconColor}`} aria-hidden />
                 </div>
             </div>
-            <p className="stat-card-value" title={String(value)}>
+            <p className={`stat-card-value ${valueClassName}`.trim()} title={String(value)}>
                 {value}
             </p>
             <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-3 min-h-[1rem]">
@@ -57,6 +58,9 @@ export default function DashboardPeriodStats({ summary, loading = false, premium
                         </div>
                         <div className="h-6 w-28 rounded bg-zinc-200/80" />
                         <div className="h-3 w-32 rounded bg-zinc-200/80" />
+                        {!premium && index === 2 ? (
+                            <div className="h-3 w-40 rounded bg-zinc-200/80" />
+                        ) : null}
                     </div>
                 ))}
             </div>
@@ -65,6 +69,8 @@ export default function DashboardPeriodStats({ summary, loading = false, premium
 
     const current = summary?.current;
     const comparison = summary?.comparison;
+    const grossProfit = current?.grossProfit ?? 0;
+    const profitPositive = grossProfit >= 0;
 
     return (
         <div className={`grid grid-cols-2 ${premium ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-3 mb-6`}>
@@ -101,10 +107,11 @@ export default function DashboardPeriodStats({ summary, loading = false, premium
             {premium ? (
                 <PeriodStatCard
                     title="Gross profit"
-                    value={formatCurrency(current?.grossProfit ?? 0)}
-                    icon={TrendingUp}
-                    iconBg="bg-violet-50"
-                    iconColor="text-violet-600"
+                    value={formatCurrency(grossProfit)}
+                    icon={profitPositive ? TrendingUp : TrendingDown}
+                    iconBg={profitPositive ? 'bg-emerald-50' : 'bg-red-50'}
+                    iconColor={profitPositive ? 'text-emerald-600' : 'text-red-600'}
+                    valueClassName={profitPositive ? '' : 'text-red-600'}
                     comparison={comparison?.grossProfit}
                 />
             ) : null}

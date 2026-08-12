@@ -37,6 +37,7 @@ import { computeCatalogMargin, formatMarginPercent } from '../utils/margin';
 import { getPaymentMethodLabel } from '../utils/receiptHelpers';
 import { isPremiumUser } from '../utils/premium';
 import { getSoldPeriodSummary } from '../utils/productSoldPeriod';
+import ActionMenu from '../components/ActionMenu';
 import PaginationBar from '../components/PaginationBar';
 import { useClientPagedList } from '../hooks/useClientPagedList';
 import {
@@ -144,6 +145,15 @@ function PeriodStatCard({
     );
 }
 
+function CatalogMetric({ label, value }) {
+    return (
+        <div className="rounded-lg border border-zinc-200/60 bg-zinc-50/50 px-3 py-2.5 min-w-0">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-400">{label}</p>
+            <p className="mt-0.5 text-sm font-semibold tabular-nums text-zinc-950 truncate">{value}</p>
+        </div>
+    );
+}
+
 export default function ProductDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -213,6 +223,20 @@ export default function ProductDetails() {
     const profitPositive = grossProfit >= 0;
     const pendingQuantity = summary?.pendingQuantity ?? 0;
     const comparisonLabel = isCurrentPeriod ? 'vs last month' : 'vs previous month';
+
+    const productMenuItems = useMemo(
+        () => [
+            {
+                id: 'delete-product',
+                label: 'Delete product',
+                icon: Trash2,
+                onClick: () => setConfirm(true),
+                destructive: true,
+                disabled: deleting,
+            },
+        ],
+        [deleting]
+    );
 
     const stockHistoryPage = useClientPagedList(activity?.stockHistory, { resetKey: id });
     const clientsPage = useClientPagedList(activity?.byClient, { resetKey: id });
@@ -337,132 +361,147 @@ export default function ProductDetails() {
 
             <Link
                 to="/products"
-                className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 mb-6"
+                className="inline-flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900 mb-4"
             >
                 <ArrowLeft size={16} aria-hidden />
                 Back to products
             </Link>
 
-            <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="min-w-0 space-y-2">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                        <h1 className="text-2xl font-bold tracking-tight text-zinc-950 break-words">
-                            {product.name}
-                        </h1>
-                        <ProductStockStatusBadge product={product} />
+            <header className="card mb-8 overflow-hidden !p-0">
+                <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="flex items-start gap-3 min-w-0">
+                        <div className="p-2.5 rounded-xl bg-brand-subtle shrink-0">
+                            <Package className="h-6 w-6 text-brand" aria-hidden />
+                        </div>
+                        <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                                <h1 className="text-2xl font-bold tracking-tight text-zinc-950 break-words">
+                                    {product.name}
+                                </h1>
+                                <ProductStockStatusBadge product={product} />
+                            </div>
+                            {product.description ? (
+                                <p className="mt-1 text-sm leading-relaxed text-zinc-500 max-w-2xl">
+                                    {product.description}
+                                </p>
+                            ) : null}
+                        </div>
                     </div>
-                    {product.description ? (
-                        <p className="text-sm leading-relaxed text-zinc-500 max-w-2xl">
-                            {product.description}
-                        </p>
-                    ) : null}
-                    <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-zinc-600">
-                        <span>
-                            <span className="text-zinc-400">Price · </span>
-                            <span className="font-semibold tabular-nums text-zinc-900">
-                                {formatCurrency(product.unitPrice || 0)}
-                            </span>
-                        </span>
-                        <span>
-                            <span className="text-zinc-400">Cost · </span>
-                            <span className="font-semibold tabular-nums text-zinc-900">
-                                {product.unitCost > 0
-                                    ? formatCurrency(product.unitCost)
-                                    : 'Not set'}
-                            </span>
-                        </span>
-                        <span>
-                            <span className="text-zinc-400">Margin · </span>
-                            <span className="font-semibold tabular-nums text-zinc-900">
-                                {formatMarginPercent(catalogMargin.marginPercent)}
-                            </span>
-                        </span>
-                        <span>
-                            <span className="text-zinc-400">In stock · </span>
-                            <span className="font-semibold tabular-nums text-zinc-900">
-                                {product.trackInventory ? (product.quantityOnHand ?? 0) : 'Not tracked'}
-                            </span>
-                        </span>
-                    </div>
-                </div>
 
-                <div className="flex flex-wrap items-center gap-2 shrink-0">
-                    {product.trackInventory ? (
+                    <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        {product.trackInventory ? (
+                            <button
+                                type="button"
+                                onClick={() => setStockAdjustOpen(true)}
+                                className="btn-primary"
+                            >
+                                <PackagePlus size={16} aria-hidden />
+                                Adjust stock
+                            </button>
+                        ) : null}
                         <button
                             type="button"
-                            onClick={() => setStockAdjustOpen(true)}
-                            className="btn-secondary"
+                            onClick={() => setIsModalOpen(true)}
+                            className={product.trackInventory ? 'btn-secondary' : 'btn-primary'}
                         >
-                            <PackagePlus size={16} aria-hidden />
-                            Adjust stock
+                            <Edit size={16} aria-hidden />
+                            Edit
                         </button>
-                    ) : null}
-                    <button type="button" onClick={() => setIsModalOpen(true)} className="btn-secondary">
-                        <Edit size={16} aria-hidden />
-                        Edit
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setConfirm(true)}
-                        className="btn-secondary text-red-600 hover:bg-red-50"
-                    >
-                        <Trash2 size={16} aria-hidden />
-                        Delete
-                    </button>
-                </div>
-            </div>
-
-            <section className="mb-6 max-w-3xl">
-                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                        <h2 className="text-sm font-semibold text-zinc-900">
-                            {isCurrentPeriod ? 'This month' : periodLabel}
-                        </h2>
-                        <p className="mt-0.5 text-xs text-zinc-500">Paid and partial sales only</p>
-                    </div>
-                    <MonthPickerField
-                        variant="compact"
-                        portal
-                        value={monthInputValue}
-                        onChange={setMonthInputValue}
-                        triggerAriaLabel={`Change period from ${periodLabel}`}
-                    />
-                </div>
-                <div
-                    className={`grid grid-cols-2 gap-3 ${premium ? 'sm:grid-cols-3' : 'max-w-lg'}`}
-                >
-                    <PeriodStatCard
-                        title="Sold"
-                        value={soldInPeriod.quantity}
-                        icon={ShoppingBag}
-                        iconBg="bg-brand-light"
-                        iconColor="text-brand"
-                        comparison={soldInPeriod.comparison}
-                        comparisonLabel={comparisonLabel}
-                    />
-                    <PeriodStatCard
-                        title="Revenue"
-                        value={formatCurrency(soldInPeriod.revenue || 0)}
-                        icon={FileText}
-                        iconBg="bg-sky-50"
-                        iconColor="text-sky-600"
-                    />
-                    {premium ? (
-                        <PeriodStatCard
-                            title="Gross profit"
-                            value={formatCurrency(grossProfit)}
-                            icon={profitPositive ? TrendingUp : TrendingDown}
-                            iconBg={profitPositive ? 'bg-emerald-50' : 'bg-red-50'}
-                            iconColor={profitPositive ? 'text-emerald-600' : 'text-red-600'}
-                            valueClassName={profitPositive ? '' : 'text-red-600'}
-                            className="col-span-2 sm:col-span-1"
+                        <ActionMenu
+                            items={productMenuItems}
+                            disabled={deleting}
+                            ariaLabel="Product actions"
                         />
-                    ) : null}
+                    </div>
                 </div>
-            </section>
+
+                <div className="grid grid-cols-2 gap-3 px-5 pb-5 sm:grid-cols-4">
+                    <CatalogMetric label="Price" value={formatCurrency(product.unitPrice || 0)} />
+                    <CatalogMetric
+                        label="Cost"
+                        value={
+                            product.unitCost > 0 ? formatCurrency(product.unitCost) : 'Not set'
+                        }
+                    />
+                    <CatalogMetric
+                        label="Margin"
+                        value={formatMarginPercent(catalogMargin.marginPercent)}
+                    />
+                    <CatalogMetric
+                        label="In stock"
+                        value={
+                            product.trackInventory
+                                ? String(product.quantityOnHand ?? 0)
+                                : 'Not tracked'
+                        }
+                    />
+                </div>
+
+                <div className="border-t border-zinc-200/60 bg-zinc-50/30 px-5 py-5">
+                    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <h2 className="text-sm font-semibold text-zinc-900">
+                                {isCurrentPeriod ? 'This month' : periodLabel}
+                            </h2>
+                            <p className="mt-0.5 text-xs text-zinc-500">Paid and partial sales only</p>
+                        </div>
+                        <MonthPickerField
+                            variant="compact"
+                            portal
+                            value={monthInputValue}
+                            onChange={setMonthInputValue}
+                            triggerAriaLabel={`Change period from ${periodLabel}`}
+                        />
+                    </div>
+                    <div
+                        className={`grid grid-cols-2 gap-3 ${premium ? 'sm:grid-cols-3' : 'max-w-lg'}`}
+                    >
+                        <PeriodStatCard
+                            title="Sold"
+                            value={soldInPeriod.quantity}
+                            icon={ShoppingBag}
+                            iconBg="bg-brand-light"
+                            iconColor="text-brand"
+                            comparison={soldInPeriod.comparison}
+                            comparisonLabel={comparisonLabel}
+                        />
+                        <PeriodStatCard
+                            title="Revenue"
+                            value={formatCurrency(soldInPeriod.revenue || 0)}
+                            icon={FileText}
+                            iconBg="bg-sky-50"
+                            iconColor="text-sky-600"
+                        />
+                        {premium ? (
+                            <PeriodStatCard
+                                title="Gross profit"
+                                value={formatCurrency(grossProfit)}
+                                icon={profitPositive ? TrendingUp : TrendingDown}
+                                iconBg={profitPositive ? 'bg-emerald-50' : 'bg-red-50'}
+                                iconColor={profitPositive ? 'text-emerald-600' : 'text-red-600'}
+                                valueClassName={profitPositive ? '' : 'text-red-600'}
+                                className="col-span-2 sm:col-span-1"
+                            />
+                        ) : null}
+                    </div>
+                </div>
+
+                <div className="border-t border-zinc-200/60 px-5 py-3 text-sm text-zinc-600">
+                    <span className="text-zinc-400">All time · </span>
+                    <span className="tabular-nums">{summary?.totalQuantitySold ?? 0}</span> sold
+                    <span className="mx-2 text-zinc-300">·</span>
+                    <span className="font-medium tabular-nums text-zinc-800">
+                        {formatCurrency(summary?.totalRevenue || 0)}
+                    </span>{' '}
+                    revenue
+                    <span className="mx-2 text-zinc-300">·</span>
+                    <span className="tabular-nums">{summary?.uniqueClients ?? 0}</span> customer
+                    {(summary?.uniqueClients ?? 0) === 1 ? '' : 's'}
+                </div>
+            </header>
 
             {pendingQuantity > 0 ? (
-                <div className="mb-6 flex max-w-3xl items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3">
+                <div className="mb-8 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3">
                     <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden />
                     <div className="text-sm">
                         <p className="font-medium text-amber-950">Awaiting payment</p>
@@ -474,19 +513,6 @@ export default function ProductDetails() {
                     </div>
                 </div>
             ) : null}
-
-            <p className="mb-8 max-w-3xl text-sm text-zinc-600">
-                <span className="text-zinc-400">All time · </span>
-                <span className="tabular-nums">{summary?.totalQuantitySold ?? 0}</span> sold
-                <span className="mx-2 text-zinc-300">·</span>
-                <span className="font-medium tabular-nums text-zinc-800">
-                    {formatCurrency(summary?.totalRevenue || 0)}
-                </span>{' '}
-                revenue
-                <span className="mx-2 text-zinc-300">·</span>
-                <span className="tabular-nums">{summary?.uniqueClients ?? 0}</span> client
-                {(summary?.uniqueClients ?? 0) === 1 ? '' : 's'}
-            </p>
 
             {product.trackInventory ? (
                 <section className="mb-8">
@@ -515,8 +541,8 @@ export default function ProductDetails() {
                                         <DataTableCell>
                                             {formatDisplayDate(row.date?.slice(0, 10))}
                                         </DataTableCell>
-                                        <DataTableCell className={`text-right tabular-nums ${deltaClass}`}>
-                                            {formatStockDelta(delta)}
+                                        <DataTableCell className="text-right tabular-nums">
+                                            <span className={deltaClass}>{formatStockDelta(delta)}</span>
                                         </DataTableCell>
                                         <DataTableCell className="text-right tabular-nums text-zinc-900">
                                             {row.balanceAfter ?? '—'}
@@ -555,7 +581,7 @@ export default function ProductDetails() {
             ) : null}
 
             <section className="mb-8">
-                <h2 className="text-sm font-semibold text-zinc-900 mb-3">Clients who bought this</h2>
+                <h2 className="text-sm font-semibold text-zinc-900 mb-3">Customers</h2>
                 {activity?.byClient?.length ? (
                     <>
                     <DataTable
