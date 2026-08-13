@@ -47,7 +47,7 @@ export const formatCurrency = (amount, currencyOrShowSymbol = APP_CURRENCY, show
     const info = getCurrencyInfo(currency);
     const prefix = useSymbol ? info.symbol : info.code;
     const formatted = Number(amount).toLocaleString(info.locale, {
-        minimumFractionDigits: 2,
+        minimumFractionDigits: 0,
         maximumFractionDigits: 2,
     });
     return `${prefix}${formatted}`;

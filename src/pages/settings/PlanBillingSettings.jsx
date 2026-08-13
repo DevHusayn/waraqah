@@ -24,7 +24,7 @@ export default function PlanBillingSettings() {
     return (
         <SettingsPageShell
             title="Plan and Billing"
-            subtitle="Subscription status, document limits, and billing history"
+            subtitle="Subscription status, sales document limits, and billing history"
             backTo="/settings"
             backLabel="Settings"
             breadcrumbs={[
@@ -56,8 +56,8 @@ export default function PlanBillingSettings() {
                                 </div>
                                 <p className="text-sm text-zinc-500 mt-0.5">
                                     {premium
-                                        ? 'Unlimited invoices, brand assets, and PDF customization'
-                                        : 'Limited monthly invoices — upgrade for full branding'}
+                                        ? 'Unlimited sales documents, brand assets, and PDF customization'
+                                        : 'Limited monthly sales documents. Upgrade for full branding.'}
                                 </p>
                             </div>
                             {!premium ? (

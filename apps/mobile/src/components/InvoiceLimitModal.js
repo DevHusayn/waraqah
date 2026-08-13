@@ -1,7 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Crown } from 'lucide-react-native';
-import { FREE_MONTHLY_INVOICE_LIMIT } from '@waraqah/shared';
+import { FREE_MONTHLY_INVOICE_LIMIT, SALES_DOCUMENT_TYPES_LABEL } from '@waraqah/shared';
 import { BottomSheet } from './ui/BottomSheet';
 import { Button } from './ui/Button';
 import { colors, fontFamily, fontSize, spacing } from '../theme';
@@ -25,10 +25,11 @@ export const InvoiceLimitModal = forwardRef(function InvoiceLimitModal(
             <View style={styles.iconWrap}>
                 <Crown size={28} color={colors.amber600} />
             </View>
-            <Text style={styles.title}>Monthly document limit reached</Text>
+            <Text style={styles.title}>Monthly sales document limit reached</Text>
             <Text style={styles.message}>
-                You have used all {limit} free documents for this month ({used}/{limit}).
-                Upgrade to Premium for unlimited documents, custom logos, and more.
+                You have used all {limit} free sales documents for this month ({used}/{limit}).
+                Sales documents are {SALES_DOCUMENT_TYPES_LABEL}. Upgrade to Premium for unlimited
+                sales documents, custom logos, and more.
             </Text>
             <Button title="Upgrade to Premium" onPress={onUpgrade} style={{ marginBottom: spacing.sm }} />
             <Button title="Not now" variant="secondary" onPress={() => sheetRef.current?.close()} />

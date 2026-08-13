@@ -79,10 +79,10 @@ function renderInvoicePreviewCanvas(invoice, client, businessInfo, mode = 'invoi
         ctx.fillText(
             Number(item.quantity || 0) * Number(item.rate || 0) > 0
                 ? Number(item.quantity * item.rate).toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
+                      minimumFractionDigits: 0,
                       maximumFractionDigits: 2,
                   })
-                : '0.00',
+                : '0',
             THUMB_WIDTH - 40,
             y
         );
@@ -104,7 +104,7 @@ function renderInvoicePreviewCanvas(invoice, client, businessInfo, mode = 'invoi
     ctx.font = 'bold 28px Helvetica, Arial, sans-serif';
     ctx.fillText(
         Number(invoice.total || 0).toLocaleString('en-US', {
-            minimumFractionDigits: 2,
+            minimumFractionDigits: 0,
             maximumFractionDigits: 2,
         }),
         THUMB_WIDTH - 40,

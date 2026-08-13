@@ -74,8 +74,8 @@ export function PlanBillingSettingsScreen({ navigation }) {
                 <Text style={styles.planTitle}>{premium ? 'Premium' : 'Free'} plan</Text>
                 <Text style={styles.planSub}>
                     {premium
-                        ? 'You have unlimited invoices, quotations, and premium features.'
-                        : 'Upgrade for unlimited documents and branding.'}
+                        ? 'You have unlimited sales documents and premium features.'
+                        : 'Upgrade for unlimited sales documents and branding.'}
                 </Text>
                 {features.map((f) => (
                     <Text key={f} style={styles.feature}>• {f}</Text>

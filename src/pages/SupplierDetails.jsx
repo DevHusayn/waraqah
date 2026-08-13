@@ -21,6 +21,7 @@ import { apiFetch } from '../utils/api';
 import { formatCurrency } from '../utils/currency';
 import PaginationBar from '../components/PaginationBar';
 import { useClientPagedList } from '../hooks/useClientPagedList';
+import AdaptiveStatValue from '../components/AdaptiveStatValue';
 
 const PO_COLUMNS = [
     { key: 'number', label: 'PO #' },
@@ -50,7 +51,7 @@ function StatCard({ title, value, detail, className = '' }) {
     return (
         <div className={`stat-card stat-card-compact ${className}`.trim()}>
             <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
-            <p className="stat-card-value">{value}</p>
+            <AdaptiveStatValue value={value} variant="compact" />
             {detail ? <p className="text-[11px] text-zinc-500 leading-snug">{detail}</p> : null}
         </div>
     );

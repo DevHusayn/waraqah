@@ -1,5 +1,6 @@
 import { formatCurrency } from '../../utils/currency';
 import MonthComparisonTrend from '../MonthComparisonTrend';
+import AdaptiveStatValue from '../AdaptiveStatValue';
 
 function formatDocumentCounts(invoices, receipts) {
     const invoiceLabel = invoices === 1 ? 'invoice' : 'invoices';
@@ -19,10 +20,7 @@ function PeriodStatCard({
     return (
         <div className={`stat-card min-w-0 ${className}`.trim()}>
             <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
-            <p className={`stat-card-value ${valueClassName}`.trim()} title={String(value)}>
-                {value}
-            </p>
-            <div className="flex flex-col gap-1 min-h-[1rem]">
+            <AdaptiveStatValue value={value} valueClassName={valueClassName} />            <div className="flex flex-col gap-1 min-h-[1rem]">
                 <div className="min-w-0">
                     <MonthComparisonTrend comparison={comparison} positiveDirection={positiveDirection} />
                 </div>

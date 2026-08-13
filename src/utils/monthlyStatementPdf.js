@@ -7,6 +7,7 @@ import { PAGE_H } from './pdfLogo';
 import { printPdfBlob } from './shareInvoicePdf';
 import { ANALYTICS_EVENTS, PDF_ACTIONS, PDF_DOCUMENT_TYPES } from '@waraqah/shared';
 import { captureEvent } from '../monitoring/posthog';
+import { ensurePdfFonts, PDF_FONT_FAMILY, setPdfFont } from './pdfFonts';
 
 const FOOTER_RESERVE = 22;
 
@@ -19,7 +20,7 @@ function hexToRgb(hex) {
 
 function formatMoney(value, currencySymbol) {
     return `${currencySymbol} ${Number(value || 0).toLocaleString('en-US', {
-        minimumFractionDigits: 2,
+        minimumFractionDigits: 0,
         maximumFractionDigits: 2,
     })}`;
 }
@@ -45,6 +46,8 @@ function applyColumnAlignment(data, alignments) {
 export async function generateMonthlyStatementPdf(statement, businessInfo, options = {}) {
     const { print = false } = options;
     const doc = new jsPDF();
+    await ensurePdfFonts(doc);
+    setPdfFont(doc, 'normal');
     const primaryColor = hexToRgb(businessInfo?.brandColor || '#16A34A');
     const textColor = [31, 41, 55];
     const grayColor = [107, 114, 128];
@@ -57,11 +60,11 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
 
     doc.setTextColor(...textColor);
     doc.setFontSize(20);
-    doc.setFont(undefined, 'bold');
+    setPdfFont(doc, 'bold');
     doc.text(String(businessInfo?.name || 'Your Business'), 15, 18);
 
     doc.setFontSize(9);
-    doc.setFont(undefined, 'normal');
+    setPdfFont(doc, 'normal');
     doc.setTextColor(...grayColor);
     doc.text('Monthly billing statement', 15, 26);
     doc.text(`Period: ${statement.periodLabel}`, 15, 32);
@@ -69,7 +72,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
 
     doc.setFontSize(16);
     doc.setTextColor(...primaryColor);
-    doc.setFont(undefined, 'bold');
+    setPdfFont(doc, 'bold');
     doc.text('Statement summary', 15, 52);
 
     const summaryBody = [
@@ -88,10 +91,11 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
         body: summaryBody,
         theme: 'plain',
         tableWidth: 180,
-        styles: { fontSize: 9, cellPadding: 3 },
+        styles: { font: PDF_FONT_FAMILY, fontSize: 9, cellPadding: 3 },
         headStyles: {
             fillColor: primaryColor,
             textColor: [255, 255, 255],
+            font: PDF_FONT_FAMILY,
             fontStyle: 'bold',
         },
         columnStyles: {
@@ -106,12 +110,12 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
 
     doc.setFontSize(12);
     doc.setTextColor(...textColor);
-    doc.setFont(undefined, 'bold');
+    setPdfFont(doc, 'bold');
     doc.text('By client', 15, tableY);
 
     if (!statement.hasData) {
         doc.setFontSize(9);
-        doc.setFont(undefined, 'normal');
+        setPdfFont(doc, 'normal');
         doc.setTextColor(...grayColor);
         doc.text('No documents were issued during this period.', 15, tableY + 8);
     } else {
@@ -157,15 +161,17 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
             showFoot: 'lastPage',
             theme: 'striped',
             tableWidth: 180,
-            styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
+            styles: { font: PDF_FONT_FAMILY, fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
             headStyles: {
                 fillColor: primaryColor,
                 textColor: [255, 255, 255],
+                font: PDF_FONT_FAMILY,
                 fontStyle: 'bold',
             },
             footStyles: {
                 fillColor: [241, 245, 249],
                 textColor: textColor,
+                font: PDF_FONT_FAMILY,
                 fontStyle: 'bold',
             },
             columnStyles: {

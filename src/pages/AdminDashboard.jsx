@@ -23,6 +23,7 @@ import { FREE_MONTHLY_INVOICE_LIMIT } from '../utils/invoiceLimits';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import PageHeader from '../components/PageHeader';
+import AdaptiveStatValue from '../components/AdaptiveStatValue';
 import Spinner from '../components/Spinner';
 import { TableBodySkeleton } from '../components/Skeleton';
 import EmptyState from '../components/EmptyState';
@@ -522,19 +523,19 @@ export default function AdminDashboard() {
                         <p className="text-xs text-zinc-500 font-medium leading-snug truncate">
                             Total users
                         </p>
-                        <p className="stat-card-value">{stats.total}</p>
+                        <AdaptiveStatValue value={stats.total} />
                     </div>
                     <div className="stat-card">
                         <p className="text-xs text-zinc-500 font-medium leading-snug truncate">
                             Premium
                         </p>
-                        <p className="stat-card-value">{stats.premium}</p>
+                        <AdaptiveStatValue value={stats.premium} />
                     </div>
                     <div className="stat-card">
                         <p className="text-xs text-zinc-500 font-medium leading-snug truncate">
                             Suspended
                         </p>
-                        <p className="stat-card-value">{stats.suspended}</p>
+                        <AdaptiveStatValue value={stats.suspended} />
                     </div>
                 </div>
 

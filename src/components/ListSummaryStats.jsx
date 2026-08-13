@@ -1,5 +1,6 @@
 import MonthPickerField from './MonthPickerField';
 import MonthComparisonTrend from './MonthComparisonTrend';
+import AdaptiveStatValue from './AdaptiveStatValue';
 
 function StatLoadingDots() {
     return (
@@ -34,7 +35,7 @@ export default function ListSummaryStats({
         <div className="grid grid-cols-2 gap-3 mb-6 max-w-lg">
             <div className="stat-card stat-card-compact">
                 <p className="text-xs text-zinc-500 font-medium leading-snug">{totalLabel}</p>
-                <p className="stat-card-value">{total ?? '—'}</p>
+                <AdaptiveStatValue value={total ?? '—'} variant="compact" />
             </div>
             <div className="stat-card stat-card-compact overflow-visible">
                 <p className="text-xs text-zinc-500 font-medium leading-snug min-w-0">
@@ -48,12 +49,13 @@ export default function ListSummaryStats({
                         triggerAriaLabel={`${periodPrefix} ${periodLabel}. Change month.`}
                     />
                 </p>
-                <p
-                    className="stat-card-value min-h-[1.5rem] flex items-center"
+                <AdaptiveStatValue
+                    variant="compact"
+                    className="min-h-[1.5rem] flex items-center"
                     aria-busy={summaryLoading}
                 >
                     {summaryLoading ? <StatLoadingDots /> : (newInPeriod ?? '—')}
-                </p>
+                </AdaptiveStatValue>
                 {!summaryLoading ? (
                     <MonthComparisonTrend comparison={newComparison} label={comparisonLabel} />
                 ) : null}

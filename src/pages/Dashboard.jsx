@@ -190,7 +190,7 @@ const Dashboard = () => {
             {dashboardLoading ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
-                        <h2 className="text-sm font-semibold text-zinc-950 mb-3">Recent documents</h2>
+                        <h2 className="text-sm font-semibold text-zinc-950 mb-3">Recent sales documents</h2>
                         <TableSkeleton rows={5} columns={4} />
                     </div>
                     <div>
@@ -205,12 +205,12 @@ const Dashboard = () => {
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
-                        <h2 className="text-sm font-semibold text-zinc-950 mb-3">Recent documents</h2>
+                        <h2 className="text-sm font-semibold text-zinc-950 mb-3">Recent sales documents</h2>
                         {recentDocuments.length === 0 ? (
                             <div className="data-table-wrap">
                                 <EmptyState
                                     icon={FileText}
-                                    title="No documents yet"
+                                    title="No sales documents yet"
                                     action={
                                         <button
                                             type="button"

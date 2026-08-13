@@ -23,7 +23,7 @@ export const SETTINGS_INDEX = [
         title: 'Plan and Billing',
         to: '/settings/plan-billing',
         icon: Crown,
-        description: 'Subscription, document limits, and billing history',
+        description: 'Subscription, sales document limits, and billing history',
     },
     {
         title: 'Terms and Conditions',

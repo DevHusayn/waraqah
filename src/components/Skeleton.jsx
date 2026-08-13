@@ -66,13 +66,12 @@ export function TableSkeleton({ rows = 6, columns = 5, className = '' }) {
                                 {Array.from({ length: columns }).map((_, col) => (
                                     <td key={col}>
                                         <Skeleton
-                                            className={`h-4 ${
-                                                col === 0
+                                            className={`h-4 ${col === 0
                                                     ? 'w-28'
                                                     : col === columns - 1
-                                                      ? 'w-16 ml-auto'
-                                                      : 'w-20'
-                                            }`}
+                                                        ? 'w-16 ml-auto'
+                                                        : 'w-20'
+                                                }`}
                                         />
                                     </td>
                                 ))}
@@ -170,9 +169,8 @@ export function TableBodySkeleton({ rows = 6, columns = 7 }) {
                     {Array.from({ length: columns }).map((_, col) => (
                         <td key={col} className="px-4 sm:px-6 py-4">
                             <Skeleton
-                                className={`h-4 ${
-                                    col === 0 ? 'w-32' : col === columns - 1 ? 'w-20 ml-auto' : 'w-16'
-                                }`}
+                                className={`h-4 ${col === 0 ? 'w-32' : col === columns - 1 ? 'w-20 ml-auto' : 'w-16'
+                                    }`}
                             />
                         </td>
                     ))}

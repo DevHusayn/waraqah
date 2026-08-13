@@ -1,9 +1,11 @@
+import { setPdfFont } from './pdfFonts';
+
 /**
  * Draw "Try yours at mywaraqah.com" centered — only the domain is styled and underlined.
  * Returns domain bounds in jsPDF mm units for pdf-lib link injection.
  */
 export function drawCenteredPdfFooterCta(doc, prefix, domain, y, brandColor, grayColor) {
-    doc.setFont(undefined, 'normal');
+    setPdfFont(doc, 'normal');
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const prefixWidth = doc.getTextWidth(prefix);

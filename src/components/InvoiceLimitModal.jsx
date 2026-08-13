@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Crown, X } from 'lucide-react';
-import { FREE_MONTHLY_INVOICE_LIMIT } from '../utils/invoiceLimits';
+import { FREE_MONTHLY_INVOICE_LIMIT, SALES_DOCUMENT_TYPES_LABEL } from '../utils/invoiceLimits';
 
 export default function InvoiceLimitModal({ open, onClose, usage }) {
     if (!open) return null;
@@ -25,11 +25,12 @@ export default function InvoiceLimitModal({ open, onClose, usage }) {
                     </div>
                 </div>
                 <h2 className="text-xl font-semibold text-zinc-900 text-center mb-2">
-                    Monthly document limit reached
+                    Monthly sales document limit reached
                 </h2>
                 <p className="text-zinc-600 text-center text-sm mb-6">
-                    You have used all <strong>{limit}</strong> free documents for this month
-                    ({used}/{limit}). Upgrade to Premium for unlimited documents, custom logos, and more.
+                    You have used all <strong>{limit}</strong> free sales documents for this month
+                    ({used}/{limit}). Sales documents are {SALES_DOCUMENT_TYPES_LABEL}. Upgrade to Premium
+                    for unlimited sales documents, custom logos, and more.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                     <Link to="/upgrade" className="premium-upgrade-btn mx-auto text-sm py-2 px-4" onClick={onClose}>

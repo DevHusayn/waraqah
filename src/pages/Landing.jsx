@@ -15,6 +15,7 @@ import {
     Users,
     Package,
     FileBarChart,
+    Wallet,
 } from 'lucide-react';
 import LandingNav from '../components/LandingNav';
 import LandingDashboardPreview from '../components/LandingDashboardPreview';
@@ -23,7 +24,7 @@ import WaraqahLogo from '../components/WaraqahLogo';
 import { APP_NAME, APP_SOCIAL_LINKS, APP_TAGLINE } from '../constants/brand';
 import { AUTH_LOGIN_PATH, AUTH_REGISTER_PATH } from '../constants/authRoutes';
 import { TERMS_PATH, PRIVACY_PATH } from '../constants/legalRoutes';
-import { FREE_MONTHLY_INVOICE_LIMIT } from '../utils/invoiceLimits';
+import { FREE_MONTHLY_INVOICE_LIMIT, SALES_DOCUMENT_TYPES_LABEL } from '../utils/invoiceLimits';
 import { FREE_PLAN_FEATURES, PREMIUM_PLAN_FEATURES } from '../constants/planFeatures';
 import {
     PREMIUM_PRICE_NGN,
@@ -63,25 +64,25 @@ const WHY_ITEMS = [
     {
         icon: TrendingUp,
         title: 'See profit, not just revenue',
-        text: 'Set a unit cost on each product to see catalog margin. Premium adds gross profit on your dashboard and a Profit page with monthly trends and product breakdown, based on what customers have actually paid.',
+        text: 'Track margins on products and operating costs. Premium shows gross and net profit with trends.',
         stamp: 'Profit',
     },
     {
         icon: Package,
         title: 'Inventory that stays in sync',
-        text: 'Track stock per product, deduct automatically when you issue invoices or receipts, review movement history, and get low-stock alerts. Purchase orders can update unit cost when stock arrives.',
+        text: 'Stock updates when you bill or receipt. Low-stock alerts keep you ahead of empty shelves.',
         stamp: 'In stock',
     },
     {
         icon: ClipboardList,
         title: 'From quote to payment',
-        text: 'Send quotations with valid-until dates, convert accepted quotes to invoices in one click, record partial payments on receipts, and email polished PDFs to clients.',
+        text: 'Quote, convert to invoice, collect partial payments, and email polished PDFs.',
         stamp: 'Signed',
     },
     {
         icon: Smartphone,
         title: 'Work from anywhere',
-        text: 'Check your dashboard, manage clients and products, record payments, and download PDFs from your phone or laptop. Your business records travel with you.',
+        text: 'Run your business from phone or laptop. Dashboard, documents, and records stay in sync.',
         stamp: 'Synced',
     },
 ];
@@ -90,75 +91,68 @@ const MANAGE_TODAY_ITEMS = [
     {
         icon: ClipboardList,
         title: 'Sales',
-        text: 'Quotations, invoices, and receipts, from first quote to proof of payment, including partial payments and client emails.',
+        text: 'Quotations, invoices, receipts, and client emails in one flow.',
     },
     {
         icon: Users,
         title: 'Clients',
-        text: 'Save contact details once and reuse them on every document. Export your client list to CSV anytime.',
+        text: 'Save contacts once, reuse on every document, export to CSV.',
     },
     {
         icon: Package,
         title: 'Products',
-        text: 'Build a catalog with unit cost and margin on every product. Track stock that updates when you issue documents, adjust levels manually, and review stock history and low-stock alerts. Purchase orders can update cost when stock arrives.',
+        text: 'Catalog with unit cost, margin, and optional stock tracking.',
+    },
+    {
+        icon: Wallet,
+        title: 'Expenses',
+        text: 'Log running costs by category. Premium ties them to net profit.',
     },
     {
         icon: FileBarChart,
         title: 'Reports & exports',
-        text: 'Dashboard analytics with gross profit (Premium), a Profit page for trends and product-level margins, overdue tracking, monthly billing statements (Premium), and CSV exports for invoices, quotations, receipts, and clients.',
+        text: 'Dashboard stats, profit analytics, monthly statements, and CSV exports.',
     },
 ];
 
 const STEPS = [
-    { step: '01', title: 'Add your business', text: 'Set your profile, bank account details, and brand color. Premium adds your logo, stamp, and signature on PDFs.' },
-    { step: '02', title: 'Quote, invoice, or receipt', text: 'Build a quotation for new work, bill with an invoice, or issue a receipt when payment arrives, without an invoice. Reuse clients and products either way.' },
-    { step: '03', title: 'Send, track, and get paid', text: 'Email documents to clients, convert accepted quotations to invoices, record partial payments on receipts, and keep every payment on record.' },
+    { step: '01', title: 'Add your business', text: 'Set your profile, bank details, and brand. Premium adds logo, stamp, and signature on PDFs.' },
+    { step: '02', title: 'Quote, invoice, or receipt', text: 'Create a quotation, invoice, or standalone receipt. Reuse saved clients and products.' },
+    { step: '03', title: 'Send, track, and get paid', text: 'Email to clients, track payments, and convert accepted quotes to invoices.' },
 ];
 
 const FAQ_ITEMS = [
     {
         q: 'Who is Waraqah for?',
-        a: 'Businesses and solo operators who want one place for quotations, invoices, receipts, clients, products, payment tracking, and inventory, without spreadsheets or scattered paperwork. Paystack billing and NGN are supported today.',
+        a: 'Small businesses and solo operators in Nigeria who want quotations, invoices, receipts, clients, inventory, and profit in one place, without spreadsheets.',
     },
     {
         q: 'What is the difference between a quotation and an invoice?',
-        a: 'A quotation is an estimate you send before work is agreed. It is not a demand for payment. Once accepted, you can convert it into an invoice. Payment and receipts happen on the invoice.',
+        a: 'A quotation is an estimate before work is agreed. An invoice is the bill. Convert an accepted quote to an invoice when you are ready to collect payment.',
     },
     {
         q: 'Can I issue a receipt without an invoice?',
-        a: 'Yes. Create a standalone receipt when you receive payment and do not need an invoice. For example, a deposit or walk-in sale. You can record partial payments and follow-up instalments on the same receipt.',
+        a: 'Yes. Issue a standalone receipt for deposits, walk-in sales, or any payment where you do not need an invoice first.',
     },
     {
         q: 'Can Waraqah track inventory?',
-        a: 'Yes. Turn on inventory tracking per product to record stock on hand, deduct automatically when invoices or receipts are issued, adjust levels manually, and review a full stock history. Low-stock email alerts are available in Settings → Notifications. Products can stay untracked if you only need a price list.',
+        a: 'Yes. Track stock per product, with automatic deductions when you issue documents and optional low-stock email alerts in Settings.',
     },
     {
-        q: 'Can Waraqah track profit and margins?',
-        a: 'Yes. Add a unit cost on each product to see catalog margin on the product page. When you issue invoices and receipts, Waraqah snapshots cost at sale time. Premium adds a gross profit KPI on your dashboard and a Profit page with monthly trends and product-level breakdown, based on paid amounts.',
+        q: 'Can Waraqah track profit, margins, and expenses?',
+        a: 'Add unit cost on products to see margin on sales. Record operating expenses on any plan. Premium adds gross and net profit, trends, and breakdowns on the Profit page.',
     },
     {
         q: 'What happens on the Free plan?',
-        a: `You can create up to ${FREE_MONTHLY_INVOICE_LIMIT} invoices, quotations, and receipts combined per calendar month, manage clients and products (including optional inventory tracking), add bank details to invoices, mark invoices paid, and download PDFs. Deleting a document does not reset your monthly allowance.`,
-    },
-    {
-        q: 'What does Premium include?',
-        a: 'Unlimited invoices, quotations, and receipts, gross profit on your dashboard, Profit analytics with trends and product breakdown, your logo on PDFs, a company stamp on paid receipts, an authorized signature, and monthly billing statements you can print or export.',
+        a: `Up to ${FREE_MONTHLY_INVOICE_LIMIT} sales documents per month (${SALES_DOCUMENT_TYPES_LABEL}), plus clients, products, expenses, inventory, PDFs, and more. See the Free plan card above for the full list.`,
     },
     {
         q: 'How does Premium billing work?',
         a: `Premium is ₦${formatPremiumPrice(PREMIUM_PRICE_NGN)}/month or ₦${formatPremiumPrice(PREMIUM_PRICE_YEARLY_NGN)}/year (2 months free) through Paystack. You can cancel auto-renewal and keep access until the period ends.`,
     },
     {
-        q: 'Can I export my data?',
-        a: 'Yes. Export filtered lists of invoices, quotations, receipts, and clients to CSV from each list page. Handy for spreadsheets, accounting, or backup.',
-    },
-    {
         q: 'Can Waraqah email my clients?',
-        a: 'Yes. Email finalized quotations and invoices from the share dialog, send payment reminders for outstanding balances, and deliver receipt emails for paid invoices and standalone receipts. You can enable automatic delivery in Settings → Notifications.',
-    },
-    {
-        q: 'Can I use Waraqah on my phone?',
-        a: 'Yes. Waraqah works in your mobile browser and native app. Create quotations, invoices, and receipts, manage clients, record payments, and download PDFs on the go.',
+        a: 'Yes. Email quotations, invoices, and receipts from the share dialog. Payment reminders and automatic delivery are available in Settings.',
     },
 ];
 
@@ -310,9 +304,9 @@ export default function Landing() {
                                 <span className="landing-text-shimmer">One record.</span>
                             </h1>
                             <p className="mt-6 text-lg text-zinc-600 max-w-xl leading-relaxed">
-                                Run sales from quote to receipt. Manage clients and products, track unit costs
-                                and margins, email documents, export PDFs and CSV reports, and see what&apos;s
-                                paid and profitable, all in one workspace, without spreadsheets.
+                                Run sales from quote to receipt. Manage clients and products, track unit costs,
+                                margins, and operating expenses, email documents, export PDFs and CSV reports,
+                                and see what&apos;s paid and profitable, all in one workspace, without spreadsheets.
                             </p>
                             <div className="mt-8 flex flex-col sm:flex-row gap-3">
                                 <CtaButton className="py-3.5 px-8 text-base shadow-soft shadow-brand/20 hover:shadow-card hover:shadow-brand/25" />
@@ -321,7 +315,7 @@ export default function Landing() {
                                 </a>
                             </div>
                             <p className="mt-4 text-sm text-zinc-500">
-                                Free to start · No card required · {FREE_MONTHLY_INVOICE_LIMIT} documents/month
+                                Free to start · No card required · {FREE_MONTHLY_INVOICE_LIMIT} sales documents/month
                             </p>
                         </div>
 
@@ -345,7 +339,7 @@ export default function Landing() {
                             Why you need {APP_NAME}
                         </h2>
                         <p className="mt-4 text-zinc-600 text-lg">
-                            Revenue is only half the picture. Here is what changes when sales, stock, and profit live in one place.
+                            Revenue is only half the picture. Here is what changes when sales, stock, costs, and profit live in one place.
                         </p>
                     </SectionReveal>
                     <SectionReveal className="mt-14">
@@ -368,7 +362,7 @@ export default function Landing() {
                             Everything your business needs to sell, record, and report, in one workspace.
                         </p>
                     </SectionReveal>
-                    <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                         {MANAGE_TODAY_ITEMS.map((item, i) => {
                             const Icon = item.icon;
                             return (
@@ -425,7 +419,7 @@ export default function Landing() {
                             Free to start. Premium when you scale.
                         </h2>
                         <p className="mt-4 text-zinc-600 text-lg">
-                            Try {APP_NAME} at no cost, then upgrade for unlimited documents, profit analytics, your logo on PDFs, and monthly billing statements.
+                            Try {APP_NAME} at no cost, then upgrade when you need more.
                         </p>
                     </SectionReveal>
                     <div className="mt-14 grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -462,11 +456,12 @@ export default function Landing() {
             {/* Features strip */}
             <section className="py-16 border-y border-zinc-200/80 bg-zinc-900 text-white">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 text-center">
                         {[
                             { icon: ClipboardList, label: 'Quotations' },
                             { icon: FileText, label: 'Invoices & receipts' },
                             { icon: Users, label: 'Clients & products' },
+                            { icon: Wallet, label: 'Expenses' },
                             { icon: FileBarChart, label: 'Profit & reports' },
                         ].map(({ icon: Icon, label }) => (
                             <div key={label} className="flex flex-col items-center gap-3">

@@ -22,6 +22,7 @@ import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable'
 import EmptyState from '../components/EmptyState';
 import MonthPickerField from '../components/MonthPickerField';
 import MonthComparisonTrend from '../components/MonthComparisonTrend';
+import AdaptiveStatValue from '../components/AdaptiveStatValue';
 import { useSettings } from '../context/SettingsContext';
 import { isOversellingAllowed } from '@waraqah/shared';
 import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
@@ -123,7 +124,7 @@ function PeriodStatCard({
     return (
         <div className={`stat-card stat-card-compact min-w-0 ${className}`.trim()}>
             <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
-            <p className={`stat-card-value ${valueClassName}`.trim()}>{value}</p>
+            <AdaptiveStatValue value={value} variant="compact" valueClassName={valueClassName} />
             {comparison ? (
                 <div className="min-h-[1rem]">
                     <MonthComparisonTrend comparison={comparison} label={comparisonLabel} />

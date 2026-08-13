@@ -1,7 +1,7 @@
-import { FREE_MONTHLY_INVOICE_LIMIT } from './invoiceLimits.js';
+import { FREE_MONTHLY_INVOICE_LIMIT, formatFreeSalesDocumentsLimit } from './invoiceLimits.js';
 
 export const FREE_PLAN_FEATURES = [
-    `${FREE_MONTHLY_INVOICE_LIMIT} documents per month (invoices, quotations, and receipts)`,
+    formatFreeSalesDocumentsLimit(FREE_MONTHLY_INVOICE_LIMIT),
     'Create and send professional invoices',
     'Convert accepted quotations to invoices',
     'Client management',
@@ -11,13 +11,15 @@ export const FREE_PLAN_FEATURES = [
     'Professional PDF invoices & quotations',
     'Email invoices, reminders, and receipts',
     'Mark paid with PDF receipts',
+    'Track operating expenses by category',
     'Dashboard and status tracking',
     'CSV export for invoices, quotations, receipts, and clients',
 ];
 
 export const PREMIUM_PLAN_FEATURES = [
-    'Unlimited documents every month',
+    'Unlimited sales documents every month',
     'Gross profit on your dashboard',
+    'Net profit after operating expenses',
     'Profit analytics with trends and product breakdown',
     'Logo on PDF invoices & quotations',
     'Company stamp on paid receipts',

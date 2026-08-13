@@ -37,6 +37,8 @@ import { addFooterLinkToPdfBlob } from '../pdfFooterLink';
 import { addPdfPreviewThumbnail } from '../pdfPageThumbnail';
 import { resolvePdfPaperFormat } from '../pdfPageFormat';
 import { loadWaraqahLogoIcon } from '../waraqahBrandLogo';
+import { ensurePdfFonts, PDF_FONT_FAMILY, setPdfFont } from '../pdfFonts';
+import { containsEmoji, drawUnicodeText } from '../pdfUnicodeText';
 
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -58,9 +60,8 @@ function hasPaymentDetails(businessInfo) {
     );
 }
 
-/** jsPDF Helvetica only supports normal/bold — bold at small sizes reads slightly heavier. */
 function setPdfBodyFont(doc) {
-    doc.setFont(undefined, 'bold');
+    setPdfFont(doc, 'bold');
 }
 
 const PDF_TOTALS_LABEL_X = 130;
@@ -78,12 +79,12 @@ function drawPdfTotalsRow(doc, label, amountText, y, options = {}) {
     } = options;
 
     doc.setFontSize(labelFontSize);
-    doc.setFont(undefined, labelBold ? 'bold' : 'normal');
+    setPdfFont(doc, labelBold ? 'bold' : 'normal');
     doc.setTextColor(...labelColor);
     doc.text(label, PDF_TOTALS_LABEL_X, y);
     const labelWidth = doc.getTextWidth(label);
 
-    doc.setFont(undefined, amountBold ? 'bold' : 'normal');
+    setPdfFont(doc, amountBold ? 'bold' : 'normal');
     let fontSize = amountFontSize;
     doc.setFontSize(fontSize);
     doc.setTextColor(...amountColor);
@@ -124,7 +125,7 @@ function drawStatusBadge(doc, status, x, y) {
     const label = key.toUpperCase();
     const color = statusColors[key] || statusColors.pending;
     doc.setFontSize(6.5);
-    doc.setFont(undefined, 'bold');
+    setPdfFont(doc, 'bold');
     const badgeW = Math.max(24, doc.getTextWidth(label) + 8);
     doc.setFillColor(color[0], color[1], color[2]);
     doc.roundedRect(x - badgeW + 2, y - 4, badgeW, 7, 1.5, 1.5, 'F');
@@ -162,7 +163,7 @@ function measureBillToBoxHeight(doc, client, business, additionalInfo) {
     let height = 13;
 
     doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
+    setPdfFont(doc, 'bold');
     height += countWrappedLines(doc, client?.name || 'Client', BILL_TO_MAX_WIDTH) * BILL_TO_LINE_HEIGHT;
 
     doc.setFontSize(8);
@@ -211,13 +212,13 @@ function drawInvoiceTitleBlock(doc, docNumber, mode, primaryColor, lightPrimary,
     const title =
         mode === 'receipt' ? 'RECEIPT' : mode === 'quotation' ? 'QUOTATION' : 'INVOICE';
     doc.setFontSize(26);
-    doc.setFont(undefined, 'bold');
+    setPdfFont(doc, 'bold');
     doc.setTextColor(...textColor);
     doc.text(title, 195, 20, { align: 'right' });
 
     const numberText = `#${String(docNumber)}`;
     doc.setFontSize(11);
-    doc.setFont(undefined, 'bold');
+    setPdfFont(doc, 'bold');
     const badgeW = Math.max(36, doc.getTextWidth(numberText) + 10);
     const badgeX = 195 - badgeW;
     const badgeY = 24;
@@ -255,12 +256,12 @@ function drawBillToAndDetails(
     doc.roundedRect(107, y, 88, rightBoxH, 2, 2, 'F');
 
     doc.setFontSize(7);
-    doc.setFont(undefined, 'bold');
+    setPdfFont(doc, 'bold');
     doc.setTextColor(...primaryColor);
     doc.text(isQuotationDoc ? 'QUOTED TO' : 'BILL TO', BILL_TO_TEXT_X, y + 6);
 
     doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
+    setPdfFont(doc, 'bold');
     doc.setTextColor(...textColor);
     let billY = drawWrappedBillToField(doc, client?.name || 'Client', BILL_TO_TEXT_X, y + 13);
 
@@ -289,11 +290,11 @@ function drawBillToAndDetails(
 
     const issueDate = invoice.date ? format(new Date(invoice.date), 'MMM dd, yyyy') : 'N/A';
     doc.setFontSize(7);
-    doc.setFont(undefined, 'bold');
+    setPdfFont(doc, 'bold');
     doc.setTextColor(...grayColor);
     doc.text('ISSUE DATE', 111, y + 18);
     doc.setFontSize(9);
-    doc.setFont(undefined, 'bold');
+    setPdfFont(doc, 'bold');
     doc.setTextColor(...textColor);
     doc.text(issueDate, 190, y + 18, { align: 'right' });
 
@@ -302,40 +303,40 @@ function drawBillToAndDetails(
             ? format(new Date(invoice.datePaid), 'MMM dd, yyyy')
             : issueDate;
         doc.setFontSize(7);
-        doc.setFont(undefined, 'bold');
+        setPdfFont(doc, 'bold');
         doc.setTextColor(...grayColor);
         doc.text('PAYMENT DATE', 111, y + 28);
         doc.setFontSize(9);
-        doc.setFont(undefined, 'bold');
+        setPdfFont(doc, 'bold');
         doc.setTextColor(...textColor);
         doc.text(paymentDate, 190, y + 28, { align: 'right' });
 
         doc.setFontSize(7);
-        doc.setFont(undefined, 'bold');
+        setPdfFont(doc, 'bold');
         doc.setTextColor(...grayColor);
         doc.text('PAYMENT METHOD', 111, y + 38);
         doc.setFontSize(8);
-        doc.setFont(undefined, 'bold');
+        setPdfFont(doc, 'bold');
         doc.setTextColor(...textColor);
         doc.text(getPaymentMethodLabel(invoice.paymentMethod), 190, y + 38, { align: 'right' });
     } else if (isQuotationDoc && hasValidUntil) {
         const validUntil = format(new Date(invoice.validUntil), 'MMM dd, yyyy');
         doc.setFontSize(7);
-        doc.setFont(undefined, 'bold');
+        setPdfFont(doc, 'bold');
         doc.setTextColor(...grayColor);
         doc.text('VALID UNTIL', 111, y + 28);
         doc.setFontSize(9);
-        doc.setFont(undefined, 'bold');
+        setPdfFont(doc, 'bold');
         doc.setTextColor(...textColor);
         doc.text(validUntil, 190, y + 28, { align: 'right' });
     } else if (!isQuotationDoc && hasDueDate) {
         const dueDate = format(new Date(invoice.dueDate), 'MMM dd, yyyy');
         doc.setFontSize(7);
-        doc.setFont(undefined, 'bold');
+        setPdfFont(doc, 'bold');
         doc.setTextColor(...grayColor);
         doc.text('DUE DATE', 111, y + 28);
         doc.setFontSize(9);
-        doc.setFont(undefined, 'bold');
+        setPdfFont(doc, 'bold');
         doc.setTextColor(...textColor);
         doc.text(dueDate, 190, y + 28, { align: 'right' });
     }
@@ -365,7 +366,7 @@ async function drawCompanyHeader(doc, businessInfo, premium, logoUrl, pngCache, 
     }
 
     doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
+    setPdfFont(doc, 'bold');
     doc.setTextColor(...primaryColor);
     doc.text(String(businessInfo.name || 'Your Business'), nameX, nameY);
 
@@ -450,7 +451,7 @@ function drawBottomBoxes(
             doc.roundedRect(15, y, 88, boxH, 2, 2, 'S');
 
             doc.setFontSize(8);
-            doc.setFont(undefined, 'bold');
+            setPdfFont(doc, 'bold');
             doc.setTextColor(...primaryColor);
             doc.text('PAYMENT INFORMATION', 19, y + 7);
 
@@ -469,7 +470,7 @@ function drawBottomBoxes(
             doc.roundedRect(notesX, y, notesW, boxH, 2, 2, 'S');
 
             doc.setFontSize(8);
-            doc.setFont(undefined, 'bold');
+            setPdfFont(doc, 'bold');
             doc.setTextColor(...primaryColor);
             doc.text('NOTES', notesX + 4, y + 7);
 
@@ -496,7 +497,7 @@ function drawBottomBoxes(
         doc.roundedRect(15, y, 180, termsBoxH, 2, 2, 'S');
 
         doc.setFontSize(8);
-        doc.setFont(undefined, 'bold');
+        setPdfFont(doc, 'bold');
         doc.setTextColor(...primaryColor);
         doc.text('TERMS & CONDITIONS', 19, y + 7);
 
@@ -542,12 +543,12 @@ function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayC
     const gapAfterIcon = 0.6;
 
     doc.setFontSize(7);
-    doc.setFont(undefined, 'normal');
+    setPdfFont(doc, 'normal');
     doc.setTextColor(...grayColor);
     const poweredByWidth = doc.getTextWidth(poweredByLabel);
 
     doc.setFontSize(8);
-    doc.setFont(undefined, 'bold');
+    setPdfFont(doc, 'bold');
     doc.setTextColor(...primaryColor);
     const nameWidth = doc.getTextWidth(APP_NAME);
 
@@ -558,13 +559,13 @@ function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayC
     let x = (210 - totalWidth) / 2;
 
     doc.setFontSize(7);
-    doc.setFont(undefined, 'normal');
+    setPdfFont(doc, 'normal');
     doc.setTextColor(...grayColor);
     doc.text(poweredByLabel, x, lockupY + 0.4);
     x += poweredByWidth + gapAfterLabel;
 
     doc.setFontSize(8);
-    doc.setFont(undefined, 'bold');
+    setPdfFont(doc, 'bold');
     doc.setTextColor(...primaryColor);
     if (waraqahLogoPng) {
         doc.addImage(waraqahLogoPng, 'PNG', x, lockupY - iconSize + 1.2, iconSize, iconSize);
@@ -655,7 +656,7 @@ async function drawSignatureStampBlock(
             let textY = ruleY + ruleGap + 2;
             if (name) {
                 doc.setFontSize(8);
-                doc.setFont(undefined, 'bold');
+                setPdfFont(doc, 'bold');
                 doc.setTextColor(...textColor);
                 doc.text(name, drawn.x + drawn.w / 2, textY, { align: 'center' });
                 textY += nameGap;
@@ -680,6 +681,8 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
 
     const paperFormat = resolvePdfPaperFormat(options);
     const doc = new jsPDF({ unit: 'mm', format: paperFormat });
+    await ensurePdfFonts(doc);
+    setPdfFont(doc, 'normal');
     const pageHeight = doc.internal.pageSize.getHeight();
     const pageWidth = doc.internal.pageSize.getWidth();
     const premium = isPremiumUser(businessInfo);
@@ -697,7 +700,7 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
 
     const formatMoney = (value) =>
         Number(value || 0).toLocaleString('en-US', {
-            minimumFractionDigits: 2,
+            minimumFractionDigits: 0,
             maximumFractionDigits: 2,
         });
 
@@ -790,12 +793,14 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         headStyles: {
             fillColor: lightPrimary,
             textColor: primaryColor,
+            font: PDF_FONT_FAMILY,
             fontStyle: 'bold',
             fontSize: 8,
             halign: 'center',
             cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
         },
         styles: {
+            font: PDF_FONT_FAMILY,
             fontSize: 8,
             fontStyle: 'bold',
             cellPadding: { top: 5, bottom: 5, left: 4, right: 4 },
@@ -814,6 +819,26 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
             if (hookData.section === 'head') {
                 hookData.cell.styles.halign = 'center';
             }
+            if (hookData.section === 'body' && hookData.column.index === 1) {
+                const raw = String(hookData.cell.raw ?? '');
+                if (containsEmoji(raw)) {
+                    hookData.cell.text = '';
+                    hookData.cell.customUnicodeText = raw;
+                }
+            }
+        },
+        didDrawCell: (hookData) => {
+            if (!hookData.cell.customUnicodeText) return;
+            const padding = hookData.cell.styles.cellPadding;
+            const padLeft = typeof padding === 'object' ? padding.left : padding || 4;
+            const padTop = typeof padding === 'object' ? padding.top : padding || 5;
+            drawUnicodeText(doc, hookData.cell.customUnicodeText, hookData.cell.x + padLeft, hookData.cell.y + padTop + 2, {
+                maxWidth: hookData.cell.width - padLeft * 2,
+                lineHeight: 4,
+                fontSize: 8,
+                fontStyle: 'bold',
+                textColor,
+            });
         },
         alternateRowStyles: { fillColor: [252, 252, 253] },
         margin: { left: pdfContentLeft, right: pageWidth - pdfContentRight, bottom: FOOTER_ZONE + 4 },

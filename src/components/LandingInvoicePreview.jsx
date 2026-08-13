@@ -7,7 +7,7 @@ const BRAND = DEFAULT_BRAND_COLOR;
 
 function formatAmount(value) {
     return Number(value).toLocaleString('en-US', {
-        minimumFractionDigits: 2,
+        minimumFractionDigits: 0,
         maximumFractionDigits: 2,
     });
 }

@@ -23,6 +23,7 @@ import { getClientBusiness } from '../utils/clientHelpers';
 import { REPLAY_MASK } from '@waraqah/shared';
 import PaginationBar from '../components/PaginationBar';
 import { useClientPagedList } from '../hooks/useClientPagedList';
+import AdaptiveStatValue from '../components/AdaptiveStatValue';
 
 const DOCUMENT_COLUMNS = [
     { key: 'type', label: 'Type' },
@@ -65,7 +66,7 @@ function StatCard({ title, value, detail, className = '' }) {
     return (
         <div className={`stat-card stat-card-compact ${className}`.trim()}>
             <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
-            <p className="stat-card-value">{value}</p>
+            <AdaptiveStatValue value={value} variant="compact" />
             {detail ? <p className="text-[11px] text-zinc-500 leading-snug">{detail}</p> : null}
         </div>
     );
@@ -286,7 +287,7 @@ export default function ClientDetails() {
                 <StatCard
                     title="Total invoiced"
                     value={formatCurrency(summary?.totalInvoiced ?? 0, currency)}
-                    detail={`${summary?.totalDocuments ?? 0} documents`}
+                    detail={`${summary?.totalDocuments ?? 0} sales documents`}
                 />
                 <StatCard
                     title="Products sold"
@@ -296,7 +297,7 @@ export default function ClientDetails() {
             </div>
 
             <section className="card mb-6">
-                <h2 className="text-sm font-semibold text-zinc-950 mb-4">Documents</h2>
+                <h2 className="text-sm font-semibold text-zinc-950 mb-4">Sales documents</h2>
                 {activity.documents?.length ? (
                     <>
                     <DataTable columns={DOCUMENT_COLUMNS}>
@@ -335,7 +336,7 @@ export default function ClientDetails() {
                 ) : (
                     <EmptyState
                         icon={FileText}
-                        title="No documents yet"
+                        title="No sales documents yet"
                         description="Create an invoice, receipt, or quotation for this client to see activity here."
                         action={
                             <button

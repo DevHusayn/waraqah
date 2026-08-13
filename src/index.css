@@ -234,15 +234,11 @@
     }
 
     .stat-card-value {
-        @apply text-xl font-semibold text-zinc-950 tabular-nums tracking-[-0.02em] leading-tight whitespace-nowrap overflow-hidden text-ellipsis;
+        @apply font-semibold text-zinc-950 tabular-nums tracking-[-0.02em] min-w-0 break-words;
     }
 
     .stat-card-compact {
         @apply gap-1 p-3;
-    }
-
-    .stat-card-compact .stat-card-value {
-        @apply text-lg whitespace-normal overflow-visible;
     }
 
     .filter-tab {

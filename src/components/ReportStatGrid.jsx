@@ -1,4 +1,5 @@
 import MonthComparisonTrend from './MonthComparisonTrend';
+import AdaptiveStatValue from './AdaptiveStatValue';
 
 export function ReportStatCell({
     title,
@@ -18,12 +19,7 @@ export function ReportStatCell({
             <p className={`text-xs text-zinc-500 font-medium leading-snug ${titleClassName}`.trim()}>
                 {title}
             </p>
-            <p
-                className={`text-sm sm:text-base lg:text-lg font-semibold text-zinc-950 tabular-nums tracking-[-0.02em] leading-snug min-w-0 ${valueClassName}`.trim()}
-                title={typeof value === 'string' ? value : undefined}
-            >
-                {value}
-            </p>
+            <AdaptiveStatValue value={value} variant="grid" valueClassName={valueClassName} />
             {showTrendArea ? (
                 <div className="flex flex-col gap-1 min-h-[1.125rem]">
                     <MonthComparisonTrend comparison={comparison} positiveDirection={positiveDirection} />
@@ -56,12 +52,7 @@ export function ReportStatFooter({ title, value, titleClassName = '', valueClass
             className={`border-t border-zinc-200/80 bg-white px-3.5 py-3.5 sm:px-4 sm:py-4 ${className}`.trim()}
         >
             <p className={`text-xs font-medium uppercase tracking-wide ${titleClassName}`.trim()}>{title}</p>
-            <p
-                className={`mt-1 text-sm sm:text-base lg:text-lg font-semibold tabular-nums tracking-[-0.02em] leading-snug min-w-0 ${valueClassName}`.trim()}
-                title={typeof value === 'string' ? value : undefined}
-            >
-                {value}
-            </p>
+            <AdaptiveStatValue value={value} variant="grid" valueClassName={valueClassName} className="mt-1" />
         </div>
     );
 }
