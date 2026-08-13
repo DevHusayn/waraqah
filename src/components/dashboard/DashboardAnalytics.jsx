@@ -1,6 +1,4 @@
 import { Suspense, lazy } from 'react';
-import { format } from 'date-fns';
-import MonthPickerField from '../MonthPickerField';
 import DashboardPeriodStats from './DashboardPeriodStats';
 import PaymentBreakdownChart from './PaymentBreakdownChart';
 
@@ -43,9 +41,6 @@ function PaymentBreakdownSkeleton() {
 export function DashboardAnalyticsSkeleton({ premium = false }) {
     return (
         <>
-            <div className="mb-4 flex justify-end">
-                <div className="h-9 w-28 rounded-lg bg-zinc-200/80 animate-pulse" aria-hidden />
-            </div>
             <DashboardPeriodStats loading premium={premium} />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
                 <ChartAreaSkeleton />
@@ -65,31 +60,13 @@ export default function DashboardAnalytics({
     loading = false,
     fetching = false,
     premium = false,
-    summaryYear,
-    summaryMonth,
-    monthInputValue,
-    onMonthChange,
 }) {
     if (loading) {
         return <AnalyticsSkeleton premium={premium} />;
     }
 
-    const maxMonth = format(new Date(), 'yyyy-MM');
-
     return (
         <div className={`mb-6 transition-opacity ${fetching ? 'opacity-80' : ''}`}>
-            <div className="mb-4 flex justify-end">
-                <MonthPickerField
-                    id="dashboard-analytics-month"
-                    variant="compact"
-                    portal
-                    value={monthInputValue}
-                    onChange={onMonthChange}
-                    max={maxMonth}
-                    triggerAriaLabel="Select dashboard month"
-                />
-            </div>
-
             <DashboardPeriodStats summary={periodSummary} loading={false} premium={premium} />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

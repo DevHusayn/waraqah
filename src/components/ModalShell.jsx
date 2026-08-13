@@ -16,6 +16,7 @@ export default function ModalShell({
     role = 'dialog',
     showClose = false,
     size = 'sm',
+    scrollable = true,
 }) {
     useEffect(() => {
         if (!open) return undefined;
@@ -58,7 +59,9 @@ export default function ModalShell({
                 aria-modal="true"
                 aria-labelledby={ariaLabelledby}
                 aria-describedby={ariaDescribedby}
-                className={`relative w-full ${sizes[size] || sizes.sm} bg-white rounded-lg border border-zinc-200/60 shadow-lift animate-modal-scale max-h-[min(90vh,100%)] overflow-y-auto ${panelClassName}`}
+                className={`relative w-full ${sizes[size] || sizes.sm} bg-white rounded-lg border border-zinc-200/60 shadow-lift animate-modal-scale ${
+                    scrollable ? 'max-h-[min(90vh,100%)] overflow-y-auto' : 'overflow-visible'
+                } ${panelClassName}`}
             >
                 {showClose && onClose && (
                     <button

@@ -1,12 +1,12 @@
 import { Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, Crown, TrendingDown, TrendingUp } from 'lucide-react';
+import { AlertTriangle, Crown } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import MonthPickerField from '../components/MonthPickerField';
-import MonthComparisonTrend from '../components/MonthComparisonTrend';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 import { StatementContentSkeleton } from '../components/Skeleton';
+import ReportStatGrid, { ReportStatCell } from '../components/ReportStatGrid';
 import { useSettings } from '../context/SettingsContext';
 import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
 import { useProfitSummaryQuery } from '../hooks/useProfitSummaryQuery';
@@ -15,6 +15,7 @@ import { useClientPagedList } from '../hooks/useClientPagedList';
 import { formatCurrency } from '../utils/currency';
 import { formatMarginPercent } from '../utils/margin';
 import { isPremiumUser } from '../utils/premium';
+import { getExpenseCategoryLabel } from '@waraqah/shared';
 import { format } from 'date-fns';
 
 const ProfitTrendChart = lazy(() => import('../components/dashboard/ProfitTrendChart'));
@@ -28,33 +29,11 @@ const PRODUCT_COLUMNS = [
     { key: 'margin', label: 'Margin', className: 'text-right', width: '12%' },
 ];
 
-function ProfitStatCard({
-    title,
-    value,
-    comparison,
-    detail,
-    icon: Icon = TrendingUp,
-    iconBg = 'bg-violet-50',
-    iconColor = 'text-violet-600',
-    valueClassName = '',
-    className = '',
-}) {
-    return (
-        <div className={`stat-card min-w-0 ${className}`.trim()}>
-            <div className="flex items-start justify-between gap-3">
-                <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
-                <div className={`stat-card-icon shrink-0 ${iconBg}`}>
-                    <Icon className={`h-4 w-4 ${iconColor}`} aria-hidden />
-                </div>
-            </div>
-            <p className={`stat-card-value ${valueClassName}`.trim()}>{value}</p>
-            <div className="flex flex-col gap-1 min-h-[1rem]">
-                <MonthComparisonTrend comparison={comparison} />
-                {detail ? <p className="text-[11px] text-zinc-500">{detail}</p> : null}
-            </div>
-        </div>
-    );
-}
+const EXPENSE_COLUMNS = [
+    { key: 'category', label: 'Category', width: '40%' },
+    { key: 'amount', label: 'Amount', className: 'text-right', width: '30%' },
+    { key: 'share', label: '% of expenses', className: 'text-right', width: '30%' },
+];
 
 function ChartSkeleton() {
     return (
@@ -117,13 +96,16 @@ export default function Profit() {
     const comparison = data?.comparison;
     const missingCostCount = totals?.linesMissingCost ?? 0;
     const grossProfit = totals?.grossProfit ?? 0;
+    const totalExpenses = totals?.totalExpenses ?? 0;
+    const netProfit = totals?.netProfit ?? grossProfit - totalExpenses;
     const profitPositive = grossProfit >= 0;
+    const netPositive = netProfit >= 0;
 
     return (
         <div>
             <PageHeader
                 title="Profit"
-                subtitle={`Gross profit for ${periodLabel}`}
+                subtitle={`Gross and net profit for ${periodLabel}`}
             />
 
             {isPending ? (
@@ -142,29 +124,48 @@ export default function Profit() {
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-                        <ProfitStatCard
+                    <ReportStatGrid>
+                        <ReportStatCell
                             title="Gross profit"
                             value={formatCurrency(grossProfit)}
                             comparison={comparison?.grossProfit}
-                            icon={profitPositive ? TrendingUp : TrendingDown}
-                            iconBg={profitPositive ? 'bg-emerald-50' : 'bg-red-50'}
-                            iconColor={profitPositive ? 'text-emerald-600' : 'text-red-600'}
                             valueClassName={profitPositive ? '' : 'text-red-600'}
+                            reserveTrendSpace
                         />
-                        <ProfitStatCard
+                        <ReportStatCell
+                            title="Total expenses"
+                            value={formatCurrency(totalExpenses)}
+                            comparison={comparison?.totalExpenses}
+                            positiveDirection="down"
+                            reserveTrendSpace
+                        />
+                        <ReportStatCell
+                            title="Net profit"
+                            value={formatCurrency(netProfit)}
+                            comparison={comparison?.netProfit}
+                            valueClassName={netPositive ? '' : 'text-red-600'}
+                            reserveTrendSpace
+                        />
+                        <ReportStatCell
                             title="Gross margin"
                             value={formatMarginPercent(totals?.marginPercent ?? null)}
                             comparison={comparison?.marginPercent}
+                            reserveTrendSpace
                         />
-                        <ProfitStatCard
+                        <ReportStatCell
+                            title="Net margin"
+                            value={formatMarginPercent(totals?.netMarginPercent ?? null)}
+                            comparison={comparison?.netMarginPercent}
+                            reserveTrendSpace
+                        />
+                        <ReportStatCell
                             title="Revenue"
                             value={formatCurrency(totals?.revenue ?? 0)}
                             comparison={comparison?.revenue}
                             detail="Paid sales in period"
-                            className="col-span-2 sm:col-span-1"
+                            reserveTrendSpace
                         />
-                    </div>
+                    </ReportStatGrid>
 
                     {missingCostCount > 0 ? (
                         <div className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm text-amber-900">
@@ -185,6 +186,40 @@ export default function Profit() {
                             <ProfitTrendChart trend={data?.trend} />
                         </Suspense>
                     </div>
+
+                    <section className="mb-6">
+                        <h2 className="text-sm font-semibold text-zinc-900 mb-3">By category</h2>
+                        {data?.byExpenseCategory?.length ? (
+                            <DataTable columns={EXPENSE_COLUMNS} fixedLayout minWidth={480}>
+                                {data.byExpenseCategory.map((row) => (
+                                    <DataTableRow key={row.category}>
+                                        <DataTableCell>
+                                            {getExpenseCategoryLabel(row.category)}
+                                        </DataTableCell>
+                                        <DataTableCell className="text-right tabular-nums">
+                                            {formatCurrency(row.amount ?? 0)}
+                                        </DataTableCell>
+                                        <DataTableCell className="text-right tabular-nums">
+                                            {row.sharePercent != null ? `${row.sharePercent}%` : '—'}
+                                        </DataTableCell>
+                                    </DataTableRow>
+                                ))}
+                            </DataTable>
+                        ) : (
+                            <div className="card">
+                                <EmptyState
+                                    icon={Wallet}
+                                    title="No expenses this month"
+                                    description="Record operating costs on the Expenses page to see net profit."
+                                    action={
+                                        <Link to="/expenses" className="btn-secondary text-sm py-2 px-4">
+                                            Go to Expenses
+                                        </Link>
+                                    }
+                                />
+                            </div>
+                        )}
+                    </section>
 
                     <section>
                         <h2 className="text-sm font-semibold text-zinc-900 mb-3">By product</h2>
@@ -236,7 +271,11 @@ export default function Profit() {
 
                     <p className="mt-6 text-xs text-zinc-500">
                         Gross profit is revenue minus cost of goods sold (COGS) on paid and partial sales only.
-                        Pending and unpaid invoices are excluded. Receipts count once payment is recorded.
+                        Net profit subtracts operating expenses recorded on{' '}
+                        <Link to="/expenses" className="underline underline-offset-2">
+                            Expenses
+                        </Link>
+                        . Pending and unpaid invoices are excluded. Receipts count once payment is recorded.
                     </p>
                 </div>
             )}

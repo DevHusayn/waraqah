@@ -9,6 +9,7 @@ import CustomSelect from '../CustomSelect';
 import { formatCurrency } from '../../utils/currency';
 import { focusFieldById } from '../../utils/formFieldValidation';
 import { formatStockLabel } from '../../utils/stockWarnings';
+import { isEmptyLineItem } from '../../utils/documentFormHelpers';
 
 const ADD_ITEM_FIELD_ORDER = ['description', 'quantity', 'rate'];
 
@@ -103,18 +104,32 @@ export default function DocumentLineItemsSection({
     }, []);
 
     const showSavedItems = savedItemIndices.length > 0;
+    const canAddAnotherItem =
+        activeItem && (showSavedItems || !isEmptyLineItem(activeItem));
 
     return (
         <FormSection
             icon={List}
             title="Items"
             description={`Products or services on this ${docLabel}`}
+            actions={
+                canAddAnotherItem ? (
+                    <button
+                        type="button"
+                        onClick={handleAddItem}
+                        className="btn-secondary text-sm py-2 px-3"
+                    >
+                        <Plus size={16} aria-hidden />
+                        Add another item
+                    </button>
+                ) : null
+            }
         >
             {activeItem ? (
                 <div className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-4">
                     <div className="mb-3">
                         <span className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
-                            Current item
+                            {showSavedItems ? 'New item' : 'Item details'}
                         </span>
                     </div>
                     <LineItemEditor
@@ -133,17 +148,6 @@ export default function DocumentLineItemsSection({
                     />
                 </div>
             ) : null}
-
-            <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-2">
-                <button
-                    type="button"
-                    onClick={handleAddItem}
-                    className="btn-secondary text-sm py-2 px-3 w-full sm:w-auto"
-                >
-                    <Plus size={16} aria-hidden />
-                    Add item
-                </button>
-            </div>
 
             {products.length > 0 ? (
                 <div className="mt-3 flex flex-col sm:flex-row sm:items-end gap-3 p-4 rounded-xl border border-brand/20 bg-brand-subtle/30">

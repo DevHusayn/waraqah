@@ -30,3 +30,4 @@ export * from './pdfPageFormat.js';
 export * from './analyticsEvents.js';
 export * from './replayMasking.js';
 export * from './timezone.js';
+export * from './expenseCategories.js';

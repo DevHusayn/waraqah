@@ -7,9 +7,6 @@ import {
     Trash2,
     Users,
     FileText,
-    Wallet,
-    Clock,
-    Package,
     Plus,
 } from 'lucide-react';
 import { PageSpinner } from '../components/Spinner';
@@ -64,15 +61,10 @@ function documentHref(type, id) {
     return `/invoices/${id}`;
 }
 
-function StatCard({ title, value, icon: Icon, iconBg, iconColor, detail, className = '' }) {
+function StatCard({ title, value, detail, className = '' }) {
     return (
         <div className={`stat-card stat-card-compact ${className}`.trim()}>
-            <div className="flex items-center gap-2">
-                <div className={`stat-card-icon shrink-0 ${iconBg}`}>
-                    <Icon className={`h-3.5 w-3.5 ${iconColor}`} aria-hidden />
-                </div>
-                <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
-            </div>
+            <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
             <p className="stat-card-value">{value}</p>
             {detail ? <p className="text-[11px] text-zinc-500 leading-snug">{detail}</p> : null}
         </div>
@@ -284,33 +276,21 @@ export default function ClientDetails() {
                 <StatCard
                     title="Outstanding"
                     value={formatCurrency(summary?.outstanding ?? 0, currency)}
-                    icon={Clock}
-                    iconBg="bg-amber-50"
-                    iconColor="text-amber-600"
                     detail="Unpaid invoice and receipt balances"
                 />
                 <StatCard
                     title="Paid"
                     value={formatCurrency(summary?.totalPaid ?? 0, currency)}
-                    icon={Wallet}
-                    iconBg="bg-green-50"
-                    iconColor="text-green-600"
                     detail="Payments received"
                 />
                 <StatCard
                     title="Total invoiced"
                     value={formatCurrency(summary?.totalInvoiced ?? 0, currency)}
-                    icon={FileText}
-                    iconBg="bg-sky-50"
-                    iconColor="text-sky-600"
                     detail={`${summary?.totalDocuments ?? 0} documents`}
                 />
                 <StatCard
                     title="Products sold"
                     value={String(summary?.uniqueProducts ?? 0)}
-                    icon={Package}
-                    iconBg="bg-violet-50"
-                    iconColor="text-violet-600"
                     detail="Across invoices and receipts"
                 />
             </div>

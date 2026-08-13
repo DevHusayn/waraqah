@@ -7,9 +7,6 @@ import {
     Trash2,
     Truck,
     ShoppingCart,
-    PackageCheck,
-    Clock,
-    Package,
     Plus,
 } from 'lucide-react';
 import { PageSpinner } from '../components/Spinner';
@@ -49,15 +46,10 @@ function formatDisplayDate(value) {
     }
 }
 
-function StatCard({ title, value, icon: Icon, iconBg, iconColor, detail, className = '' }) {
+function StatCard({ title, value, detail, className = '' }) {
     return (
         <div className={`stat-card stat-card-compact ${className}`.trim()}>
-            <div className="flex items-center gap-2">
-                <div className={`stat-card-icon shrink-0 ${iconBg}`}>
-                    <Icon className={`h-3.5 w-3.5 ${iconColor}`} aria-hidden />
-                </div>
-                <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
-            </div>
+            <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
             <p className="stat-card-value">{value}</p>
             {detail ? <p className="text-[11px] text-zinc-500 leading-snug">{detail}</p> : null}
         </div>
@@ -261,33 +253,21 @@ export default function SupplierDetails() {
                 <StatCard
                     title="Open orders"
                     value={String(summary?.openOrders ?? 0)}
-                    icon={Clock}
-                    iconBg="bg-amber-50"
-                    iconColor="text-amber-600"
                     detail="Sent or partially received"
                 />
                 <StatCard
                     title="Received"
                     value={String(summary?.receivedOrders ?? 0)}
-                    icon={PackageCheck}
-                    iconBg="bg-green-50"
-                    iconColor="text-green-600"
                     detail="Fully received POs"
                 />
                 <StatCard
                     title="Total ordered"
                     value={formatCurrency(summary?.totalOrderedValue ?? 0, currency)}
-                    icon={ShoppingCart}
-                    iconBg="bg-sky-50"
-                    iconColor="text-sky-600"
                     detail={`${summary?.totalOrders ?? 0} purchase orders`}
                 />
                 <StatCard
                     title="Products bought"
                     value={String(summary?.uniqueProducts ?? 0)}
-                    icon={Package}
-                    iconBg="bg-violet-50"
-                    iconColor="text-violet-600"
                     detail="Across all orders"
                 />
             </div>

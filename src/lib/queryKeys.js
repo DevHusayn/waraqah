@@ -27,6 +27,13 @@ export const queryKeys = {
     ],
     adminUsers: (userId, params) => ['adminUsers', userId, params],
     profit: (userId, summaryYear, summaryMonth) => ['profit', userId, summaryYear, summaryMonth],
+    expenses: (userId, params) => ['expenses', userId, params],
+    expenseSummary: (userId, summaryYear, summaryMonth) => [
+        'expenseSummary',
+        userId,
+        summaryYear,
+        summaryMonth,
+    ],
 };
 
 export const STALE_TIMES = {

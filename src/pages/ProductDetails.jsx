@@ -9,11 +9,7 @@ import {
     PackagePlus,
     Trash2,
     Users,
-    TrendingUp,
-    TrendingDown,
-    ShoppingBag,
     Clock,
-    FileText,
 } from 'lucide-react';
 import { PageSpinner } from '../components/Spinner';
 import AlertModal from '../components/AlertModal';
@@ -119,9 +115,6 @@ function formatActivityLineAmount(row) {
 function PeriodStatCard({
     title,
     value,
-    icon: Icon,
-    iconBg,
-    iconColor,
     comparison,
     comparisonLabel,
     valueClassName = '',
@@ -129,12 +122,7 @@ function PeriodStatCard({
 }) {
     return (
         <div className={`stat-card stat-card-compact min-w-0 ${className}`.trim()}>
-            <div className="flex items-start justify-between gap-2">
-                <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
-                <div className={`stat-card-icon shrink-0 ${iconBg}`}>
-                    <Icon className={`h-3.5 w-3.5 ${iconColor}`} aria-hidden />
-                </div>
-            </div>
+            <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
             <p className={`stat-card-value ${valueClassName}`.trim()}>{value}</p>
             {comparison ? (
                 <div className="min-h-[1rem]">
@@ -459,26 +447,17 @@ export default function ProductDetails() {
                         <PeriodStatCard
                             title="Sold"
                             value={soldInPeriod.quantity}
-                            icon={ShoppingBag}
-                            iconBg="bg-brand-light"
-                            iconColor="text-brand"
                             comparison={soldInPeriod.comparison}
                             comparisonLabel={comparisonLabel}
                         />
                         <PeriodStatCard
                             title="Revenue"
                             value={formatCurrency(soldInPeriod.revenue || 0)}
-                            icon={FileText}
-                            iconBg="bg-sky-50"
-                            iconColor="text-sky-600"
                         />
                         {premium ? (
                             <PeriodStatCard
                                 title="Gross profit"
                                 value={formatCurrency(grossProfit)}
-                                icon={profitPositive ? TrendingUp : TrendingDown}
-                                iconBg={profitPositive ? 'bg-emerald-50' : 'bg-red-50'}
-                                iconColor={profitPositive ? 'text-emerald-600' : 'text-red-600'}
                                 valueClassName={profitPositive ? '' : 'text-red-600'}
                                 className="col-span-2 sm:col-span-1"
                             />

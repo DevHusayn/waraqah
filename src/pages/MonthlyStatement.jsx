@@ -12,6 +12,7 @@ import {
     parseStatementMonth,
 } from '../utils/monthlyStatement';
 import { generateMonthlyStatementPdf, statusLabel } from '../utils/monthlyStatementPdf';
+import ReportStatGrid, { ReportStatCell, ReportStatFooter } from '../components/ReportStatGrid';
 import MonthPickerField from '../components/MonthPickerField';
 import PaginationBar from '../components/PaginationBar';
 import { useClientPagedList } from '../hooks/useClientPagedList';
@@ -184,29 +185,30 @@ export default function MonthlyStatement() {
             </div>
 
             {periodLoading ? (
-                <StatementContentSkeleton />
+                <StatementContentSkeleton variant="statement" />
             ) : (
                 <div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+                    <ReportStatGrid
+                        columns="grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
+                        footer={
+                            <ReportStatFooter
+                                title="Total billed"
+                                value={formatCurrency(statement.totals.total)}
+                                titleClassName="text-amber-800 font-semibold"
+                                valueClassName="font-bold"
+                                className="bg-amber-50/80"
+                            />
+                        }
+                    >
                         {STATUS_COLS.map((status) => (
-                            <div key={status} className="card !p-4 min-w-0">
-                                <p className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
-                                    {statusLabel(status)}
-                                </p>
-                                <p className="mt-1 text-base sm:text-lg font-semibold text-zinc-900 tabular-nums break-words">
-                                    {formatCurrency(statement.totals[status])}
-                                </p>
-                            </div>
+                            <ReportStatCell
+                                key={status}
+                                title={statusLabel(status)}
+                                value={formatCurrency(statement.totals[status])}
+                                titleClassName="uppercase tracking-wide"
+                            />
                         ))}
-                        <div className="card !p-4 min-w-0 col-span-2 sm:col-span-3 lg:col-span-6 border-2 border-amber-300/80 bg-amber-50">
-                            <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide">
-                                Total billed
-                            </p>
-                            <p className="mt-1 text-base sm:text-lg font-bold text-zinc-900 tabular-nums break-words">
-                                {formatCurrency(statement.totals.total)}
-                            </p>
-                        </div>
-                    </div>
+                    </ReportStatGrid>
 
                     <div className="card overflow-hidden !p-0">
                         <div className="px-6 py-4 border-b border-zinc-200 bg-zinc-50/80">

@@ -167,7 +167,6 @@ const Quotations = () => {
                         newInPeriod={summary?.newInPeriod ?? summary?.newThisMonth}
                         newComparison={summary?.comparison?.newInPeriod}
                         comparisonLabel={isCurrentPeriod ? 'vs last month' : 'vs previous month'}
-                        totalIcon={ClipboardList}
                         periodLabel={periodLabel}
                         monthInputValue={monthInputValue}
                         onPeriodChange={setMonthInputValue}

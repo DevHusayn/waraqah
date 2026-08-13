@@ -1,4 +1,3 @@
-import { CheckCircle, Clock, FileText, TrendingDown, TrendingUp } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 import MonthComparisonTrend from '../MonthComparisonTrend';
 
@@ -11,9 +10,6 @@ function formatDocumentCounts(invoices, receipts) {
 function PeriodStatCard({
     title,
     value,
-    icon: Icon,
-    iconBg,
-    iconColor,
     comparison,
     positiveDirection = 'up',
     detail,
@@ -22,19 +18,16 @@ function PeriodStatCard({
 }) {
     return (
         <div className={`stat-card min-w-0 ${className}`.trim()}>
-            <div className="flex items-start justify-between gap-3">
-                <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
-                <div className={`stat-card-icon shrink-0 ${iconBg}`}>
-                    <Icon className={`h-4 w-4 ${iconColor}`} aria-hidden />
-                </div>
-            </div>
+            <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
             <p className={`stat-card-value ${valueClassName}`.trim()} title={String(value)}>
                 {value}
             </p>
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-3 min-h-[1rem]">
-                <MonthComparisonTrend comparison={comparison} positiveDirection={positiveDirection} />
+            <div className="flex flex-col gap-1 min-h-[1rem]">
+                <div className="min-w-0">
+                    <MonthComparisonTrend comparison={comparison} positiveDirection={positiveDirection} />
+                </div>
                 {detail ? (
-                    <p className="text-[11px] text-zinc-500 sm:whitespace-nowrap sm:shrink-0">{detail}</p>
+                    <p className="text-[11px] text-zinc-500 leading-snug">{detail}</p>
                 ) : null}
             </div>
         </div>
@@ -52,10 +45,7 @@ export default function DashboardPeriodStats({ summary, loading = false, premium
                             !premium && index === 2 ? ' col-span-2 sm:col-span-1' : ''
                         }`}
                     >
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="h-3 w-24 rounded bg-zinc-200/80" />
-                            <div className="h-8 w-8 rounded-lg bg-zinc-200/80" />
-                        </div>
+                        <div className="h-3 w-24 rounded bg-zinc-200/80" />
                         <div className="h-6 w-28 rounded bg-zinc-200/80" />
                         <div className="h-3 w-32 rounded bg-zinc-200/80" />
                         {!premium && index === 2 ? (
@@ -77,26 +67,17 @@ export default function DashboardPeriodStats({ summary, loading = false, premium
             <PeriodStatCard
                 title="Total Revenue"
                 value={formatCurrency(current?.totalRevenue ?? 0)}
-                icon={FileText}
-                iconBg="bg-brand-light"
-                iconColor="text-brand"
                 comparison={comparison?.totalRevenue}
             />
             <PeriodStatCard
                 title="Outstanding"
                 value={formatCurrency(current?.outstanding ?? 0)}
-                icon={Clock}
-                iconBg="bg-amber-50"
-                iconColor="text-amber-600"
                 comparison={comparison?.outstanding}
                 positiveDirection="down"
             />
             <PeriodStatCard
                 title="Fully received payment"
                 value={String(current?.paymentsReceived ?? 0)}
-                icon={CheckCircle}
-                iconBg="bg-green-50"
-                iconColor="text-green-600"
                 comparison={comparison?.paymentsReceived}
                 detail={formatDocumentCounts(
                     current?.paidInvoices ?? 0,
@@ -108,9 +89,6 @@ export default function DashboardPeriodStats({ summary, loading = false, premium
                 <PeriodStatCard
                     title="Gross profit"
                     value={formatCurrency(grossProfit)}
-                    icon={profitPositive ? TrendingUp : TrendingDown}
-                    iconBg={profitPositive ? 'bg-emerald-50' : 'bg-red-50'}
-                    iconColor={profitPositive ? 'text-emerald-600' : 'text-red-600'}
                     valueClassName={profitPositive ? '' : 'text-red-600'}
                     comparison={comparison?.grossProfit}
                 />

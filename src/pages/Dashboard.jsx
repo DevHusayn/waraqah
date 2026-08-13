@@ -14,6 +14,7 @@ import { formatCurrency } from '../utils/currency';
 import { getDisplayNumber, getReceiptStatusBadge } from '../utils/receiptHelpers';
 import { isQuotationDocument, isReceiptDocument } from '../utils/documentHelpers';
 import PageHeader from '../components/PageHeader';
+import MonthPickerField from '../components/MonthPickerField';
 import InvoiceLimitModal from '../components/InvoiceLimitModal';
 import CreateDocumentModal from '../components/CreateDocumentModal';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
@@ -23,7 +24,7 @@ import { prefetchFrequentRoutes } from '../utils/prefetchRoutes';
 import { formatInvoiceUsageLabel } from '../utils/invoiceLimits';
 import { isPremiumUser } from '../utils/premium';
 import { useSettings } from '../context/SettingsContext';
-import { getDisplayBusinessName, DASHBOARD_SUBTITLE } from '@waraqah/shared';
+import { getDisplayBusinessName } from '@waraqah/shared';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import StatusBadge from '../components/StatusBadge';
 import EmptyState from '../components/EmptyState';
@@ -64,6 +65,7 @@ const Dashboard = () => {
         summaryMonth,
         monthInputValue,
         setMonthInputValue,
+        periodLabel,
     } = useSummaryPeriod();
     const { data, isPending, isFetching } = useDashboardQuery(summaryYear, summaryMonth);
     const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -86,6 +88,7 @@ const Dashboard = () => {
     const premium = isPremiumUser(businessInfo);
 
     const dashboardLoading = isPending;
+    const maxMonth = format(new Date(), 'yyyy-MM');
 
     const resolveDocumentStatusBadge = (doc) => {
         if (isReceiptDocument(doc) || doc.documentType === 'receipt') {
@@ -124,8 +127,18 @@ const Dashboard = () => {
             />
             <PageHeader
                 title={displayBusinessName}
-                subtitle={DASHBOARD_SUBTITLE}
-            />
+                subtitle={`Overview for ${periodLabel}`}
+            >
+                <MonthPickerField
+                    id="dashboard-analytics-month"
+                    variant="compact"
+                    portal
+                    value={monthInputValue}
+                    onChange={setMonthInputValue}
+                    max={maxMonth}
+                    triggerAriaLabel="Select dashboard month"
+                />
+            </PageHeader>
             {!premium && usageLabel ? (
                 <InvoiceUsageBanner label={usageLabel} className="mb-4" />
             ) : null}
@@ -136,10 +149,6 @@ const Dashboard = () => {
                 loading={dashboardLoading}
                 fetching={isFetching && !isPending}
                 premium={premium}
-                summaryYear={summaryYear}
-                summaryMonth={summaryMonth}
-                monthInputValue={monthInputValue}
-                onMonthChange={setMonthInputValue}
             />
 
             <div className="card mb-6">

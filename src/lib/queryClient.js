@@ -94,6 +94,15 @@ export function invalidateClientListQueries(userId) {
     invalidateListSummaryQueries(userId, 'clients');
 }
 
+/** Invalidate expense list, summary, profit, and dashboard after expense mutations. */
+export function invalidateExpenseQueries(userId) {
+    if (!userId) return;
+    queryClient.invalidateQueries({ queryKey: ['expenses', userId] });
+    queryClient.invalidateQueries({ queryKey: ['expenseSummary', userId] });
+    queryClient.invalidateQueries({ queryKey: ['profit', userId] });
+    invalidateDashboardQueries(userId);
+}
+
 /** Wipe all cached server state — call on logout / account switch. */
 export function clearUserQueryCache() {
     queryClient.clear();

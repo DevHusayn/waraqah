@@ -5,9 +5,11 @@ export default function MonthComparisonTrend({
 }) {
     if (!comparison) return null;
 
+    const baseClass = 'text-xs font-medium whitespace-nowrap';
+
     if (comparison.kind === 'unavailable') {
         return (
-            <p className="text-xs font-medium text-zinc-500">
+            <p className={`${baseClass} text-zinc-500`}>
                 — {label}
             </p>
         );
@@ -15,7 +17,7 @@ export default function MonthComparisonTrend({
 
     if (comparison.kind === 'flat' || comparison.direction === 'flat') {
         return (
-            <p className="text-xs font-medium text-zinc-500">
+            <p className={`${baseClass} text-zinc-500`}>
                 No change {label}
             </p>
         );
@@ -24,7 +26,7 @@ export default function MonthComparisonTrend({
     if (comparison.kind === 'new') {
         const isPositive = comparison.direction === positiveDirection;
         return (
-            <p className={`text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-500'}`}>
+            <p className={`${baseClass} ${isPositive ? 'text-green-600' : 'text-red-500'}`}>
                 <span aria-hidden>↗</span> New {label}
             </p>
         );
@@ -36,7 +38,7 @@ export default function MonthComparisonTrend({
     const percentLabel = isCapped ? `${comparison.value}%+` : `${comparison.value}%`;
 
     return (
-        <p className={`text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-500'}`}>
+        <p className={`${baseClass} ${isPositive ? 'text-green-600' : 'text-red-500'}`}>
             <span aria-hidden>{isUp ? '↗' : '↘'}</span>{' '}
             {percentLabel} {label}
         </p>

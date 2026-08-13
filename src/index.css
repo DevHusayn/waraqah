@@ -230,31 +230,19 @@
     }
 
     .stat-card {
-        @apply card flex flex-col gap-2.5 min-w-0 !p-4 transition-shadow duration-200 hover:shadow-card;
-    }
-
-    .stat-card-icon {
-        @apply shrink-0 p-2 rounded-lg flex items-center justify-center;
-    }
-
-    .stat-card-body {
-        @apply min-w-0 w-full;
+        @apply rounded-lg border border-zinc-200/80 bg-white p-3.5 flex flex-col gap-1.5 min-w-0;
     }
 
     .stat-card-value {
-        @apply text-lg font-semibold text-zinc-950 tabular-nums tracking-[-0.02em] leading-tight whitespace-nowrap overflow-hidden text-ellipsis;
+        @apply text-xl font-semibold text-zinc-950 tabular-nums tracking-[-0.02em] leading-tight whitespace-nowrap overflow-hidden text-ellipsis;
     }
 
     .stat-card-compact {
-        @apply gap-1.5 !p-3 hover:shadow-soft;
-    }
-
-    .stat-card-compact .stat-card-icon {
-        @apply p-1.5;
+        @apply gap-1 p-3;
     }
 
     .stat-card-compact .stat-card-value {
-        @apply text-base whitespace-normal overflow-visible;
+        @apply text-lg whitespace-normal overflow-visible;
     }
 
     .filter-tab {

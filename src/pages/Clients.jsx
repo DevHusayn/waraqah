@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Plus, Search, Users, UserPlus } from 'lucide-react';
+import { Plus, Search, Users } from 'lucide-react';
 import ListSummaryStats from '../components/ListSummaryStats';
 import AlertModal from '../components/AlertModal';
 import ClientFormModal, { EMPTY_CLIENT } from '../components/ClientFormModal';
@@ -202,8 +202,6 @@ const Clients = () => {
                     newInPeriod={newInPeriod}
                     newComparison={summary?.comparison?.newInPeriod}
                     comparisonLabel={isCurrentPeriod ? 'vs last month' : 'vs previous month'}
-                    totalIcon={Users}
-                    newIcon={UserPlus}
                     periodLabel={periodLabel}
                     monthInputValue={monthInputValue}
                     onPeriodChange={setMonthInputValue}

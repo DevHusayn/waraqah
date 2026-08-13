@@ -176,7 +176,6 @@ const Receipts = () => {
                         newInPeriod={summary?.newInPeriod ?? summary?.newThisMonth}
                         newComparison={summary?.comparison?.newInPeriod}
                         comparisonLabel={isCurrentPeriod ? 'vs last month' : 'vs previous month'}
-                        totalIcon={Receipt}
                         periodLabel={periodLabel}
                         monthInputValue={monthInputValue}
                         onPeriodChange={setMonthInputValue}

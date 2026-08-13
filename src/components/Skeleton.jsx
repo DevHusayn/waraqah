@@ -1,4 +1,5 @@
 import { DashboardAnalyticsSkeleton } from './dashboard/DashboardAnalytics';
+import { ReportStatGridSkeleton } from './ReportStatGrid';
 
 function Skeleton({ className = '' }) {
     return <div className={`animate-pulse rounded bg-zinc-200/80 ${className}`.trim()} aria-hidden />;
@@ -89,10 +90,7 @@ export function ListSummaryStatsSkeleton({ className = 'mb-6' }) {
         <div className={`grid grid-cols-2 gap-3 max-w-lg ${className}`.trim()} aria-hidden>
             {[0, 1].map((index) => (
                 <div key={index} className="stat-card stat-card-compact">
-                    <div className="flex items-center gap-2 min-w-0">
-                        <Skeleton className="h-7 w-7 rounded-lg shrink-0" />
-                        <Skeleton className={`h-3 ${index === 0 ? 'w-[5.5rem]' : 'w-[7.5rem]'}`} />
-                    </div>
+                    <Skeleton className={`h-3 ${index === 0 ? 'w-[5.5rem]' : 'w-[7.5rem]'}`} />
                     <Skeleton className="h-5 w-10" />
                     {index === 1 ? <Skeleton className="h-3 w-24" /> : null}
                 </div>
@@ -156,10 +154,7 @@ export function StatsCardsSkeleton({ count = 3, className = 'grid grid-cols-2 lg
                     key={i}
                     className={`stat-card${fullWidthLast && i === count - 1 ? ' col-span-2 lg:col-span-1' : ''}`}
                 >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                        <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
-                        <Skeleton className="h-3 w-20" />
-                    </div>
+                    <Skeleton className="h-3 w-20" />
                     <Skeleton className="h-6 w-24" />
                 </div>
             ))}
@@ -276,17 +271,16 @@ export function StatementPageSkeleton() {
     );
 }
 
-export function StatementContentSkeleton() {
+export function StatementContentSkeleton({ variant = 'profit' }) {
+    const isStatement = variant === 'statement';
+
     return (
         <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-                {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="card !p-4 space-y-2">
-                        <Skeleton className="h-3 w-16" />
-                        <Skeleton className="h-6 w-20" />
-                    </div>
-                ))}
-            </div>
+            <ReportStatGridSkeleton
+                count={isStatement ? 5 : 6}
+                columns={isStatement ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : 'grid-cols-2 sm:grid-cols-3'}
+                footer={isStatement}
+            />
             <div className="card overflow-hidden !p-0">
                 <div className="px-6 py-4 border-b border-zinc-200 bg-zinc-50/80 space-y-2">
                     <Skeleton className="h-5 w-36" />

@@ -14,6 +14,7 @@ import {
     Truck,
     ShoppingCart,
     TrendingUp,
+    Wallet,
 } from 'lucide-react';
 import { useState, useEffect, memo } from 'react';
 import { useSettings } from '../context/SettingsContext';
@@ -32,23 +33,40 @@ import {
     isBusinessSetupCoachmarkDismissed,
 } from '../utils/businessSetupCoachmark';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
-import { APP_TAGLINE } from '../constants/brand';
 import useAppLogout from '../hooks/useAppLogout';
 import InstallPrompt from './InstallPrompt';
 import NavLinks from './NavLinks';
 
-const NAV_ITEMS = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Invoices', href: '/invoices', icon: FileText },
-    { name: 'Receipts', href: '/receipts', icon: Receipt },
-    { name: 'Quotations', href: '/quotations', icon: ClipboardList },
-    { name: 'Drafts', href: '/drafts', icon: PenLine, badgeKey: 'drafts' },
-    { name: 'Statements', href: '/statements', icon: FileBarChart, premiumFeature: true },
-    { name: 'Profit', href: '/profit', icon: TrendingUp, premiumFeature: true },
-    { name: 'Clients', href: '/clients', icon: Users },
-    { name: 'Suppliers', href: '/suppliers', icon: Truck },
-    { name: 'Products', href: '/products', icon: Package },
-    { name: 'Purchase orders', href: '/purchase-orders', icon: ShoppingCart },
+const NAV_SECTIONS = [
+    {
+        items: [{ name: 'Dashboard', href: '/', icon: LayoutDashboard }],
+    },
+    {
+        label: 'Sales',
+        items: [
+            { name: 'Invoices', href: '/invoices', icon: FileText },
+            { name: 'Receipts', href: '/receipts', icon: Receipt },
+            { name: 'Quotations', href: '/quotations', icon: ClipboardList },
+            { name: 'Drafts', href: '/drafts', icon: PenLine, badgeKey: 'drafts' },
+        ],
+    },
+    {
+        label: 'Finance',
+        items: [
+            { name: 'Statements', href: '/statements', icon: FileBarChart, premiumFeature: true },
+            { name: 'Profit', href: '/profit', icon: TrendingUp, premiumFeature: true },
+            { name: 'Expenses', href: '/expenses', icon: Wallet },
+        ],
+    },
+    {
+        label: 'Directory',
+        items: [
+            { name: 'Clients', href: '/clients', icon: Users },
+            { name: 'Products', href: '/products', icon: Package },
+            { name: 'Suppliers', href: '/suppliers', icon: Truck },
+            { name: 'Purchase orders', href: '/purchase-orders', icon: ShoppingCart },
+        ],
+    },
 ];
 
 const Layout = ({ children }) => {
@@ -132,14 +150,18 @@ const Layout = ({ children }) => {
         ? [{ name: 'Admin', href: '/admin', icon: LayoutDashboard }]
         : [];
 
-    const navigation = [...NAV_ITEMS, ...adminItem];
-
     const isActive = (path) => {
         if (path === '/') return location.pathname === '/';
         if (path === '/invoices') {
             return location.pathname === '/invoices' || location.pathname.startsWith('/invoices/');
         }
         return location.pathname.startsWith(path);
+    };
+
+    const navLinkProps = {
+        isActive,
+        premium,
+        badges: { drafts: draftCount },
     };
 
     const logoutButton = (
@@ -157,17 +179,16 @@ const Layout = ({ children }) => {
         <>
             {showBrand ? (
                 <div className="px-2 mb-5 min-w-0">
-                    <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} subtitle={APP_TAGLINE} />
+                    <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
                 </div>
             ) : null}
             <nav className="flex flex-col gap-0.5">
-                <NavLinks
-                    items={navigation}
-                    isActive={isActive}
-                    onNavigate={onNavigate}
-                    premium={premium}
-                    badges={{ drafts: draftCount }}
-                />
+                <NavLinks sections={NAV_SECTIONS} onNavigate={onNavigate} {...navLinkProps} />
+                {adminItem.length > 0 ? (
+                    <div className="mt-2">
+                        <NavLinks items={adminItem} onNavigate={onNavigate} {...navLinkProps} />
+                    </div>
+                ) : null}
                 {showLogout && isAuthenticated ? (
                     <div className="mt-4 pt-4 border-t border-zinc-200/50">
                         {logoutButton}
@@ -181,7 +202,7 @@ const Layout = ({ children }) => {
         <div className="min-h-screen bg-surface-muted">
             <header className="hidden md:flex fixed top-0 inset-x-0 z-50 h-14 items-center border-b border-zinc-200/50 bg-white">
                 <div className="flex h-full w-[15.5rem] shrink-0 items-center px-4 min-w-0">
-                    <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} subtitle={APP_TAGLINE} />
+                    <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
                 </div>
                 <div className="flex flex-1 items-center justify-end px-4 sm:px-6 lg:px-8">
                     {showAccountAvatar ? <AccountAvatarPill /> : null}
@@ -234,13 +255,21 @@ const Layout = ({ children }) => {
                 >
                     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 pb-4 pt-4">
                         <NavLinks
-                            items={navigation}
-                            isActive={isActive}
+                            sections={NAV_SECTIONS}
                             onNavigate={() => setSidebarOpen(false)}
-                            premium={premium}
-                            badges={{ drafts: draftCount }}
+                            {...navLinkProps}
                             className="gap-1.5 [&_.nav-link]:py-2.5"
                         />
+                        {adminItem.length > 0 ? (
+                            <div className="mt-2">
+                                <NavLinks
+                                    items={adminItem}
+                                    onNavigate={() => setSidebarOpen(false)}
+                                    {...navLinkProps}
+                                    className="gap-1.5 [&_.nav-link]:py-2.5"
+                                />
+                            </div>
+                        ) : null}
                     </div>
 
                     {isAuthenticated ? (

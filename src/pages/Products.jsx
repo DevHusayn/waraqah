@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Package, Search, PackagePlus } from 'lucide-react';
+import { Plus, Package, Search } from 'lucide-react';
 import ListSummaryStats from '../components/ListSummaryStats';
 import AlertModal from '../components/AlertModal';
 import ProductFormModal, { EMPTY_PRODUCT } from '../components/ProductFormModal';
@@ -157,8 +157,6 @@ export default function Products() {
                     newComparison={summary?.comparison?.newInPeriod}
                     comparisonLabel={isCurrentPeriod ? 'vs last month' : 'vs previous month'}
                     periodPrefix="Added this"
-                    totalIcon={Package}
-                    newIcon={PackagePlus}
                     periodLabel={periodLabel}
                     monthInputValue={monthInputValue}
                     onPeriodChange={setMonthInputValue}
