@@ -139,6 +139,7 @@ const Dashboard = () => {
             <PageHeader
                 title={displayBusinessName}
                 subtitle={`Overview for ${periodLabel}`}
+                inlineActions
             >
                 <MonthPickerField
                     id="dashboard-analytics-month"
