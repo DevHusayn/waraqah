@@ -59,6 +59,7 @@ export default function DashboardAnalytics({
     periodSummary,
     loading = false,
     fetching = false,
+    periodUpdating = false,
     premium = false,
     comparisonLabel,
 }) {
@@ -67,10 +68,10 @@ export default function DashboardAnalytics({
     }
 
     return (
-        <div className={`mb-6 transition-opacity ${fetching ? 'opacity-80' : ''}`}>
+        <div className={`mb-6 transition-opacity ${fetching && !periodUpdating ? 'opacity-80' : ''}`}>
             <DashboardPeriodStats
                 summary={periodSummary}
-                loading={false}
+                loading={periodUpdating}
                 premium={premium}
                 comparisonLabel={comparisonLabel}
             />
@@ -79,10 +80,14 @@ export default function DashboardAnalytics({
                 <Suspense fallback={<ChartAreaSkeleton />}>
                     <RevenueTrendChart trend={analytics?.revenueTrend} />
                 </Suspense>
-                <PaymentBreakdownChart
-                    breakdown={periodSummary?.paymentBreakdown}
-                    periodLabel={periodSummary?.period?.label}
-                />
+                {periodUpdating ? (
+                    <PaymentBreakdownSkeleton />
+                ) : (
+                    <PaymentBreakdownChart
+                        breakdown={periodSummary?.paymentBreakdown}
+                        periodLabel={periodSummary?.period?.label}
+                    />
+                )}
             </div>
         </div>
     );

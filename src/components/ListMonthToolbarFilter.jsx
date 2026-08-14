@@ -12,7 +12,7 @@ export default function ListMonthToolbarFilter({
     const maxMonth = format(new Date(), 'yyyy-MM');
 
     return (
-        <div className="flex w-full sm:w-auto items-center gap-2">
+        <div className="min-w-0 flex-1 sm:flex-none">
             <MonthPickerField
                 id="list-month-filter"
                 variant="compact"
@@ -26,6 +26,8 @@ export default function ListMonthToolbarFilter({
                 displayLabel={periodLabel}
                 max={maxMonth}
                 triggerAriaLabel="Filter list by period"
+                className="!block w-full sm:!inline"
+                triggerClassName="w-full justify-between sm:w-auto sm:justify-start"
             />
         </div>
     );

@@ -191,6 +191,24 @@ const Invoices = () => {
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search invoices..."
                         aria-label="Search invoices"
+                        action={
+                            <ListExportButton
+                                path="/invoices/export"
+                                resource="invoices"
+                                companyName={businessInfo?.name}
+                                filters={{
+                                    search: debouncedSearch,
+                                    status: filter,
+                                    sort: sortBy,
+                                    year: listYear,
+                                    month: listMonth,
+                                    period: listQueryPeriod,
+                                }}
+                                disabled={pagination.total === 0}
+                                onExported={() => showToast('Invoices exported successfully.', 'success')}
+                                onError={(err) => showToast(err.message || 'Export failed.', 'error')}
+                            />
+                        }
                     />
                     <ToolbarActions>
                         <ListMonthToolbarFilter
@@ -201,23 +219,7 @@ const Invoices = () => {
                             periodLabel={listPeriodLabel}
                             isThisMonth={listIsThisMonth}
                         />
-                        <ListExportButton
-                            path="/invoices/export"
-                            resource="invoices"
-                            companyName={businessInfo?.name}
-                            filters={{
-                                search: debouncedSearch,
-                                status: filter,
-                                sort: sortBy,
-                                year: listYear,
-                                month: listMonth,
-                                period: listQueryPeriod,
-                            }}
-                            disabled={pagination.total === 0}
-                            onExported={() => showToast('Invoices exported successfully.', 'success')}
-                            onError={(err) => showToast(err.message || 'Export failed.', 'error')}
-                        />
-                        <div className="w-full sm:w-44">
+                        <div className="min-w-0 flex-1 sm:w-44 sm:flex-none">
                             <CustomSelect
                                 value={sortBy}
                                 onChange={setSortBy}

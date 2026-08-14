@@ -73,7 +73,7 @@ const Dashboard = () => {
         showComparison,
         comparisonLabel,
     } = usePeriodFilter();
-    const { data, isPending, isFetching } = useDashboardQuery(
+    const { data, isPending, isFetching, isPlaceholderData } = useDashboardQuery(
         queryPeriod,
         summaryYear,
         summaryMonth
@@ -98,6 +98,7 @@ const Dashboard = () => {
     const premium = isPremiumUser(businessInfo);
 
     const dashboardLoading = isPending;
+    const periodUpdating = Boolean(isPlaceholderData && isFetching);
     const maxMonth = format(new Date(), 'yyyy-MM');
 
     const resolveDocumentStatusBadge = (doc) => {
@@ -163,6 +164,7 @@ const Dashboard = () => {
                 periodSummary={data?.periodSummary}
                 loading={dashboardLoading}
                 fetching={isFetching && !isPending}
+                periodUpdating={periodUpdating}
                 premium={premium}
                 comparisonLabel={showComparison ? comparisonLabel : undefined}
             />

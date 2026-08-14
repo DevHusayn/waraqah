@@ -37,10 +37,10 @@ export default function ListExportButton({
             disabled={disabled || loading}
             title="Export all rows matching your current filters"
             aria-label="Export filtered list as CSV"
-            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-200 bg-white text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors disabled:opacity-50 min-w-[108px] ${className}`.trim()}
+            className={`inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-md border border-zinc-200/80 bg-white text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 sm:h-auto sm:w-auto sm:min-w-[108px] sm:gap-1.5 sm:rounded-xl sm:border-zinc-200 sm:px-3 sm:py-2 ${className}`.trim()}
         >
             {loading ? <Spinner size="sm" inline /> : <Download size={16} aria-hidden />}
-            Export
+            <span className="hidden sm:inline">Export</span>
         </button>
     );
 }

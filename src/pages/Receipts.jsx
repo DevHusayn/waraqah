@@ -198,6 +198,24 @@ const Receipts = () => {
                         icon={Search}
                         type="search"
                         aria-label="Search receipts"
+                        action={
+                            <ListExportButton
+                                path="/receipts/export"
+                                resource="receipts"
+                                companyName={businessInfo?.name}
+                                filters={{
+                                    search: debouncedSearch,
+                                    status: filter,
+                                    sort: sortBy,
+                                    year: listYear,
+                                    month: listMonth,
+                                    period: listQueryPeriod,
+                                }}
+                                disabled={pagination.total === 0}
+                                onExported={() => showToast('Receipts exported successfully.', 'success')}
+                                onError={(err) => showToast(err.message || 'Export failed.', 'error')}
+                            />
+                        }
                     />
                     <ToolbarActions>
                         <ListMonthToolbarFilter
@@ -208,29 +226,16 @@ const Receipts = () => {
                             periodLabel={listPeriodLabel}
                             isThisMonth={listIsThisMonth}
                         />
-                        <ListExportButton
-                            path="/receipts/export"
-                            resource="receipts"
-                            companyName={businessInfo?.name}
-                            filters={{
-                                search: debouncedSearch,
-                                status: filter,
-                                sort: sortBy,
-                                year: listYear,
-                                month: listMonth,
-                                period: listQueryPeriod,
-                            }}
-                            disabled={pagination.total === 0}
-                            onExported={() => showToast('Receipts exported successfully.', 'success')}
-                            onError={(err) => showToast(err.message || 'Export failed.', 'error')}
-                        />
-                        <CustomSelect
-                            value={sortBy}
-                            onChange={setSortBy}
-                            options={SORT_OPTIONS}
-                            icon={ArrowUpDown}
-                            ariaLabel="Sort receipts"
-                        />
+                        <div className="min-w-0 flex-1 sm:w-44 sm:flex-none">
+                            <CustomSelect
+                                value={sortBy}
+                                onChange={setSortBy}
+                                options={SORT_OPTIONS}
+                                placeholder="Sort by"
+                                leadingIcon={<ArrowUpDown size={14} />}
+                                aria-label="Sort receipts"
+                            />
+                        </div>
                     </ToolbarActions>
                 </Toolbar>
 

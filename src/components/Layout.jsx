@@ -217,29 +217,24 @@ const Layout = ({ children }) => {
 
             <div className="md:pl-[15.5rem] md:pt-14 flex flex-col flex-1 min-h-screen min-w-0">
                 <header className="sticky top-0 z-50 flex md:hidden h-14 shrink-0 items-center justify-between border-b border-zinc-200/50 bg-white px-4">
-                    <div className="flex items-center min-w-0">
-                        <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                        {showAccountAvatar ? <AccountAvatarPill /> : null}
-                        <button
-                            type="button"
-                            className="inline-flex items-center justify-center rounded-md p-2 text-zinc-600 hover:bg-zinc-100/80 transition-colors"
-                            onClick={() => setSidebarOpen((open) => !open)}
-                            aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
-                            aria-expanded={sidebarOpen}
-                        >
-                            {sidebarOpen ? (
-                                <X className="h-5 w-5 stroke-[1.75]" />
-                            ) : (
-                                <Menu className="h-5 w-5 stroke-[1.75]" />
-                            )}
-                        </button>
-                    </div>
+                    <button
+                        type="button"
+                        className="inline-flex items-center justify-center rounded-md p-2 text-zinc-600 hover:bg-zinc-100/80 transition-colors"
+                        onClick={() => setSidebarOpen((open) => !open)}
+                        aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+                        aria-expanded={sidebarOpen}
+                    >
+                        {sidebarOpen ? (
+                            <X className="h-5 w-5 stroke-[1.75]" />
+                        ) : (
+                            <Menu className="h-5 w-5 stroke-[1.75]" />
+                        )}
+                    </button>
+                    {showAccountAvatar ? <AccountAvatarPill /> : null}
                 </header>
 
                 <div
-                    className={`fixed top-14 inset-x-0 bottom-0 z-40 bg-zinc-950/40 md:hidden transition-opacity duration-300 ease-smooth ${
+                    className={`fixed inset-0 z-[52] bg-zinc-950/40 md:hidden transition-opacity duration-300 ease-smooth ${
                         sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                     }`}
                     onClick={() => setSidebarOpen(false)}
@@ -247,13 +242,16 @@ const Layout = ({ children }) => {
                 />
 
                 <aside
-                    className={`fixed z-[45] md:hidden flex w-[min(17.5rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] transition-transform duration-300 ease-smooth will-change-transform top-[calc(3.5rem+0.75rem)] bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-3 ${
-                        sidebarOpen ? 'translate-x-0 pointer-events-auto' : 'translate-x-[calc(100%+0.75rem)] pointer-events-none'
+                    className={`fixed z-[55] md:hidden flex w-[min(17.5rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] transition-transform duration-300 ease-smooth will-change-transform top-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 ${
+                        sidebarOpen ? 'translate-x-0 pointer-events-auto' : '-translate-x-[calc(100%+0.75rem)] pointer-events-none'
                     }`}
                     aria-hidden={!sidebarOpen}
                     aria-label="Navigation menu"
                 >
-                    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 pb-4 pt-4">
+                    <div className="flex h-14 shrink-0 items-center px-4 min-w-0">
+                        <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
+                    </div>
+                    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 pb-4 pt-2">
                         <NavLinks
                             sections={NAV_SECTIONS}
                             onNavigate={() => setSidebarOpen(false)}

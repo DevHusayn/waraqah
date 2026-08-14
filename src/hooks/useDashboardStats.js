@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
@@ -35,12 +35,9 @@ export function useDashboardQuery(period, summaryYear, summaryMonth) {
         enabled: isAuthenticated && Boolean(userId) && isPeriodReady(period, summaryYear, summaryMonth),
         staleTime: STALE_TIMES.dashboard,
         placeholderData: (previousData, previousQuery) => {
-            const [, prevUserId, prevPeriod, prevYear, prevMonth] = previousQuery?.queryKey ?? [];
+            const prevUserId = previousQuery?.queryKey?.[1];
             if (prevUserId !== userId) return undefined;
-            if (prevPeriod !== period || prevYear !== summaryYear || prevMonth !== summaryMonth) {
-                return undefined;
-            }
-            return keepPreviousData(previousData);
+            return previousData;
         },
     });
 }

@@ -241,6 +241,22 @@ const Clients = () => {
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search clients..."
                             aria-label="Search clients"
+                            action={
+                                <ListExportButton
+                                    path="/clients/export"
+                                    resource="clients"
+                                    companyName={businessInfo?.name}
+                                    filters={{
+                                        search: debouncedSearch,
+                                        year: listYear,
+                                        month: listMonth,
+                                        period: listQueryPeriod,
+                                    }}
+                                    disabled={pagination.total === 0}
+                                    onExported={() => showToast('Clients exported successfully.', 'success')}
+                                    onError={(err) => showToast(err.message || 'Export failed.', 'error')}
+                                />
+                            }
                         />
                         <ToolbarActions>
                         <ListMonthToolbarFilter
@@ -250,20 +266,6 @@ const Clients = () => {
                             onPeriodModeChange={setListPeriodMode}
                             periodLabel={listPeriodLabel}
                             isThisMonth={listIsThisMonth}
-                        />
-                        <ListExportButton
-                            path="/clients/export"
-                            resource="clients"
-                            companyName={businessInfo?.name}
-                            filters={{
-                                search: debouncedSearch,
-                                year: listYear,
-                                month: listMonth,
-                                period: listQueryPeriod,
-                            }}
-                            disabled={pagination.total === 0}
-                            onExported={() => showToast('Clients exported successfully.', 'success')}
-                            onError={(err) => showToast(err.message || 'Export failed.', 'error')}
                         />
                     </ToolbarActions>
                 </Toolbar>

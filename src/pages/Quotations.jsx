@@ -189,6 +189,24 @@ const Quotations = () => {
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search quotations..."
                         aria-label="Search quotations"
+                        action={
+                            <ListExportButton
+                                path="/quotations/export"
+                                resource="quotations"
+                                companyName={businessInfo?.name}
+                                filters={{
+                                    search: debouncedSearch,
+                                    status: filter,
+                                    sort: sortBy,
+                                    year: listYear,
+                                    month: listMonth,
+                                    period: listQueryPeriod,
+                                }}
+                                disabled={pagination.total === 0}
+                                onExported={() => showToast('Quotations exported successfully.', 'success')}
+                                onError={(err) => showToast(err.message || 'Export failed.', 'error')}
+                            />
+                        }
                     />
                     <ToolbarActions>
                         <ListMonthToolbarFilter
@@ -199,23 +217,7 @@ const Quotations = () => {
                             periodLabel={listPeriodLabel}
                             isThisMonth={listIsThisMonth}
                         />
-                        <ListExportButton
-                            path="/quotations/export"
-                            resource="quotations"
-                            companyName={businessInfo?.name}
-                            filters={{
-                                search: debouncedSearch,
-                                status: filter,
-                                sort: sortBy,
-                                year: listYear,
-                                month: listMonth,
-                                period: listQueryPeriod,
-                            }}
-                            disabled={pagination.total === 0}
-                            onExported={() => showToast('Quotations exported successfully.', 'success')}
-                            onError={(err) => showToast(err.message || 'Export failed.', 'error')}
-                        />
-                        <div className="w-full sm:w-44">
+                        <div className="min-w-0 flex-1 sm:w-44 sm:flex-none">
                             <CustomSelect
                                 value={sortBy}
                                 onChange={setSortBy}

@@ -199,6 +199,22 @@ export default function Products() {
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search products..."
                             aria-label="Search products"
+                            action={
+                                <ListExportButton
+                                    path="/products/export"
+                                    resource="products"
+                                    companyName={businessInfo?.name}
+                                    filters={{
+                                        search: debouncedSearch,
+                                        year: listYear,
+                                        month: listMonth,
+                                        period: listQueryPeriod,
+                                    }}
+                                    disabled={pagination.total === 0}
+                                    onExported={() => showToast('Products exported successfully.', 'success')}
+                                    onError={(err) => showToast(err.message || 'Export failed.', 'error')}
+                                />
+                            }
                         />
                         <ToolbarActions>
                             <ListMonthToolbarFilter
@@ -208,20 +224,6 @@ export default function Products() {
                                 onPeriodModeChange={setListPeriodMode}
                                 periodLabel={listPeriodLabel}
                                 isThisMonth={listIsThisMonth}
-                            />
-                            <ListExportButton
-                                path="/products/export"
-                                resource="products"
-                                companyName={businessInfo?.name}
-                                filters={{
-                                    search: debouncedSearch,
-                                    year: listYear,
-                                    month: listMonth,
-                                    period: listQueryPeriod,
-                                }}
-                                disabled={pagination.total === 0}
-                                onExported={() => showToast('Products exported successfully.', 'success')}
-                                onError={(err) => showToast(err.message || 'Export failed.', 'error')}
                             />
                         </ToolbarActions>
                     </Toolbar>

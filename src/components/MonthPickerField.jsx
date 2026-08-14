@@ -230,6 +230,7 @@ export default function MonthPickerField({
     displayLabel,
     portal = false,
     triggerAriaLabel,
+    triggerClassName = '',
     showPeriodPresets = false,
     periodMode = 'month',
     isThisMonth = false,
@@ -403,7 +404,7 @@ export default function MonthPickerField({
                     aria-haspopup="dialog"
                     aria-expanded={open}
                     aria-label={triggerAriaLabel || `Select period, currently ${triggerText}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 shadow-soft transition-colors hover:bg-zinc-50 disabled:opacity-50"
+                    className={`inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 shadow-soft transition-colors hover:bg-zinc-50 disabled:opacity-50 ${triggerClassName}`.trim()}
                 >
                     <span className="tabular-nums">{triggerText}</span>
                     <ChevronDown
