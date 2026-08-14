@@ -66,14 +66,17 @@ const Quotations = () => {
         isCurrentPeriod,
         listYear,
         listMonth,
-        allTime,
-        setAllTime,
+        listQueryPeriod,
+        listPeriodMode,
+        setListPeriodMode,
+        listPeriodLabel,
+        listIsThisMonth,
         listMonthInputValue,
         setListMonthInputValue,
     } = useListMonthFilter();
 
     const fetcher = useCallback(
-        ({ page, limit, search, status, sort, year, month }) =>
+        ({ page, limit, search, status, sort, year, month, period }) =>
             apiFetch(
                 `/quotations?${buildListQuery({
                     page,
@@ -83,6 +86,7 @@ const Quotations = () => {
                     sort,
                     year,
                     month,
+                    period,
                 })}`
             ),
         []
@@ -108,6 +112,7 @@ const Quotations = () => {
             sort: sortBy,
             year: listYear,
             month: listMonth,
+            period: listQueryPeriod,
         },
     });
 
@@ -115,7 +120,7 @@ const Quotations = () => {
 
     useEffect(() => {
         setPage(1);
-    }, [filter, sortBy, listYear, listMonth, setPage]);
+    }, [filter, sortBy, listYear, listMonth, listQueryPeriod, setPage]);
 
     const handleFilterChange = useCallback(
         (next) => {
@@ -189,8 +194,10 @@ const Quotations = () => {
                         <ListMonthToolbarFilter
                             monthInputValue={listMonthInputValue}
                             onMonthChange={setListMonthInputValue}
-                            allTime={allTime}
-                            onShowAllTime={setAllTime}
+                            periodMode={listPeriodMode}
+                            onPeriodModeChange={setListPeriodMode}
+                            periodLabel={listPeriodLabel}
+                            isThisMonth={listIsThisMonth}
                         />
                         <ListExportButton
                             path="/quotations/export"
@@ -202,6 +209,7 @@ const Quotations = () => {
                                 sort: sortBy,
                                 year: listYear,
                                 month: listMonth,
+                                period: listQueryPeriod,
                             }}
                             disabled={pagination.total === 0}
                             onExported={() => showToast('Quotations exported successfully.', 'success')}

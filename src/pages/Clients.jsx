@@ -60,14 +60,17 @@ const Clients = () => {
         isCurrentPeriod,
         listYear,
         listMonth,
-        allTime,
-        setAllTime,
+        listQueryPeriod,
+        listPeriodMode,
+        setListPeriodMode,
+        listPeriodLabel,
+        listIsThisMonth,
         listMonthInputValue,
         setListMonthInputValue,
     } = useListMonthFilter();
 
     const fetcher = useCallback(
-        ({ page, limit, search, year, month }) =>
+        ({ page, limit, search, year, month, period }) =>
             apiFetch(
                 `/clients?${buildListQuery({
                     page,
@@ -75,6 +78,7 @@ const Clients = () => {
                     search,
                     year,
                     month,
+                    period,
                 })}`
             ),
         []
@@ -94,14 +98,14 @@ const Clients = () => {
     } = usePagedQuery({
         queryKeyBase: 'clients',
         fetcher,
-        extraParams: { year: listYear, month: listMonth },
+        extraParams: { year: listYear, month: listMonth, period: listQueryPeriod },
     });
 
     const clients = data.map(mapClient);
 
     useEffect(() => {
         setPage(1);
-    }, [listYear, listMonth, setPage]);
+    }, [listYear, listMonth, listQueryPeriod, setPage]);
 
     useEffect(() => {
         if (shouldOpenAdd && !openedAddModal.current) {
@@ -242,8 +246,10 @@ const Clients = () => {
                         <ListMonthToolbarFilter
                             monthInputValue={listMonthInputValue}
                             onMonthChange={setListMonthInputValue}
-                            allTime={allTime}
-                            onShowAllTime={setAllTime}
+                            periodMode={listPeriodMode}
+                            onPeriodModeChange={setListPeriodMode}
+                            periodLabel={listPeriodLabel}
+                            isThisMonth={listIsThisMonth}
                         />
                         <ListExportButton
                             path="/clients/export"
@@ -253,6 +259,7 @@ const Clients = () => {
                                 search: debouncedSearch,
                                 year: listYear,
                                 month: listMonth,
+                                period: listQueryPeriod,
                             }}
                             disabled={pagination.total === 0}
                             onExported={() => showToast('Clients exported successfully.', 'success')}

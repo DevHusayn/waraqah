@@ -41,6 +41,7 @@ export function buildListQuery({
     sort,
     year,
     month,
+    period,
     summaryYear,
     summaryMonth,
     summaryOnly,
@@ -53,6 +54,7 @@ export function buildListQuery({
     if (plan && plan !== 'all') params.set('plan', plan);
     if (activity && activity !== 'all') params.set('activity', activity);
     if (sort) params.set('sort', sort);
+    if (period) params.set('period', String(period));
     if (year != null && year !== '') params.set('year', String(year));
     if (month != null && month !== '') params.set('month', String(month));
     if (summaryYear != null && summaryYear !== '') params.set('summaryYear', String(summaryYear));
@@ -62,11 +64,12 @@ export function buildListQuery({
 }
 
 /** Build query string for filtered list CSV export (no pagination). */
-export function buildListExportQuery({ search, status, sort, year, month } = {}) {
+export function buildListExportQuery({ search, status, sort, year, month, period } = {}) {
     const params = new URLSearchParams();
     if (search && String(search).trim()) params.set('search', String(search).trim());
     if (status && status !== 'all') params.set('status', status);
     if (sort) params.set('sort', sort);
+    if (period) params.set('period', String(period));
     if (year != null && year !== '') params.set('year', String(year));
     if (month != null && month !== '') params.set('month', String(month));
     return params.toString();
@@ -82,14 +85,16 @@ export function slugifyFilenamePart(value, fallback = 'export') {
     return slug || fallback;
 }
 
-export function buildListExportFilename(companyName, resource, { status = 'all', year, month, search } = {}) {
+export function buildListExportFilename(companyName, resource, { status = 'all', year, month, period, search } = {}) {
     const parts = [
         slugifyFilenamePart(companyName, 'business'),
         slugifyFilenamePart(resource, 'export'),
     ];
 
     const filterParts = [];
-    if (year != null && year !== '' && month != null && month !== '') {
+    if (period === 'today') {
+        filterParts.push('today');
+    } else if (year != null && year !== '' && month != null && month !== '') {
         filterParts.push(`${year}-${String(month).padStart(2, '0')}`);
     }
     if (status && status !== 'all') {

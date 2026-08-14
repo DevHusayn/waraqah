@@ -18,7 +18,7 @@ import MonthPickerField from '../components/MonthPickerField';
 import InvoiceLimitModal from '../components/InvoiceLimitModal';
 import CreateDocumentModal from '../components/CreateDocumentModal';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
-import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
+import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { useDashboardQuery } from '../hooks/useDashboardStats';
 import { prefetchFrequentRoutes } from '../utils/prefetchRoutes';
 import { formatInvoiceUsageLabel } from '../utils/invoiceLimits';
@@ -66,8 +66,18 @@ const Dashboard = () => {
         monthInputValue,
         setMonthInputValue,
         periodLabel,
-    } = useSummaryPeriod();
-    const { data, isPending, isFetching } = useDashboardQuery(summaryYear, summaryMonth);
+        mode,
+        setPeriodMode,
+        queryPeriod,
+        isCurrentPeriod,
+        showComparison,
+        comparisonLabel,
+    } = usePeriodFilter();
+    const { data, isPending, isFetching } = useDashboardQuery(
+        queryPeriod,
+        summaryYear,
+        summaryMonth
+    );
     const [createModalOpen, setCreateModalOpen] = useState(false);
 
     const businessInfo = data?.businessInfo || settingsBusinessInfo;
@@ -133,10 +143,15 @@ const Dashboard = () => {
                     id="dashboard-analytics-month"
                     variant="compact"
                     portal
+                    showPeriodPresets
+                    periodMode={mode}
+                    isThisMonth={isCurrentPeriod}
+                    onPeriodModeChange={setPeriodMode}
                     value={monthInputValue}
                     onChange={setMonthInputValue}
+                    displayLabel={periodLabel}
                     max={maxMonth}
-                    triggerAriaLabel="Select dashboard month"
+                    triggerAriaLabel="Select dashboard period"
                 />
             </PageHeader>
             {!premium && usageLabel ? (
@@ -149,6 +164,7 @@ const Dashboard = () => {
                 loading={dashboardLoading}
                 fetching={isFetching && !isPending}
                 premium={premium}
+                comparisonLabel={showComparison ? comparisonLabel : undefined}
             />
 
             <div className="card mb-6">

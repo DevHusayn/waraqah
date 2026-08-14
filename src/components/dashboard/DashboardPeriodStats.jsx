@@ -12,6 +12,7 @@ function PeriodStatCard({
     title,
     value,
     comparison,
+    comparisonLabel,
     positiveDirection = 'up',
     detail,
     valueClassName = '',
@@ -20,9 +21,14 @@ function PeriodStatCard({
     return (
         <div className={`stat-card min-w-0 ${className}`.trim()}>
             <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
-            <AdaptiveStatValue value={value} valueClassName={valueClassName} />            <div className="flex flex-col gap-1 min-h-[1rem]">
+            <AdaptiveStatValue value={value} valueClassName={valueClassName} />
+            <div className="flex flex-col gap-1 min-h-[1rem]">
                 <div className="min-w-0">
-                    <MonthComparisonTrend comparison={comparison} positiveDirection={positiveDirection} />
+                    <MonthComparisonTrend
+                        comparison={comparison}
+                        positiveDirection={positiveDirection}
+                        label={comparisonLabel}
+                    />
                 </div>
                 {detail ? (
                     <p className="text-[11px] text-zinc-500 leading-snug">{detail}</p>
@@ -32,7 +38,12 @@ function PeriodStatCard({
     );
 }
 
-export default function DashboardPeriodStats({ summary, loading = false, premium = false }) {
+export default function DashboardPeriodStats({
+    summary,
+    loading = false,
+    premium = false,
+    comparisonLabel,
+}) {
     if (loading) {
         return (
             <div className={`grid grid-cols-2 ${premium ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-3 mb-6`}>
@@ -66,17 +77,20 @@ export default function DashboardPeriodStats({ summary, loading = false, premium
                 title="Total Revenue"
                 value={formatCurrency(current?.totalRevenue ?? 0)}
                 comparison={comparison?.totalRevenue}
+                comparisonLabel={comparisonLabel}
             />
             <PeriodStatCard
                 title="Outstanding"
                 value={formatCurrency(current?.outstanding ?? 0)}
                 comparison={comparison?.outstanding}
+                comparisonLabel={comparisonLabel}
                 positiveDirection="down"
             />
             <PeriodStatCard
                 title="Fully received payment"
                 value={String(current?.paymentsReceived ?? 0)}
                 comparison={comparison?.paymentsReceived}
+                comparisonLabel={comparisonLabel}
                 detail={formatDocumentCounts(
                     current?.paidInvoices ?? 0,
                     current?.receiptsIssued ?? 0
@@ -89,6 +103,7 @@ export default function DashboardPeriodStats({ summary, loading = false, premium
                     value={formatCurrency(grossProfit)}
                     valueClassName={profitPositive ? '' : 'text-red-600'}
                     comparison={comparison?.grossProfit}
+                    comparisonLabel={comparisonLabel}
                 />
             ) : null}
         </div>

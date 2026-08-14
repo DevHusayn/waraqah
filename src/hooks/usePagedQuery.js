@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 
 const SUMMARY_RESOURCES = new Set(['invoices', 'quotations', 'receipts', 'products', 'clients']);
 
-const LIST_PLACEHOLDER_KEYS = ['year', 'month', 'status', 'sort', 'search'];
+const LIST_PLACEHOLDER_KEYS = ['year', 'month', 'period', 'status', 'sort', 'search'];
 
 function listParamsChanged(prev = {}, curr = {}) {
     return LIST_PLACEHOLDER_KEYS.some((key) => prev[key] !== curr[key]);
@@ -57,6 +57,7 @@ export function usePagedQuery({
     }, [
         extraParams.year,
         extraParams.month,
+        extraParams.period,
         extraParams.status,
         extraParams.sort,
         debouncedSearch,

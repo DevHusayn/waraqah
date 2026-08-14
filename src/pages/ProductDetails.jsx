@@ -24,8 +24,8 @@ import MonthPickerField from '../components/MonthPickerField';
 import MonthComparisonTrend from '../components/MonthComparisonTrend';
 import AdaptiveStatValue from '../components/AdaptiveStatValue';
 import { useSettings } from '../context/SettingsContext';
-import { isOversellingAllowed } from '@waraqah/shared';
-import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
+import { getDatePartsInTimezone, isOversellingAllowed } from '@waraqah/shared';
+import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
@@ -167,7 +167,11 @@ export default function ProductDetails() {
         periodLabel,
         timezone,
         isCurrentPeriod,
-    } = useSummaryPeriod();
+        mode,
+        setPeriodMode,
+        showComparison,
+        comparisonLabel,
+    } = usePeriodFilter();
 
     const loadActivity = useCallback(async () => {
         setLoading(true);
@@ -192,15 +196,17 @@ export default function ProductDetails() {
 
     const product = activity?.product;
     const summary = activity?.summary;
+    const soldPeriod = useMemo(() => {
+        if (mode === 'all') return { kind: 'all' };
+        if (mode === 'today') {
+            return { kind: 'day', ...getDatePartsInTimezone(timezone) };
+        }
+        return { kind: 'month', year: summaryYear, month: summaryMonth };
+    }, [mode, summaryYear, summaryMonth, timezone]);
+
     const soldInPeriod = useMemo(
-        () =>
-            getSoldPeriodSummary(
-                activity?.transactions,
-                summaryYear,
-                summaryMonth,
-                timezone
-            ),
-        [activity?.transactions, summaryYear, summaryMonth, timezone]
+        () => getSoldPeriodSummary(activity?.transactions, soldPeriod, timezone),
+        [activity?.transactions, soldPeriod, timezone]
     );
 
     const catalogMargin = useMemo(
@@ -211,7 +217,6 @@ export default function ProductDetails() {
     const grossProfit = soldInPeriod.grossProfit || 0;
     const profitPositive = grossProfit >= 0;
     const pendingQuantity = summary?.pendingQuantity ?? 0;
-    const comparisonLabel = isCurrentPeriod ? 'vs last month' : 'vs previous month';
 
     const productMenuItems = useMemo(
         () => [
@@ -430,15 +435,20 @@ export default function ProductDetails() {
                     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                         <div>
                             <h2 className="text-sm font-semibold text-zinc-900">
-                                {isCurrentPeriod ? 'This month' : periodLabel}
+                                {mode === 'month' && isCurrentPeriod ? 'This month' : periodLabel}
                             </h2>
                             <p className="mt-0.5 text-xs text-zinc-500">Paid and partial sales only</p>
                         </div>
                         <MonthPickerField
                             variant="compact"
                             portal
+                            showPeriodPresets
+                            periodMode={mode}
+                            isThisMonth={isCurrentPeriod}
+                            onPeriodModeChange={setPeriodMode}
                             value={monthInputValue}
                             onChange={setMonthInputValue}
+                            displayLabel={periodLabel}
                             triggerAriaLabel={`Change period from ${periodLabel}`}
                         />
                     </div>
@@ -448,7 +458,7 @@ export default function ProductDetails() {
                         <PeriodStatCard
                             title="Sold"
                             value={soldInPeriod.quantity}
-                            comparison={soldInPeriod.comparison}
+                            comparison={showComparison ? soldInPeriod.comparison : null}
                             comparisonLabel={comparisonLabel}
                         />
                         <PeriodStatCard
@@ -466,6 +476,7 @@ export default function ProductDetails() {
                     </div>
                 </div>
 
+                {mode === 'all' ? null : (
                 <div className="border-t border-zinc-200/60 px-5 py-3 text-sm text-zinc-600">
                     <span className="text-zinc-400">All time · </span>
                     <span className="tabular-nums">{summary?.totalQuantitySold ?? 0}</span> sold
@@ -478,6 +489,7 @@ export default function ProductDetails() {
                     <span className="tabular-nums">{summary?.uniqueClients ?? 0}</span> customer
                     {(summary?.uniqueClients ?? 0) === 1 ? '' : 's'}
                 </div>
+                )}
             </header>
 
             {pendingQuantity > 0 ? (

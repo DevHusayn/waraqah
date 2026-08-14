@@ -18,6 +18,12 @@ const MONTHS = [
     { value: 11, label: 'Dec' },
 ];
 
+const PERIOD_PRESETS = [
+    { id: 'all', label: 'All time' },
+    { id: 'today', label: 'Today' },
+    { id: 'month', label: 'This month' },
+];
+
 function parseMonthValue(value) {
     if (!value || !/^\d{4}-\d{2}$/.test(value)) return null;
     try {
@@ -67,9 +73,40 @@ function MonthPickerPanel({
     onPickMonth,
     onPickYear,
     onThisMonth,
+    showPeriodPresets = false,
+    periodMode = 'month',
+    isThisMonth = false,
+    onPickPreset,
 }) {
+    const thisMonthSelected = periodMode === 'month' && isThisMonth;
+
     return (
         <>
+            {showPeriodPresets ? (
+                <div className="mb-3 space-y-0.5 border-b border-zinc-100 pb-3">
+                    {PERIOD_PRESETS.map((preset) => {
+                        const selected =
+                            preset.id === 'month'
+                                ? thisMonthSelected
+                                : periodMode === preset.id;
+                        return (
+                            <button
+                                key={preset.id}
+                                type="button"
+                                onClick={() => onPickPreset?.(preset.id)}
+                                className={`flex w-full items-center rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
+                                    selected
+                                        ? 'bg-brand text-white shadow-sm'
+                                        : 'text-zinc-700 hover:bg-brand-light hover:text-brand'
+                                }`}
+                            >
+                                {preset.label}
+                            </button>
+                        );
+                    })}
+                </div>
+            ) : null}
+
             <div className="mb-3 flex items-center justify-between gap-2">
                 <button
                     type="button"
@@ -166,15 +203,17 @@ function MonthPickerPanel({
                 </div>
             )}
 
-            <div className="mt-3 flex justify-end border-t border-zinc-100 pt-3">
-                <button
-                    type="button"
-                    onClick={onThisMonth}
-                    className="text-sm font-medium text-brand hover:text-brand-hover transition-colors"
-                >
-                    This month
-                </button>
-            </div>
+            {showPeriodPresets ? null : (
+                <div className="mt-3 flex justify-end border-t border-zinc-100 pt-3">
+                    <button
+                        type="button"
+                        onClick={onThisMonth}
+                        className="text-sm font-medium text-brand hover:text-brand-hover transition-colors"
+                    >
+                        This month
+                    </button>
+                </div>
+            )}
         </>
     );
 }
@@ -191,6 +230,10 @@ export default function MonthPickerField({
     displayLabel,
     portal = false,
     triggerAriaLabel,
+    showPeriodPresets = false,
+    periodMode = 'month',
+    isThisMonth = false,
+    onPeriodModeChange,
 }) {
     const [open, setOpen] = useState(false);
     const [mode, setMode] = useState('month');
@@ -272,7 +315,12 @@ export default function MonthPickerField({
 
     const formattedLabel = selected ? format(selected, 'MMMM yyyy') : 'Select month';
     const compactLabel = selected ? format(selected, 'MMM yyyy') : 'Select month';
-    const triggerText = displayLabel || (variant === 'compact' ? compactLabel : formattedLabel);
+    const presetLabel =
+        periodMode === 'all' ? 'All time' : periodMode === 'today' ? 'Today' : null;
+    const triggerText =
+        displayLabel ||
+        presetLabel ||
+        (variant === 'compact' ? compactLabel : formattedLabel);
 
     const yearOptions = useMemo(
         () => buildYearOptions(viewYear, max, min),
@@ -295,14 +343,22 @@ export default function MonthPickerField({
     const goToThisMonth = () => {
         const now = new Date();
         const current = format(startOfMonth(now), 'yyyy-MM');
+        onPeriodModeChange?.('month');
         onChange(current);
         setViewYear(now.getFullYear());
         setMode('month');
         setOpen(false);
     };
 
-    const selectedMonthIndex = selected ? selected.getMonth() : null;
-    const selectedYear = selected ? selected.getFullYear() : null;
+    const pickPreset = (presetId) => {
+        onPeriodModeChange?.(presetId);
+        setOpen(false);
+    };
+
+    const monthGridSelected = periodMode === 'month' || !showPeriodPresets;
+    const selectedMonthIndex =
+        monthGridSelected && selected ? selected.getMonth() : null;
+    const selectedYear = monthGridSelected && selected ? selected.getFullYear() : null;
 
     const panel = open ? (
         <div
@@ -327,6 +383,10 @@ export default function MonthPickerField({
                 onPickMonth={pickMonth}
                 onPickYear={pickYear}
                 onThisMonth={goToThisMonth}
+                showPeriodPresets={showPeriodPresets}
+                periodMode={periodMode}
+                isThisMonth={isThisMonth}
+                onPickPreset={pickPreset}
             />
         </div>
     ) : null;
@@ -342,7 +402,7 @@ export default function MonthPickerField({
                     onClick={() => setOpen((prev) => !prev)}
                     aria-haspopup="dialog"
                     aria-expanded={open}
-                    aria-label={triggerAriaLabel || `Select month, currently ${triggerText}`}
+                    aria-label={triggerAriaLabel || `Select period, currently ${triggerText}`}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 shadow-soft transition-colors hover:bg-zinc-50 disabled:opacity-50"
                 >
                     <span className="tabular-nums">{triggerText}</span>
@@ -383,7 +443,7 @@ export default function MonthPickerField({
                     aria-haspopup="dialog"
                     aria-expanded={open}
                     className={`input-field mt-1 flex items-center justify-between gap-2 text-left max-w-xs ${
-                        !selected ? 'text-zinc-400' : 'text-zinc-900'
+                        !selected && !presetLabel ? 'text-zinc-400' : 'text-zinc-900'
                     }`}
                 >
                     <span className="flex items-center gap-2 truncate">

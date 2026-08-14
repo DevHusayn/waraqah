@@ -3,32 +3,39 @@ import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
 
-function buildExpenseSummaryQuery(summaryYear, summaryMonth) {
+function buildExpenseSummaryQuery(period, summaryYear, summaryMonth) {
     const params = new URLSearchParams();
+    if (period) params.set('period', String(period));
     if (summaryYear) params.set('summaryYear', String(summaryYear));
     if (summaryMonth) params.set('summaryMonth', String(summaryMonth));
     const query = params.toString();
     return query ? `/expenses/summary?${query}` : '/expenses/summary';
 }
 
-export function useExpenseSummaryQuery(summaryYear, summaryMonth, { enabled = true } = {}) {
+function isPeriodReady(period, summaryYear, summaryMonth) {
+    if (period === 'all' || period === 'today') return true;
+    return Boolean(summaryYear) && Boolean(summaryMonth);
+}
+
+export function useExpenseSummaryQuery(period, summaryYear, summaryMonth, { enabled = true } = {}) {
     const { isAuthenticated, user } = useAuth();
     const userId = user?.id;
 
     return useQuery({
-        queryKey: queryKeys.expenseSummary(userId, summaryYear, summaryMonth),
-        queryFn: () => apiFetch(buildExpenseSummaryQuery(summaryYear, summaryMonth)),
+        queryKey: queryKeys.expenseSummary(userId, period, summaryYear, summaryMonth),
+        queryFn: () => apiFetch(buildExpenseSummaryQuery(period, summaryYear, summaryMonth)),
         enabled:
             enabled &&
             isAuthenticated &&
             Boolean(userId) &&
-            Boolean(summaryYear) &&
-            Boolean(summaryMonth),
+            isPeriodReady(period, summaryYear, summaryMonth),
         staleTime: STALE_TIMES.dashboard,
         placeholderData: (previousData, previousQuery) => {
-            const [, prevUserId, prevYear, prevMonth] = previousQuery?.queryKey ?? [];
+            const [, prevUserId, prevPeriod, prevYear, prevMonth] = previousQuery?.queryKey ?? [];
             if (prevUserId !== userId) return undefined;
-            if (prevYear !== summaryYear || prevMonth !== summaryMonth) return undefined;
+            if (prevPeriod !== period || prevYear !== summaryYear || prevMonth !== summaryMonth) {
+                return undefined;
+            }
             return keepPreviousData(previousData);
         },
     });

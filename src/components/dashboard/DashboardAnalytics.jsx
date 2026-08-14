@@ -60,6 +60,7 @@ export default function DashboardAnalytics({
     loading = false,
     fetching = false,
     premium = false,
+    comparisonLabel,
 }) {
     if (loading) {
         return <AnalyticsSkeleton premium={premium} />;
@@ -67,7 +68,12 @@ export default function DashboardAnalytics({
 
     return (
         <div className={`mb-6 transition-opacity ${fetching ? 'opacity-80' : ''}`}>
-            <DashboardPeriodStats summary={periodSummary} loading={false} premium={premium} />
+            <DashboardPeriodStats
+                summary={periodSummary}
+                loading={false}
+                premium={premium}
+                comparisonLabel={comparisonLabel}
+            />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <Suspense fallback={<ChartAreaSkeleton />}>

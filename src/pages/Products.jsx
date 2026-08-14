@@ -55,14 +55,18 @@ export default function Products() {
         isCurrentPeriod,
         listYear,
         listMonth,
+        listQueryPeriod,
+        listPeriodMode,
+        setListPeriodMode,
+        listPeriodLabel,
+        listIsThisMonth,
         allTime,
-        setAllTime,
         listMonthInputValue,
         setListMonthInputValue,
     } = useListMonthFilter();
 
     const fetcher = useCallback(
-        ({ page, limit, search, year, month }) =>
+        ({ page, limit, search, year, month, period }) =>
             apiFetch(
                 `/products?${buildListQuery({
                     page,
@@ -70,6 +74,7 @@ export default function Products() {
                     search,
                     year,
                     month,
+                    period,
                 })}`
             ),
         []
@@ -93,14 +98,14 @@ export default function Products() {
     } = usePagedQuery({
         queryKeyBase: 'products',
         fetcher,
-        extraParams: { year: listYear, month: listMonth },
+        extraParams: { year: listYear, month: listMonth, period: listQueryPeriod },
     });
 
     const products = data.map(mapProduct);
 
     useEffect(() => {
         setPage(1);
-    }, [listYear, listMonth, setPage]);
+    }, [listYear, listMonth, listQueryPeriod, setPage]);
 
     const handleSubmit = async (formData) => {
         try {
@@ -199,8 +204,10 @@ export default function Products() {
                             <ListMonthToolbarFilter
                                 monthInputValue={listMonthInputValue}
                                 onMonthChange={setListMonthInputValue}
-                                allTime={allTime}
-                                onShowAllTime={setAllTime}
+                                periodMode={listPeriodMode}
+                                onPeriodModeChange={setListPeriodMode}
+                                periodLabel={listPeriodLabel}
+                                isThisMonth={listIsThisMonth}
                             />
                             <ListExportButton
                                 path="/products/export"
@@ -210,6 +217,7 @@ export default function Products() {
                                     search: debouncedSearch,
                                     year: listYear,
                                     month: listMonth,
+                                    period: listQueryPeriod,
                                 }}
                                 disabled={pagination.total === 0}
                                 onExported={() => showToast('Products exported successfully.', 'success')}

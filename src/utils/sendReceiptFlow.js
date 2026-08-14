@@ -1,4 +1,5 @@
 import { calculateInvoiceTotals } from './invoiceTotals';
+import { parseAmountInput } from './numberInput';
 import { setCachedPdf } from './pdfCache';
 
 export function buildReceiptPayload(formData, status) {
@@ -41,7 +42,7 @@ export function buildReceiptPayload(formData, status) {
         payload.paidInFull = paidInFull;
         payload.paymentAmount = paidInFull
             ? totals.total
-            : Number(formData.paymentAmount) || 0;
+            : parseAmountInput(formData.paymentAmount);
     }
 
     if (!payload.clientId) {

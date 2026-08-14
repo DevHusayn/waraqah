@@ -4,8 +4,10 @@ import MonthPickerField from './MonthPickerField';
 export default function ListMonthToolbarFilter({
     monthInputValue,
     onMonthChange,
-    allTime,
-    onShowAllTime,
+    periodMode = 'all',
+    onPeriodModeChange,
+    periodLabel,
+    isThisMonth = false,
 }) {
     const maxMonth = format(new Date(), 'yyyy-MM');
 
@@ -15,20 +17,16 @@ export default function ListMonthToolbarFilter({
                 id="list-month-filter"
                 variant="compact"
                 portal
+                showPeriodPresets
+                periodMode={periodMode}
+                isThisMonth={isThisMonth}
+                onPeriodModeChange={onPeriodModeChange}
                 value={monthInputValue}
                 onChange={onMonthChange}
+                displayLabel={periodLabel}
                 max={maxMonth}
-                triggerAriaLabel="Filter list by month"
+                triggerAriaLabel="Filter list by period"
             />
-            {!allTime ? (
-                <button
-                    type="button"
-                    onClick={onShowAllTime}
-                    className="text-[13px] font-medium text-zinc-500 hover:text-zinc-800 whitespace-nowrap"
-                >
-                    All time
-                </button>
-            ) : null}
         </div>
     );
 }

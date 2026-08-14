@@ -5,6 +5,7 @@ export function ReportStatCell({
     title,
     value,
     comparison,
+    comparisonLabel,
     detail,
     positiveDirection = 'up',
     valueClassName = '',
@@ -22,7 +23,11 @@ export function ReportStatCell({
             <AdaptiveStatValue value={value} variant="grid" valueClassName={valueClassName} />
             {showTrendArea ? (
                 <div className="flex flex-col gap-1 min-h-[1.125rem]">
-                    <MonthComparisonTrend comparison={comparison} positiveDirection={positiveDirection} />
+                    <MonthComparisonTrend
+                        comparison={comparison}
+                        positiveDirection={positiveDirection}
+                        label={comparisonLabel}
+                    />
                     {detail ? <p className="text-[11px] text-zinc-500 leading-snug">{detail}</p> : null}
                 </div>
             ) : null}

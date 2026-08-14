@@ -1,8 +1,9 @@
 /** TanStack Query keys — scoped by userId to prevent cross-account cache bleed. */
 export const queryKeys = {
-    dashboard: (userId, summaryYear, summaryMonth) => [
+    dashboard: (userId, period, summaryYear, summaryMonth) => [
         'dashboard',
         userId,
+        period,
         summaryYear,
         summaryMonth,
     ],
@@ -26,11 +27,18 @@ export const queryKeys = {
         summaryMonth,
     ],
     adminUsers: (userId, params) => ['adminUsers', userId, params],
-    profit: (userId, summaryYear, summaryMonth) => ['profit', userId, summaryYear, summaryMonth],
+    profit: (userId, period, summaryYear, summaryMonth) => [
+        'profit',
+        userId,
+        period,
+        summaryYear,
+        summaryMonth,
+    ],
     expenses: (userId, params) => ['expenses', userId, params],
-    expenseSummary: (userId, summaryYear, summaryMonth) => [
+    expenseSummary: (userId, period, summaryYear, summaryMonth) => [
         'expenseSummary',
         userId,
+        period,
         summaryYear,
         summaryMonth,
     ],

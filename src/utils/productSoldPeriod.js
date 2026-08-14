@@ -1,10 +1,15 @@
-import { getYearMonthInTimezone, shiftSummaryPeriod } from '@waraqah/shared';
+import { getDatePartsInTimezone, shiftDateByDays, shiftSummaryPeriod } from '@waraqah/shared';
 
-function isSoldTransaction(documentType) {
-    return documentType === 'invoice' || documentType === 'receipt';
+function rowMatchesPeriod(issueDate, period, timeZone) {
+    if (!period || period.kind === 'all') return true;
+    const parts = getDatePartsInTimezone(timeZone, issueDate);
+    if (period.kind === 'day') {
+        return parts.year === period.year && parts.month === period.month && parts.day === period.day;
+    }
+    return parts.year === period.year && parts.month === period.month;
 }
 
-export function sumSoldInPeriod(transactions, year, month, timeZone) {
+export function sumSoldInPeriod(transactions, period, timeZone) {
     let quantity = 0;
     let revenue = 0;
     let grossProfit = 0;
@@ -17,9 +22,7 @@ export function sumSoldInPeriod(transactions, year, month, timeZone) {
 
         const issueDate = new Date(row.date);
         if (Number.isNaN(issueDate.getTime())) continue;
-
-        const { year: rowYear, month: rowMonth } = getYearMonthInTimezone(timeZone, issueDate);
-        if (rowYear !== year || rowMonth !== month) continue;
+        if (!rowMatchesPeriod(issueDate, period, timeZone)) continue;
 
         quantity += Number(row.saleQuantity) || 0;
         revenue += Number(row.saleLineTotal) || 0;
@@ -64,15 +67,22 @@ export function computeCountPercentChange(current, previous) {
     };
 }
 
-export function getSoldPeriodSummary(transactions, year, month, timeZone) {
-    const current = sumSoldInPeriod(transactions, year, month, timeZone);
-    const previousPeriod = shiftSummaryPeriod(year, month, -1);
-    const previous = sumSoldInPeriod(
-        transactions,
-        previousPeriod.year,
-        previousPeriod.month,
-        timeZone
-    );
+function previousSoldPeriod(period) {
+    if (!period || period.kind === 'all') return null;
+    if (period.kind === 'day') {
+        return { kind: 'day', ...shiftDateByDays(period.year, period.month, period.day, -1) };
+    }
+    return { kind: 'month', ...shiftSummaryPeriod(period.year, period.month, -1) };
+}
+
+export function getSoldPeriodSummary(transactions, period, timeZone) {
+    const current = sumSoldInPeriod(transactions, period, timeZone);
+    const previousPeriod = previousSoldPeriod(period);
+    if (!previousPeriod) {
+        return { ...current, comparison: null };
+    }
+
+    const previous = sumSoldInPeriod(transactions, previousPeriod, timeZone);
 
     return {
         ...current,

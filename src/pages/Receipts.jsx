@@ -72,14 +72,17 @@ const Receipts = () => {
         isCurrentPeriod,
         listYear,
         listMonth,
-        allTime,
-        setAllTime,
+        listQueryPeriod,
+        listPeriodMode,
+        setListPeriodMode,
+        listPeriodLabel,
+        listIsThisMonth,
         listMonthInputValue,
         setListMonthInputValue,
     } = useListMonthFilter();
 
     const fetcher = useCallback(
-        ({ page, limit, search, status, sort, year, month }) =>
+        ({ page, limit, search, status, sort, year, month, period }) =>
             apiFetch(
                 `/receipts?${buildListQuery({
                     page,
@@ -89,6 +92,7 @@ const Receipts = () => {
                     sort,
                     year,
                     month,
+                    period,
                 })}`
             ),
         []
@@ -114,6 +118,7 @@ const Receipts = () => {
             sort: sortBy,
             year: listYear,
             month: listMonth,
+            period: listQueryPeriod,
         },
     });
 
@@ -121,7 +126,7 @@ const Receipts = () => {
 
     useEffect(() => {
         setPage(1);
-    }, [filter, sortBy, listYear, listMonth, setPage]);
+    }, [filter, sortBy, listYear, listMonth, listQueryPeriod, setPage]);
 
     const handleFilterChange = useCallback(
         (next) => {
@@ -198,8 +203,10 @@ const Receipts = () => {
                         <ListMonthToolbarFilter
                             monthInputValue={listMonthInputValue}
                             onMonthChange={setListMonthInputValue}
-                            allTime={allTime}
-                            onShowAllTime={setAllTime}
+                            periodMode={listPeriodMode}
+                            onPeriodModeChange={setListPeriodMode}
+                            periodLabel={listPeriodLabel}
+                            isThisMonth={listIsThisMonth}
                         />
                         <ListExportButton
                             path="/receipts/export"
@@ -211,6 +218,7 @@ const Receipts = () => {
                                 sort: sortBy,
                                 year: listYear,
                                 month: listMonth,
+                                period: listQueryPeriod,
                             }}
                             disabled={pagination.total === 0}
                             onExported={() => showToast('Receipts exported successfully.', 'success')}

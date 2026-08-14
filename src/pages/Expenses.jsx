@@ -18,7 +18,7 @@ import Toolbar, { ToolbarSearch } from '../components/Toolbar';
 import PaginationBar from '../components/PaginationBar';
 import { ListPageSkeleton } from '../components/Skeleton';
 import { usePagedQuery } from '../hooks/usePagedQuery';
-import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
+import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { useExpenseSummaryQuery } from '../hooks/useExpenseSummaryQuery';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
@@ -61,7 +61,14 @@ export default function Expenses() {
         setMonthInputValue,
         periodLabel,
         isCurrentPeriod,
-    } = useSummaryPeriod();
+        mode,
+        setPeriodMode,
+        queryPeriod,
+        showComparison,
+        comparisonLabel,
+        calendarYear,
+        calendarMonth,
+    } = usePeriodFilter();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingExpense, setEditingExpense] = useState(null);
@@ -71,12 +78,12 @@ export default function Expenses() {
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
 
     const listParams = useMemo(
-        () => ({ year: summaryYear, month: summaryMonth }),
-        [summaryYear, summaryMonth]
+        () => ({ period: queryPeriod, year: summaryYear, month: summaryMonth }),
+        [queryPeriod, summaryYear, summaryMonth]
     );
 
     const fetcher = useCallback(
-        ({ page, limit, search, year, month }) =>
+        ({ page, limit, search, year, month, period }) =>
             apiFetch(
                 `/expenses?${buildListQuery({
                     page,
@@ -84,6 +91,7 @@ export default function Expenses() {
                     search,
                     year,
                     month,
+                    period,
                 })}`
             ),
         []
@@ -104,12 +112,12 @@ export default function Expenses() {
     });
 
     const { data: summary, isFetching: summaryFetching } = useExpenseSummaryQuery(
+        queryPeriod,
         summaryYear,
         summaryMonth
     );
 
     const expenses = data.map(mapExpense);
-    const comparisonLabel = isCurrentPeriod ? 'vs last month' : 'vs previous month';
 
     const openModal = (expense = null) => {
         if (expense) {
@@ -125,7 +133,10 @@ export default function Expenses() {
             setEditingExpense(null);
             setModalInitialData({
                 ...EMPTY_EXPENSE,
-                date: `${summaryYear}-${String(summaryMonth).padStart(2, '0')}-01`,
+                date:
+                    mode === 'month'
+                        ? `${calendarYear}-${String(calendarMonth).padStart(2, '0')}-01`
+                        : format(new Date(), 'yyyy-MM-dd'),
             });
         }
         setIsModalOpen(true);
@@ -135,9 +146,9 @@ export default function Expenses() {
         setEditingExpense(null);
         setModalInitialData(
             buildDuplicateExpenseInitialData(expense, {
-                summaryYear,
-                summaryMonth,
-                isCurrentPeriod,
+                summaryYear: calendarYear,
+                summaryMonth: calendarMonth,
+                isCurrentPeriod: mode !== 'month' || isCurrentPeriod,
             })
         );
         setIsModalOpen(true);
@@ -242,19 +253,26 @@ export default function Expenses() {
                         {formatCurrency(summary?.totals?.totalExpenses ?? 0)}
                     </p>
                     <div className="mt-1 min-h-[1rem]">
-                        <MonthComparisonTrend
-                            comparison={summary?.comparison?.totalExpenses}
-                            label={comparisonLabel}
-                            positiveDirection="down"
-                        />
+                        {showComparison ? (
+                            <MonthComparisonTrend
+                                comparison={summary?.comparison?.totalExpenses}
+                                label={comparisonLabel}
+                                positiveDirection="down"
+                            />
+                        ) : null}
                     </div>
                     <p className="mt-1 text-xs text-zinc-500">{periodLabel}</p>
                 </div>
                 <MonthPickerField
                     variant="compact"
                     portal
+                    showPeriodPresets
+                    periodMode={mode}
+                    isThisMonth={isCurrentPeriod}
+                    onPeriodModeChange={setPeriodMode}
                     value={monthInputValue}
                     onChange={setMonthInputValue}
+                    displayLabel={periodLabel}
                     triggerAriaLabel={`Change period from ${periodLabel}`}
                 />
             </div>
@@ -303,7 +321,13 @@ export default function Expenses() {
             {expenses.length === 0 && !loading ? (
                 <EmptyState
                     icon={Wallet}
-                    title={search ? 'No expenses found' : 'No expenses this month'}
+                    title={
+                        search
+                            ? 'No expenses found'
+                            : mode === 'month'
+                              ? 'No expenses this month'
+                              : 'No expenses in this period'
+                    }
                     description={
                         search
                             ? 'Try a different search term.'

@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, Crown } from 'lucide-react';
+import { AlertTriangle, Crown, Wallet } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import MonthPickerField from '../components/MonthPickerField';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
@@ -8,7 +8,7 @@ import EmptyState from '../components/EmptyState';
 import { StatementContentSkeleton } from '../components/Skeleton';
 import ReportStatGrid, { ReportStatCell } from '../components/ReportStatGrid';
 import { useSettings } from '../context/SettingsContext';
-import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
+import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { useProfitSummaryQuery } from '../hooks/useProfitSummaryQuery';
 import PaginationBar from '../components/PaginationBar';
 import { useClientPagedList } from '../hooks/useClientPagedList';
@@ -56,14 +56,25 @@ export default function Profit() {
         periodLabel,
         summaryYear,
         summaryMonth,
-    } = useSummaryPeriod();
+        mode,
+        setPeriodMode,
+        queryPeriod,
+        isCurrentPeriod,
+        showComparison,
+        comparisonLabel,
+    } = usePeriodFilter();
 
-    const { data, isPending, isFetching } = useProfitSummaryQuery(summaryYear, summaryMonth, {
-        enabled: premium,
-    });
+    const { data, isPending, isFetching } = useProfitSummaryQuery(
+        queryPeriod,
+        summaryYear,
+        summaryMonth,
+        {
+            enabled: premium,
+        }
+    );
 
     const productsPage = useClientPagedList(data?.byProduct, {
-        resetKey: `${summaryYear}-${summaryMonth}`,
+        resetKey: `${queryPeriod}-${summaryYear}-${summaryMonth}`,
     });
 
     const maxMonth = format(new Date(), 'yyyy-MM');
@@ -117,10 +128,15 @@ export default function Profit() {
                             id="profit-month"
                             variant="compact"
                             portal
+                            showPeriodPresets
+                            periodMode={mode}
+                            isThisMonth={isCurrentPeriod}
+                            onPeriodModeChange={setPeriodMode}
                             value={monthInputValue}
                             onChange={setMonthInputValue}
+                            displayLabel={periodLabel}
                             max={maxMonth}
-                            triggerAriaLabel="Select profit month"
+                            triggerAriaLabel="Select profit period"
                         />
                     </div>
 
@@ -128,42 +144,48 @@ export default function Profit() {
                         <ReportStatCell
                             title="Gross profit"
                             value={formatCurrency(grossProfit)}
-                            comparison={comparison?.grossProfit}
+                            comparison={showComparison ? comparison?.grossProfit : null}
+                            comparisonLabel={comparisonLabel}
                             valueClassName={profitPositive ? '' : 'text-red-600'}
-                            reserveTrendSpace
+                            reserveTrendSpace={showComparison}
                         />
                         <ReportStatCell
                             title="Total expenses"
                             value={formatCurrency(totalExpenses)}
-                            comparison={comparison?.totalExpenses}
+                            comparison={showComparison ? comparison?.totalExpenses : null}
+                            comparisonLabel={comparisonLabel}
                             positiveDirection="down"
-                            reserveTrendSpace
+                            reserveTrendSpace={showComparison}
                         />
                         <ReportStatCell
                             title="Net profit"
                             value={formatCurrency(netProfit)}
-                            comparison={comparison?.netProfit}
+                            comparison={showComparison ? comparison?.netProfit : null}
+                            comparisonLabel={comparisonLabel}
                             valueClassName={netPositive ? '' : 'text-red-600'}
-                            reserveTrendSpace
+                            reserveTrendSpace={showComparison}
                         />
                         <ReportStatCell
                             title="Gross margin"
                             value={formatMarginPercent(totals?.marginPercent ?? null)}
-                            comparison={comparison?.marginPercent}
-                            reserveTrendSpace
+                            comparison={showComparison ? comparison?.marginPercent : null}
+                            comparisonLabel={comparisonLabel}
+                            reserveTrendSpace={showComparison}
                         />
                         <ReportStatCell
                             title="Net margin"
                             value={formatMarginPercent(totals?.netMarginPercent ?? null)}
-                            comparison={comparison?.netMarginPercent}
-                            reserveTrendSpace
+                            comparison={showComparison ? comparison?.netMarginPercent : null}
+                            comparisonLabel={comparisonLabel}
+                            reserveTrendSpace={showComparison}
                         />
                         <ReportStatCell
                             title="Revenue"
                             value={formatCurrency(totals?.revenue ?? 0)}
-                            comparison={comparison?.revenue}
+                            comparison={showComparison ? comparison?.revenue : null}
+                            comparisonLabel={comparisonLabel}
                             detail="Paid sales in period"
-                            reserveTrendSpace
+                            reserveTrendSpace={showComparison}
                         />
                     </ReportStatGrid>
 
@@ -209,7 +231,7 @@ export default function Profit() {
                             <div className="card">
                                 <EmptyState
                                     icon={Wallet}
-                                    title="No expenses this month"
+                                    title={mode === 'month' ? 'No expenses this month' : 'No expenses in this period'}
                                     description="Record operating costs on the Expenses page to see net profit."
                                     action={
                                         <Link to="/expenses" className="btn-secondary text-sm py-2 px-4">
@@ -262,7 +284,7 @@ export default function Profit() {
                         ) : (
                             <div className="card">
                                 <EmptyState
-                                    title="No product sales this month"
+                                    title={mode === 'month' ? 'No product sales this month' : 'No product sales in this period'}
                                     description="Paid invoices and receipts with catalog products will appear here."
                                 />
                             </div>

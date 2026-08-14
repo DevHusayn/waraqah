@@ -4,42 +4,54 @@ import { useAuth } from '../context/AuthContext';
 import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
 import { seedDashboardCache } from '../lib/queryClient';
 
-function buildDashboardQuery(summaryYear, summaryMonth) {
+function buildDashboardQuery(period, summaryYear, summaryMonth) {
     const params = new URLSearchParams();
+    if (period) params.set('period', String(period));
     if (summaryYear) params.set('summaryYear', String(summaryYear));
     if (summaryMonth) params.set('summaryMonth', String(summaryMonth));
     const query = params.toString();
     return query ? `/dashboard?${query}` : '/dashboard';
 }
 
+function isPeriodReady(period, summaryYear, summaryMonth) {
+    if (period === 'all' || period === 'today') return true;
+    return Boolean(summaryYear) && Boolean(summaryMonth);
+}
+
 /**
  * Aggregated dashboard query — stats, period summary, analytics, recent docs, alerts.
  */
-export function useDashboardQuery(summaryYear, summaryMonth) {
+export function useDashboardQuery(period, summaryYear, summaryMonth) {
     const { isAuthenticated, user } = useAuth();
     const userId = user?.id;
 
     return useQuery({
-        queryKey: queryKeys.dashboard(userId, summaryYear, summaryMonth),
+        queryKey: queryKeys.dashboard(userId, period, summaryYear, summaryMonth),
         queryFn: async () => {
-            const data = await apiFetch(buildDashboardQuery(summaryYear, summaryMonth));
-            seedDashboardCache(userId, summaryYear, summaryMonth, data);
+            const data = await apiFetch(buildDashboardQuery(period, summaryYear, summaryMonth));
+            seedDashboardCache(userId, period, summaryYear, summaryMonth, data);
             return data;
         },
-        enabled: isAuthenticated && Boolean(userId) && Boolean(summaryYear) && Boolean(summaryMonth),
+        enabled: isAuthenticated && Boolean(userId) && isPeriodReady(period, summaryYear, summaryMonth),
         staleTime: STALE_TIMES.dashboard,
         placeholderData: (previousData, previousQuery) => {
-            const [, prevUserId, prevYear, prevMonth] = previousQuery?.queryKey ?? [];
+            const [, prevUserId, prevPeriod, prevYear, prevMonth] = previousQuery?.queryKey ?? [];
             if (prevUserId !== userId) return undefined;
-            if (prevYear !== summaryYear || prevMonth !== summaryMonth) return undefined;
+            if (prevPeriod !== period || prevYear !== summaryYear || prevMonth !== summaryMonth) {
+                return undefined;
+            }
             return keepPreviousData(previousData);
         },
     });
 }
 
 /** @deprecated Use useDashboardQuery — kept for backward compatibility. */
-export function useDashboardStats(summaryYear, summaryMonth) {
-    const { data, isLoading, isFetching, refetch } = useDashboardQuery(summaryYear, summaryMonth);
+export function useDashboardStats(period, summaryYear, summaryMonth) {
+    const { data, isLoading, isFetching, refetch } = useDashboardQuery(
+        period,
+        summaryYear,
+        summaryMonth
+    );
 
     return {
         data,
