@@ -36,7 +36,7 @@ const DOCUMENT_COLUMNS = [
 
 const PRODUCT_COLUMNS = [
     { key: 'product', label: 'Product' },
-    { key: 'qty', label: 'Qty sold', className: 'text-right' },
+    { key: 'qty', label: 'Qty bought', className: 'text-right' },
     { key: 'value', label: 'Revenue', className: 'text-right' },
     { key: 'last', label: 'Last purchase' },
 ];
@@ -290,7 +290,7 @@ export default function ClientDetails() {
                     detail={`${summary?.totalDocuments ?? 0} sales documents`}
                 />
                 <StatCard
-                    title="Products sold"
+                    title="Products bought"
                     value={String(summary?.uniqueProducts ?? 0)}
                     detail="Across invoices and receipts"
                 />
@@ -355,7 +355,7 @@ export default function ClientDetails() {
             </section>
 
             <section className="card">
-                <h2 className="text-sm font-semibold text-zinc-950 mb-4">Products sold</h2>
+                <h2 className="text-sm font-semibold text-zinc-950 mb-4">Products bought</h2>
                 {activity.byProduct?.length ? (
                     <>
                     <DataTable columns={PRODUCT_COLUMNS}>

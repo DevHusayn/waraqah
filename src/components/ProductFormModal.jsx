@@ -172,7 +172,7 @@ export default function ProductFormModal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label htmlFor="product-unitPrice" className="label">
-                            Selling price (NGN)
+                            Cost price (NGN)
                         </label>
                         <AmountInput
                             id="product-unitPrice"
@@ -184,7 +184,7 @@ export default function ProductFormModal({
                     </div>
                     <div>
                         <label htmlFor="product-unitCost" className="label">
-                            Cost price (NGN) <span className="text-zinc-400 font-normal">(optional)</span>
+                            Selling price (NGN) <span className="text-zinc-400 font-normal">(optional)</span>
                         </label>
                         <AmountInput
                             id="product-unitCost"
