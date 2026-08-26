@@ -70,19 +70,19 @@ const Receipts = () => {
         setMonthInputValue,
         periodLabel,
         isCurrentPeriod,
-        listYear,
-        listMonth,
-        listQueryPeriod,
+        listQueryParams,
         listPeriodMode,
         setListPeriodMode,
         listPeriodLabel,
-        listIsThisMonth,
-        listMonthInputValue,
-        setListMonthInputValue,
+        listCustomDraftStartDate,
+        listCustomDraftEndDate,
+        setListCustomDraftRange,
+        applyListCustomRange,
+        listMaxDate,
     } = useListMonthFilter();
 
     const fetcher = useCallback(
-        ({ page, limit, search, status, sort, year, month, period }) =>
+        ({ page, limit, search, status, sort, period, startDate, endDate }) =>
             apiFetch(
                 `/receipts?${buildListQuery({
                     page,
@@ -90,9 +90,9 @@ const Receipts = () => {
                     search,
                     status,
                     sort,
-                    year,
-                    month,
                     period,
+                    startDate,
+                    endDate,
                 })}`
             ),
         []
@@ -116,9 +116,7 @@ const Receipts = () => {
         extraParams: {
             status: filter,
             sort: sortBy,
-            year: listYear,
-            month: listMonth,
-            period: listQueryPeriod,
+            ...listQueryParams,
         },
     });
 
@@ -126,7 +124,7 @@ const Receipts = () => {
 
     useEffect(() => {
         setPage(1);
-    }, [filter, sortBy, listYear, listMonth, listQueryPeriod, setPage]);
+    }, [filter, sortBy, listQueryParams, setPage]);
 
     const handleFilterChange = useCallback(
         (next) => {
@@ -207,9 +205,7 @@ const Receipts = () => {
                                     search: debouncedSearch,
                                     status: filter,
                                     sort: sortBy,
-                                    year: listYear,
-                                    month: listMonth,
-                                    period: listQueryPeriod,
+                                    ...listQueryParams,
                                 }}
                                 disabled={pagination.total === 0}
                                 onExported={() => showToast('Receipts exported successfully.', 'success')}
@@ -219,12 +215,14 @@ const Receipts = () => {
                     />
                     <ToolbarActions>
                         <ListMonthToolbarFilter
-                            monthInputValue={listMonthInputValue}
-                            onMonthChange={setListMonthInputValue}
                             periodMode={listPeriodMode}
                             onPeriodModeChange={setListPeriodMode}
                             periodLabel={listPeriodLabel}
-                            isThisMonth={listIsThisMonth}
+                            customDraftStartDate={listCustomDraftStartDate}
+                            customDraftEndDate={listCustomDraftEndDate}
+                            onCustomDraftRangeChange={setListCustomDraftRange}
+                            onCustomApply={applyListCustomRange}
+                            maxDate={listMaxDate}
                         />
                         <div className="min-w-0 flex-1 sm:w-44 sm:flex-none">
                             <CustomSelect
@@ -288,17 +286,17 @@ const Receipts = () => {
                                     className="cursor-pointer"
                                 >
                                     <DataTableCell>
-                                        <span className="font-medium text-zinc-900">
+                                        <span className="font-medium text-foreground">
                                             {getReceiptNumber(receipt) || '—'}
                                         </span>
                                     </DataTableCell>
                                     <DataTableCell>
                                         <div>
-                                            <p className="font-medium text-zinc-900">
+                                            <p className="font-medium text-foreground">
                                                 {receipt.clientName || 'Unknown Client'}
                                             </p>
                                             {business ? (
-                                                <p className="text-xs text-zinc-500">{business}</p>
+                                                <p className="text-xs text-foreground-muted">{business}</p>
                                             ) : null}
                                         </div>
                                     </DataTableCell>

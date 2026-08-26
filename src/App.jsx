@@ -13,6 +13,7 @@ import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
 import { AnalyticsProvider, PostHogAuthSync, PostHogPageView } from './components/analytics/PostHogTracker';
 import BrandTheme from './components/BrandTheme';
+import { ThemeProvider } from './context/ThemeContext';
 import { PublicPageSpinner } from './components/Spinner';
 import {
     ListPageSkeleton,
@@ -45,6 +46,7 @@ const Clients = lazy(() => import('./pages/Clients'));
 const ClientDetails = lazy(() => import('./pages/ClientDetails'));
 const Products = lazy(() => import('./pages/Products'));
 const ProductDetails = lazy(() => import('./pages/ProductDetails'));
+const Inventory = lazy(() => import('./pages/Inventory'));
 const Suppliers = lazy(() => import('./pages/Suppliers'));
 const SupplierDetails = lazy(() => import('./pages/SupplierDetails'));
 const PurchaseOrders = lazy(() => import('./pages/PurchaseOrders'));
@@ -105,6 +107,7 @@ function AppProviders({ children }) {
 function App() {
     return (
         <AnalyticsProvider>
+        <ThemeProvider>
         <ToastProvider>
             <AuthProvider>
                 <SettingsProvider>
@@ -161,6 +164,7 @@ function App() {
                                             <Route path="/clients/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><ClientDetails /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/products" element={<PrivateRoute><ListRoute><Products /></ListRoute></PrivateRoute>} />
                                             <Route path="/products/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><ProductDetails /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/inventory" element={<PrivateRoute><ListRoute><Inventory /></ListRoute></PrivateRoute>} />
                                             <Route path="/suppliers" element={<PrivateRoute><ListRoute><Suppliers /></ListRoute></PrivateRoute>} />
                                             <Route path="/suppliers/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><SupplierDetails /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/purchase-orders" element={<PrivateRoute><ListRoute><PurchaseOrders /></ListRoute></PrivateRoute>} />
@@ -200,6 +204,7 @@ function App() {
                 </SettingsProvider>
             </AuthProvider>
         </ToastProvider>
+        </ThemeProvider>
         </AnalyticsProvider>
     );
 }

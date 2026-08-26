@@ -4,13 +4,16 @@ import { UpgradeScreen } from '../screens/UpgradeScreen';
 import { MonthlyStatementScreen } from '../screens/MonthlyStatementScreen';
 import { AdminDashboardScreen } from '../screens/AdminDashboardScreen';
 import { SettingsStack } from './SettingsStack';
-import { stackScreenOptions } from './headerOptions';
+import { getStackScreenOptions } from './headerOptions';
+import { useTheme } from '../theme';
 
 const Stack = createNativeStackNavigator();
 
 export function ProfileStack() {
+    const { colors } = useTheme();
+
     return (
-        <Stack.Navigator screenOptions={stackScreenOptions}>
+        <Stack.Navigator screenOptions={getStackScreenOptions(colors)}>
             <Stack.Screen name="ProfileHome" component={ProfileScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Settings" component={SettingsStack} options={{ headerShown: false }} />
             <Stack.Screen name="Upgrade" component={UpgradeScreen} options={{ title: 'Upgrade' }} />

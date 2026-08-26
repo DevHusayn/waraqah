@@ -39,12 +39,12 @@ export default function CheckEmailPage() {
     };
 
     return (
-        <div className="min-h-screen bg-zinc-50/80 flex flex-col">
+        <div className="min-h-screen bg-surface-muted/80 flex flex-col">
             <div className="flex-1 flex flex-col justify-center px-5 py-8 sm:px-8">
                 <div className="w-full max-w-[420px] mx-auto">
                     <Link
                         to={AUTH_LOGIN_PATH}
-                        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-zinc-500 hover:text-zinc-900 mb-6 transition-colors"
+                        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-foreground-muted hover:text-foreground mb-6 transition-colors"
                     >
                         <ArrowLeft size={15} aria-hidden />
                         Back to sign in
@@ -54,20 +54,20 @@ export default function CheckEmailPage() {
                         <WaraqahLogo size="md" />
                     </div>
 
-                    <div className="rounded-xl border border-zinc-200/60 bg-white shadow-soft p-6 sm:p-8 text-center">
+                    <div className="rounded-xl border border-border/60 bg-surface shadow-soft p-6 sm:p-8 text-center">
                         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-brand-light text-brand">
                             <Mail size={22} aria-hidden />
                         </div>
-                        <h1 className="text-xl font-semibold text-zinc-900">Check your email</h1>
+                        <h1 className="text-xl font-semibold text-foreground">Check your email</h1>
                         {message ? (
                             <p className="mt-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-2">
                                 {message}
                             </p>
                         ) : null}
-                        <p className="mt-2 text-sm text-zinc-600 leading-relaxed">
+                        <p className="mt-2 text-sm text-foreground-muted leading-relaxed">
                             We sent a verification link to{' '}
                             {email ? (
-                                <span className="font-medium text-zinc-900">{email}</span>
+                                <span className="font-medium text-foreground">{email}</span>
                             ) : (
                                 'your email address'
                             )}
@@ -90,7 +90,7 @@ export default function CheckEmailPage() {
                             Go to sign in
                         </Link>
 
-                        <p className="mt-5 text-xs text-zinc-500">
+                        <p className="mt-5 text-xs text-foreground-muted">
                             Didn&apos;t get it? Check spam, or wait a few minutes before resending.
                         </p>
                     </div>

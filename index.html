@@ -6,6 +6,18 @@
     <script>
         (function () {
             try {
+                var mode = localStorage.getItem('waraqah_theme_mode') || 'system';
+                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var isDark = mode === 'dark' || (mode === 'system' && prefersDark);
+                if (isDark) {
+                    document.documentElement.classList.add('dark');
+                }
+            } catch (_) { }
+        })();
+    </script>
+    <script>
+        (function () {
+            try {
                 var standalone =
                     window.navigator.standalone === true ||
                     window.matchMedia('(display-mode: standalone)').matches ||
@@ -31,7 +43,7 @@
             } catch (_) { }
         })();
     </script>
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="light dark" />
     <style id="pwa-cold-start-styles">
         html.pwa-cold-start,
         html.pwa-cold-start body,

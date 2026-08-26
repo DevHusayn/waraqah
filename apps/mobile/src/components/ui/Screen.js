@@ -1,6 +1,7 @@
+import { useMemo } from 'react';
 import { ScrollView, View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, spacing } from '../../theme';
+import { useTheme, spacing } from '../../theme';
 
 export function Screen({
     children,
@@ -11,6 +12,7 @@ export function Screen({
     edges = ['top', 'left', 'right'],
     safe = true,
 }) {
+    const { colors } = useTheme();
     const bg = muted ? colors.surfaceMuted : colors.surface;
     const body = scroll ? (
         <ScrollView
@@ -36,10 +38,12 @@ export function Screen({
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     scrollContent: {
         paddingHorizontal: spacing.xl,
         paddingTop: spacing.lg,
         paddingBottom: spacing.huge,
     },
 });
+}

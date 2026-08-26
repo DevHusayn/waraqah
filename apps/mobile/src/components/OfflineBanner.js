@@ -1,11 +1,14 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { WifiOff } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppStore } from '../stores/appStore';
-import { colors, fontFamily, fontSize, spacing } from '../theme';
+import { colors, fontFamily, fontSize, spacing, useTheme } from '../theme';
 
 export function OfflineBanner() {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const isOffline = useAppStore((s) => s.isOffline);
     const insets = useSafeAreaInsets();
 
@@ -27,7 +30,8 @@ export function OfflineBanner() {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     banner: {
         position: 'absolute',
         top: 0,
@@ -50,3 +54,4 @@ const styles = StyleSheet.create({
         fontSize: fontSize.xs,
     },
 });
+}

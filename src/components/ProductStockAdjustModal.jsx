@@ -60,16 +60,16 @@ export default function ProductStockAdjustModal({
             showClose
             ariaLabelledby="product-stock-modal-title"
         >
-            <div className="px-6 pt-6 pb-4 border-b border-zinc-100">
+            <div className="px-6 pt-6 pb-4 border-b border-border/50">
                 <div className="flex items-start gap-3 pr-8">
                     <div className="p-2.5 rounded-xl bg-brand-subtle shrink-0">
                         <PackagePlus className="h-5 w-5 text-brand" aria-hidden />
                     </div>
                     <div>
-                        <h2 id="product-stock-modal-title" className="text-lg font-semibold text-zinc-900">
+                        <h2 id="product-stock-modal-title" className="text-lg font-semibold text-foreground">
                             Adjust stock
                         </h2>
-                        <p className="text-sm text-zinc-500 mt-0.5">
+                        <p className="text-sm text-foreground-muted mt-0.5">
                             {product.name} · currently {product.quantityOnHand ?? 0} in stock
                         </p>
                     </div>
@@ -92,7 +92,7 @@ export default function ProductStockAdjustModal({
                         placeholder="e.g. 10 or -3"
                         aria-invalid={Boolean(error)}
                     />
-                    <p className="text-xs text-zinc-500 mt-1.5">
+                    <p className="text-xs text-foreground-muted mt-1.5">
                         {allowOverselling
                             ? 'Use positive numbers to add stock and negative numbers to remove stock.'
                             : 'Use positive numbers to add stock. Removals cannot exceed the current quantity.'}

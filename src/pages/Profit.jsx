@@ -16,7 +16,6 @@ import { formatCurrency } from '../utils/currency';
 import { formatMarginPercent } from '../utils/margin';
 import { isPremiumUser } from '../utils/premium';
 import { getExpenseCategoryLabel } from '@waraqah/shared';
-import { format } from 'date-fns';
 
 const ProfitTrendChart = lazy(() => import('../components/dashboard/ProfitTrendChart'));
 
@@ -39,10 +38,10 @@ function ChartSkeleton() {
     return (
         <div className="card lg:col-span-2 min-h-[280px] animate-pulse">
             <div className="mb-4 space-y-2">
-                <div className="h-4 w-32 rounded bg-zinc-200/80" />
-                <div className="h-3 w-56 max-w-full rounded bg-zinc-200/80" />
+                <div className="h-4 w-32 skeleton-bar" />
+                <div className="h-3 w-56 max-w-full skeleton-bar" />
             </div>
-            <div className="h-[220px] rounded-lg bg-zinc-200/80" />
+            <div className="h-[220px] skeleton-bar" />
         </div>
     );
 }
@@ -51,33 +50,27 @@ export default function Profit() {
     const { businessInfo } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const {
-        monthInputValue,
-        setMonthInputValue,
         periodLabel,
-        summaryYear,
-        summaryMonth,
         mode,
         setPeriodMode,
-        queryPeriod,
+        queryParams,
         isCurrentPeriod,
         showComparison,
         comparisonLabel,
+        customDraftStartDate,
+        customDraftEndDate,
+        setCustomDraftRange,
+        applyCustomRange,
+        maxDate,
     } = usePeriodFilter();
 
-    const { data, isPending, isFetching } = useProfitSummaryQuery(
-        queryPeriod,
-        summaryYear,
-        summaryMonth,
-        {
-            enabled: premium,
-        }
-    );
-
-    const productsPage = useClientPagedList(data?.byProduct, {
-        resetKey: `${queryPeriod}-${summaryYear}-${summaryMonth}`,
+    const { data, isPending, isFetching } = useProfitSummaryQuery(queryParams, {
+        enabled: premium,
     });
 
-    const maxMonth = format(new Date(), 'yyyy-MM');
+    const productsPage = useClientPagedList(data?.byProduct, {
+        resetKey: JSON.stringify(queryParams),
+    });
 
     if (!premium) {
         return (
@@ -132,10 +125,12 @@ export default function Profit() {
                             periodMode={mode}
                             isThisMonth={isCurrentPeriod}
                             onPeriodModeChange={setPeriodMode}
-                            value={monthInputValue}
-                            onChange={setMonthInputValue}
                             displayLabel={periodLabel}
-                            max={maxMonth}
+                            maxDate={maxDate}
+                            customDraftStartDate={customDraftStartDate}
+                            customDraftEndDate={customDraftEndDate}
+                            onCustomDraftRangeChange={setCustomDraftRange}
+                            onCustomApply={applyCustomRange}
                             triggerAriaLabel="Select profit period"
                         />
                     </div>
@@ -210,7 +205,7 @@ export default function Profit() {
                     </div>
 
                     <section className="mb-6">
-                        <h2 className="text-sm font-semibold text-zinc-900 mb-3">By category</h2>
+                        <h2 className="text-sm font-semibold text-foreground mb-3">By category</h2>
                         {data?.byExpenseCategory?.length ? (
                             <DataTable columns={EXPENSE_COLUMNS} fixedLayout minWidth={480}>
                                 {data.byExpenseCategory.map((row) => (
@@ -244,7 +239,7 @@ export default function Profit() {
                     </section>
 
                     <section>
-                        <h2 className="text-sm font-semibold text-zinc-900 mb-3">By product</h2>
+                        <h2 className="text-sm font-semibold text-foreground mb-3">By product</h2>
                         {data?.byProduct?.length ? (
                             <>
                             <DataTable columns={PRODUCT_COLUMNS} fixedLayout minWidth={720} className="scroll-x-touch">
@@ -253,7 +248,7 @@ export default function Profit() {
                                         <DataTableCell>
                                             <Link
                                                 to={`/products/${row.productId}`}
-                                                className="font-medium text-zinc-950 hover:text-brand"
+                                                className="font-medium text-foreground hover:text-brand"
                                             >
                                                 {row.name}
                                             </Link>
@@ -291,7 +286,7 @@ export default function Profit() {
                         )}
                     </section>
 
-                    <p className="mt-6 text-xs text-zinc-500">
+                    <p className="mt-6 text-xs text-foreground-muted">
                         Gross profit is revenue minus cost of goods sold (COGS) on paid and partial sales only.
                         Net profit subtracts operating expenses recorded on{' '}
                         <Link to="/expenses" className="underline underline-offset-2">

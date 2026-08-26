@@ -10,6 +10,8 @@ import {
 } from 'recharts';
 import { format, subMonths } from 'date-fns';
 import { formatCurrency } from '../../utils/currency';
+import { useTheme } from '../../context/ThemeContext';
+import { getChartTheme } from '../../utils/chartTheme';
 import ChartCard from './ChartCard';
 
 function buildPlaceholderTrend(count = 12) {
@@ -42,36 +44,38 @@ function formatAxisCurrency(value) {
     return formatCurrency(amount);
 }
 
-function ProfitTooltip({ active, payload }) {
+function ProfitTooltip({ active, payload, theme }) {
     if (!active || !payload?.length) return null;
 
     const point = payload[0]?.payload;
     if (!point) return null;
 
     return (
-        <div className="rounded-lg border border-zinc-200/80 bg-white px-3 py-2 shadow-soft text-xs">
-            <p className="font-medium text-zinc-950">{point.label}</p>
-            <p className="mt-1 text-zinc-600">
+        <div className={theme.tooltipPanel}>
+            <p className={theme.tooltipTitle}>{point.label}</p>
+            <p className={`mt-1 ${theme.tooltipMuted}`}>
                 Net profit:{' '}
-                <span className="font-medium text-zinc-950">{formatCurrency(point.netProfit ?? 0)}</span>
+                <span className={theme.tooltipValue}>{formatCurrency(point.netProfit ?? 0)}</span>
             </p>
-            <p className="text-zinc-600">
+            <p className={theme.tooltipMuted}>
                 Gross profit:{' '}
-                <span className="font-medium text-zinc-950">{formatCurrency(point.grossProfit ?? 0)}</span>
+                <span className={theme.tooltipValue}>{formatCurrency(point.grossProfit ?? 0)}</span>
             </p>
-            <p className="text-zinc-600">
+            <p className={theme.tooltipMuted}>
                 Expenses:{' '}
-                <span className="font-medium text-zinc-950">{formatCurrency(point.totalExpenses ?? 0)}</span>
+                <span className={theme.tooltipValue}>{formatCurrency(point.totalExpenses ?? 0)}</span>
             </p>
-            <p className="text-zinc-600">
+            <p className={theme.tooltipMuted}>
                 Revenue:{' '}
-                <span className="font-medium text-zinc-950">{formatCurrency(point.revenue ?? 0)}</span>
+                <span className={theme.tooltipValue}>{formatCurrency(point.revenue ?? 0)}</span>
             </p>
         </div>
     );
 }
 
 export default function ProfitTrendChart({ trend = [] }) {
+    const { isDark } = useTheme();
+    const chartTheme = getChartTheme(isDark);
     const chartData = trend.length
         ? trend.map((point) => ({
               ...point,
@@ -99,24 +103,24 @@ export default function ProfitTrendChart({ trend = [] }) {
                                 <stop offset="100%" stopColor="#059669" stopOpacity={0} />
                             </linearGradient>
                         </defs>
-                        <CartesianGrid stroke="#e4e4e7" strokeDasharray="3 3" vertical={false} />
+                        <CartesianGrid stroke={chartTheme.grid} strokeDasharray="3 3" vertical={false} />
                         <XAxis
                             dataKey="label"
-                            tick={{ fill: '#71717a', fontSize: 11 }}
+                            tick={{ fill: chartTheme.tick, fontSize: 11 }}
                             axisLine={false}
                             tickLine={false}
                             interval="preserveStartEnd"
                             minTickGap={24}
                         />
                         <YAxis
-                            tick={{ fill: '#71717a', fontSize: 11 }}
+                            tick={{ fill: chartTheme.tick, fontSize: 11 }}
                             axisLine={false}
                             tickLine={false}
                             tickFormatter={formatAxisCurrency}
                             width={56}
                             domain={['auto', 'auto']}
                         />
-                        <Tooltip content={<ProfitTooltip />} cursor={{ stroke: '#059669', strokeOpacity: 0.2 }} />
+                        <Tooltip content={<ProfitTooltip theme={chartTheme} />} cursor={{ stroke: '#059669', strokeOpacity: 0.2 }} />
                         <Area
                             type="monotone"
                             dataKey="netProfit"
@@ -125,7 +129,7 @@ export default function ProfitTrendChart({ trend = [] }) {
                             strokeOpacity={hasData ? 1 : 0.35}
                             fill="url(#netProfitTrendFill)"
                             dot={false}
-                            activeDot={hasData ? { r: 4, fill: '#059669', stroke: '#fff', strokeWidth: 2 } : false}
+                            activeDot={hasData ? { r: 4, fill: '#059669', stroke: chartTheme.activeDotStroke, strokeWidth: 2 } : false}
                         />
                         <Line
                             type="monotone"
@@ -140,7 +144,7 @@ export default function ProfitTrendChart({ trend = [] }) {
                 </ResponsiveContainer>
             </div>
             {!hasData ? (
-                <p className="mt-3 text-center text-xs text-zinc-500">
+                <p className="mt-3 text-center text-xs text-foreground-muted">
                     Add unit costs on products, record paid sales, and log expenses to see profit trends.
                 </p>
             ) : null}

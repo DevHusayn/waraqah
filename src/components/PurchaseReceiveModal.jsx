@@ -42,25 +42,25 @@ export default function PurchaseReceiveModal({ open, onClose, lines, currency, o
 
     return (
         <ModalShell open={open} onClose={saving ? undefined : onClose} size="md" showClose ariaLabelledby="receive-po-title">
-            <div className="px-6 pt-6 pb-4 border-b border-zinc-100">
-                <h2 id="receive-po-title" className="text-lg font-semibold text-zinc-900">
+            <div className="px-6 pt-6 pb-4 border-b border-border/50">
+                <h2 id="receive-po-title" className="text-lg font-semibold text-foreground">
                     Receive stock
                 </h2>
-                <p className="text-sm text-zinc-500 mt-1">
-                    Enter quantities received now. Tracked products will update automatically.
+                <p className="text-sm text-foreground-muted mt-1">
+                    Enter quantities received now. New items are added to your product catalog automatically.
                 </p>
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 {lines.map((line, index) => (
-                    <div key={line.lineIndex} className="rounded-xl border border-zinc-200 p-4 space-y-2">
+                    <div key={line.lineIndex} className="rounded-xl border border-border p-4 space-y-2">
                         <div className="flex items-start justify-between gap-3">
                             <div>
-                                <p className="font-medium text-zinc-950">{line.description || 'Line item'}</p>
-                                <p className="text-xs text-zinc-500 mt-0.5">
+                                <p className="font-medium text-foreground">{line.description || 'Line item'}</p>
+                                <p className="text-xs text-foreground-muted mt-0.5">
                                     Ordered {line.ordered} · Received {line.received} · Remaining {line.remaining}
                                 </p>
                             </div>
-                            <p className="text-sm text-zinc-600 tabular-nums shrink-0">
+                            <p className="text-sm text-foreground-muted tabular-nums shrink-0">
                                 {formatCurrency(line.rate || 0, currency)}
                             </p>
                         </div>

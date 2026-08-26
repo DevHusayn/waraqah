@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, fontFamily, fontSize, lineHeight, radii, spacing } from '../../theme';
+import { colors, fontFamily, fontSize, lineHeight, radii, spacing , useTheme } from '../../theme';
 
 /** Compact horizontal summary tile — not a large card */
 export function StatTile({ label, value }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     return (
         <View style={styles.tile}>
             <Text style={styles.label} numberOfLines={1}>
@@ -39,7 +42,8 @@ export function StatCard({ label, value, icon: Icon, theme = 'brand' }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     strip: {
         flexDirection: 'row',
         backgroundColor: colors.surfaceMuted,
@@ -85,3 +89,4 @@ const styles = StyleSheet.create({
         borderColor: colors.border,
     },
 });
+}

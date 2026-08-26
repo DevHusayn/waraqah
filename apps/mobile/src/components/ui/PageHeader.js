@@ -1,7 +1,10 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, fontFamily, fontSize, lineHeight, spacing } from '../../theme';
+import { colors, fontFamily, fontSize, lineHeight, spacing , useTheme } from '../../theme';
 
 export function PageHeader({ title, subtitle, right, style, large = true }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     return (
         <View style={[styles.wrap, style]}>
             <View style={styles.row}>
@@ -17,7 +20,8 @@ export function PageHeader({ title, subtitle, right, style, large = true }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     wrap: {
         marginBottom: spacing.xxl,
         paddingHorizontal: spacing.xl,
@@ -52,3 +56,4 @@ const styles = StyleSheet.create({
         lineHeight: lineHeight.md,
     },
 });
+}

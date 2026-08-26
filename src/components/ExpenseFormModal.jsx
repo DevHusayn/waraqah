@@ -208,7 +208,7 @@ export default function ExpenseFormModal({
                 scrollable={false}
                 ariaLabelledby="expense-modal-title"
             >
-                <div className="px-6 pt-6 pb-4 border-b border-zinc-100">
+                <div className="px-6 pt-6 pb-4 border-b border-border/50">
                     <div className="flex items-start gap-3 pr-8">
                         <div className="p-2.5 rounded-xl bg-brand-subtle shrink-0">
                             {isEdit ? (
@@ -218,10 +218,10 @@ export default function ExpenseFormModal({
                             )}
                         </div>
                         <div>
-                            <h2 id="expense-modal-title" className="text-lg font-semibold text-zinc-900">
+                            <h2 id="expense-modal-title" className="text-lg font-semibold text-foreground">
                                 {isEdit ? 'Edit expense' : 'Add expense'}
                             </h2>
-                            <p className="text-sm text-zinc-500 mt-0.5">
+                            <p className="text-sm text-foreground-muted mt-0.5">
                                 Operating costs like rent, salaries, and utilities
                             </p>
                         </div>
@@ -272,7 +272,7 @@ export default function ExpenseFormModal({
 
                     <div>
                         <label htmlFor="expense-vendor" className="label">
-                            Paid to <span className="text-zinc-400 font-normal">(optional)</span>
+                            Paid to <span className="text-foreground-muted/70 font-normal">(optional)</span>
                         </label>
                         <input
                             id="expense-vendor"
@@ -287,7 +287,7 @@ export default function ExpenseFormModal({
 
                     <div>
                         <label htmlFor="expense-description" className="label">
-                            Description <span className="text-zinc-400 font-normal">(optional)</span>
+                            Description <span className="text-foreground-muted/70 font-normal">(optional)</span>
                         </label>
                         <textarea
                             id="expense-description"
@@ -328,11 +328,11 @@ export default function ExpenseFormModal({
                 className="z-[10000]"
                 ariaLabelledby="expense-custom-category-title"
             >
-                <div className="px-6 pt-6 pb-4 border-b border-zinc-100">
-                    <h2 id="expense-custom-category-title" className="text-lg font-semibold text-zinc-900">
+                <div className="px-6 pt-6 pb-4 border-b border-border/50">
+                    <h2 id="expense-custom-category-title" className="text-lg font-semibold text-foreground">
                         Custom category
                     </h2>
-                    <p className="text-sm text-zinc-500 mt-0.5">
+                    <p className="text-sm text-foreground-muted mt-0.5">
                         Enter a category that is not in the list
                     </p>
                 </div>

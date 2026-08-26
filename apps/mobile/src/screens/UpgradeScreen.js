@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
@@ -14,11 +14,13 @@ import { captureEvent } from '../monitoring/posthog';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { Button, Card, PageHeader, PageLoader } from '../components/ui';
-import { colors, spacing } from '../theme';
+import { colors, spacing, useTheme } from '../theme';
 
 const CALLBACK_SCHEME = 'waraqah://upgrade/callback';
 
 export function UpgradeScreen() {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { businessInfo, refreshBusinessInfo } = useSettings();
     const { showToast } = useToast();
     const [plan, setPlan] = useState(null);
@@ -104,7 +106,8 @@ export function UpgradeScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.surfaceMuted },
     content: { padding: spacing.lg, paddingBottom: spacing.xxl },
     block: { marginBottom: 12 },
@@ -112,3 +115,4 @@ const styles = StyleSheet.create({
     feature: { color: colors.slate600, marginBottom: 4 },
     active: { color: colors.green600, fontWeight: '700', fontSize: 16 },
 });
+}

@@ -1,12 +1,15 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WaraqahLogo } from '../components/WaraqahLogo';
 import { Button } from '../components/ui';
 import { APP_TAGLINE } from '../constants/brand';
-import { colors, fontFamily, fontSize, lineHeight, spacing } from '../theme';
+import { colors, fontFamily, fontSize, lineHeight, spacing, useTheme } from '../theme';
 
 export function WelcomeScreen({ navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     return (
         <SafeAreaView style={styles.root} edges={['top', 'left', 'right', 'bottom']}>
             <View style={styles.hero}>
@@ -34,7 +37,8 @@ export function WelcomeScreen({ navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.surface },
     hero: {
         flex: 1,
@@ -80,3 +84,4 @@ const styles = StyleSheet.create({
         lineHeight: lineHeight.xs,
     },
 });
+}

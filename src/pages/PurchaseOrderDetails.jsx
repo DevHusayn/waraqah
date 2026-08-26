@@ -7,6 +7,7 @@ import PageHeader from '../components/PageHeader';
 import StatusBadge from '../components/StatusBadge';
 import ConfirmModal from '../components/ConfirmModal';
 import PurchaseReceiveModal from '../components/PurchaseReceiveModal';
+import AdjustSellingPriceModal from '../components/AdjustSellingPriceModal';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
 import { formatCurrency } from '../utils/currency';
@@ -18,11 +19,13 @@ export default function PurchaseOrderDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { showToast } = useToast();
-    const { fetchProducts } = useInvoice();
+    const { fetchProducts, updateProduct } = useInvoice();
 
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [receiveOpen, setReceiveOpen] = useState(false);
+    const [pricePrompts, setPricePrompts] = useState([]);
+    const [priceModalOpen, setPriceModalOpen] = useState(false);
     const [cancelOpen, setCancelOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
 
@@ -83,8 +86,35 @@ export default function PurchaseOrderDetails() {
             setReceiveOpen(false);
             fetchProducts({ force: true }).catch(() => {});
             showToast('Stock received successfully', 'success');
+
+            const prompts = updated.sellingPricePrompts || [];
+            if (prompts.length > 0) {
+                setPricePrompts(prompts);
+                setPriceModalOpen(true);
+            }
         } catch (err) {
             showToast(err.message || 'Failed to receive stock', 'error');
+            throw err;
+        }
+    };
+
+    const handleUpdateSellingPrices = async (updates) => {
+        try {
+            await Promise.all(
+                updates.map(({ productId, unitPrice }) =>
+                    updateProduct(productId, { unitPrice })
+                )
+            );
+            setPriceModalOpen(false);
+            setPricePrompts([]);
+            showToast(
+                updates.length === 1
+                    ? 'Selling price updated'
+                    : `${updates.length} selling prices updated`,
+                'success'
+            );
+        } catch (err) {
+            showToast(err.message || 'Failed to update selling prices', 'error');
             throw err;
         }
     };
@@ -130,11 +160,21 @@ export default function PurchaseOrderDetails() {
                 currency={order.currency}
                 onSubmit={handleReceive}
             />
+            <AdjustSellingPriceModal
+                open={priceModalOpen}
+                onClose={() => {
+                    setPriceModalOpen(false);
+                    setPricePrompts([]);
+                }}
+                prompts={pricePrompts}
+                currency={order.currency}
+                onSubmit={handleUpdateSellingPrices}
+            />
 
             <div className="mb-4">
                 <Link
                     to="/purchase-orders"
-                    className="inline-flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900"
+                    className="inline-flex items-center gap-2 text-sm text-foreground-muted hover:text-foreground"
                 >
                     <ArrowLeft size={16} aria-hidden />
                     Back to purchase orders
@@ -147,7 +187,7 @@ export default function PurchaseOrderDetails() {
                     order.supplierId ? (
                         <Link
                             to={`/suppliers/${order.supplierId}`}
-                            className="hover:text-zinc-900 hover:underline"
+                            className="hover:text-foreground hover:underline"
                         >
                             {order.supplierName || 'View supplier'}
                         </Link>
@@ -185,23 +225,23 @@ export default function PurchaseOrderDetails() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
                 <div className="card lg:col-span-2 space-y-4">
                     <div className="flex items-center justify-between gap-3">
-                        <h2 className="text-sm font-semibold text-zinc-950">Line items</h2>
+                        <h2 className="text-sm font-semibold text-foreground">Line items</h2>
                         <StatusBadge status={order.status} />
                     </div>
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-sm">
                             <thead>
-                                <tr className="text-left text-xs uppercase tracking-wide text-zinc-400 border-b border-zinc-200">
+                                <tr className="text-left text-xs uppercase tracking-wide text-foreground-muted/70 border-b border-border">
                                     <th className="py-2 pr-4 font-medium">Item</th>
                                     <th className="py-2 px-4 font-medium text-right">Ordered</th>
                                     <th className="py-2 px-4 font-medium text-right">Received</th>
-                                    <th className="py-2 pl-4 font-medium text-right">Rate</th>
+                                    <th className="py-2 pl-4 font-medium text-right">Unit cost</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {(order.items || []).map((item, index) => (
-                                    <tr key={index} className="border-b border-zinc-100 last:border-0">
-                                        <td className="py-3 pr-4 text-zinc-800">{item.description || '—'}</td>
+                                    <tr key={index} className="border-b border-border/50 last:border-0">
+                                        <td className="py-3 pr-4 text-foreground">{item.description || '—'}</td>
                                         <td className="py-3 px-4 text-right tabular-nums">{item.quantity ?? 0}</td>
                                         <td className="py-3 px-4 text-right tabular-nums">
                                             {item.quantityReceived ?? 0}
@@ -218,29 +258,29 @@ export default function PurchaseOrderDetails() {
 
                 <div className="card space-y-3 text-sm">
                     <div>
-                        <p className="text-zinc-500">Order date</p>
-                        <p className="font-medium text-zinc-950">
+                        <p className="text-foreground-muted">Order date</p>
+                        <p className="font-medium text-foreground">
                             {order.date ? format(new Date(order.date), 'MMM d, yyyy') : '—'}
                         </p>
                     </div>
                     {order.expectedDate ? (
                         <div>
-                            <p className="text-zinc-500">Expected delivery</p>
-                            <p className="font-medium text-zinc-950">
+                            <p className="text-foreground-muted">Expected delivery</p>
+                            <p className="font-medium text-foreground">
                                 {format(new Date(order.expectedDate), 'MMM d, yyyy')}
                             </p>
                         </div>
                     ) : null}
                     <div>
-                        <p className="text-zinc-500">Estimated total</p>
-                        <p className="text-lg font-bold text-zinc-950">
+                        <p className="text-foreground-muted">Estimated total</p>
+                        <p className="text-lg font-bold text-foreground">
                             {formatCurrency(order.total || 0, order.currency)}
                         </p>
                     </div>
                     {order.notes ? (
                         <div>
-                            <p className="text-zinc-500">Notes</p>
-                            <p className="text-zinc-800 whitespace-pre-wrap">{order.notes}</p>
+                            <p className="text-foreground-muted">Notes</p>
+                            <p className="text-foreground whitespace-pre-wrap">{order.notes}</p>
                         </div>
                     ) : null}
                 </div>

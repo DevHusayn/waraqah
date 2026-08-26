@@ -30,7 +30,7 @@ export default function CustomUnitModal({ open, onClose, onSave }) {
             <form onSubmit={handleSubmit} className="p-5 sm:p-6">
                 <h2
                     id="custom-unit-modal-title"
-                    className="text-base font-semibold text-zinc-950"
+                    className="text-base font-semibold text-foreground"
                 >
                     Enter Unit Name
                 </h2>

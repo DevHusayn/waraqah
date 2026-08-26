@@ -24,8 +24,8 @@ function NotificationToggle({
         <div className="card">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div className="space-y-1">
-                    <h2 className="text-base font-semibold text-zinc-900">{title}</h2>
-                    <p className="text-sm text-zinc-600 leading-relaxed max-w-xl">{description}</p>
+                    <h2 className="text-base font-semibold text-foreground">{title}</h2>
+                    <p className="text-sm text-foreground-muted leading-relaxed max-w-xl">{description}</p>
                 </div>
                 <button
                     type="button"
@@ -38,13 +38,13 @@ function NotificationToggle({
                     }`}
                 >
                     <span
-                        className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition ${
+                        className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-surface shadow ring-0 transition ${
                             enabled ? 'translate-x-5' : 'translate-x-0'
                         }`}
                     />
                 </button>
             </div>
-            <p className="mt-4 text-xs text-zinc-500">{statusText}</p>
+            <p className="mt-4 text-xs text-foreground-muted">{statusText}</p>
         </div>
     );
 }

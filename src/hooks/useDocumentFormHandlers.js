@@ -17,6 +17,8 @@ export function useDocumentFormHandlers({
     setCustomUnitModal,
     customUnitModal,
     markDirty,
+    /** 'unitPrice' for sales documents; 'unitCost' for purchase orders */
+    productPriceField = 'unitPrice',
 }) {
     const resolveClientId = useCallback(
         async (data, { createIfMissing = true } = {}) =>
@@ -151,7 +153,7 @@ export function useDocumentFormHandlers({
         const newLine = {
             description,
             quantity: 1,
-            rate: product.unitPrice || 0,
+            rate: Number(product[productPriceField]) || 0,
             unit: DEFAULT_INVOICE_UNIT,
             productId: product.id,
         };
@@ -189,7 +191,39 @@ export function useDocumentFormHandlers({
                 return next;
             });
         }
-    }, [markDirty, products, formData.items, setFormData, setFieldErrors]);
+    }, [markDirty, productPriceField, products, formData.items, setFormData, setFieldErrors]);
+
+    const applyProductToLine = useCallback(
+        (index, product) => {
+            if (!product || index == null || index < 0) return;
+            markDirty();
+            const description = product.description
+                ? `${product.name} — ${product.description}`
+                : product.name;
+
+            setFormData((prev) => {
+                if (index >= prev.items.length) return prev;
+                const items = [...prev.items];
+                items[index] = {
+                    ...items[index],
+                    description,
+                    quantity: items[index].quantity || 1,
+                    rate: Number(product[productPriceField]) || 0,
+                    productId: product.id,
+                };
+                return { ...prev, items };
+            });
+
+            setFieldErrors((fieldPrev) => {
+                const next = { ...fieldPrev };
+                delete next[`item-${index}-description`];
+                delete next[`item-${index}-quantity`];
+                delete next[`item-${index}-rate`];
+                return next;
+            });
+        },
+        [markDirty, productPriceField, setFormData, setFieldErrors]
+    );
 
     const removeItem = useCallback((index) => {
         setFormData((prev) => {
@@ -240,6 +274,7 @@ export function useDocumentFormHandlers({
         handleCustomUnitSave,
         addItem,
         addProductItem,
+        applyProductToLine,
         removeItem,
         createExpiryToggleHandler,
         createExpiryDateChangeHandler,

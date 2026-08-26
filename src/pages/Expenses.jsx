@@ -55,19 +55,18 @@ export default function Expenses() {
     const premium = isPremiumUser(businessInfo);
 
     const {
-        summaryYear,
-        summaryMonth,
-        monthInputValue,
-        setMonthInputValue,
         periodLabel,
         isCurrentPeriod,
         mode,
         setPeriodMode,
-        queryPeriod,
+        queryParams,
         showComparison,
         comparisonLabel,
-        calendarYear,
-        calendarMonth,
+        customDraftStartDate,
+        customDraftEndDate,
+        setCustomDraftRange,
+        applyCustomRange,
+        maxDate,
     } = usePeriodFilter();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -77,21 +76,18 @@ export default function Expenses() {
     const [deleting, setDeleting] = useState(false);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
 
-    const listParams = useMemo(
-        () => ({ period: queryPeriod, year: summaryYear, month: summaryMonth }),
-        [queryPeriod, summaryYear, summaryMonth]
-    );
+    const listParams = useMemo(() => ({ ...queryParams }), [queryParams]);
 
     const fetcher = useCallback(
-        ({ page, limit, search, year, month, period }) =>
+        ({ page, limit, search, period, startDate, endDate }) =>
             apiFetch(
                 `/expenses?${buildListQuery({
                     page,
                     limit,
                     search,
-                    year,
-                    month,
                     period,
+                    startDate,
+                    endDate,
                 })}`
             ),
         []
@@ -111,11 +107,7 @@ export default function Expenses() {
         extraParams: listParams,
     });
 
-    const { data: summary, isFetching: summaryFetching } = useExpenseSummaryQuery(
-        queryPeriod,
-        summaryYear,
-        summaryMonth
-    );
+    const { data: summary, isFetching: summaryFetching } = useExpenseSummaryQuery(queryParams);
 
     const expenses = data.map(mapExpense);
 
@@ -133,10 +125,7 @@ export default function Expenses() {
             setEditingExpense(null);
             setModalInitialData({
                 ...EMPTY_EXPENSE,
-                date:
-                    mode === 'month'
-                        ? `${calendarYear}-${String(calendarMonth).padStart(2, '0')}-01`
-                        : format(new Date(), 'yyyy-MM-dd'),
+                date: format(new Date(), 'yyyy-MM-dd'),
             });
         }
         setIsModalOpen(true);
@@ -146,9 +135,9 @@ export default function Expenses() {
         setEditingExpense(null);
         setModalInitialData(
             buildDuplicateExpenseInitialData(expense, {
-                summaryYear: calendarYear,
-                summaryMonth: calendarMonth,
-                isCurrentPeriod: mode !== 'month' || isCurrentPeriod,
+                isCurrentPeriod: true,
+                summaryYear: 1,
+                summaryMonth: 1,
             })
         );
         setIsModalOpen(true);
@@ -248,8 +237,8 @@ export default function Expenses() {
 
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                    <p className="text-xs text-zinc-500 font-medium">Total expenses</p>
-                    <p className="text-2xl font-semibold tabular-nums text-zinc-950">
+                    <p className="text-xs text-foreground-muted font-medium">Total expenses</p>
+                    <p className="text-2xl font-semibold tabular-nums text-foreground">
                         {formatCurrency(summary?.totals?.totalExpenses ?? 0)}
                     </p>
                     <div className="mt-1 min-h-[1rem]">
@@ -261,7 +250,7 @@ export default function Expenses() {
                             />
                         ) : null}
                     </div>
-                    <p className="mt-1 text-xs text-zinc-500">{periodLabel}</p>
+                    <p className="mt-1 text-xs text-foreground-muted">{periodLabel}</p>
                 </div>
                 <MonthPickerField
                     variant="compact"
@@ -270,9 +259,12 @@ export default function Expenses() {
                     periodMode={mode}
                     isThisMonth={isCurrentPeriod}
                     onPeriodModeChange={setPeriodMode}
-                    value={monthInputValue}
-                    onChange={setMonthInputValue}
                     displayLabel={periodLabel}
+                    maxDate={maxDate}
+                    customDraftStartDate={customDraftStartDate}
+                    customDraftEndDate={customDraftEndDate}
+                    onCustomDraftRangeChange={setCustomDraftRange}
+                    onCustomApply={applyCustomRange}
                     triggerAriaLabel={`Change period from ${periodLabel}`}
                 />
             </div>
@@ -295,10 +287,10 @@ export default function Expenses() {
                     {summary.byCategory.slice(0, 4).map((row) => (
                         <span
                             key={row.category}
-                            className="inline-flex items-center gap-2 rounded-full border border-zinc-200/80 bg-white px-3 py-1 text-xs text-zinc-700"
+                            className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-surface px-3 py-1 text-xs text-foreground-muted"
                         >
                             <span>{row.label}</span>
-                            <span className="font-medium tabular-nums text-zinc-950">
+                            <span className="font-medium tabular-nums text-foreground">
                                 {formatCurrency(row.amount)}
                             </span>
                         </span>
@@ -363,7 +355,7 @@ export default function Expenses() {
                                         {getExpenseCategoryLabel(expense.category)}
                                     </DataTableCell>
                                     <DataTableCell>
-                                        <span className="text-zinc-700">{details || '—'}</span>
+                                        <span className="text-foreground-muted">{details || '—'}</span>
                                     </DataTableCell>
                                     <DataTableCell className="text-right tabular-nums font-medium">
                                         {formatCurrency(expense.amount || 0)}
@@ -372,7 +364,7 @@ export default function Expenses() {
                                         <div className="flex items-center justify-end gap-1">
                                             <button
                                                 type="button"
-                                                className="inline-flex items-center justify-center rounded-md p-1.5 text-zinc-600 hover:bg-zinc-100"
+                                                className="inline-flex items-center justify-center rounded-md p-1.5 text-foreground-muted hover:bg-surface-muted"
                                                 aria-label="Duplicate expense"
                                                 title="Duplicate expense"
                                                 onClick={() => openDuplicateModal(expense)}
@@ -381,7 +373,7 @@ export default function Expenses() {
                                             </button>
                                             <button
                                                 type="button"
-                                                className="inline-flex items-center justify-center rounded-md p-1.5 text-zinc-600 hover:bg-zinc-100"
+                                                className="inline-flex items-center justify-center rounded-md p-1.5 text-foreground-muted hover:bg-surface-muted"
                                                 aria-label="Edit expense"
                                                 onClick={() => openModal(expense)}
                                             >

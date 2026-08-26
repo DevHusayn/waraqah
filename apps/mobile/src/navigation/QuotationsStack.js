@@ -2,13 +2,16 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { QuotationsListScreen } from '../screens/QuotationsListScreen';
 import { QuotationDetailScreen } from '../screens/QuotationDetailScreen';
 import { CreateQuotationScreen } from '../screens/CreateQuotationScreen';
-import { stackScreenOptions } from './headerOptions';
+import { getStackScreenOptions } from './headerOptions';
+import { useTheme } from '../theme';
 
 const Stack = createNativeStackNavigator();
 
 export function QuotationsStack() {
+    const { colors } = useTheme();
+
     return (
-        <Stack.Navigator screenOptions={stackScreenOptions}>
+        <Stack.Navigator screenOptions={getStackScreenOptions(colors)}>
             <Stack.Screen
                 name="QuotationsList"
                 component={QuotationsListScreen}

@@ -158,15 +158,15 @@ const FAQ_ITEMS = [
 
 function FaqItem({ item, open, onToggle }) {
     return (
-        <div className="border-b border-zinc-200/80 last:border-0">
+        <div className="border-b border-border/80 last:border-0">
             <button
                 type="button"
                 onClick={onToggle}
                 className="flex w-full items-center justify-between gap-4 py-4 text-left"
             >
-                <span className="font-medium text-zinc-950">{item.q}</span>
+                <span className="font-medium text-foreground">{item.q}</span>
                 <ChevronDown
-                    className={`h-4 w-4 flex-shrink-0 text-zinc-400 transition-transform duration-200 ${open ? 'rotate-180' : ''
+                    className={`h-4 w-4 flex-shrink-0 text-foreground-muted/70 transition-transform duration-200 ${open ? 'rotate-180' : ''
                         }`}
                 />
             </button>
@@ -174,7 +174,7 @@ function FaqItem({ item, open, onToggle }) {
                 className={`overflow-hidden transition-all duration-200 ${open ? 'max-h-80 pb-4 opacity-100' : 'max-h-0 opacity-0'
                     }`}
             >
-                <p className="text-zinc-500 text-sm leading-relaxed pr-8">{item.a}</p>
+                <p className="text-foreground-muted text-sm leading-relaxed pr-8">{item.a}</p>
             </div>
         </div>
     );
@@ -193,7 +193,7 @@ function PlanAudienceLine({ children, variant = 'free' }) {
     const styles =
         variant === 'premium'
             ? 'border-amber-300/80 bg-amber-50/60 text-amber-950/80'
-            : 'border-zinc-300 bg-zinc-50 text-zinc-600';
+            : 'border-zinc-300 bg-surface-muted text-foreground-muted';
 
     return (
         <p
@@ -211,12 +211,12 @@ function LandingPremiumCard() {
 
     return (
         <div className="premium-card p-8 h-full flex flex-col relative overflow-hidden landing-premium-glow">
-            <div className="absolute top-4 right-4 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 uppercase tracking-wide">
+            <div className="absolute top-4 right-4 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 uppercase tracking-wide dark:bg-amber-950/50 dark:text-amber-300">
                 Popular
             </div>
             <div className="flex items-center gap-2">
                 <Crown className="h-5 w-5 text-amber-600" />
-                <h3 className="text-lg font-semibold text-zinc-900">Premium</h3>
+                <h3 className="text-lg font-semibold text-foreground">Premium</h3>
             </div>
 
             <div className="grid grid-cols-2 gap-1 rounded-lg bg-zinc-100 p-1 mt-4 mb-3">
@@ -224,8 +224,8 @@ function LandingPremiumCard() {
                     type="button"
                     onClick={() => setBillingInterval('monthly')}
                     className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${billingInterval === 'monthly'
-                        ? 'bg-white text-zinc-900 shadow-sm'
-                        : 'text-zinc-600 hover:text-zinc-900'
+                        ? 'bg-surface text-foreground shadow-sm'
+                        : 'text-foreground-muted hover:text-foreground'
                         }`}
                 >
                     Monthly
@@ -234,8 +234,8 @@ function LandingPremiumCard() {
                     type="button"
                     onClick={() => setBillingInterval('yearly')}
                     className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${billingInterval === 'yearly'
-                        ? 'bg-white text-zinc-900 shadow-sm'
-                        : 'text-zinc-600 hover:text-zinc-900'
+                        ? 'bg-surface text-foreground shadow-sm'
+                        : 'text-foreground-muted hover:text-foreground'
                         }`}
                 >
                     Yearly
@@ -254,12 +254,12 @@ function LandingPremiumCard() {
                 For growing businesses that care about branding and clean books.
             </PlanAudienceLine>
             <ul className="mt-8 space-y-3 flex-1">
-                <li className="flex items-start gap-3 text-sm font-semibold text-zinc-900 pb-3 mb-1 border-b border-amber-200/70">
+                <li className="flex items-start gap-3 text-sm font-semibold text-foreground pb-3 mb-1 border-b border-amber-200/70">
                     <Check className="h-5 w-5 text-amber-600 flex-shrink-0" />
                     Everything in Free, plus:
                 </li>
                 {PREMIUM_PLAN_FEATURES.map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-zinc-700 text-sm">
+                    <li key={f} className="flex items-start gap-3 text-foreground-muted text-sm">
                         <Check className="h-5 w-5 text-amber-600 flex-shrink-0" />
                         {f}
                     </li>
@@ -284,37 +284,37 @@ export default function Landing() {
     const [heroRef, heroVisible] = useRevealOnScroll({ threshold: 0.2 });
 
     return (
-        <div className="landing-page min-h-screen bg-white text-zinc-950 overflow-x-hidden">
+        <div className="landing-page min-h-screen bg-surface text-foreground overflow-x-hidden">
             <LandingNav />
 
             {/* Hero */}
-            <section className="relative pt-28 pb-20 sm:pt-32 sm:pb-28 bg-white border-b border-zinc-200/80">
+            <section className="relative pt-28 pb-20 sm:pt-32 sm:pb-28 bg-surface border-b border-border/80">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6">
                     <div
                         ref={heroRef}
                         className={`grid lg:grid-cols-2 gap-12 lg:gap-16 items-center ${revealClass(heroVisible)}`}
                     >
                         <div>
-                            <p className="text-sm font-bold uppercase tracking-[0.14em] text-zinc-500">
+                            <p className="text-sm font-bold uppercase tracking-[0.14em] text-foreground-muted">
                                 {APP_TAGLINE}
                             </p>
-                            <h1 className="mt-6 text-3xl sm:text-4xl lg:text-4xl font-bold tracking-tight text-zinc-950 leading-[1.1]">
+                            <h1 className="mt-6 text-3xl sm:text-4xl lg:text-4xl font-bold tracking-tight text-foreground leading-[1.1]">
                                 Every sale.{' '}
                                 <span className="whitespace-nowrap">Every client.</span>{' '}
                                 <span className="landing-text-shimmer">One record.</span>
                             </h1>
-                            <p className="mt-6 text-lg text-zinc-600 max-w-xl leading-relaxed">
+                            <p className="mt-6 text-lg text-foreground-muted max-w-xl leading-relaxed">
                                 Run sales from quote to receipt. Manage clients and products, track unit costs,
                                 margins, and operating expenses, email documents, export PDFs and CSV reports,
                                 and see what&apos;s paid and profitable, all in one workspace, without spreadsheets.
                             </p>
                             <div className="mt-8 flex flex-col sm:flex-row gap-3">
                                 <CtaButton className="py-3.5 px-8 text-base shadow-soft shadow-brand/20 hover:shadow-card hover:shadow-brand/25" />
-                                <a href="#pricing" className="btn-secondary py-3.5 px-8 text-base border-zinc-200/80 bg-white/70">
+                                <a href="#pricing" className="btn-secondary py-3.5 px-8 text-base border-border/80 bg-surface/70">
                                     Compare plans
                                 </a>
                             </div>
-                            <p className="mt-4 text-sm text-zinc-500">
+                            <p className="mt-4 text-sm text-foreground-muted">
                                 Free to start · No card required · {FREE_MONTHLY_INVOICE_LIMIT} sales documents/month
                             </p>
                         </div>
@@ -323,7 +323,7 @@ export default function Landing() {
                             <div className="landing-dashboard-frame">
                                 <LandingDashboardPreview />
                             </div>
-                            <p className="mt-4 text-right text-xs text-zinc-400 pr-1">
+                            <p className="mt-4 text-right text-xs text-foreground-muted/70 pr-1">
                                 Dashboard snapshot
                             </p>
                         </div>
@@ -332,13 +332,13 @@ export default function Landing() {
             </section>
 
             {/* Why */}
-            <section className="py-20 sm:py-24 bg-white">
+            <section className="py-20 sm:py-24 bg-surface">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6">
                     <SectionReveal className="text-center max-w-2xl mx-auto">
-                        <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900 tracking-tight">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
                             Why you need {APP_NAME}
                         </h2>
-                        <p className="mt-4 text-zinc-600 text-lg">
+                        <p className="mt-4 text-foreground-muted text-lg">
                             Revenue is only half the picture. Here is what changes when sales, stock, costs, and profit live in one place.
                         </p>
                     </SectionReveal>
@@ -352,13 +352,13 @@ export default function Landing() {
             </section>
 
             {/* What you can manage today */}
-            <section className="py-20 sm:py-24 bg-zinc-50/80 border-y border-zinc-200/80">
+            <section className="py-20 sm:py-24 bg-surface-muted/80 border-y border-border/80">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6">
                     <SectionReveal className="text-center max-w-2xl mx-auto">
-                        <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900 tracking-tight">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
                             What you can manage today
                         </h2>
-                        <p className="mt-4 text-zinc-600 text-lg">
+                        <p className="mt-4 text-foreground-muted text-lg">
                             Everything your business needs to sell, record, and report, in one workspace.
                         </p>
                     </SectionReveal>
@@ -367,12 +367,12 @@ export default function Landing() {
                             const Icon = item.icon;
                             return (
                                 <SectionReveal key={item.title} delay={i + 1}>
-                                    <article className="h-full rounded-xl border border-zinc-200/80 bg-white p-6 shadow-sm">
+                                    <article className="h-full rounded-xl border border-border/80 bg-surface p-6 shadow-sm">
                                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand/10 text-brand">
                                             <Icon className="h-5 w-5" aria-hidden />
                                         </div>
-                                        <h3 className="mt-4 text-lg font-semibold text-zinc-900">{item.title}</h3>
-                                        <p className="mt-2 text-sm text-zinc-600 leading-relaxed">{item.text}</p>
+                                        <h3 className="mt-4 text-lg font-semibold text-foreground">{item.title}</h3>
+                                        <p className="mt-2 text-sm text-foreground-muted leading-relaxed">{item.text}</p>
                                     </article>
                                 </SectionReveal>
                             );
@@ -382,10 +382,10 @@ export default function Landing() {
             </section>
 
             {/* How it works */}
-            <section className="py-20 sm:py-24 bg-white">
+            <section className="py-20 sm:py-24 bg-surface">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6">
                     <SectionReveal className="text-center max-w-2xl mx-auto">
-                        <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900 tracking-tight">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
                             Three steps from quote to receipt
                         </h2>
                     </SectionReveal>
@@ -394,8 +394,8 @@ export default function Landing() {
                             <SectionReveal key={s.step} delay={i + 1} className="relative">
                                 <div className="text-center md:text-left">
                                     <span className="text-5xl font-black text-brand/15">{s.step}</span>
-                                    <h3 className="mt-2 text-xl font-semibold text-zinc-900">{s.title}</h3>
-                                    <p className="mt-2 text-zinc-600">{s.text}</p>
+                                    <h3 className="mt-2 text-xl font-semibold text-foreground">{s.title}</h3>
+                                    <p className="mt-2 text-foreground-muted">{s.text}</p>
                                 </div>
                                 {i < STEPS.length - 1 && (
                                     <div className="hidden md:block absolute top-8 -right-4 text-brand/30" aria-hidden>
@@ -412,30 +412,30 @@ export default function Landing() {
             </section>
 
             {/* Pricing */}
-            <section id="pricing" className="py-20 sm:py-24 bg-white scroll-mt-20">
+            <section id="pricing" className="py-20 sm:py-24 bg-surface scroll-mt-20">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6">
                     <SectionReveal className="text-center max-w-2xl mx-auto">
-                        <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900 tracking-tight">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
                             Free to start. Premium when you scale.
                         </h2>
-                        <p className="mt-4 text-zinc-600 text-lg">
+                        <p className="mt-4 text-foreground-muted text-lg">
                             Try {APP_NAME} at no cost, then upgrade when you need more.
                         </p>
                     </SectionReveal>
                     <div className="mt-14 grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                         <SectionReveal delay={1}>
-                            <div className="rounded-lg border border-zinc-200 bg-white p-6 h-full flex flex-col">
-                                <h3 className="text-lg font-semibold text-zinc-900">Free</h3>
-                                <p className="mt-2 text-4xl font-bold text-zinc-900">
+                            <div className="rounded-lg border border-border bg-surface p-6 h-full flex flex-col">
+                                <h3 className="text-lg font-semibold text-foreground">Free</h3>
+                                <p className="mt-2 text-4xl font-bold text-foreground">
                                     ₦{formatPrice(0)}
-                                    <span className="text-base font-normal text-zinc-500">/month</span>
+                                    <span className="text-base font-normal text-foreground-muted">/month</span>
                                 </p>
                                 <PlanAudienceLine>
                                     For freelancers and solo operators getting started.
                                 </PlanAudienceLine>
                                 <ul className="mt-8 space-y-3 flex-1">
                                     {FREE_PLAN_FEATURES.map((f) => (
-                                        <li key={f} className="flex items-start gap-3 text-zinc-600 text-sm">
+                                        <li key={f} className="flex items-start gap-3 text-foreground-muted text-sm">
                                             <Check className="h-5 w-5 text-green-600 flex-shrink-0" />
                                             {f}
                                         </li>
@@ -454,7 +454,7 @@ export default function Landing() {
             </section>
 
             {/* Features strip */}
-            <section className="py-16 border-y border-zinc-200/80 bg-zinc-900 text-white">
+            <section className="py-16 border-y border-border/80 bg-zinc-900 text-white">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6">
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 text-center">
                         {[
@@ -474,14 +474,14 @@ export default function Landing() {
             </section>
 
             {/* FAQ */}
-            <section id="faq" className="py-20 sm:py-24 bg-white scroll-mt-20">
+            <section id="faq" className="py-20 sm:py-24 bg-surface scroll-mt-20">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6">
                     <SectionReveal className="text-center">
-                        <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900 tracking-tight">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
                             Frequently asked questions
                         </h2>
                     </SectionReveal>
-                    <SectionReveal className="mt-10 rounded-2xl border border-zinc-200 bg-zinc-50/50 px-6 sm:px-8">
+                    <SectionReveal className="mt-10 rounded-2xl border border-border bg-surface-muted/50 px-6 sm:px-8">
                         {FAQ_ITEMS.map((item, i) => (
                             <FaqItem
                                 key={item.q}
@@ -495,13 +495,13 @@ export default function Landing() {
             </section>
 
             {/* Final CTA */}
-            <section className="py-20 sm:py-28 bg-white border-t border-zinc-200/80">
+            <section className="py-20 sm:py-28 bg-surface border-t border-border/80">
                 <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center">
                     <SectionReveal>
-                        <h2 className="text-3xl sm:text-4xl font-bold text-zinc-950 tracking-tight">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
                             Ready to keep records and get paid?
                         </h2>
-                        <p className="mt-4 text-lg text-zinc-600">
+                        <p className="mt-4 text-lg text-foreground-muted">
                             Join {APP_NAME} today. Send your next quotation, invoice, or receipt in seconds.
                         </p>
                         <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
@@ -514,7 +514,7 @@ export default function Landing() {
                             </Link>
                             <Link
                                 to={AUTH_LOGIN_PATH}
-                                className="inline-flex items-center justify-center rounded-xl border border-zinc-200 text-zinc-700 font-medium py-3.5 px-8 hover:bg-zinc-50 transition-colors"
+                                className="inline-flex items-center justify-center rounded-xl border border-border text-foreground-muted font-medium py-3.5 px-8 hover:bg-surface-muted transition-colors"
                             >
                                 Log in
                             </Link>
@@ -523,8 +523,8 @@ export default function Landing() {
                 </div>
             </section>
 
-            <footer className="py-10 border-t border-zinc-200 bg-white">
-                <div className="mx-auto max-w-6xl px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-zinc-500">
+            <footer className="py-10 border-t border-border bg-surface">
+                <div className="mx-auto max-w-6xl px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-foreground-muted">
                     <WaraqahLogo size="sm" iconStyle="solid" />
                     <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
                         <nav className="flex items-center gap-4" aria-label="Social">
@@ -537,7 +537,7 @@ export default function Landing() {
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         aria-label={label}
-                                        className="inline-flex items-center hover:text-zinc-800 transition-colors"
+                                        className="inline-flex items-center hover:text-foreground transition-colors"
                                     >
                                         {Icon ? <Icon className="h-5 w-5" aria-hidden /> : null}
                                     </a>
@@ -545,10 +545,10 @@ export default function Landing() {
                             })}
                         </nav>
                         <nav className="flex items-center gap-4" aria-label="Legal">
-                            <Link to={TERMS_PATH} className="hover:text-zinc-800 transition-colors">
+                            <Link to={TERMS_PATH} className="hover:text-foreground transition-colors">
                                 Terms
                             </Link>
-                            <Link to={PRIVACY_PATH} className="hover:text-zinc-800 transition-colors">
+                            <Link to={PRIVACY_PATH} className="hover:text-foreground transition-colors">
                                 Privacy
                             </Link>
                         </nav>

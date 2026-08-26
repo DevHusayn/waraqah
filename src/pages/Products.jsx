@@ -53,28 +53,28 @@ export default function Products() {
         setMonthInputValue,
         periodLabel,
         isCurrentPeriod,
-        listYear,
-        listMonth,
-        listQueryPeriod,
+        listQueryParams,
         listPeriodMode,
         setListPeriodMode,
         listPeriodLabel,
-        listIsThisMonth,
-        allTime,
-        listMonthInputValue,
-        setListMonthInputValue,
+        listCustomDraftStartDate,
+        listCustomDraftEndDate,
+        setListCustomDraftRange,
+        applyListCustomRange,
+        listMaxDate,
+        isDefaultListPeriod,
     } = useListMonthFilter();
 
     const fetcher = useCallback(
-        ({ page, limit, search, year, month, period }) =>
+        ({ page, limit, search, period, startDate, endDate }) =>
             apiFetch(
                 `/products?${buildListQuery({
                     page,
                     limit,
                     search,
-                    year,
-                    month,
                     period,
+                    startDate,
+                    endDate,
                 })}`
             ),
         []
@@ -98,14 +98,14 @@ export default function Products() {
     } = usePagedQuery({
         queryKeyBase: 'products',
         fetcher,
-        extraParams: { year: listYear, month: listMonth, period: listQueryPeriod },
+        extraParams: listQueryParams,
     });
 
     const products = data.map(mapProduct);
 
     useEffect(() => {
         setPage(1);
-    }, [listYear, listMonth, listQueryPeriod, setPage]);
+    }, [listQueryParams, setPage]);
 
     const handleSubmit = async (formData) => {
         try {
@@ -125,7 +125,7 @@ export default function Products() {
     };
 
     const hasNoProductsAtAll =
-        !loading && !search && allTime && (summary ? summary.totalProducts === 0 : pagination.total === 0);
+        !loading && !search && isDefaultListPeriod && (summary ? summary.totalProducts === 0 : pagination.total === 0);
     const showProductStats = !(loading && products.length === 0 && !search && !summary);
     const totalProducts = summary?.totalProducts;
     const newInPeriod = summary?.newInPeriod ?? summary?.newThisMonth;
@@ -206,9 +206,7 @@ export default function Products() {
                                     companyName={businessInfo?.name}
                                     filters={{
                                         search: debouncedSearch,
-                                        year: listYear,
-                                        month: listMonth,
-                                        period: listQueryPeriod,
+                                        ...listQueryParams,
                                     }}
                                     disabled={pagination.total === 0}
                                     onExported={() => showToast('Products exported successfully.', 'success')}
@@ -218,12 +216,14 @@ export default function Products() {
                         />
                         <ToolbarActions>
                             <ListMonthToolbarFilter
-                                monthInputValue={listMonthInputValue}
-                                onMonthChange={setListMonthInputValue}
                                 periodMode={listPeriodMode}
                                 onPeriodModeChange={setListPeriodMode}
                                 periodLabel={listPeriodLabel}
-                                isThisMonth={listIsThisMonth}
+                                customDraftStartDate={listCustomDraftStartDate}
+                                customDraftEndDate={listCustomDraftEndDate}
+                                onCustomDraftRangeChange={setListCustomDraftRange}
+                                onCustomApply={applyListCustomRange}
+                                maxDate={listMaxDate}
                             />
                         </ToolbarActions>
                     </Toolbar>
@@ -233,7 +233,7 @@ export default function Products() {
                             <EmptyState
                                 title="No matches"
                                 description={
-                                    search || !allTime
+                                    search || !isDefaultListPeriod
                                         ? 'Try a different search term or month filter.'
                                         : 'Try a different search term.'
                                 }
@@ -249,17 +249,17 @@ export default function Products() {
                                         className="cursor-pointer"
                                     >
                                         <DataTableCell>
-                                            <span className="font-medium text-zinc-950">
+                                            <span className="font-medium text-foreground">
                                                 {product.name}
                                             </span>
                                         </DataTableCell>
                                         <DataTableCell className="text-right">
-                                            <span className="font-medium tabular-nums text-zinc-900">
+                                            <span className="font-medium tabular-nums text-foreground">
                                                 {formatCurrency(product.unitPrice || 0)}
                                             </span>
                                         </DataTableCell>
                                         <DataTableCell className="text-right">
-                                            <span className="tabular-nums text-zinc-700">
+                                            <span className="tabular-nums text-foreground-muted">
                                                 {formatMarginPercent(
                                                     computeCatalogMargin(
                                                         product.unitPrice,
@@ -269,7 +269,7 @@ export default function Products() {
                                             </span>
                                         </DataTableCell>
                                         <DataTableCell className="text-right">
-                                            <span className="tabular-nums text-zinc-700">
+                                            <span className="tabular-nums text-foreground-muted">
                                                 {product.trackInventory
                                                     ? (product.quantityOnHand ?? 0)
                                                     : '—'}
@@ -293,7 +293,7 @@ export default function Products() {
                 </>
             )}
 
-            <p className="mt-6 text-xs text-zinc-500">
+            <p className="mt-6 text-xs text-foreground-muted">
                 Products appear when creating invoices, receipts, and quotations for one-click line
                 items. Enable inventory tracking to deduct stock when linked items are issued.
             </p>

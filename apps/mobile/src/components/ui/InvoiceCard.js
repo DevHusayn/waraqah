@@ -1,12 +1,15 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { format } from 'date-fns';
 import { ChevronRight } from 'lucide-react-native';
 import { formatCurrency, getDisplayNumber } from '@waraqah/shared';
 import { ListRow } from './ListRow';
 import { StatusBadge } from './StatusBadge';
-import { colors, fontFamily, fontSize } from '../../theme';
+import { colors, fontFamily, fontSize , useTheme } from '../../theme';
 
 export function InvoiceCard({ invoice, onPress, onLongPress, last = false, clientName }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const client = clientName || invoice.clientName || invoice.client?.name || 'No client';
     const dateLabel = invoice.date ? format(new Date(invoice.date), 'MMM d') : '';
     const amount = formatCurrency(invoice.total || 0, invoice.currency);
@@ -31,7 +34,8 @@ export function InvoiceCard({ invoice, onPress, onLongPress, last = false, clien
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     right: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -44,3 +48,4 @@ const styles = StyleSheet.create({
         letterSpacing: -0.2,
     },
 });
+}

@@ -33,10 +33,14 @@ import DocumentSummaryCard from '../components/documentForm/DocumentSummaryCard'
 import DocumentActionButtons from '../components/documentForm/DocumentActionButtons';
 import DocumentPreviewOverlay from '../components/documentForm/DocumentPreviewOverlay';
 import { DocumentNotesSection, DocumentTermsSection } from '../components/documentForm/DocumentNotesSection';
+import { DocumentFooterSection } from '../components/documentForm/DocumentFooterSection';
+import { useDocumentFooterPrefill, resolveFormDocumentFooter } from '../hooks/useDocumentFooterPrefill';
 import { buildDocumentPreviewFromForm } from '../utils/buildDocumentPreviewData';
 import { hasDraftContent, hasAutoSaveDraftContent, resolvePersistClientId } from '../utils/documentFormHelpers';
 import { DEFAULT_QUOTATION_TERMS } from '../utils/documentHelpers';
-import { DEFAULT_INVOICE_UNIT, normalizeInvoiceUnit } from '@waraqah/shared';
+import { applyAiDraftToForm, DEFAULT_INVOICE_UNIT, isAiDraftsEnabled, normalizeInvoiceUnit } from '@waraqah/shared';
+import { isPremiumUser } from '../utils/premium';
+import AiDraftComposer from '../components/documentForm/AiDraftComposer';
 
 const quotationDraftContentCheck = (data) =>
     String(data.terms || '').trim() && data.terms !== DEFAULT_QUOTATION_TERMS;
@@ -56,6 +60,7 @@ const CreateQuotation = () => {
     const { clients, products, addClient, updateClient, fetchProducts } = useInvoice();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen } = useQuotationCreateGuard();
     const { businessInfo } = useSettings();
+    const premium = isPremiumUser(businessInfo);
     const { showToast } = useToast();
     const [saving, setSaving] = useState(false);
     const [sending, setSending] = useState(false);
@@ -109,6 +114,7 @@ const CreateQuotation = () => {
         validUntil: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
         items: [{ description: '', quantity: 1, rate: 0, unit: DEFAULT_INVOICE_UNIT }],
         notes: '',
+        documentFooter: '',
         terms: DEFAULT_QUOTATION_TERMS,
         status: 'draft',
         currency: APP_CURRENCY,
@@ -119,9 +125,18 @@ const CreateQuotation = () => {
 
     formDataRef.current = formData;
 
+    useDocumentFooterPrefill({ id, businessInfo, mode: 'quotation', setFormData });
+
     const markDirty = useCallback(() => {
         isDirtyRef.current = true;
     }, []);
+
+    const handleApplyAiDraft = useCallback((draft) => {
+        setFormData((prev) => applyAiDraftToForm(prev, draft));
+        markDirty();
+        setFieldErrors({});
+        showToast('Draft filled in. Review it before saving.', 'success');
+    }, [markDirty, showToast]);
 
     const handlers = useDocumentFormHandlers({
         formData,
@@ -171,6 +186,11 @@ const CreateQuotation = () => {
                 clientEmail: client?.email || '',
                 ...clientDetailsFromRecord(client),
                 clientAdditionalInfo: quotation.clientAdditionalInfo || '',
+                documentFooter: resolveFormDocumentFooter(
+                    quotation.documentFooter,
+                    businessInfo,
+                    'quotation'
+                ),
                 hasValidUntil: Boolean(quotation.validUntil),
                 terms: quotation.terms || DEFAULT_QUOTATION_TERMS,
                 discountType: quotation.discountType || 'percent',
@@ -602,7 +622,7 @@ const CreateQuotation = () => {
             <button
                 type="button"
                 onClick={handleLeavePage}
-                className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-brand mb-6 transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-medium text-foreground-muted hover:text-brand mb-6 transition-colors"
             >
                 <ArrowLeft size={16} aria-hidden />
                 {id ? 'Back to quotation' : 'Back to quotations'}
@@ -632,6 +652,14 @@ const CreateQuotation = () => {
             <form id="quotation-form" onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     <div className="xl:col-span-2 space-y-6">
+                        {isAiDraftsEnabled() && isDraftFlow ? (
+                            <AiDraftComposer
+                                documentType="quotation"
+                                premium={premium}
+                                disabled={saving || sending}
+                                onApply={handleApplyAiDraft}
+                            />
+                        ) : null}
                         <DocumentDetailsSection
                             icon={ClipboardList}
                             title="Quotation details"
@@ -678,7 +706,7 @@ const CreateQuotation = () => {
                             onCurrencyChange={handlers.handleCurrencyChange}
                             onAddItem={handlers.addItem}
                             onRemoveItem={handlers.removeItem}
-                            onAddProductItem={handlers.addProductItem}
+                            onApplyProductToLine={handlers.applyProductToLine}
                         />
 
                         <DocumentTermsSection formData={formData} onChange={handlers.handleChange} />
@@ -686,6 +714,13 @@ const CreateQuotation = () => {
                         <DocumentNotesSection
                             description="Extra info for the client"
                             placeholder="Optional note…"
+                            formData={formData}
+                            onChange={handlers.handleChange}
+                        />
+
+                        <DocumentFooterSection
+                            businessInfo={businessInfo}
+                            mode="quotation"
                             formData={formData}
                             onChange={handlers.handleChange}
                         />
@@ -717,7 +752,7 @@ const CreateQuotation = () => {
                 onSave={handlers.handleSaveClientDetails}
             />
 
-            <div className="fixed bottom-0 left-0 right-0 md:left-[15.5rem] z-30 xl:hidden border-t border-zinc-200 bg-white/95 backdrop-blur-sm shadow-[0_-4px_16px_rgba(15,23,42,0.06)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="fixed bottom-0 left-0 right-0 md:left-[15.5rem] z-30 xl:hidden border-t border-border bg-surface/95 backdrop-blur-sm shadow-[0_-4px_16px_rgba(15,23,42,0.06)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
                 <div className="max-w-6xl mx-auto w-full">{actionButtons()}</div>
             </div>
         </div>

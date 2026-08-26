@@ -2,7 +2,7 @@ import { DashboardAnalyticsSkeleton } from './dashboard/DashboardAnalytics';
 import { ReportStatGridSkeleton } from './ReportStatGrid';
 
 function Skeleton({ className = '' }) {
-    return <div className={`animate-pulse rounded bg-zinc-200/80 ${className}`.trim()} aria-hidden />;
+    return <div className={`skeleton-bar ${className}`.trim()} aria-hidden />;
 }
 
 function LoadingStatus({ children, label = 'Loading' }) {
@@ -16,7 +16,7 @@ function LoadingStatus({ children, label = 'Loading' }) {
 
 export function PageHeaderSkeleton({ withAction = true, withEyebrow = false }) {
     return (
-        <div className="mb-6 pb-5 border-b border-zinc-200/50 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between min-w-0">
+        <div className="mb-6 pb-5 border-b border-border/50 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between min-w-0">
             <div className="space-y-2 min-w-0">
                 {withEyebrow ? <Skeleton className="h-3 w-24" /> : null}
                 <Skeleton className="h-7 w-36 sm:w-44" />
@@ -112,7 +112,7 @@ export function ProductListSkeleton({ count = 6, className = '' }) {
                             <Skeleton className="h-10 w-20" />
                             <Skeleton className="h-10 w-16" />
                         </div>
-                        <div className="flex gap-2 pt-3 border-t border-zinc-100">
+                        <div className="flex gap-2 pt-3 border-t border-border/50">
                             <Skeleton className="h-8 w-20 rounded-md" />
                             <Skeleton className="h-8 w-16 rounded-md" />
                             <Skeleton className="h-8 w-20 rounded-md" />
@@ -186,7 +186,7 @@ export function AdminTableSkeleton() {
             <PageHeaderSkeleton withAction={false} />
             <StatsCardsSkeleton count={3} />
             <div className="card !p-0 overflow-hidden">
-                <div className="px-4 sm:px-6 py-4 border-b border-zinc-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="px-4 sm:px-6 py-4 border-b border-border/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <Skeleton className="h-4 w-24" />
                     <Skeleton className="h-9 w-full sm:w-72 rounded-lg" />
                 </div>
@@ -280,7 +280,7 @@ export function StatementContentSkeleton({ variant = 'profit' }) {
                 footer={isStatement}
             />
             <div className="card overflow-hidden !p-0">
-                <div className="px-6 py-4 border-b border-zinc-200 bg-zinc-50/80 space-y-2">
+                <div className="px-6 py-4 border-b border-border bg-surface-muted/80 space-y-2">
                     <Skeleton className="h-5 w-36" />
                     <Skeleton className="h-4 w-56" />
                 </div>
@@ -359,7 +359,7 @@ export function AppShellSkeleton() {
     return (
         <LoadingStatus label="Loading">
             <div className="min-h-screen bg-surface-muted">
-                <header className="hidden md:flex fixed top-0 inset-x-0 z-50 h-14 items-center border-b border-zinc-200/50 bg-white px-4">
+                <header className="hidden md:flex fixed top-0 inset-x-0 z-50 h-14 items-center border-b border-border/50 bg-surface px-4">
                     <div className="flex h-full w-[15.5rem] shrink-0 items-center gap-2 min-w-0">
                         <Skeleton className="h-7 w-7 rounded-md shrink-0" />
                         <Skeleton className="h-4 w-24" />
@@ -369,7 +369,7 @@ export function AppShellSkeleton() {
                     </div>
                 </header>
 
-                <aside className="hidden md:fixed md:left-0 md:top-14 md:bottom-0 md:flex md:w-[15.5rem] md:flex-col border-r border-zinc-200/50 bg-zinc-50/40">
+                <aside className="hidden md:fixed md:left-0 md:top-14 md:bottom-0 md:flex md:w-[15.5rem] md:flex-col border-r border-border/50 bg-surface-muted/80">
                     <div className="flex flex-1 flex-col overflow-y-auto px-2.5 py-4">
                         <div className="flex flex-col gap-1 px-2">
                             {Array.from({ length: 6 }).map((_, i) => (
@@ -380,7 +380,7 @@ export function AppShellSkeleton() {
                 </aside>
 
                 <div className="md:pl-[15.5rem] md:pt-14 flex flex-col flex-1 min-h-screen min-w-0">
-                    <header className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200/50 bg-white/80 px-4 py-2.5 md:hidden">
+                    <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border/50 bg-surface/80 px-4 py-2.5 md:hidden">
                         <Skeleton className="h-7 w-28" />
                         <Skeleton className="h-9 w-9 rounded-md" />
                     </header>

@@ -1,6 +1,7 @@
 import { APP_NAME, APP_SUPPORT_EMAIL } from './brand';
+import { isAiDraftsEnabled } from '@waraqah/shared';
 
-export const LEGAL_LAST_UPDATED = 'July 3, 2026';
+export const LEGAL_LAST_UPDATED = 'August 26, 2026';
 
 export const TERMS_SECTIONS = [
     {
@@ -48,7 +49,11 @@ export const PRIVACY_SECTIONS = [
     },
     {
         title: 'How we use your information',
-        body: 'We use your information to create and manage your account, generate and deliver quotations, invoices, and receipts, process subscriptions, send transactional emails (verification, password reset, quotation and invoice delivery), provide customer support, improve the product, and comply with legal obligations.',
+        body: `We use your information to create and manage your account, generate and deliver quotations, invoices, and receipts, process subscriptions, send transactional emails (verification, password reset, quotation and invoice delivery), provide customer support, improve the product, and comply with legal obligations.${
+            isAiDraftsEnabled()
+                ? ' If you use Premium document drafting, we also use a limited slice of your own client and product catalog to prefill a form you must review before saving.'
+                : ''
+        }`,
     },
     {
         title: 'Legal basis and your rights',
@@ -56,12 +61,28 @@ export const PRIVACY_SECTIONS = [
     },
     {
         title: 'Data sharing',
-        body: 'We do not sell your personal information. We share data only with service providers that help us operate the platform, such as payment processors, email delivery services, cloud hosting, error monitoring, and product analytics — and only to the extent necessary for those services. We may disclose information if required by law or to protect our rights and users.',
+        body: `We do not sell your personal information. We share data only with service providers that help us operate the platform, such as payment processors, email delivery services, cloud hosting, error monitoring, and product analytics${
+            isAiDraftsEnabled()
+                ? ', and — when you use Premium document drafting — a language-model provider'
+                : ''
+        } — and only to the extent necessary for those services. We may disclose information if required by law or to protect our rights and users.`,
     },
     {
         title: 'Third-party services',
-        body: 'Premium billing is processed by Paystack. Transactional email is delivered through Resend. Optional sign-in may use Google. We may use error monitoring tools such as Sentry and product analytics tools such as PostHog, including session recordings with sensitive fields masked. These providers have their own privacy policies governing how they handle data.',
+        body: `Premium billing is processed by Paystack. Transactional email is delivered through Resend. Optional sign-in may use Google. We may use error monitoring tools such as Sentry and product analytics tools such as PostHog, including session recordings with sensitive fields masked.${
+            isAiDraftsEnabled()
+                ? ' Premium document drafts are sent to a third-party language-model provider to prefill invoice and quotation forms.'
+                : ''
+        } These providers have their own privacy policies governing how they handle data.`,
     },
+    ...(isAiDraftsEnabled()
+        ? [
+            {
+                title: 'Document drafts (AI)',
+                body: `If you use Premium document drafting, ${APP_NAME} sends your prompt and a limited slice of your own client and product catalog to a third-party language-model provider so we can prefill an invoice or quotation form. We do not use this to send documents, change payments, or train our own models on your data. Review every draft before you save or send it. You can keep creating documents without this feature.`,
+            },
+        ]
+        : []),
     {
         title: 'Data retention',
         body: 'We retain your account and business data for as long as your account is active or as needed to provide the service. You may request account deletion by contacting support. Some records may be retained longer where required for legal, tax, or security purposes.',

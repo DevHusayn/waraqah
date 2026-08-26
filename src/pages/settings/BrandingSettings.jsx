@@ -16,7 +16,7 @@ const FORM_ID = 'branding-form';
 
 function BrandColorEditingBanner() {
     return (
-        <div className="mb-6 rounded-xl border border-brand/20 bg-brand-subtle/60 px-4 py-3 text-sm text-zinc-700">
+        <div className="mb-6 rounded-xl border border-brand/20 bg-brand-subtle/60 px-4 py-3 text-sm text-foreground-muted">
             Editing brand color. Use Save changes to apply or Cancel to discard.
         </div>
     );
@@ -66,21 +66,21 @@ export default function BrandingSettings() {
             <div className={`space-y-6 ${isEditing ? 'pb-24 lg:pb-0' : ''}`}>
                 {!isEditing ? (
                     <div className="card">
-                        <h2 className="text-base font-semibold text-zinc-900 mb-4">Brand color</h2>
+                        <h2 className="text-base font-semibold text-foreground mb-4">Brand color</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                             <ViewField label="Currency">
                                 {CURRENCY_INFO.symbol} {CURRENCY_INFO.name} ({CURRENCY_INFO.code})
                             </ViewField>
                             <div>
-                                <dt className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
+                                <dt className="text-xs font-medium text-foreground-muted uppercase tracking-wide">
                                     Brand color
                                 </dt>
                                 <dd className="mt-2 flex items-center gap-3">
                                     <div
-                                        className="w-10 h-10 rounded-xl border border-zinc-200 shadow-sm"
+                                        className="w-10 h-10 rounded-xl border border-border shadow-sm"
                                         style={{ backgroundColor: brandColor }}
                                     />
-                                    <span className="text-sm font-mono font-medium text-zinc-700">
+                                    <span className="text-sm font-mono font-medium text-foreground-muted">
                                         {brandColor}
                                     </span>
                                 </dd>
@@ -91,7 +91,7 @@ export default function BrandingSettings() {
                     <>
                         <BrandColorEditingBanner />
                         <form id={FORM_ID} onSubmit={handleSubmit} noValidate className="card">
-                            <h2 className="text-base font-semibold text-zinc-900 mb-4">Brand color</h2>
+                            <h2 className="text-base font-semibold text-foreground mb-4">Brand color</h2>
                             <BrandingFormFields
                                 formData={formData}
                                 errors={errors}

@@ -36,20 +36,20 @@ function AssetUploadCard({
     const busy = uploading || removing;
 
     return (
-        <div className="rounded-xl border border-zinc-200 bg-white p-4 flex flex-col h-full">
+        <div className="rounded-xl border border-border bg-surface p-4 flex flex-col h-full">
             <div className="flex items-start gap-2.5 mb-4">
                 <div className="p-1.5 rounded-lg bg-zinc-100 shrink-0">
                     <Icon className="h-4 w-4 text-brand" aria-hidden />
                 </div>
                 <div className="min-w-0">
-                    <p className="text-sm font-semibold text-zinc-900">{title}</p>
-                    <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed">{description}</p>
+                    <p className="text-sm font-semibold text-foreground">{title}</p>
+                    <p className="text-xs text-foreground-muted mt-0.5 leading-relaxed">{description}</p>
                 </div>
             </div>
 
             {value ? (
                 <div className="flex flex-col items-center gap-3 flex-1">
-                    <div className="relative w-full aspect-[4/3] flex items-center justify-center bg-zinc-50 rounded-lg border border-zinc-100 overflow-hidden">
+                    <div className="relative w-full aspect-[4/3] flex items-center justify-center bg-surface-muted rounded-lg border border-border/50 overflow-hidden">
                         <img src={value} alt={title} className="max-w-full max-h-full object-contain p-3" />
                     </div>
                     {canManage && (
@@ -83,7 +83,7 @@ function AssetUploadCard({
                 </div>
             ) : (
                 <div className="flex-1 flex flex-col justify-center">
-                    <div className="rounded-lg border-2 border-dashed border-zinc-200 p-5 text-center bg-zinc-50/50 min-h-[120px] flex flex-col items-center justify-center">
+                    <div className="rounded-lg border-2 border-dashed border-border p-5 text-center bg-surface-muted/50 min-h-[120px] flex flex-col items-center justify-center">
                         {canManage ? (
                             <button
                                 type="button"
@@ -95,9 +95,9 @@ function AssetUploadCard({
                                 {uploading ? 'Saving…' : 'Upload image'}
                             </button>
                         ) : (
-                            <p className="text-xs text-zinc-500">Not uploaded</p>
+                            <p className="text-xs text-foreground-muted">Not uploaded</p>
                         )}
-                        <p className="text-[11px] text-zinc-400 mt-2 leading-relaxed">{formatHint}</p>
+                        <p className="text-[11px] text-foreground-muted/70 mt-2 leading-relaxed">{formatHint}</p>
                     </div>
                 </div>
             )}
@@ -259,8 +259,8 @@ export default function PremiumLogoSettings({
     const wrapperClass = standalone
         ? 'scroll-mt-6'
         : embedded
-            ? 'mt-8 pt-8 border-t border-zinc-100'
-            : 'pt-6 border-t border-zinc-200 scroll-mt-6';
+            ? 'mt-8 pt-8 border-t border-border/50'
+            : 'pt-6 border-t border-border scroll-mt-6';
 
     const removingActive = pending?.action === 'remove';
 
@@ -268,11 +268,11 @@ export default function PremiumLogoSettings({
         <div id="premium" className={wrapperClass}>
             <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
                 <div>
-                    <h3 className="text-base font-semibold text-zinc-900 flex items-center gap-2">
+                    <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
                         <Crown className="h-4 w-4 text-amber-500" aria-hidden />
                         Brand assets
                     </h3>
-                    <p className="text-sm text-zinc-500 mt-0.5">
+                    <p className="text-sm text-foreground-muted mt-0.5">
                         Logo, stamp, and signature on PDF invoices and receipts
                     </p>
                     {premium && manageAssets ? (
@@ -280,7 +280,7 @@ export default function PremiumLogoSettings({
                             Uploads and removals save immediately and apply to new PDFs.
                         </p>
                     ) : null}
-                    <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
+                    <p className="text-xs text-foreground-muted/70 mt-1.5 leading-relaxed">
                         PNG (transparent background recommended), JPG, or SVG · max 2 MB · images are auto-resized
                     </p>
                 </div>
@@ -290,7 +290,7 @@ export default function PremiumLogoSettings({
             {!premium ? (
                 <div className="premium-card p-6 text-center space-y-3">
                     <Lock className="mx-auto h-7 w-7 text-amber-600" aria-hidden />
-                    <p className="text-sm text-zinc-700 max-w-sm mx-auto">
+                    <p className="text-sm text-foreground-muted max-w-sm mx-auto">
                         Upgrade to Premium to upload your logo, company stamp, and authorized signature.
                     </p>
                     <Link to="/upgrade" className="premium-upgrade-btn mx-auto text-sm py-2 px-4">
@@ -372,13 +372,13 @@ export default function PremiumLogoSettings({
 function PlanBadge({ premium }) {
     if (premium) {
         return (
-            <span className="text-xs font-semibold uppercase tracking-wide bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg shrink-0">
+            <span className="text-xs font-semibold uppercase tracking-wide bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg shrink-0 dark:bg-amber-950/50 dark:text-amber-300">
                 Premium
             </span>
         );
     }
     return (
-        <span className="text-xs font-semibold uppercase tracking-wide bg-zinc-100 text-zinc-600 px-2.5 py-1 rounded-lg shrink-0">
+        <span className="text-xs font-semibold uppercase tracking-wide bg-zinc-100 text-foreground-muted px-2.5 py-1 rounded-lg shrink-0 dark:bg-surface-muted">
             Premium required
         </span>
     );

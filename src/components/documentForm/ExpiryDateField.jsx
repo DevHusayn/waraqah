@@ -34,7 +34,7 @@ export default function ExpiryDateField({
                     }`}
                 >
                     <span
-                        className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition ${
+                        className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-surface shadow ring-0 transition ${
                             hasExpiry ? 'translate-x-5' : 'translate-x-0'
                         }`}
                     />
@@ -54,7 +54,7 @@ export default function ExpiryDateField({
                     <FieldValidationMessage message={fieldErrors[dateFieldKey]} />
                 </>
             ) : (
-                <p className="text-xs text-zinc-500">{emptyHint}</p>
+                <p className="text-xs text-foreground-muted">{emptyHint}</p>
             )}
         </div>
     );

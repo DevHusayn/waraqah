@@ -67,14 +67,14 @@ export default function Upgrade() {
         <div className="max-w-lg mx-auto">
             <Link
                 to="/"
-                className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-brand mb-8 transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-medium text-foreground-muted hover:text-brand mb-8 transition-colors"
             >
                 <ArrowLeft className="h-4 w-4" />
                 Back to dashboard
             </Link>
 
             <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-white border border-amber-300/80 mb-3">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-surface border border-amber-300/80 mb-3">
                     <Crown className="h-5 w-5 text-amber-500" aria-hidden />
                 </div>
                 <h1 className="page-title">Upgrade to Premium</h1>
@@ -87,7 +87,7 @@ export default function Upgrade() {
                 <div className="px-5 py-4 border-b border-amber-200/70">
                     <div className="flex items-center gap-2 mb-3">
                         <Crown className="h-4 w-4 text-amber-600" />
-                        <span className="text-sm font-semibold text-zinc-900">Premium</span>
+                        <span className="text-sm font-semibold text-foreground">Premium</span>
                     </div>
 
                     {!premium && (
@@ -97,8 +97,8 @@ export default function Upgrade() {
                                 onClick={() => setBillingInterval('monthly')}
                                 className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
                                     billingInterval === 'monthly'
-                                        ? 'bg-white text-zinc-900 shadow-sm'
-                                        : 'text-zinc-600 hover:text-zinc-900'
+                                        ? 'bg-surface text-foreground shadow-sm'
+                                        : 'text-foreground-muted hover:text-foreground'
                                 }`}
                             >
                                 Monthly
@@ -108,8 +108,8 @@ export default function Upgrade() {
                                 onClick={() => setBillingInterval('yearly')}
                                 className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
                                     billingInterval === 'yearly'
-                                        ? 'bg-white text-zinc-900 shadow-sm'
-                                        : 'text-zinc-600 hover:text-zinc-900'
+                                        ? 'bg-surface text-foreground shadow-sm'
+                                        : 'text-foreground-muted hover:text-foreground'
                                 }`}
                             >
                                 Yearly
@@ -130,29 +130,29 @@ export default function Upgrade() {
                 </div>
 
                 <ul className="px-5 py-4 space-y-2.5">
-                    <li className="flex items-start gap-2 text-sm font-semibold text-zinc-900 pb-2 border-b border-amber-200/70">
+                    <li className="flex items-start gap-2 text-sm font-semibold text-foreground pb-2 border-b border-amber-200/70">
                         <Check className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" strokeWidth={2.5} />
                         Everything in Free, plus:
                     </li>
                     {PREMIUM_PLAN_FEATURES.map((text) => (
-                        <li key={text} className="flex items-start gap-2 text-sm text-zinc-700">
+                        <li key={text} className="flex items-start gap-2 text-sm text-foreground-muted">
                             <Check className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" strokeWidth={2.5} />
                             {text}
                         </li>
                     ))}
-                    <li className="flex items-start gap-3 text-xs text-zinc-500 pt-2">
-                        <span className="h-5 w-5 shrink-0 flex items-center justify-center text-zinc-400">·</span>
+                    <li className="flex items-start gap-3 text-xs text-foreground-muted pt-2">
+                        <span className="h-5 w-5 shrink-0 flex items-center justify-center text-foreground-muted/70">·</span>
                         Auto-renews {isYearly ? 'yearly' : 'monthly'} via Paystack ({formatCurrency(amount)})
                     </li>
-                    <li className="flex items-start gap-3 text-xs text-zinc-500">
-                        <span className="h-5 w-5 shrink-0 flex items-center justify-center text-zinc-400">·</span>
+                    <li className="flex items-start gap-3 text-xs text-foreground-muted">
+                        <span className="h-5 w-5 shrink-0 flex items-center justify-center text-foreground-muted/70">·</span>
                         Cancel anytime. Keep access until your billing period ends.
                     </li>
                 </ul>
 
                 <div className="px-5 pb-5 space-y-2">
                     {premium ? (
-                        <div className="rounded-md bg-zinc-100 border border-zinc-200 px-3 py-2 text-sm text-zinc-700 text-center font-medium">
+                        <div className="rounded-md bg-zinc-100 border border-border px-3 py-2 text-sm text-foreground-muted text-center font-medium">
                             You already have Premium active.
                         </div>
                     ) : (
@@ -176,7 +176,7 @@ export default function Upgrade() {
                         </button>
                     )}
 
-                    <p className="flex items-center justify-center gap-2 text-xs text-zinc-500">
+                    <p className="flex items-center justify-center gap-2 text-xs text-foreground-muted">
                         <Shield className="h-3.5 w-3.5" />
                         Secured by Paystack · Card, bank and USSD
                     </p>
@@ -185,7 +185,7 @@ export default function Upgrade() {
                 </div>
             </div>
 
-            <p className="mt-6 text-center text-xs text-zinc-500 leading-relaxed">
+            <p className="mt-6 text-center text-xs text-foreground-muted leading-relaxed">
                 {isYearly
                     ? `You will be charged ${formatCurrency(amount)} now and each year until you cancel. Paystack secures your card for renewals.`
                     : `You will be charged ${formatCurrency(amount)} now and each month until you cancel. Paystack secures your card for renewals.`}

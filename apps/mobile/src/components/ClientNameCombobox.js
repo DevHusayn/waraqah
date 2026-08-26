@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { filterClientsForSuggestion, getClientBusiness } from '@waraqah/shared';
 import { Input, FieldError } from './ui';
-import { colors, fontSize, radii, spacing } from '../theme';
+import { colors, fontSize, radii, spacing, useTheme } from '../theme';
 
 function useDebouncedValue(value, delayMs = 200) {
     const [debounced, setDebounced] = useState(value);
@@ -32,6 +32,8 @@ export function ClientNameCombobox({
     placeholder = 'John Doe',
     fieldError,
 }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const [focused, setFocused] = useState(false);
     const debouncedQuery = useDebouncedValue(value, 200);
 
@@ -101,7 +103,8 @@ export function ClientNameCombobox({
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     wrap: {
         position: 'relative',
         zIndex: 2,
@@ -150,3 +153,4 @@ const styles = StyleSheet.create({
         color: colors.slate500,
     },
 });
+}

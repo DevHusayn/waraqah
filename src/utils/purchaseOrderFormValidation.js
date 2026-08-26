@@ -5,7 +5,7 @@ export function buildPurchaseOrderFieldErrors(formData, { requireSupplier = true
     const errors = {};
 
     if (requireSupplier) {
-        errors.supplierId = validateRequired(formData.supplierId, 'Please select a supplier.');
+        errors.supplierId = validateRequired(formData.supplierId, 'Select a supplier from the list.');
     }
 
     errors.date = validateRequired(formData.date, 'Please set an order date.');

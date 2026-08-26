@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { CheckCircle2, ChevronRight, Clock, XCircle } from 'lucide-react-native';
 import { format } from 'date-fns';
@@ -8,7 +9,7 @@ import {
     hasRecordedPayments,
     isQuotationDocument,
 } from '@waraqah/shared';
-import { colors, fontFamily, fontSize, lineHeight, radii, spacing } from '../../theme';
+import { colors, fontFamily, fontSize, lineHeight, radii, spacing , useTheme } from '../../theme';
 import { hapticSelection } from '../../utils/haptics';
 
 const STATUS_META = {
@@ -29,6 +30,8 @@ const STATUS_META = {
  * Mockup-style invoice/quotation row: status icon column + details + amount + chevron
  */
 export function InvoiceListItem({ invoice, clientName, onPress, last = false, showTypeBadge = false }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const status = STATUS_META[invoice.status] || STATUS_META.pending;
     const { Icon } = status;
     const client = clientName || invoice.clientName || invoice.client?.name || 'No client';
@@ -89,7 +92,8 @@ export function InvoiceListItem({ invoice, clientName, onPress, last = false, sh
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     row: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -186,3 +190,4 @@ const styles = StyleSheet.create({
         color: colors.slate400,
     },
 });
+}

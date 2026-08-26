@@ -45,15 +45,15 @@ export default function AboutSettings() {
             <div className="card space-y-6">
                 <div>
                     <WaraqahLogo size="lg" />
-                    <p className="text-sm text-zinc-500 mt-2">{APP_TAGLINE}</p>
-                    <p className="text-xs text-zinc-400 mt-2">Version {APP_VERSION}</p>
+                    <p className="text-sm text-foreground-muted mt-2">{APP_TAGLINE}</p>
+                    <p className="text-xs text-foreground-muted/70 mt-2">Version {APP_VERSION}</p>
                 </div>
 
-                <p className="text-sm text-zinc-600 leading-relaxed">{APP_DESCRIPTION}</p>
+                <p className="text-sm text-foreground-muted leading-relaxed">{APP_DESCRIPTION}</p>
 
                 <dl className="space-y-4 text-sm">
                     <div>
-                        <dt className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
+                        <dt className="text-xs font-medium text-foreground-muted uppercase tracking-wide">
                             Support
                         </dt>
                         <dd className="mt-1">
@@ -66,7 +66,7 @@ export default function AboutSettings() {
                         </dd>
                     </div>
                     <div>
-                        <dt className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
+                        <dt className="text-xs font-medium text-foreground-muted uppercase tracking-wide">
                             Website
                         </dt>
                         <dd className="mt-1">
@@ -82,7 +82,7 @@ export default function AboutSettings() {
                         </dd>
                     </div>
                     <div>
-                        <dt className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
+                        <dt className="text-xs font-medium text-foreground-muted uppercase tracking-wide">
                             Follow us
                         </dt>
                         <dd className="mt-2 flex flex-wrap items-center gap-3">

@@ -202,7 +202,7 @@ export default function Suppliers() {
                                 className="cursor-pointer"
                             >
                                 <DataTableCell>
-                                    <span className="font-medium text-zinc-950">{supplier.name}</span>
+                                    <span className="font-medium text-foreground">{supplier.name}</span>
                                 </DataTableCell>
                                 <DataTableCell>{supplier.company || '—'}</DataTableCell>
                                 <DataTableCell>{supplier.email || '—'}</DataTableCell>

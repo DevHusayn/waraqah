@@ -1,7 +1,8 @@
+import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { hapticLight } from '../../utils/haptics';
-import { colors } from '../../theme';
-import { baseStyles } from './styles';
+import { useTheme } from '../../theme';
+import { useBaseStyles } from './styles';
 
 export function Button({
     title,
@@ -15,6 +16,8 @@ export function Button({
     leftIcon,
     rightIcon,
 }) {
+    const { colors } = useTheme();
+    const baseStyles = useBaseStyles();
     const isPrimary = variant === 'primary';
     const isSecondary = variant === 'secondary';
     const isDanger = variant === 'danger';

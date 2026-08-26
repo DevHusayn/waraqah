@@ -6,8 +6,8 @@ export function StatusBadge({ status }) {
         <span
             className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold capitalize ${
                 active
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
+                    ? 'bg-green-100 text-green-800 dark:bg-green-950/50 dark:text-green-300'
+                    : 'bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300'
             }`}
         >
             {active ? <CheckCircle size={12} aria-hidden /> : <Ban size={12} aria-hidden />}
@@ -21,7 +21,7 @@ export function PlanBadge({ plan }) {
     return (
         <span
             className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold capitalize ${
-                premium ? 'bg-amber-100 text-amber-800' : 'bg-zinc-100 text-zinc-600'
+                premium ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300' : 'bg-zinc-100 text-foreground-muted dark:bg-surface-muted'
             }`}
         >
             {premium ? <Crown size={12} aria-hidden /> : null}
@@ -33,7 +33,7 @@ export function PlanBadge({ plan }) {
 export function UsageBadge({ usage }) {
     if (!usage || usage.unlimited) {
         return (
-            <span className="text-xs font-medium text-zinc-500">Unlimited</span>
+            <span className="text-xs font-medium text-foreground-muted">Unlimited</span>
         );
     }
     const atLimit = !usage.canCreate;
@@ -41,8 +41,8 @@ export function UsageBadge({ usage }) {
         <span
             className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold tabular-nums ${
                 atLimit
-                    ? 'bg-red-100 text-red-800'
-                    : 'bg-green-100 text-green-800'
+                    ? 'bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300'
+                    : 'bg-green-100 text-green-800 dark:bg-green-950/50 dark:text-green-300'
             }`}
         >
             {usage.used}/{usage.limit} this month
@@ -53,9 +53,9 @@ export function UsageBadge({ usage }) {
 export function PaymentStatusBadge({ status }) {
     const key = (status || 'pending').toLowerCase();
     const styles = {
-        success: 'bg-green-50/80 text-green-800 border-green-200/60',
-        pending: 'bg-amber-50/80 text-amber-800 border-amber-200/60',
-        failed: 'bg-red-50/80 text-red-800 border-red-200/60',
+        success: 'bg-green-50/80 text-green-800 border-green-200/60 dark:bg-green-950/50 dark:text-green-300 dark:border-green-800/60',
+        pending: 'bg-amber-50/80 text-amber-800 border-amber-200/60 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/60',
+        failed: 'bg-red-50/80 text-red-800 border-red-200/60 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800/60',
     };
     const style = styles[key] || styles.pending;
     const label = key === 'success' ? 'Paid' : key;

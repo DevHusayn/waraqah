@@ -29,7 +29,7 @@ function MenuItemButton({ item, onSelect, variant = 'default' }) {
 
     const tone = isDestructive
         ? 'text-red-600 hover:bg-red-50 active:bg-red-100/80'
-        : 'text-zinc-700 hover:bg-zinc-50 active:bg-zinc-100/80';
+        : 'text-foreground-muted hover:bg-surface-muted active:bg-zinc-100/80';
 
     return (
         <button
@@ -62,7 +62,7 @@ function MenuItems({ items, onSelect, variant }) {
             ))}
             {destructive.length > 0 && normal.length > 0 ? (
                 <div
-                    className={variant === 'sheet' ? 'my-1 border-t border-zinc-200' : 'my-1 border-t border-zinc-100'}
+                    className={variant === 'sheet' ? 'my-1 border-t border-border' : 'my-1 border-t border-border/50'}
                     role="separator"
                 />
             ) : null}
@@ -148,7 +148,7 @@ function DesktopDropdownMenu({
             ref={menuRef}
             role="menu"
             aria-label={ariaLabel}
-            className="fixed z-[1200] min-w-[220px] rounded-lg border border-zinc-200/80 bg-white p-1 shadow-lift animate-fade-in"
+            className="fixed z-[1200] min-w-[220px] rounded-lg border border-border/80 bg-surface p-1 shadow-lift animate-fade-in"
             style={{ top: position.top, left: position.left }}
         >
             <MenuItems items={items} onSelect={onSelect} variant="default" />
@@ -229,7 +229,7 @@ export default function ActionMenu({
                             id={menuId}
                             role="menu"
                             aria-label={ariaLabel}
-                            className="absolute inset-x-0 bottom-0 z-[9999] rounded-t-2xl border border-zinc-200/60 bg-white shadow-lift animate-sheet-up safe-area-pb"
+                            className="absolute inset-x-0 bottom-0 z-[9999] rounded-t-2xl border border-border/60 bg-surface shadow-lift animate-sheet-up safe-area-pb"
                         >
                             <div className="flex justify-center pt-3 pb-2">
                                 <div className="h-1 w-10 rounded-full bg-zinc-200" aria-hidden />

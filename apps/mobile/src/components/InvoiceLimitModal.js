@@ -1,10 +1,10 @@
-import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Crown } from 'lucide-react-native';
 import { FREE_MONTHLY_INVOICE_LIMIT, SALES_DOCUMENT_TYPES_LABEL } from '@waraqah/shared';
 import { BottomSheet } from './ui/BottomSheet';
 import { Button } from './ui/Button';
-import { colors, fontFamily, fontSize, spacing } from '../theme';
+import { colors, fontFamily, fontSize, spacing, useTheme } from '../theme';
 
 export const InvoiceLimitModal = forwardRef(function InvoiceLimitModal(
     { usage, onUpgrade, onClose },
@@ -37,7 +37,8 @@ export const InvoiceLimitModal = forwardRef(function InvoiceLimitModal(
     );
 });
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     iconWrap: {
         width: 56,
         height: 56,
@@ -65,3 +66,4 @@ const styles = StyleSheet.create({
         marginBottom: spacing.xl,
     },
 });
+}

@@ -35,10 +35,10 @@ function AuthDivider({ label }) {
     return (
         <div className="relative py-1">
             <div className="absolute inset-0 flex items-center" aria-hidden>
-                <div className="w-full border-t border-zinc-200" />
+                <div className="w-full border-t border-border" />
             </div>
-            <p className="relative flex justify-center text-[11px] font-medium uppercase tracking-wide text-zinc-400">
-                <span className="bg-white px-2">{label}</span>
+            <p className="relative flex justify-center text-[11px] font-medium uppercase tracking-wide text-foreground-muted/70">
+                <span className="bg-surface px-2">{label}</span>
             </p>
         </div>
     );
@@ -91,7 +91,7 @@ function GoogleSignInButton({
         >
             <div
                 aria-hidden
-                className={`pointer-events-none absolute inset-0 z-[1] inline-flex items-center justify-center gap-2 rounded-md border border-zinc-300 bg-white px-4 text-sm font-medium text-zinc-900 ${
+                className={`pointer-events-none absolute inset-0 z-[1] inline-flex items-center justify-center gap-2 rounded-md border border-zinc-300 bg-surface px-4 text-sm font-medium text-foreground ${
                     isDisabled ? 'opacity-50' : ''
                 }`}
             >

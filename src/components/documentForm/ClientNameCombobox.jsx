@@ -141,7 +141,7 @@ export default function ClientNameCombobox({
                 <div
                     id={suggestionListId}
                     role="listbox"
-                    className="absolute z-50 mt-1.5 w-full overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-lg"
+                    className="absolute z-50 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-surface shadow-lg"
                 >
                     {suggestions.map((client, index) => {
                         const subtitle = getClientSubtitle(client);
@@ -155,14 +155,14 @@ export default function ClientNameCombobox({
                                 role="option"
                                 aria-selected={isActive || Boolean(isSelected)}
                                 className={`flex w-full flex-col items-start gap-0.5 px-3 py-2.5 text-left transition-colors ${
-                                    isActive ? 'bg-brand-subtle' : 'hover:bg-zinc-50'
+                                    isActive ? 'bg-brand-subtle dark:bg-[rgb(var(--brand-ring)/0.22)]' : 'hover:bg-surface-muted'
                                 }`}
                                 onMouseDown={(event) => event.preventDefault()}
                                 onClick={() => selectClient(client)}
                             >
-                                <span className="text-sm font-medium text-zinc-950">{client.name}</span>
+                                <span className="text-sm font-medium text-foreground">{client.name}</span>
                                 {subtitle ? (
-                                    <span className="text-xs text-zinc-500 truncate max-w-full">
+                                    <span className="text-xs text-foreground-muted truncate max-w-full">
                                         {subtitle}
                                     </span>
                                 ) : null}
@@ -170,7 +170,7 @@ export default function ClientNameCombobox({
                         );
                     })}
                     {showEmptyHint ? (
-                        <div className="px-3 py-2.5 text-xs text-zinc-500 border-t border-zinc-100">
+                        <div className="px-3 py-2.5 text-xs text-foreground-muted border-t border-border/50">
                             New client — saved when you create or issue
                         </div>
                     ) : null}

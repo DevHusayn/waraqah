@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
-import { colors, fontFamily, fontSize, radii, spacing, touchTarget } from '../../theme';
+import { colors, fontFamily, fontSize, radii, spacing, touchTarget , useTheme } from '../../theme';
 import { hapticSelection } from '../../utils/haptics';
 
 export function ChipGroup({ options, value, onChange, style }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     return (
         <ScrollView
             horizontal
@@ -32,7 +35,8 @@ export function ChipGroup({ options, value, onChange, style }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     row: {
         flexDirection: 'row',
         gap: spacing.sm,
@@ -59,3 +63,4 @@ const styles = StyleSheet.create({
         fontFamily: fontFamily.semibold,
     },
 });
+}

@@ -42,6 +42,8 @@ export function buildListQuery({
     year,
     month,
     period,
+    startDate,
+    endDate,
     summaryYear,
     summaryMonth,
     summaryOnly,
@@ -55,6 +57,8 @@ export function buildListQuery({
     if (activity && activity !== 'all') params.set('activity', activity);
     if (sort) params.set('sort', sort);
     if (period) params.set('period', String(period));
+    if (startDate) params.set('startDate', String(startDate));
+    if (endDate) params.set('endDate', String(endDate));
     if (year != null && year !== '') params.set('year', String(year));
     if (month != null && month !== '') params.set('month', String(month));
     if (summaryYear != null && summaryYear !== '') params.set('summaryYear', String(summaryYear));
@@ -64,12 +68,14 @@ export function buildListQuery({
 }
 
 /** Build query string for filtered list CSV export (no pagination). */
-export function buildListExportQuery({ search, status, sort, year, month, period } = {}) {
+export function buildListExportQuery({ search, status, sort, year, month, period, startDate, endDate } = {}) {
     const params = new URLSearchParams();
     if (search && String(search).trim()) params.set('search', String(search).trim());
     if (status && status !== 'all') params.set('status', status);
     if (sort) params.set('sort', sort);
     if (period) params.set('period', String(period));
+    if (startDate) params.set('startDate', String(startDate));
+    if (endDate) params.set('endDate', String(endDate));
     if (year != null && year !== '') params.set('year', String(year));
     if (month != null && month !== '') params.set('month', String(month));
     return params.toString();

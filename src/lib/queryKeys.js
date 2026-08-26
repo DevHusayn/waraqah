@@ -1,11 +1,11 @@
 /** TanStack Query keys — scoped by userId to prevent cross-account cache bleed. */
 export const queryKeys = {
-    dashboard: (userId, period, summaryYear, summaryMonth) => [
+    dashboard: (userId, period, startDate, endDate) => [
         'dashboard',
         userId,
         period,
-        summaryYear,
-        summaryMonth,
+        startDate ?? null,
+        endDate ?? null,
     ],
     businessInfo: (userId) => ['businessInfo', userId],
     businessAssets: (userId) => ['businessAssets', userId],
@@ -19,6 +19,9 @@ export const queryKeys = {
     receipts: (userId, params) => ['receipts', userId, params],
     suppliers: (userId, params) => ['suppliers', userId, params],
     purchaseOrders: (userId, params) => ['purchaseOrders', userId, params],
+    inventoryStock: (userId, params) => ['inventoryStock', userId, params],
+    inventoryMovements: (userId, params) => ['inventoryMovements', userId, params],
+    inventorySummary: (userId) => ['inventorySummary', userId],
     listSummary: (userId, resource, summaryYear, summaryMonth) => [
         'listSummary',
         userId,
@@ -27,20 +30,20 @@ export const queryKeys = {
         summaryMonth,
     ],
     adminUsers: (userId, params) => ['adminUsers', userId, params],
-    profit: (userId, period, summaryYear, summaryMonth) => [
+    profit: (userId, period, startDate, endDate) => [
         'profit',
         userId,
         period,
-        summaryYear,
-        summaryMonth,
+        startDate ?? null,
+        endDate ?? null,
     ],
     expenses: (userId, params) => ['expenses', userId, params],
-    expenseSummary: (userId, period, summaryYear, summaryMonth) => [
+    expenseSummary: (userId, period, startDate, endDate) => [
         'expenseSummary',
         userId,
         period,
-        summaryYear,
-        summaryMonth,
+        startDate ?? null,
+        endDate ?? null,
     ],
 };
 

@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react-native';
-import { colors, fontFamily, fontSize } from '../theme';
+import { colors, fontFamily, fontSize, useTheme } from '../theme';
 
 export function SummaryPeriodControls({ periodLabel, onPrevious, onNext }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     return (
         <View style={styles.row}>
             <Text style={styles.prefix}>New this </Text>
@@ -30,7 +33,8 @@ export function SummaryPeriodControls({ periodLabel, onPrevious, onNext }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     row: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -54,3 +58,4 @@ const styles = StyleSheet.create({
         paddingVertical: 2,
     },
 });
+}

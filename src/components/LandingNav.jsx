@@ -29,14 +29,14 @@ export default function LandingNav() {
     }, [open]);
 
     const closeMenu = () => setOpen(false);
-    const navLinkClass = 'text-sm font-medium text-zinc-600 hover:text-zinc-950 transition-colors';
+    const navLinkClass = 'text-sm font-medium text-foreground-muted hover:text-foreground transition-colors';
 
     return (
         <>
             <header
                 className={`fixed inset-x-0 top-0 z-50 transition-colors duration-200 ${
                     scrolled || open
-                        ? 'bg-white border-b border-zinc-200/80'
+                        ? 'bg-surface border-b border-border/80'
                         : 'bg-transparent'
                 }`}
             >
@@ -61,7 +61,7 @@ export default function LandingNav() {
 
                     <button
                         type="button"
-                        className="md:hidden inline-flex items-center justify-center rounded-md p-2 text-zinc-700 hover:bg-zinc-100"
+                        className="md:hidden inline-flex items-center justify-center rounded-md p-2 text-foreground-muted hover:bg-surface-muted"
                         onClick={() => setOpen((isOpen) => !isOpen)}
                         aria-label={open ? 'Close menu' : 'Open menu'}
                         aria-expanded={open}
@@ -87,14 +87,14 @@ export default function LandingNav() {
                 }`}
                 aria-hidden={!open}
             >
-                <div className="border-b border-zinc-200/50 bg-white shadow-sm max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain px-4 py-4">
+                <div className="border-b border-border/50 bg-surface shadow-sm max-h-[calc(100dvh-3.5rem)] overflow-y-auto overscroll-contain px-4 py-4">
                     <nav className="flex flex-col gap-0.5">
                         {NAV_LINKS.map((item) => (
                             <a
                                 key={item.href}
                                 href={item.href}
                                 onClick={closeMenu}
-                                className="rounded-md px-3 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+                                className="rounded-md px-3 py-2.5 text-sm font-medium text-foreground-muted hover:bg-surface-muted"
                             >
                                 {item.label}
                             </a>
@@ -102,12 +102,12 @@ export default function LandingNav() {
                         <Link
                             to={AUTH_LOGIN_PATH}
                             onClick={closeMenu}
-                            className="rounded-md px-3 py-2.5 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
+                            className="rounded-md px-3 py-2.5 text-sm font-medium text-foreground-muted hover:bg-surface-muted"
                         >
                             Log in
                         </Link>
                     </nav>
-                    <div className="mt-3 pt-3 border-t border-zinc-200/50">
+                    <div className="mt-3 pt-3 border-t border-border/50">
                         <Link to={AUTH_REGISTER_PATH} onClick={closeMenu} className="btn-primary w-full">
                             Get started
                         </Link>

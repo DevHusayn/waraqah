@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useMemo } from 'react';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Users } from 'lucide-react-native';
@@ -23,13 +23,15 @@ import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
 import { SummaryPeriodControls } from '../components/SummaryPeriodControls';
 import { apiFetch } from '../api/client';
 import { buildListQuery } from '../utils/pagination';
-import { colors, fontFamily, fontSize, shadows, spacing } from '../theme';
+import { colors, fontFamily, fontSize, shadows, spacing, useTheme } from '../theme';
 import { ReplayMask } from '../components/ReplayMask';
 
 const EMPTY = { name: '', business: '', email: '', phone: '', address: '' };
 const mapClient = (c) => ({ ...c, id: c._id || c.id });
 
 export function ClientsScreen() {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { addClient, updateClient, deleteClient } = useInvoice();
     const { showToast } = useToast();
     const [form, setForm] = useState(EMPTY);
@@ -282,7 +284,8 @@ export function ClientsScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.surfaceMuted },
     list: { paddingBottom: 110, flexGrow: 1 },
     titleRow: {
@@ -381,3 +384,4 @@ const styles = StyleSheet.create({
         letterSpacing: -0.3,
     },
 });
+}

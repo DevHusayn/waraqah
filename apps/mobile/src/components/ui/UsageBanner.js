@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Crown } from 'lucide-react-native';
-import { colors, fontFamily, fontSize, radii, spacing } from '../../theme';
+import { colors, fontFamily, fontSize, radii, spacing , useTheme } from '../../theme';
 
 export function UsageBanner({ label, style }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     if (!label) return null;
     return (
         <View style={[styles.banner, style]}>
@@ -12,7 +15,8 @@ export function UsageBanner({ label, style }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     banner: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -26,7 +30,8 @@ const styles = StyleSheet.create({
         flex: 1,
         fontFamily: fontFamily.medium,
         fontSize: fontSize.sm,
-        color: '#92400e',
+        color: colors.amber600,
         lineHeight: 18,
     },
 });
+}

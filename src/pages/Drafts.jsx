@@ -39,9 +39,9 @@ function TypeBadge({ type }) {
         <span
             className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold tracking-wide uppercase border ${
                 isQuotation
-                    ? 'bg-sky-50 text-sky-700 border-sky-200/70'
+                    ? 'bg-sky-50 text-sky-700 border-sky-200/70 dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-800/60'
                     : isReceipt
-                      ? 'bg-teal-50 text-teal-700 border-teal-200/70'
+                      ? 'bg-teal-50 text-teal-700 border-teal-200/70 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-800/60'
                       : 'bg-brand-subtle text-brand border-brand/20'
             }`}
         >
@@ -166,13 +166,13 @@ const Drafts = () => {
                                         <button
                                             type="button"
                                             onClick={() => navigate(editPath(draft))}
-                                            className="font-medium text-zinc-950 hover:underline text-left"
+                                            className="font-medium text-foreground hover:underline text-left"
                                         >
                                             {label}
                                         </button>
                                     </DataTableCell>
                                     <DataTableCell>
-                                        <span className="text-zinc-500 text-xs">
+                                        <span className="text-foreground-muted text-xs">
                                             {updated
                                                 ? formatDistanceToNow(new Date(updated), {
                                                       addSuffix: true,

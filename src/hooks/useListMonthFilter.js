@@ -4,7 +4,7 @@ import { usePeriodFilter } from './usePeriodFilter';
 /**
  * List pages expose two independent period controls:
  * - Stat card ("New this …") → summaryYear / summaryMonth (counts only, month-only)
- * - Toolbar filter → period=all|today|month on the document list (defaults to all time)
+ * - Toolbar filter → period presets on the document list (defaults to this month)
  */
 export function useListMonthFilter() {
     const summary = useSummaryPeriod();
@@ -19,16 +19,20 @@ export function useListMonthFilter() {
         timezone: summary.timezone,
         isCurrentPeriod: summary.isCurrentPeriod,
         shiftPeriod: summary.shiftPeriod,
-        listMonthInputValue: listPeriod.monthInputValue,
-        setListMonthInputValue: listPeriod.setMonthInputValue,
         listPeriodMode: listPeriod.mode,
         setListPeriodMode: listPeriod.setPeriodMode,
         listPeriodLabel: listPeriod.periodLabel,
         listIsThisMonth: listPeriod.isCurrentPeriod,
-        listYear: listPeriod.year,
-        listMonth: listPeriod.month,
         listQueryPeriod: listPeriod.queryPeriod,
-        allTime: listPeriod.mode === 'all',
-        filterActive: listPeriod.mode !== 'all',
+        listQueryParams: listPeriod.queryParams,
+        listStartDate: listPeriod.startDate,
+        listEndDate: listPeriod.endDate,
+        listCustomDraftStartDate: listPeriod.customDraftStartDate,
+        listCustomDraftEndDate: listPeriod.customDraftEndDate,
+        setListCustomDraftRange: listPeriod.setCustomDraftRange,
+        applyListCustomRange: listPeriod.applyCustomRange,
+        listMaxDate: listPeriod.maxDate,
+        filterActive: listPeriod.mode !== 'month' || Boolean(listPeriod.startDate),
+        isDefaultListPeriod: listPeriod.mode === 'month',
     };
 }

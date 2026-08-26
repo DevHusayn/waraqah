@@ -18,14 +18,14 @@ const DOCUMENT_OPTIONS = [
         label: 'Receipt',
         description: 'Record payment received',
         icon: Receipt,
-        tone: 'bg-teal-50 text-teal-700',
+        tone: 'bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-300',
     },
     {
         id: 'quotation',
         label: 'Quotation',
         description: 'Send a price estimate',
         icon: ClipboardList,
-        tone: 'bg-sky-50 text-sky-700',
+        tone: 'bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300',
     },
 ];
 
@@ -36,7 +36,7 @@ const ALL_OPTIONS = [
         label: 'Client',
         description: 'Add a new client contact',
         icon: Users,
-        tone: 'bg-violet-50 text-violet-700',
+        tone: 'bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300',
         href: '/clients',
     },
     {
@@ -44,7 +44,7 @@ const ALL_OPTIONS = [
         label: 'Product',
         description: 'Save a product or service',
         icon: Package,
-        tone: 'bg-amber-50 text-amber-700',
+        tone: 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300',
         href: '/products',
     },
     {
@@ -52,7 +52,7 @@ const ALL_OPTIONS = [
         label: 'Purchase order',
         description: 'Order stock from a supplier',
         icon: ShoppingCart,
-        tone: 'bg-indigo-50 text-indigo-700',
+        tone: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300',
         href: '/purchase-orders/create',
     },
 ];
@@ -115,10 +115,10 @@ export default function CreateDocumentModal({ open, onClose, navigate, documents
                 ariaLabelledby="create-document-title"
             >
                 <div className="p-5 sm:p-6">
-                    <h2 id="create-document-title" className="text-base font-semibold text-zinc-900">
+                    <h2 id="create-document-title" className="text-base font-semibold text-foreground">
                         Create new
                     </h2>
-                    <p className="mt-1 text-sm text-zinc-500">
+                    <p className="mt-1 text-sm text-foreground-muted">
                         Choose what you want to create
                     </p>
                     <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -129,7 +129,7 @@ export default function CreateDocumentModal({ open, onClose, navigate, documents
                                     key={option.id}
                                     type="button"
                                     onClick={() => handleSelect(option)}
-                                    className="flex items-start gap-3 rounded-lg border border-zinc-200/80 bg-white px-3.5 py-3 text-left hover:border-zinc-300 hover:bg-zinc-50/80 transition-colors"
+                                    className="flex items-start gap-3 rounded-lg border border-border/80 bg-surface px-3.5 py-3 text-left hover:border-zinc-300 hover:bg-surface-muted/80 transition-colors"
                                 >
                                     <span
                                         className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${option.tone}`}
@@ -137,10 +137,10 @@ export default function CreateDocumentModal({ open, onClose, navigate, documents
                                         <Icon size={18} aria-hidden />
                                     </span>
                                     <span className="min-w-0">
-                                        <span className="block text-sm font-semibold text-zinc-900">
+                                        <span className="block text-sm font-semibold text-foreground">
                                             {option.label}
                                         </span>
-                                        <span className="block text-xs text-zinc-500 mt-0.5">
+                                        <span className="block text-xs text-foreground-muted mt-0.5">
                                             {option.description}
                                         </span>
                                     </span>

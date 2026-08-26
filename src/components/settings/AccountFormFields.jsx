@@ -7,7 +7,7 @@ export default function AccountFormFields({ formData, errors, onChange, idPrefix
 
     return (
         <div className={`space-y-5 ${REPLAY_MASK.NO_CAPTURE}`}>
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-foreground-muted">
                 Bank details appear on invoice PDFs so clients know where to pay you.
             </p>
             <div>
@@ -62,7 +62,7 @@ export default function AccountFormFields({ formData, errors, onChange, idPrefix
             </div>
             <div>
                 <label htmlFor={paymentFieldId('instructions')} className="label">
-                    Payment instructions <span className="text-zinc-400 font-normal">(optional)</span>
+                    Payment instructions <span className="text-foreground-muted/70 font-normal">(optional)</span>
                 </label>
                 <textarea
                     id={paymentFieldId('instructions')}

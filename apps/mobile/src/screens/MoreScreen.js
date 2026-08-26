@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -15,9 +16,11 @@ import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { AvatarInitials, ListRow } from '../components/ui';
 import { APP_VERSION } from '../constants/brand';
-import { colors, fontFamily, fontSize, radii, shadows, spacing } from '../theme';
+import { colors, fontFamily, fontSize, radii, shadows, spacing, useTheme } from '../theme';
 
 export function MoreScreen({ navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { logout, isAdmin, user } = useAuth();
     const { businessInfo } = useSettings();
     const premium = isPremiumUser(businessInfo);
@@ -85,7 +88,8 @@ export function MoreScreen({ navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.surfaceMuted },
     content: { paddingBottom: spacing.huge, paddingTop: spacing.lg },
     pageTitle: {
@@ -150,3 +154,4 @@ const styles = StyleSheet.create({
         color: colors.slate400,
     },
 });
+}

@@ -128,8 +128,8 @@ export default function UpgradeCallback() {
         return (
             <div className="max-w-md mx-auto text-center py-20">
                 <Spinner size="xl" centered className="mx-auto mb-4" />
-                <h1 className="text-lg font-semibold text-zinc-950 tracking-tight">Confirming payment…</h1>
-                <p className="text-zinc-500 mt-2 text-[13px]">
+                <h1 className="text-lg font-semibold text-foreground tracking-tight">Confirming payment…</h1>
+                <p className="text-foreground-muted mt-2 text-[13px]">
                     {retryHint || 'Checking your subscription status…'}
                 </p>
             </div>
@@ -141,7 +141,7 @@ export default function UpgradeCallback() {
             <div className="max-w-md mx-auto text-center py-16">
                 <CheckCircle2 className="h-14 w-14 text-green-500 mx-auto mb-4" />
                 <h1 className="page-title">Payment successful</h1>
-                <p className="text-zinc-600 mt-2 mb-8">{message}</p>
+                <p className="text-foreground-muted mt-2 mb-8">{message}</p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Link to="/settings/plan-billing" className="btn-primary">
                         Upload your logo
@@ -159,7 +159,7 @@ export default function UpgradeCallback() {
             <div className="max-w-md mx-auto text-center py-16">
                 <Clock className="h-14 w-14 text-amber-500 mx-auto mb-4" />
                 <h1 className="page-title">Still processing</h1>
-                <p className="text-zinc-600 mt-2 mb-8">{message}</p>
+                <p className="text-foreground-muted mt-2 mb-8">{message}</p>
                 <div className="flex flex-col gap-3 items-center">
                     <button
                         type="button"
@@ -179,7 +179,7 @@ export default function UpgradeCallback() {
                     <Link to="/" className="btn-secondary w-full sm:w-auto">
                         Go to dashboard
                     </Link>
-                    <p className="text-xs text-zinc-500 mt-2">
+                    <p className="text-xs text-foreground-muted mt-2">
                         Premium usually activates within a minute. You can leave and check Plan &amp; Billing in
                         Settings.
                     </p>
@@ -192,7 +192,7 @@ export default function UpgradeCallback() {
         <div className="max-w-md mx-auto text-center py-16">
             <XCircle className="h-14 w-14 text-red-500 mx-auto mb-4" />
             <h1 className="page-title">Cannot verify payment</h1>
-            <p className="text-zinc-600 mt-2 mb-8">{message}</p>
+            <p className="text-foreground-muted mt-2 mb-8">{message}</p>
             <div className="flex flex-col gap-3 items-center">
                 {!isAuthenticated ? (
                     <Link

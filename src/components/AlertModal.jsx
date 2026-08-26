@@ -4,23 +4,23 @@ import ModalShell from './ModalShell';
 const VARIANTS = {
     error: {
         icon: AlertCircle,
-        iconWrap: 'bg-red-50 text-red-600',
-        titleClass: 'text-zinc-950',
-        messageClass: 'text-zinc-500',
+        iconWrap: 'bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400',
+        titleClass: 'text-foreground',
+        messageClass: 'text-foreground-muted',
         buttonClass: 'btn-primary',
     },
     success: {
         icon: CheckCircle2,
-        iconWrap: 'bg-green-50 text-green-600',
-        titleClass: 'text-zinc-950',
-        messageClass: 'text-zinc-500',
+        iconWrap: 'bg-green-50 text-green-600 dark:bg-green-950/50 dark:text-green-400',
+        titleClass: 'text-foreground',
+        messageClass: 'text-foreground-muted',
         buttonClass: 'btn-primary',
     },
     info: {
         icon: Info,
-        iconWrap: 'bg-zinc-100 text-zinc-600',
-        titleClass: 'text-zinc-950',
-        messageClass: 'text-zinc-500',
+        iconWrap: 'bg-zinc-100 text-foreground-muted dark:bg-surface-muted',
+        titleClass: 'text-foreground',
+        messageClass: 'text-foreground-muted',
         buttonClass: 'btn-primary',
     },
 };

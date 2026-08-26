@@ -26,7 +26,7 @@ export default function DocumentDetailsSection({
                     <input
                         type="text"
                         value={numberDisplay}
-                        className="input-field bg-zinc-50 text-zinc-500 cursor-not-allowed"
+                        className="input-field bg-surface-muted text-foreground-muted cursor-not-allowed"
                         readOnly
                         disabled
                     />

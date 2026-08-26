@@ -33,9 +33,13 @@ import DocumentSummaryCard from '../components/documentForm/DocumentSummaryCard'
 import DocumentActionButtons from '../components/documentForm/DocumentActionButtons';
 import DocumentPreviewOverlay from '../components/documentForm/DocumentPreviewOverlay';
 import { DocumentNotesSection } from '../components/documentForm/DocumentNotesSection';
+import { DocumentFooterSection } from '../components/documentForm/DocumentFooterSection';
+import { useDocumentFooterPrefill, resolveFormDocumentFooter } from '../hooks/useDocumentFooterPrefill';
 import { buildDocumentPreviewFromForm } from '../utils/buildDocumentPreviewData';
 import { hasDraftContent, hasAutoSaveDraftContent, resolvePersistClientId } from '../utils/documentFormHelpers';
-import { DEFAULT_INVOICE_UNIT, normalizeInvoiceUnit } from '@waraqah/shared';
+import { applyAiDraftToForm, DEFAULT_INVOICE_UNIT, isAiDraftsEnabled, normalizeInvoiceUnit } from '@waraqah/shared';
+import { isPremiumUser } from '../utils/premium';
+import AiDraftComposer from '../components/documentForm/AiDraftComposer';
 
 const CreateInvoice = () => {
     const { id } = useParams();
@@ -57,6 +61,7 @@ const CreateInvoice = () => {
     } = useInvoice();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen } = useInvoiceCreateGuard();
     const { businessInfo } = useSettings();
+    const premium = isPremiumUser(businessInfo);
     const { showToast } = useToast();
     const [saving, setSaving] = useState(false);
     const [sending, setSending] = useState(false);
@@ -111,6 +116,7 @@ const CreateInvoice = () => {
         dueDate: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
         items: [{ description: '', quantity: 1, rate: 0, unit: DEFAULT_INVOICE_UNIT }],
         notes: '',
+        documentFooter: '',
         status: 'draft',
         currency: APP_CURRENCY,
         taxRate: 0,
@@ -120,9 +126,18 @@ const CreateInvoice = () => {
 
     formDataRef.current = formData;
 
+    useDocumentFooterPrefill({ id, businessInfo, mode: 'invoice', setFormData });
+
     const markDirty = useCallback(() => {
         isDirtyRef.current = true;
     }, []);
+
+    const handleApplyAiDraft = useCallback((draft) => {
+        setFormData((prev) => applyAiDraftToForm(prev, draft));
+        markDirty();
+        setFieldErrors({});
+        showToast('Draft filled in. Review it before saving.', 'success');
+    }, [markDirty, showToast]);
 
     const handlers = useDocumentFormHandlers({
         formData,
@@ -176,6 +191,11 @@ const CreateInvoice = () => {
                 clientEmail: client?.email || '',
                 ...clientDetailsFromRecord(client),
                 clientAdditionalInfo: invoice.clientAdditionalInfo || '',
+                documentFooter: resolveFormDocumentFooter(
+                    invoice.documentFooter,
+                    businessInfo,
+                    'invoice'
+                ),
                 hasDueDate: Boolean(invoice.dueDate),
                 discountType: invoice.discountType || 'percent',
                 discountValue: invoice.discountValue ?? '',
@@ -623,7 +643,7 @@ const CreateInvoice = () => {
             <button
                 type="button"
                 onClick={handleLeavePage}
-                className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-brand mb-6 transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-medium text-foreground-muted hover:text-brand mb-6 transition-colors"
             >
                 <ArrowLeft size={16} aria-hidden />
                 {isDraftEdit ? 'Back to drafts' : id ? 'Back to invoice' : 'Back to invoices'}
@@ -655,6 +675,14 @@ const CreateInvoice = () => {
             <form id="invoice-form" onSubmit={handleSubmit} noValidate>
                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     <div className="xl:col-span-2 space-y-6">
+                        {isAiDraftsEnabled() && isDraftFlow ? (
+                            <AiDraftComposer
+                                documentType="invoice"
+                                premium={premium}
+                                disabled={saving || sending}
+                                onApply={handleApplyAiDraft}
+                            />
+                        ) : null}
                         <DocumentDetailsSection
                             icon={FileText}
                             title="Invoice details"
@@ -701,12 +729,19 @@ const CreateInvoice = () => {
                             onCurrencyChange={handlers.handleCurrencyChange}
                             onAddItem={handlers.addItem}
                             onRemoveItem={handlers.removeItem}
-                            onAddProductItem={handlers.addProductItem}
+                            onApplyProductToLine={handlers.applyProductToLine}
                         />
 
                         <DocumentNotesSection
                             description="Payment terms or extra info"
                             placeholder="Thank-you message…"
+                            formData={formData}
+                            onChange={handlers.handleChange}
+                        />
+
+                        <DocumentFooterSection
+                            businessInfo={businessInfo}
+                            mode="invoice"
                             formData={formData}
                             onChange={handlers.handleChange}
                         />
@@ -738,7 +773,7 @@ const CreateInvoice = () => {
                 onSave={handlers.handleSaveClientDetails}
             />
 
-            <div className="fixed bottom-0 left-0 right-0 md:left-[15.5rem] z-30 xl:hidden border-t border-zinc-200 bg-white/95 backdrop-blur-sm shadow-[0_-4px_16px_rgba(15,23,42,0.06)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="fixed bottom-0 left-0 right-0 md:left-[15.5rem] z-30 xl:hidden border-t border-border bg-surface/95 backdrop-blur-sm shadow-[0_-4px_16px_rgba(15,23,42,0.06)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
                 <div className="max-w-6xl mx-auto w-full">{actionButtons()}</div>
             </div>
         </div>

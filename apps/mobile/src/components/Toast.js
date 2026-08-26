@@ -1,9 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme';
 
 export function Toast({ message, type = 'info', onHide }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const insets = useSafeAreaInsets();
     useEffect(() => {
         const timer = setTimeout(onHide, 3200);
@@ -29,7 +31,8 @@ export function Toast({ message, type = 'info', onHide }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     wrap: {
         position: 'absolute',
         left: 16,
@@ -46,3 +49,4 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
 });
+}

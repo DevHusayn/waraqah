@@ -1,12 +1,24 @@
-import { getDatePartsInTimezone, shiftDateByDays, shiftSummaryPeriod } from '@waraqah/shared';
+import {
+    dateMatchesClientPeriod,
+    getDatePartsInTimezone,
+    shiftDateByDays,
+    shiftSummaryPeriod,
+} from '@waraqah/shared';
 
-function rowMatchesPeriod(issueDate, period, timeZone) {
-    if (!period || period.kind === 'all') return true;
-    const parts = getDatePartsInTimezone(timeZone, issueDate);
-    if (period.kind === 'day') {
-        return parts.year === period.year && parts.month === period.month && parts.day === period.day;
+function countInclusiveDays(start, end) {
+    let count = 0;
+    let cursor = { ...start };
+    const compare = (a, b) => {
+        if (a.year !== b.year) return a.year - b.year;
+        if (a.month !== b.month) return a.month - b.month;
+        return a.day - b.day;
+    };
+    while (compare(cursor, end) <= 0) {
+        count += 1;
+        if (compare(cursor, end) === 0) break;
+        cursor = shiftDateByDays(cursor.year, cursor.month, cursor.day, 1);
     }
-    return parts.year === period.year && parts.month === period.month;
+    return count;
 }
 
 export function sumSoldInPeriod(transactions, period, timeZone) {
@@ -22,7 +34,7 @@ export function sumSoldInPeriod(transactions, period, timeZone) {
 
         const issueDate = new Date(row.date);
         if (Number.isNaN(issueDate.getTime())) continue;
-        if (!rowMatchesPeriod(issueDate, period, timeZone)) continue;
+        if (!dateMatchesClientPeriod(issueDate, period, timeZone)) continue;
 
         quantity += Number(row.saleQuantity) || 0;
         revenue += Number(row.saleLineTotal) || 0;
@@ -68,11 +80,55 @@ export function computeCountPercentChange(current, previous) {
 }
 
 function previousSoldPeriod(period) {
-    if (!period || period.kind === 'all') return null;
+    if (!period) return null;
     if (period.kind === 'day') {
         return { kind: 'day', ...shiftDateByDays(period.year, period.month, period.day, -1) };
     }
-    return { kind: 'month', ...shiftSummaryPeriod(period.year, period.month, -1) };
+    if (period.kind === 'month') {
+        return { kind: 'month', ...shiftSummaryPeriod(period.year, period.month, -1) };
+    }
+    if (period.kind === 'year') {
+        return { kind: 'year', year: period.year - 1 };
+    }
+    if (period.kind === 'week') {
+        const start = {
+            year: period.startYear,
+            month: period.startMonth,
+            day: period.startDay,
+        };
+        const prevStart = shiftDateByDays(start.year, start.month, start.day, -7);
+        const prevEnd = shiftDateByDays(prevStart.year, prevStart.month, prevStart.day, 6);
+        return {
+            kind: 'week',
+            startYear: prevStart.year,
+            startMonth: prevStart.month,
+            startDay: prevStart.day,
+            endYear: prevEnd.year,
+            endMonth: prevEnd.month,
+            endDay: prevEnd.day,
+        };
+    }
+    if (period.kind === 'range') {
+        const start = {
+            year: period.startYear,
+            month: period.startMonth,
+            day: period.startDay,
+        };
+        const end = { year: period.endYear, month: period.endMonth, day: period.endDay };
+        const days = countInclusiveDays(start, end);
+        const prevEnd = shiftDateByDays(start.year, start.month, start.day, -1);
+        const prevStart = shiftDateByDays(prevEnd.year, prevEnd.month, prevEnd.day, -(days - 1));
+        return {
+            kind: 'range',
+            startYear: prevStart.year,
+            startMonth: prevStart.month,
+            startDay: prevStart.day,
+            endYear: prevEnd.year,
+            endMonth: prevEnd.month,
+            endDay: prevEnd.day,
+        };
+    }
+    return null;
 }
 
 export function getSoldPeriodSummary(transactions, period, timeZone) {

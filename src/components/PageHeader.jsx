@@ -1,7 +1,7 @@
 export default function PageHeader({ title, subtitle, breadcrumb, eyebrow, children, inlineActions = false }) {
     return (
         <div
-            className={`mb-6 pb-5 border-b border-zinc-200/50 flex gap-3 min-w-0 ${
+            className={`mb-6 pb-5 border-b border-border/50 flex gap-3 min-w-0 ${
                 inlineActions
                     ? 'flex-row items-start justify-between'
                     : 'flex-col sm:flex-row sm:items-end sm:justify-between'
@@ -9,12 +9,12 @@ export default function PageHeader({ title, subtitle, breadcrumb, eyebrow, child
         >
             <div className="min-w-0">
                 {breadcrumb ? (
-                    <div className="mb-1.5 text-[11px] font-medium text-zinc-400 tracking-wide uppercase">
+                    <div className="mb-1.5 text-[11px] font-medium text-foreground-muted/70 tracking-wide uppercase">
                         {breadcrumb}
                     </div>
                 ) : null}
                 {eyebrow ? (
-                    <p className="mb-1.5 text-[11px] font-medium text-zinc-400 tracking-wide uppercase">
+                    <p className="mb-1.5 text-[11px] font-medium text-foreground-muted/70 tracking-wide uppercase">
                         {eyebrow}
                     </p>
                 ) : null}

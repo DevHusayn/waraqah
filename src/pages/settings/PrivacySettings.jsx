@@ -17,7 +17,7 @@ export default function PrivacySettings() {
             ]}
         >
             <div className="card space-y-6">
-                <p className="text-sm text-zinc-500">
+                <p className="text-sm text-foreground-muted">
                     Public version also available at{' '}
                     <a href={PRIVACY_PATH} target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">
                         {APP_DOMAIN}{PRIVACY_PATH}

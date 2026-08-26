@@ -17,10 +17,10 @@ export const queryClient = new QueryClient({
 });
 
 /** Seed related query caches from aggregated dashboard response. */
-export function seedDashboardCache(userId, period, summaryYear, summaryMonth, data) {
+export function seedDashboardCache(userId, period, startDate, endDate, data) {
     if (!data || !userId) return;
 
-    queryClient.setQueryData(queryKeys.dashboard(userId, period, summaryYear, summaryMonth), data);
+    queryClient.setQueryData(queryKeys.dashboard(userId, period, startDate, endDate), data);
 
     if (data.businessInfo) {
         if (!needsBusinessSetup(data.businessInfo)) {

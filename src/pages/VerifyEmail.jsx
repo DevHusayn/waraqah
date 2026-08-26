@@ -46,8 +46,8 @@ export default function VerifyEmail() {
                         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-50 text-green-600">
                             <CheckCircle2 size={24} aria-hidden />
                         </div>
-                        <h1 className="text-xl font-semibold text-zinc-900">Email verified</h1>
-                        <p className="mt-2 text-sm text-zinc-600">{message}</p>
+                        <h1 className="text-xl font-semibold text-foreground">Email verified</h1>
+                        <p className="mt-2 text-sm text-foreground-muted">{message}</p>
 
                         <Link
                             to={AUTH_LOGIN_PATH}
@@ -58,8 +58,8 @@ export default function VerifyEmail() {
                     </>
                 ) : (
                     <>
-                        <h1 className="text-xl font-semibold text-zinc-900">Verification failed</h1>
-                        <p className="mt-2 text-sm text-zinc-600">{message}</p>
+                        <h1 className="text-xl font-semibold text-foreground">Verification failed</h1>
+                        <p className="mt-2 text-sm text-foreground-muted">{message}</p>
 
                         <Link
                             to={AUTH_LOGIN_PATH}

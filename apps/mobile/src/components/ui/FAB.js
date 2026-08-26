@@ -1,10 +1,13 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { Plus } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, fontFamily, fontSize, radii, shadows, spacing } from '../../theme';
+import { colors, fontFamily, fontSize, radii, shadows, spacing , useTheme } from '../../theme';
 import { hapticLight } from '../../utils/haptics';
 
 export function FAB({ onPress, label, icon: Icon = Plus, style }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const insets = useSafeAreaInsets();
     return (
         <Pressable
@@ -28,7 +31,8 @@ export function FAB({ onPress, label, icon: Icon = Plus, style }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     fab: {
         position: 'absolute',
         right: spacing.xl,
@@ -53,3 +57,4 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
 });
+}

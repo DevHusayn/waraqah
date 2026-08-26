@@ -19,7 +19,7 @@ export default function LegalConsentCheckbox({
                     className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300 accent-brand focus:ring-brand/30"
                     aria-invalid={Boolean(error)}
                 />
-                <span className="text-[13px] text-zinc-600 leading-relaxed">
+                <span className="text-[13px] text-foreground-muted leading-relaxed">
                     By registering, you agree to our{' '}
                     <Link
                         to={TERMS_PATH}

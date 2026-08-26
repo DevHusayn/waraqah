@@ -21,13 +21,15 @@ import { useSummaryPeriod } from '../hooks/useSummaryPeriod';
 import { SummaryPeriodControls } from '../components/SummaryPeriodControls';
 import { apiFetch } from '../api/client';
 import { buildListQuery } from '../utils/pagination';
-import { colors, fontFamily, fontSize, shadows, spacing } from '../theme';
+import { colors, fontFamily, fontSize, shadows, spacing, useTheme } from '../theme';
 
 const FILTER_VALUES = ['all', 'pending', 'partial', 'paid', 'overdue', 'cancelled'];
 
 const mapInvoice = (i) => ({ ...i, id: i._id || i.id });
 
 export function InvoicesListScreen({ navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { draftCount } = useInvoice();
     const { businessInfo } = useSettings();
     const [filter, setFilter] = useState('all');
@@ -202,7 +204,8 @@ export function InvoicesListScreen({ navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.surfaceMuted },
     list: { paddingBottom: 110, flexGrow: 1 },
     pageTitle: {
@@ -295,3 +298,4 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
     },
 });
+}

@@ -17,7 +17,7 @@ export default function BusinessSummaryCard({ businessInfo, className = '' }) {
         >
             <div className="flex items-center gap-4 min-w-0 flex-1">
                 {logoUrl ? (
-                    <div className="h-14 w-14 rounded-xl border border-zinc-200 bg-white p-1.5 shrink-0 overflow-hidden flex items-center justify-center">
+                    <div className="h-14 w-14 rounded-xl border border-border bg-surface p-1.5 shrink-0 overflow-hidden flex items-center justify-center">
                         <img src={logoUrl} alt="" className="max-h-full max-w-full object-contain" />
                     </div>
                 ) : (
@@ -30,12 +30,12 @@ export default function BusinessSummaryCard({ businessInfo, className = '' }) {
                 )}
                 <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-base font-semibold text-zinc-900 truncate">
+                        <h2 className="text-base font-semibold text-foreground truncate">
                             {businessInfo.name?.trim() || 'Your business'}
                         </h2>
                         <PlanBadge premium={premium} />
                     </div>
-                    <p className="text-sm text-zinc-500 mt-0.5 truncate">
+                    <p className="text-sm text-foreground-muted mt-0.5 truncate">
                         {businessInfo.email || 'Add your business email to get started'}
                     </p>
                 </div>

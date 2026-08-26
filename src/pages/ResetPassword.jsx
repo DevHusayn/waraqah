@@ -133,13 +133,13 @@ export default function ResetPassword() {
 
                 <div className="mb-6 text-center">
                     <h1 className="page-title text-3xl mb-2">Choose a new password</h1>
-                    <p className="text-base text-zinc-600">Enter and confirm your new password below.</p>
+                    <p className="text-base text-foreground-muted">Enter and confirm your new password below.</p>
                 </div>
 
                 <form
                     onSubmit={handleSubmit}
                     noValidate
-                    className="bg-white rounded-lg border border-zinc-200 p-6 space-y-5"
+                    className="bg-surface rounded-lg border border-border p-6 space-y-5"
                 >
                     <div>
                         <RequiredLabel htmlFor="reset-password">New password</RequiredLabel>
@@ -160,7 +160,7 @@ export default function ResetPassword() {
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-brand font-semibold text-sm"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-brand font-semibold text-sm"
                             >
                                 {showPassword ? 'Hide' : 'Show'}
                             </button>
@@ -225,7 +225,7 @@ export default function ResetPassword() {
                     </button>
                 </form>
 
-                <p className="mt-8 text-center text-zinc-700 text-base">
+                <p className="mt-8 text-center text-foreground-muted text-base">
                     <Link
                         to={AUTH_LOGIN_PATH}
                         className="inline-flex items-center justify-center gap-2 font-medium text-brand hover:underline"

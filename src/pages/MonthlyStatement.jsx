@@ -161,25 +161,25 @@ export default function MonthlyStatement() {
                         onChange={setMonthValue}
                         max={format(new Date(), 'yyyy-MM')}
                     />
-                    <p className="mt-2 text-xs text-zinc-500">
+                    <p className="mt-2 text-xs text-foreground-muted">
                         Based on document issue dates in {periodLabel}.
                     </p>
                 </div>
                 {!periodLoading && statement ? (
-                    <div className="flex items-center gap-2 text-sm text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3">
+                    <div className="flex items-center gap-2 text-sm text-foreground-muted bg-surface-muted border border-border rounded-xl px-4 py-3">
                         <FileBarChart className="h-5 w-5 text-brand shrink-0" />
                         <span>
-                            <strong className="text-zinc-900">{statement.totals.documentCount}</strong>{' '}
+                            <strong className="text-foreground">{statement.totals.documentCount}</strong>{' '}
                             document{statement.totals.documentCount === 1 ? '' : 's'} this month
                         </span>
                     </div>
                 ) : periodLoading ? (
                     <div
-                        className="flex items-center gap-2 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 animate-pulse"
+                        className="flex items-center gap-2 bg-surface-muted border border-border rounded-xl px-4 py-3 animate-pulse"
                         aria-hidden
                     >
-                        <div className="h-5 w-5 rounded bg-zinc-200/80 shrink-0" />
-                        <div className="h-4 w-40 rounded bg-zinc-200/80" />
+                        <div className="h-5 w-5 skeleton-bar shrink-0" />
+                        <div className="h-4 w-40 skeleton-bar" />
                     </div>
                 ) : null}
             </div>
@@ -211,9 +211,9 @@ export default function MonthlyStatement() {
                     </ReportStatGrid>
 
                     <div className="card overflow-hidden !p-0">
-                        <div className="px-6 py-4 border-b border-zinc-200 bg-zinc-50/80">
-                            <h2 className="text-lg font-semibold text-zinc-900">Client breakdown</h2>
-                            <p className="text-sm text-zinc-500 mt-0.5">
+                        <div className="px-6 py-4 border-b border-border bg-surface-muted/80">
+                            <h2 className="text-lg font-semibold text-foreground">Client breakdown</h2>
+                            <p className="text-sm text-foreground-muted mt-0.5">
                                 Amounts issued to each client in {statement.periodLabel}
                             </p>
                         </div>
@@ -221,8 +221,8 @@ export default function MonthlyStatement() {
                         {!statement.hasData ? (
                             <div className="text-center py-16 px-6">
                                 <FileBarChart className="mx-auto h-12 w-12 text-zinc-300" />
-                                <p className="mt-3 font-medium text-zinc-900">No documents this month</p>
-                                <p className="text-sm text-zinc-500 mt-1">
+                                <p className="mt-3 font-medium text-foreground">No documents this month</p>
+                                <p className="text-sm text-foreground-muted mt-1">
                                     Create invoices or receipts with an issue date in {statement.periodLabel}{' '}
                                     to see them here.
                                 </p>
@@ -232,19 +232,19 @@ export default function MonthlyStatement() {
                             <div className="overflow-x-auto scroll-x-touch">
                                 <table className="w-full min-w-[720px] text-sm">
                                     <thead>
-                                        <tr className="border-b border-zinc-200 bg-white text-left">
-                                            <th className="px-6 py-3 font-semibold text-zinc-700">
+                                        <tr className="border-b border-border bg-surface text-left">
+                                            <th className="px-6 py-3 font-semibold text-foreground-muted">
                                                 Client
                                             </th>
                                             {STATUS_COLS.map((status) => (
                                                 <th
                                                     key={status}
-                                                    className="px-4 py-3 font-semibold text-zinc-700 text-center"
+                                                    className="px-4 py-3 font-semibold text-foreground-muted text-center"
                                                 >
                                                     {statusLabel(status)}
                                                 </th>
                                             ))}
-                                            <th className="px-6 py-3 font-semibold text-zinc-900 text-center">
+                                            <th className="px-6 py-3 font-semibold text-foreground text-center">
                                                 Total
                                             </th>
                                         </tr>
@@ -253,14 +253,14 @@ export default function MonthlyStatement() {
                                         {clientRowsPage.data.map((row) => (
                                             <tr
                                                 key={row.clientId}
-                                                className="border-b border-zinc-100 hover:bg-zinc-50/80"
+                                                className="border-b border-border/50 hover:bg-surface-muted/80"
                                             >
                                                 <td className="px-6 py-3">
-                                                    <p className="font-medium text-zinc-900">
+                                                    <p className="font-medium text-foreground">
                                                         {row.clientName}
                                                     </p>
                                                     {row.clientSubtitle ? (
-                                                        <p className="text-xs text-zinc-500 truncate max-w-[200px]">
+                                                        <p className="text-xs text-foreground-muted truncate max-w-[200px]">
                                                             {row.clientSubtitle}
                                                         </p>
                                                     ) : null}
@@ -268,21 +268,21 @@ export default function MonthlyStatement() {
                                                 {STATUS_COLS.map((status) => (
                                                     <td
                                                         key={status}
-                                                        className="px-4 py-3 text-center text-zinc-700 tabular-nums"
+                                                        className="px-4 py-3 text-center text-foreground-muted tabular-nums"
                                                     >
                                                         {row[status] > 0
                                                             ? formatCurrency(row[status])
                                                             : '—'}
                                                     </td>
                                                 ))}
-                                                <td className="px-6 py-3 text-center font-semibold text-zinc-900 tabular-nums">
+                                                <td className="px-6 py-3 text-center font-semibold text-foreground tabular-nums">
                                                     {formatCurrency(row.total)}
                                                 </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                     <tfoot>
-                                        <tr className="bg-zinc-50 font-semibold text-zinc-900">
+                                        <tr className="bg-surface-muted font-semibold text-foreground">
                                             <td className="px-6 py-3">Total</td>
                                             {STATUS_COLS.map((status) => (
                                                 <td

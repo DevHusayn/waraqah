@@ -13,9 +13,11 @@ import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../api/client';
 import { buildListQuery, unwrapListResponse } from '../utils/pagination';
 import { Button, Card, Input, Label, PageHeader } from '../components/ui';
-import { colors, spacing } from '../theme';
+import { colors, spacing, useTheme } from '../theme';
 
 export function MonthlyStatementScreen({ navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { clients, fetchInvoices } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
@@ -121,7 +123,8 @@ function Row({ label, value, bold }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.surfaceMuted },
     content: { padding: spacing.lg, paddingBottom: spacing.xxl },
     block: { marginBottom: 12 },
@@ -133,3 +136,4 @@ const styles = StyleSheet.create({
     rowLabel: { color: colors.slate500 },
     rowValue: { color: colors.slate900 },
 });
+}

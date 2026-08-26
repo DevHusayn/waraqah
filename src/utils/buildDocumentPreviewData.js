@@ -37,6 +37,7 @@ export function buildDocumentPreviewFromForm(formData, { type = 'invoice' } = {}
         tax: totals.tax,
         total: totals.total,
         clientAdditionalInfo: formData.clientAdditionalInfo || '',
+        documentFooter: formData.documentFooter || '',
     };
 
     if (isQuotation) {

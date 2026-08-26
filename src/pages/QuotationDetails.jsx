@@ -189,7 +189,7 @@ function QuotationActionsPanel({
 
     return (
         <div className="card overflow-visible">
-            <h3 className="text-sm font-semibold text-zinc-900 pb-3 mb-4 border-b border-zinc-200">
+            <h3 className="text-sm font-semibold text-foreground pb-3 mb-4 border-b border-border">
                 Actions
             </h3>
             <div className="space-y-3">
@@ -533,7 +533,7 @@ const QuotationDetails = () => {
             <div className="max-w-6xl mx-auto pb-8">
                 <Link
                     to="/quotations"
-                    className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-brand mb-6 transition-colors"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-foreground-muted hover:text-brand mb-6 transition-colors"
                 >
                     <ArrowLeft size={16} aria-hidden />
                     Back to quotations
@@ -547,7 +547,7 @@ const QuotationDetails = () => {
                         </div>
                         <p className="page-subtitle mt-1">Quotation details and documents</p>
                         {convertedInvoiceId ? (
-                            <p className="mt-2 text-sm text-zinc-600">
+                            <p className="mt-2 text-sm text-foreground-muted">
                                 Converted to{' '}
                                 <Link
                                     to={`/invoices/${convertedInvoiceId}`}
@@ -576,7 +576,7 @@ const QuotationDetails = () => {
 
                     <div className="space-y-6 order-1 xl:order-2">
                         <div className="card xl:sticky xl:top-24">
-                            <h3 className="text-sm font-semibold text-zinc-900 mb-4">Summary</h3>
+                            <h3 className="text-sm font-semibold text-foreground mb-4">Summary</h3>
                             <dl className="space-y-3">
                                 <SummaryRow
                                     label="Issue date"
@@ -611,8 +611,8 @@ const QuotationDetails = () => {
                                     label={`Tax (${quotation.taxRate}%)`}
                                     value={formatCurrency(quotation.tax, quotation.currency)}
                                 />
-                                <div className="pt-3 border-t border-zinc-200 flex justify-between items-center">
-                                    <dt className="text-base font-semibold text-zinc-900">
+                                <div className="pt-3 border-t border-border flex justify-between items-center">
+                                    <dt className="text-base font-semibold text-foreground">
                                         Estimated total
                                     </dt>
                                     <dd className="text-2xl font-bold text-brand">

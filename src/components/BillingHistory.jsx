@@ -18,9 +18,9 @@ const COLUMNS = [
 ];
 
 const STATUS_STYLES = {
-    success: 'bg-green-50/80 text-green-800 border-green-200/60',
-    pending: 'bg-amber-50/80 text-amber-800 border-amber-200/60',
-    failed: 'bg-red-50/80 text-red-800 border-red-200/60',
+    success: 'bg-green-50/80 text-green-800 border-green-200/60 dark:bg-green-950/50 dark:text-green-300 dark:border-green-800/60',
+    pending: 'bg-amber-50/80 text-amber-800 border-amber-200/60 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/60',
+    failed: 'bg-red-50/80 text-red-800 border-red-200/60 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800/60',
 };
 
 function PaymentStatusBadge({ status }) {
@@ -91,20 +91,20 @@ export default function BillingHistory() {
                 {payments.map((payment) => (
                     <DataTableRow key={payment.id}>
                         <DataTableCell>
-                            <span className="text-zinc-700 tabular-nums">{paymentDate(payment)}</span>
+                            <span className="text-foreground-muted tabular-nums">{paymentDate(payment)}</span>
                         </DataTableCell>
                         <DataTableCell>
                             <div className="min-w-0">
-                                <p className="text-zinc-950 font-medium">{paymentDescription(payment)}</p>
+                                <p className="text-foreground font-medium">{paymentDescription(payment)}</p>
                                 {payment.reference ? (
-                                    <p className="text-xs text-zinc-500 truncate max-w-[200px]">
+                                    <p className="text-xs text-foreground-muted truncate max-w-[200px]">
                                         Ref: {payment.reference}
                                     </p>
                                 ) : null}
                             </div>
                         </DataTableCell>
                         <DataTableCell className="text-right">
-                            <span className="font-medium text-zinc-950 tabular-nums">
+                            <span className="font-medium text-foreground tabular-nums">
                                 {formatCurrency(payment.amount)}
                             </span>
                         </DataTableCell>

@@ -17,6 +17,7 @@ import {
 } from '../utils/brandAssets';
 import { isPremiumUser } from '../utils/premium';
 import { getDocumentNumber, getPaymentMethodLabel, resolvePdfMode, getReceiptDisplayStatus, isPartialReceipt } from '../utils/receiptHelpers';
+import { resolveDocumentFooter } from '@waraqah/shared';
 import { REPLAY_MASK } from '@waraqah/shared';
 
 function lightenHex(hex, amount = 0.88) {
@@ -100,6 +101,7 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
     const stampUrl = premium && isReceipt ? getCompanyStampUrl(businessInfo) : '';
     const signatureUrl = premium ? getAuthorizedSignatureUrl(businessInfo) : '';
     const badgeStatus = isReceipt ? getReceiptDisplayStatus(invoice) : invoice?.status;
+    const footerText = premium ? resolveDocumentFooter(invoice, businessInfo, resolvedMode) : '';
     const issueDate = invoice?.date ? format(new Date(invoice.date), 'MMM dd, yyyy') : 'N/A';
     const hasValidUntil = Boolean(invoice?.validUntil);
     const hasDueDate = Boolean(invoice?.dueDate);
@@ -456,11 +458,7 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
 
                 <div className="mt-8 pt-4 border-t border-zinc-200 text-center text-xs text-zinc-500">
                     {premium ? (
-                        <p>
-                            {isQuotation
-                                ? `Thank you for considering ${businessInfo?.name || 'us'}. We look forward to doing business with you.`
-                                : `Thank you for doing business with ${businessInfo?.name || 'us'}.`}
-                        </p>
+                        <p>{footerText}</p>
                     ) : (
                         <div className="flex flex-col items-center gap-1">
                             <div className="inline-flex items-center justify-center gap-2 text-zinc-500">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
     Modal,
     Pressable,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Button } from './ui';
 import { ReplayMask } from './ReplayMask';
-import { colors, fontFamily, fontSize, radii, spacing } from '../theme';
+import { colors, fontFamily, fontSize, radii, spacing, useTheme } from '../theme';
 
 const EMPTY_DETAILS = {
     business: '',
@@ -20,6 +20,8 @@ const EMPTY_DETAILS = {
 };
 
 export function ClientDetailsModal({ visible, initialData = EMPTY_DETAILS, onClose, onSave }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const [form, setForm] = useState(EMPTY_DETAILS);
 
     useEffect(() => {
@@ -102,7 +104,8 @@ export function ClientDetailsModal({ visible, initialData = EMPTY_DETAILS, onClo
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     overlay: {
         flex: 1,
         backgroundColor: 'rgba(15, 23, 42, 0.45)',
@@ -158,3 +161,4 @@ const styles = StyleSheet.create({
         marginTop: spacing.lg,
     },
 });
+}

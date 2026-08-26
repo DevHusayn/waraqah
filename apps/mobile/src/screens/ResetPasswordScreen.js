@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { validateRequired, isStrongPassword, PASSWORD_REQUIREMENTS_MESSAGE } from '@waraqah/shared';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Screen, Title, Label, Input, Button, FieldError } from '../components/ui';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme';
 
 export function ResetPasswordScreen({ route, navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const token = route.params?.token;
     const { resetPassword } = useAuth();
     const { showToast } = useToast();
@@ -56,7 +58,8 @@ export function ResetPasswordScreen({ route, navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     pad: { padding: 16 },
     sub: { color: colors.slate500, marginTop: 4, marginBottom: 16 },
     card: {
@@ -67,3 +70,4 @@ const styles = StyleSheet.create({
         borderColor: colors.slate200,
     },
 });
+}

@@ -87,32 +87,32 @@ export default function BusinessSetupCoachmark({ userId, authProvider, onDismiss
             />
 
             <div
-                className="absolute w-[280px] rounded-xl border border-zinc-200 bg-white p-4 shadow-xl"
+                className="absolute w-[280px] rounded-xl border border-border bg-surface p-4 shadow-xl"
                 style={{ top: bubbleTop, left: bubbleLeft }}
                 role="dialog"
                 aria-labelledby="business-setup-coachmark-title"
             >
                 <div
-                    className="absolute -top-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-l border-t border-zinc-200 bg-white"
+                    className="absolute -top-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-l border-t border-border bg-surface"
                     aria-hidden
                 />
                 <div className="flex items-start justify-between gap-2">
                     <p
                         id="business-setup-coachmark-title"
-                        className="text-sm font-semibold text-zinc-900"
+                        className="text-sm font-semibold text-foreground"
                     >
                         Finish your business setup
                     </p>
                     <button
                         type="button"
                         onClick={handleDismiss}
-                        className="rounded-md p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                        className="rounded-md p-1 text-foreground-muted/70 hover:bg-surface-muted hover:text-foreground-muted"
                         aria-label="Close"
                     >
                         <X className="h-4 w-4" />
                     </button>
                 </div>
-                <p className="mt-2 text-[13px] leading-relaxed text-zinc-600">
+                <p className="mt-2 text-[13px] leading-relaxed text-foreground-muted">
                     {getCoachmarkMessage(authProvider)}
                 </p>
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row">

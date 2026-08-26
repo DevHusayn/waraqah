@@ -1,8 +1,54 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, fontFamily, fontSize, lineHeight, radii, spacing } from '../../theme';
+import { fontFamily, fontSize, lineHeight, radii, spacing, useTheme } from '../../theme';
 import { Button } from './Button';
 
+function createStyles(colors) {
+    return StyleSheet.create({
+        wrap: {
+            alignItems: 'center',
+            paddingVertical: spacing.huge,
+            paddingHorizontal: spacing.xxl,
+        },
+        iconWrap: {
+            width: 64,
+            height: 64,
+            borderRadius: radii.xxl,
+            backgroundColor: colors.surfaceMuted,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: spacing.xl,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderColor: colors.border,
+        },
+        title: {
+            fontFamily: fontFamily.semibold,
+            fontSize: fontSize.lg,
+            color: colors.foreground,
+            textAlign: 'center',
+            letterSpacing: -0.3,
+            marginBottom: spacing.sm,
+        },
+        message: {
+            fontFamily: fontFamily.regular,
+            fontSize: fontSize.md,
+            color: colors.muted,
+            textAlign: 'center',
+            lineHeight: lineHeight.md,
+            maxWidth: 280,
+            marginBottom: spacing.xl,
+        },
+        cta: {
+            minWidth: 180,
+            marginTop: spacing.sm,
+        },
+    });
+}
+
 export function EmptyState({ title, message, action, actionLabel, onAction, icon: Icon }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
+
     return (
         <View style={styles.wrap} accessibilityRole="summary">
             {Icon ? (
@@ -20,43 +66,3 @@ export function EmptyState({ title, message, action, actionLabel, onAction, icon
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    wrap: {
-        alignItems: 'center',
-        paddingVertical: spacing.huge,
-        paddingHorizontal: spacing.xxl,
-    },
-    iconWrap: {
-        width: 64,
-        height: 64,
-        borderRadius: radii.xxl,
-        backgroundColor: colors.surfaceMuted,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: spacing.xl,
-        borderWidth: StyleSheet.hairlineWidth,
-        borderColor: colors.border,
-    },
-    title: {
-        fontFamily: fontFamily.semibold,
-        fontSize: fontSize.lg,
-        color: colors.foreground,
-        textAlign: 'center',
-        letterSpacing: -0.3,
-        marginBottom: spacing.sm,
-    },
-    message: {
-        fontFamily: fontFamily.regular,
-        fontSize: fontSize.md,
-        color: colors.muted,
-        textAlign: 'center',
-        lineHeight: lineHeight.md,
-        maxWidth: 280,
-        marginBottom: spacing.xl,
-    },
-    cta: {
-        minWidth: 180,
-        marginTop: spacing.sm,
-    },
-});

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useMemo } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Package } from 'lucide-react-native';
@@ -22,12 +22,14 @@ import {
 import { usePagedList } from '../hooks/usePagedList';
 import { apiFetch } from '../api/client';
 import { buildListQuery } from '../utils/pagination';
-import { colors, fontFamily, fontSize, spacing } from '../theme';
+import { colors, fontFamily, fontSize, spacing, useTheme } from '../theme';
 
 const EMPTY = { name: '', description: '', price: '' };
 const mapProduct = (p) => ({ ...p, id: p._id || p.id });
 
 export function ProductsScreen() {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { addProduct, updateProduct, deleteProduct } = useInvoice();
     const { showToast } = useToast();
     const [refreshing, setRefreshing] = useState(false);
@@ -226,7 +228,8 @@ export function ProductsScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.surface },
     list: { paddingBottom: 100, flexGrow: 1 },
     padX: { paddingHorizontal: spacing.xl, marginBottom: spacing.md },
@@ -246,3 +249,4 @@ const styles = StyleSheet.create({
         letterSpacing: -0.3,
     },
 });
+}

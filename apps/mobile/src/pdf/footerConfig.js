@@ -1,11 +1,12 @@
-import { isPremiumUser } from '@waraqah/shared';
+import { isPremiumUser, resolveDocumentFooter } from '@waraqah/shared';
 
-export function buildDocumentFooterConfig(businessInfo, mode = 'invoice') {
+export function buildDocumentFooterConfig(doc, businessInfo, mode = 'invoice') {
     return {
         premium: isPremiumUser(businessInfo),
         mode,
         businessName: businessInfo?.name || 'us',
         brandColor: businessInfo?.brandColor || '#16A34A',
+        footerText: resolveDocumentFooter(doc, businessInfo, mode),
     };
 }
 

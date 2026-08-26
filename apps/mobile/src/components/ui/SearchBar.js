@@ -1,8 +1,11 @@
+import { useMemo } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { Search } from 'lucide-react-native';
-import { colors, fontFamily, fontSize, radii, spacing, touchTarget } from '../../theme';
+import { colors, fontFamily, fontSize, radii, spacing, touchTarget , useTheme } from '../../theme';
 
 export function SearchBar({ value, onChangeText, placeholder = 'Search…', style }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     return (
         <View style={[styles.wrap, style]}>
             <Search size={18} color={colors.slate400} strokeWidth={2} />
@@ -22,7 +25,8 @@ export function SearchBar({ value, onChangeText, placeholder = 'Search…', styl
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     wrap: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -42,3 +46,4 @@ const styles = StyleSheet.create({
         color: colors.foreground,
     },
 });
+}

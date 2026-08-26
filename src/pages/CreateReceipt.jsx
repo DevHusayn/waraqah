@@ -34,6 +34,8 @@ import DocumentSummaryCard from '../components/documentForm/DocumentSummaryCard'
 import DocumentActionButtons from '../components/documentForm/DocumentActionButtons';
 import DocumentPreviewOverlay from '../components/documentForm/DocumentPreviewOverlay';
 import { DocumentNotesSection } from '../components/documentForm/DocumentNotesSection';
+import { DocumentFooterSection } from '../components/documentForm/DocumentFooterSection';
+import { useDocumentFooterPrefill, resolveFormDocumentFooter } from '../hooks/useDocumentFooterPrefill';
 import { buildDocumentPreviewFromForm } from '../utils/buildDocumentPreviewData';
 import { hasDraftContent, hasAutoSaveDraftContent, resolvePersistClientId } from '../utils/documentFormHelpers';
 import { DEFAULT_INVOICE_UNIT, normalizeInvoiceUnit } from '@waraqah/shared';
@@ -122,6 +124,7 @@ const CreateReceipt = () => {
         paymentAmount: '',
         items: [{ description: '', quantity: 1, rate: 0, unit: DEFAULT_INVOICE_UNIT }],
         notes: '',
+        documentFooter: '',
         status: 'draft',
         currency: APP_CURRENCY,
         taxRate: 0,
@@ -130,6 +133,8 @@ const CreateReceipt = () => {
     });
 
     formDataRef.current = formData;
+
+    useDocumentFooterPrefill({ id, businessInfo, mode: 'receipt', setFormData });
 
     const markDirty = useCallback(() => {
         isDirtyRef.current = true;
@@ -179,6 +184,11 @@ const CreateReceipt = () => {
                 clientEmail: client?.email || '',
                 ...clientDetailsFromRecord(client),
                 clientAdditionalInfo: receipt.clientAdditionalInfo || '',
+                documentFooter: resolveFormDocumentFooter(
+                    receipt.documentFooter,
+                    businessInfo,
+                    'receipt'
+                ),
                 discountType: receipt.discountType || 'percent',
                 discountValue: receipt.discountValue ?? '',
                 currency: normalizeCurrency(receipt.currency || APP_CURRENCY),
@@ -607,7 +617,7 @@ const CreateReceipt = () => {
             <button
                 type="button"
                 onClick={handleLeavePage}
-                className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-brand mb-6 transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-medium text-foreground-muted hover:text-brand mb-6 transition-colors"
             >
                 <ArrowLeft size={16} aria-hidden />
                 {isDraftEdit ? 'Back to drafts' : id ? 'Back to receipt' : 'Back to receipts'}
@@ -673,7 +683,7 @@ const CreateReceipt = () => {
                             onCurrencyChange={handlers.handleCurrencyChange}
                             onAddItem={handlers.addItem}
                             onRemoveItem={handlers.removeItem}
-                            onAddProductItem={handlers.addProductItem}
+                            onApplyProductToLine={handlers.applyProductToLine}
                         />
 
                         <FormSection
@@ -698,7 +708,7 @@ const CreateReceipt = () => {
                                         onChange={handlePaymentAmountChange}
                                         error={Boolean(fieldErrors.paymentAmount)}
                                         disabled={formData.paidInFull}
-                                        className="disabled:bg-zinc-50 disabled:text-zinc-600"
+                                        className="disabled:bg-surface-muted disabled:text-foreground-muted"
                                     />
                                     <label
                                         htmlFor="receipt-paid-in-full"
@@ -712,13 +722,13 @@ const CreateReceipt = () => {
                                             onChange={(e) => handlePaidInFullChange(e.target.checked)}
                                             className="h-4 w-4 rounded border-zinc-300 accent-brand focus:ring-brand/30"
                                         />
-                                        <span className="text-sm text-zinc-700">Received in full</span>
+                                        <span className="text-sm text-foreground-muted">Received in full</span>
                                     </label>
                                     <FieldValidationMessage message={fieldErrors.paymentAmount} />
                                     {totals.total > 0 ? (
-                                        <p className="text-xs text-zinc-500 mt-2">
+                                        <p className="text-xs text-foreground-muted mt-2">
                                             Balance after this payment:{' '}
-                                            <span className="font-medium text-zinc-700">
+                                            <span className="font-medium text-foreground-muted">
                                                 {formatCurrency(balanceAfterPayment, formData.currency)}
                                             </span>
                                         </p>
@@ -764,6 +774,13 @@ const CreateReceipt = () => {
                             description="Optional notes on this receipt"
                             placeholder="Thank you for your payment…"
                         />
+
+                        <DocumentFooterSection
+                            businessInfo={businessInfo}
+                            mode="receipt"
+                            formData={formData}
+                            onChange={handlers.handleChange}
+                        />
                     </div>
 
                     <div className="space-y-6">
@@ -796,7 +813,7 @@ const CreateReceipt = () => {
                 onSave={handlers.handleSaveClientDetails}
             />
 
-            <div className="fixed bottom-0 inset-x-0 z-30 border-t border-zinc-200 bg-white/95 backdrop-blur p-4 xl:hidden">
+            <div className="fixed bottom-0 inset-x-0 z-30 border-t border-border bg-surface/95 backdrop-blur p-4 xl:hidden">
                 {actionButtons('mobile')}
             </div>
         </div>

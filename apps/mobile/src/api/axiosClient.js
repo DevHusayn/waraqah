@@ -54,6 +54,7 @@ export async function apiFetch(path, options = {}) {
         method,
         data: body,
         headers: options.headers,
+        ...(options.timeoutMs ? { timeout: options.timeoutMs } : {}),
     });
     return res.data;
 }

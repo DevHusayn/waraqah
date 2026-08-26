@@ -1,16 +1,16 @@
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FilePlus2 } from 'lucide-react-native';
-import { colors, fontFamily, shadows, spacing, touchTarget } from '../theme';
+import { fontFamily, shadows, spacing, touchTarget, useTheme } from '../theme';
 import { hapticLight, hapticSelection } from '../utils/haptics';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { useQuotationCreateGuard } from '../hooks/useQuotationCreateGuard';
 import { InvoiceLimitModal } from '../components/InvoiceLimitModal';
 import { CreateActionSheet } from '../components/CreateActionSheet';
 
-function TabItem({ isFocused, options, label, badge, onPress, onLongPress }) {
+function TabItem({ isFocused, options, label, badge, onPress, onLongPress, colors, styles }) {
     const color = isFocused ? colors.brand : colors.slate400;
     const Icon = options.tabBarIcon;
 
@@ -50,7 +50,7 @@ function TabItem({ isFocused, options, label, badge, onPress, onLongPress }) {
     );
 }
 
-function CreateTab({ onPress }) {
+function CreateTab({ onPress, colors, styles }) {
     return (
         <View style={styles.createSlot}>
             <Pressable
@@ -69,7 +69,98 @@ function CreateTab({ onPress }) {
     );
 }
 
+function createStyles(colors) {
+    return StyleSheet.create({
+        wrap: {
+            flexDirection: 'row',
+            alignItems: 'flex-end',
+            backgroundColor: colors.surface,
+            borderTopWidth: StyleSheet.hairlineWidth,
+            borderTopColor: colors.border,
+            paddingTop: spacing.sm,
+            minHeight: 64,
+        },
+        tab: {
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            minHeight: touchTarget + 12,
+            paddingBottom: 4,
+            gap: 2,
+        },
+        activeLine: {
+            width: 28,
+            height: 3,
+            borderRadius: 2,
+            backgroundColor: colors.brand,
+            marginBottom: 4,
+        },
+        activeLinePlaceholder: {
+            width: 28,
+            height: 3,
+            marginBottom: 4,
+        },
+        iconWrap: {
+            position: 'relative',
+            width: 28,
+            height: 28,
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        label: {
+            fontSize: 10,
+            letterSpacing: 0.1,
+        },
+        badge: {
+            position: 'absolute',
+            top: -4,
+            right: -10,
+            minWidth: 16,
+            height: 16,
+            borderRadius: 8,
+            backgroundColor: colors.brand,
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingHorizontal: 4,
+        },
+        badgeText: {
+            color: colors.white,
+            fontSize: 9,
+            fontFamily: fontFamily.bold,
+            fontWeight: '700',
+        },
+        createSlot: {
+            width: 76,
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            marginTop: -28,
+            paddingBottom: 2,
+        },
+        createFab: {
+            width: 58,
+            height: 58,
+            borderRadius: 29,
+            backgroundColor: colors.brand,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 2,
+        },
+        createPressed: {
+            transform: [{ scale: 0.96 }],
+            opacity: 0.95,
+        },
+        createLabel: {
+            fontFamily: fontFamily.medium,
+            fontSize: 10,
+            color: colors.slate400,
+            marginTop: 2,
+        },
+    });
+}
+
 export function CustomTabBar({ state, descriptors, navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const insets = useSafeAreaInsets();
     const limitModalRef = useRef(null);
     const createSheetRef = useRef(null);
@@ -106,7 +197,6 @@ export function CustomTabBar({ state, descriptors, navigation }) {
         }
     };
 
-    // Insert Create FAB after Invoices (index 1) → visual: Home, Invoices, Create, Clients, More
     const leftRoutes = state.routes.slice(0, 2);
     const rightRoutes = state.routes.slice(2);
 
@@ -129,6 +219,8 @@ export function CustomTabBar({ state, descriptors, navigation }) {
                 options={options}
                 label={label}
                 badge={badge}
+                colors={colors}
+                styles={styles}
                 onPress={() => {
                     hapticSelection();
                     const event = navigation.emit({
@@ -155,7 +247,7 @@ export function CustomTabBar({ state, descriptors, navigation }) {
                 ]}
             >
                 {leftRoutes.map(renderTab)}
-                <CreateTab onPress={openCreateSheet} />
+                <CreateTab onPress={openCreateSheet} colors={colors} styles={styles} />
                 {rightRoutes.map(renderTab)}
             </View>
             <CreateActionSheet sheetRef={createSheetRef} onSelect={handleCreateSelect} />
@@ -163,90 +255,3 @@ export function CustomTabBar({ state, descriptors, navigation }) {
         </>
     );
 }
-
-const styles = StyleSheet.create({
-    wrap: {
-        flexDirection: 'row',
-        alignItems: 'flex-end',
-        backgroundColor: colors.surface,
-        borderTopWidth: StyleSheet.hairlineWidth,
-        borderTopColor: colors.border,
-        paddingTop: spacing.sm,
-        minHeight: 64,
-    },
-    tab: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        minHeight: touchTarget + 12,
-        paddingBottom: 4,
-        gap: 2,
-    },
-    activeLine: {
-        width: 28,
-        height: 3,
-        borderRadius: 2,
-        backgroundColor: colors.brand,
-        marginBottom: 4,
-    },
-    activeLinePlaceholder: {
-        width: 28,
-        height: 3,
-        marginBottom: 4,
-    },
-    iconWrap: {
-        position: 'relative',
-        width: 28,
-        height: 28,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    label: {
-        fontSize: 10,
-        letterSpacing: 0.1,
-    },
-    badge: {
-        position: 'absolute',
-        top: -4,
-        right: -10,
-        minWidth: 16,
-        height: 16,
-        borderRadius: 8,
-        backgroundColor: colors.brand,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 4,
-    },
-    badgeText: {
-        color: colors.white,
-        fontSize: 9,
-        fontFamily: fontFamily.bold,
-        fontWeight: '700',
-    },
-    createSlot: {
-        width: 76,
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        marginTop: -28,
-        paddingBottom: 2,
-    },
-    createFab: {
-        width: 58,
-        height: 58,
-        borderRadius: 29,
-        backgroundColor: colors.brand,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 2,
-    },
-    createPressed: {
-        transform: [{ scale: 0.96 }],
-        opacity: 0.95,
-    },
-    createLabel: {
-        fontFamily: fontFamily.medium,
-        fontSize: 10,
-        color: colors.slate400,
-        marginTop: 2,
-    },
-});

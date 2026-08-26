@@ -94,15 +94,15 @@ export default function SubscriptionBilling() {
         : `Billed monthly · ${premiumPriceLabel()}/mo`;
 
     return (
-        <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 px-4 py-3 space-y-2">
-            <p className="text-sm font-medium text-zinc-700">{billingLabel}</p>
+        <div className="rounded-xl border border-border bg-surface-muted/80 px-4 py-3 space-y-2">
+            <p className="text-sm font-medium text-foreground-muted">{billingLabel}</p>
             {renewsAt && (
-                <p className="flex items-center gap-2 text-sm text-zinc-600">
-                    <Calendar className="h-4 w-4 text-zinc-400 shrink-0" />
+                <p className="flex items-center gap-2 text-sm text-foreground-muted">
+                    <Calendar className="h-4 w-4 text-foreground-muted/70 shrink-0" />
                     {isActiveSub ? (
                         <>
                             Renews on{' '}
-                            <span className="font-medium text-zinc-800">
+                            <span className="font-medium text-foreground">
                                 {new Date(renewsAt).toLocaleDateString('en-NG', {
                                     day: 'numeric',
                                     month: 'short',
@@ -113,7 +113,7 @@ export default function SubscriptionBilling() {
                     ) : (
                         <>
                             Premium until{' '}
-                            <span className="font-medium text-zinc-800">
+                            <span className="font-medium text-foreground">
                                 {new Date(renewsAt).toLocaleDateString('en-NG', {
                                     day: 'numeric',
                                     month: 'short',
@@ -128,7 +128,7 @@ export default function SubscriptionBilling() {
                 <p className="text-sm text-amber-800">Last renewal failed. Update your card in Paystack or resubscribe.</p>
             )}
             {businessInfo.subscriptionStatus === 'cancelled' && (
-                <p className="text-sm text-zinc-600">Auto-renewal is off.</p>
+                <p className="text-sm text-foreground-muted">Auto-renewal is off.</p>
             )}
             {isActiveSub && hasSubscription && isMonthly && (
                 <button
@@ -148,15 +148,15 @@ export default function SubscriptionBilling() {
                 </button>
             )}
             {canCancelAutoRenewal && (
-                <div className="pt-3 mt-1 border-t border-zinc-200 space-y-2">
-                    <p className="text-sm text-zinc-600">
+                <div className="pt-3 mt-1 border-t border-border space-y-2">
+                    <p className="text-sm text-foreground-muted">
                         Auto-renewal is on. Cancel anytime — you keep Premium until the end of your billing period.
                     </p>
                     <button
                         type="button"
                         onClick={handleCancel}
                         disabled={cancelling}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-surface px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50 transition-colors disabled:opacity-50"
                     >
                         <XCircle className="h-4 w-4" />
                         {cancelling ? 'Cancelling…' : 'Cancel auto-renewal'}

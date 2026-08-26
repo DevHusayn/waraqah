@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
     FREE_PLAN_FEATURES,
@@ -15,7 +15,7 @@ import { useSettings } from '../../context/SettingsContext';
 import { useToast } from '../../context/ToastContext';
 import { ConfirmModal } from '../../components/Modal';
 import { Button, Card } from '../../components/ui';
-import { colors, fontFamily, fontSize, spacing } from '../../theme';
+import { colors, fontFamily, fontSize, spacing , useTheme } from '../../theme';
 
 function formatRenewalDate(value) {
     if (!value) return null;
@@ -27,6 +27,8 @@ function formatRenewalDate(value) {
 }
 
 export function PlanBillingSettingsScreen({ navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { businessInfo, refreshBusinessInfo } = useSettings();
     const { showToast } = useToast();
     const [confirmCancel, setConfirmCancel] = useState(false);
@@ -138,7 +140,8 @@ export function PlanBillingSettingsScreen({ navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.surfaceMuted },
     content: { padding: spacing.lg, paddingBottom: spacing.xxl, gap: spacing.lg },
     block: { marginTop: 0 },
@@ -152,3 +155,4 @@ const styles = StyleSheet.create({
     mutedText: { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.muted, marginTop: spacing.sm },
     cancelBlock: { marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
 });
+}

@@ -9,7 +9,7 @@ export default function MonthComparisonTrend({
 
     if (comparison.kind === 'unavailable') {
         return (
-            <p className={`${baseClass} text-zinc-500`}>
+            <p className={`${baseClass} text-foreground-muted`}>
                 — {label}
             </p>
         );
@@ -17,7 +17,7 @@ export default function MonthComparisonTrend({
 
     if (comparison.kind === 'flat' || comparison.direction === 'flat') {
         return (
-            <p className={`${baseClass} text-zinc-500`}>
+            <p className={`${baseClass} text-foreground-muted`}>
                 No change {label}
             </p>
         );

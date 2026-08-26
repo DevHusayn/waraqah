@@ -112,12 +112,7 @@ async function drawFooterOnLastPage(pdfDoc, footer) {
     }
 
     if (footer.premium) {
-        const businessName = footer.businessName || 'us';
-        const thankYou =
-            footer.mode === 'quotation'
-                ? `Thank you for considering ${businessName}. We look forward to doing business with you.`
-                : `Thank you for doing business with ${businessName}.`;
-        const lines = wrapText(thankYou, 72);
+        const lines = wrapText(footer.footerText || '', 72);
         let y = footerLineY + 2;
         for (const line of lines) {
             drawCenteredLine(page, font, line, y, 8, gray, width, height);

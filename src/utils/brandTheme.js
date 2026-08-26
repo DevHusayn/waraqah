@@ -23,7 +23,7 @@ function mixRgb(rgb, target, amount) {
 }
 
 /** Apply brand color as CSS variables on :root */
-export function applyBrandTheme(hex) {
+export function applyBrandTheme(hex, isDark = false) {
     const color = /^#([A-Fa-f0-9]{6})$/.test(hex) ? hex : DEFAULT_BRAND_COLOR;
     const rgb = hexToRgb(color);
     const white = { r: 255, g: 255, b: 255 };
@@ -32,9 +32,18 @@ export function applyBrandTheme(hex) {
     const root = document.documentElement;
     root.style.setProperty('--brand', color);
     root.style.setProperty('--brand-hover', rgbToHex(...Object.values(mixRgb(rgb, black, 0.14))));
+    root.style.setProperty('--brand-ring', `${rgb.r} ${rgb.g} ${rgb.b}`);
+
+    if (isDark) {
+        root.style.setProperty('--brand-light', rgbToHex(...Object.values(mixRgb(rgb, black, 0.72))));
+        root.style.setProperty('--brand-subtle', rgbToHex(...Object.values(mixRgb(rgb, black, 0.82))));
+        root.style.setProperty('--brand-secondary', rgbToHex(...Object.values(mixRgb(rgb, black, 0.55))));
+        return;
+    }
+
     root.style.setProperty('--brand-light', rgbToHex(...Object.values(mixRgb(rgb, white, 0.92))));
     root.style.setProperty('--brand-subtle', rgbToHex(...Object.values(mixRgb(rgb, white, 0.88))));
-    root.style.setProperty('--brand-ring', `${rgb.r} ${rgb.g} ${rgb.b}`);
+    root.style.setProperty('--brand-secondary', rgbToHex(...Object.values(mixRgb(rgb, white, 0.55))));
 }
 
 export { DEFAULT_BRAND_COLOR, BRAND_COLORS };

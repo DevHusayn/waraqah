@@ -7,15 +7,15 @@ const icons = {
 };
 
 const styles = {
-    success: 'bg-green-50 border-green-200 text-green-800',
-    error: 'bg-red-50 border-red-200 text-red-800',
-    info: 'bg-green-50 border-green-200 text-green-800',
+    success: 'bg-green-50 border-green-200 text-green-800 dark:bg-green-950/50 dark:border-green-800/60 dark:text-green-300',
+    error: 'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-800/60 dark:text-red-300',
+    info: 'bg-green-50 border-green-200 text-green-800 dark:bg-green-950/50 dark:border-green-800/60 dark:text-green-300',
 };
 
 const iconStyles = {
-    success: 'text-green-600',
-    error: 'text-red-500',
-    info: 'text-green-600',
+    success: 'text-green-600 dark:text-green-400',
+    error: 'text-red-500 dark:text-red-400',
+    info: 'text-green-600 dark:text-green-400',
 };
 
 export default function ToastContainer({ toasts, onDismiss }) {

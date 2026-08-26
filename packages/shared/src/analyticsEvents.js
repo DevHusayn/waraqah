@@ -9,6 +9,8 @@ export const ANALYTICS_EVENTS = {
     PDF_DOWNLOADED: 'pdf_downloaded',
     UPGRADE_STARTED: 'upgrade_started',
     UPGRADE_COMPLETED: 'upgrade_completed',
+    AI_DRAFT_STARTED: 'ai_draft_started',
+    AI_DRAFT_APPLIED: 'ai_draft_applied',
 };
 
 export const ANALYTICS_PLATFORMS = {

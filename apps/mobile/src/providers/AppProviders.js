@@ -10,6 +10,7 @@ import { QuotationProvider } from '../context/QuotationContext';
 import { SettingsProvider } from '../context/SettingsContext';
 import { ToastProvider } from '../context/ToastContext';
 import { useAppStore } from '../stores/appStore';
+import { ThemeProvider } from '../theme/ThemeProvider';
 import { OfflineBanner } from '../components/OfflineBanner';
 import { PostHogClientProvider } from '../monitoring/posthog';
 
@@ -49,10 +50,12 @@ export function AppProviders({ children }) {
                                 <InvoiceProvider>
                                     <QuotationProvider>
                                         <ToastProvider>
+                                            <ThemeProvider>
                                             <NetworkWatcher>
                                                 {children}
                                                 <OfflineBanner />
                                             </NetworkWatcher>
+                                            </ThemeProvider>
                                         </ToastProvider>
                                     </QuotationProvider>
                                 </InvoiceProvider>

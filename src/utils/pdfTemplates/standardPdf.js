@@ -7,6 +7,7 @@ import {
     resolveFooterLineY,
     getFooterZoneHeight,
     contentFitsAboveFooter,
+    resolveDocumentFooter,
 } from '@waraqah/shared';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
@@ -30,6 +31,7 @@ import {
     getDocumentNumber,
     getPaymentMethodLabel,
     getPdfFileName,
+    getReceiptDisplayStatus,
     resolvePdfMode,
 } from '../receiptHelpers';
 import { drawCenteredPdfFooterCta } from '../pdfLink';
@@ -284,7 +286,7 @@ function drawBillToAndDetails(
         drawWrappedBillToField(doc, additionalInfo, BILL_TO_TEXT_X, billY);
     }
 
-    const badgeStatus = isReceiptDoc ? 'paid' : invoice.status;
+    const badgeStatus = isReceiptDoc ? getReceiptDisplayStatus(invoice) : invoice.status;
     drawStatusBadge(doc, badgeStatus, 188, y + 8);
 
     const issueDate = invoice.date ? format(new Date(invoice.date), 'MMM dd, yyyy') : 'N/A';
@@ -515,7 +517,7 @@ function drawBottomBoxes(
     return y;
 }
 
-function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayColor, mode = 'invoice', waraqahLogoPng = '') {
+function drawPageFooter(doc, footerText, premium, footerY, primaryColor, grayColor, waraqahLogoPng = '') {
     doc.setDrawColor(229, 231, 235);
     doc.setLineWidth(0.5);
     doc.line(15, footerY - 4, 195, footerY - 4);
@@ -525,12 +527,7 @@ function drawPageFooter(doc, businessInfo, premium, footerY, primaryColor, grayC
 
     if (premium) {
         doc.setTextColor(...grayColor);
-        const businessName = String(businessInfo.name || 'us');
-        const thankYou =
-            mode === 'quotation'
-                ? `Thank you for considering ${businessName}. We look forward to doing business with you.`
-                : `Thank you for doing business with ${businessName}.`;
-        const thankYouLines = doc.splitTextToSize(thankYou, 170);
+        const thankYouLines = doc.splitTextToSize(footerText, 170);
         doc.text(thankYouLines, 105, footerY + 2, { align: 'center' });
         return null;
     }
@@ -991,14 +988,14 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     }
 
     const waraqahLogoPng = premium ? '' : await loadWaraqahLogoIcon(pngCache);
+    const footerText = premium ? resolveDocumentFooter(invoice, businessInfo, mode) : '';
     const footerLinkBounds = drawPageFooter(
         doc,
-        businessInfo,
+        footerText,
         premium,
         footerLineY,
         primaryColor,
         grayColor,
-        mode,
         waraqahLogoPng
     );
 

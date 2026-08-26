@@ -65,19 +65,19 @@ const Invoices = () => {
         setMonthInputValue,
         periodLabel,
         isCurrentPeriod,
-        listYear,
-        listMonth,
-        listQueryPeriod,
+        listQueryParams,
         listPeriodMode,
         setListPeriodMode,
         listPeriodLabel,
-        listIsThisMonth,
-        listMonthInputValue,
-        setListMonthInputValue,
+        listCustomDraftStartDate,
+        listCustomDraftEndDate,
+        setListCustomDraftRange,
+        applyListCustomRange,
+        listMaxDate,
     } = useListMonthFilter();
 
     const fetcher = useCallback(
-        ({ page, limit, search, status, sort, year, month, period }) =>
+        ({ page, limit, search, status, sort, period, startDate, endDate }) =>
             apiFetch(
                 `/invoices?${buildListQuery({
                     page,
@@ -85,9 +85,9 @@ const Invoices = () => {
                     search,
                     status,
                     sort,
-                    year,
-                    month,
                     period,
+                    startDate,
+                    endDate,
                 })}`
             ),
         []
@@ -111,9 +111,7 @@ const Invoices = () => {
         extraParams: {
             status: filter,
             sort: sortBy,
-            year: listYear,
-            month: listMonth,
-            period: listQueryPeriod,
+            ...listQueryParams,
         },
     });
 
@@ -121,7 +119,7 @@ const Invoices = () => {
 
     useEffect(() => {
         setPage(1);
-    }, [filter, sortBy, listYear, listMonth, listQueryPeriod, setPage]);
+    }, [filter, sortBy, listQueryParams, setPage]);
 
     const handleFilterChange = useCallback(
         (next) => {
@@ -200,9 +198,7 @@ const Invoices = () => {
                                     search: debouncedSearch,
                                     status: filter,
                                     sort: sortBy,
-                                    year: listYear,
-                                    month: listMonth,
-                                    period: listQueryPeriod,
+                                    ...listQueryParams,
                                 }}
                                 disabled={pagination.total === 0}
                                 onExported={() => showToast('Invoices exported successfully.', 'success')}
@@ -212,12 +208,14 @@ const Invoices = () => {
                     />
                     <ToolbarActions>
                         <ListMonthToolbarFilter
-                            monthInputValue={listMonthInputValue}
-                            onMonthChange={setListMonthInputValue}
                             periodMode={listPeriodMode}
                             onPeriodModeChange={setListPeriodMode}
                             periodLabel={listPeriodLabel}
-                            isThisMonth={listIsThisMonth}
+                            customDraftStartDate={listCustomDraftStartDate}
+                            customDraftEndDate={listCustomDraftEndDate}
+                            onCustomDraftRangeChange={setListCustomDraftRange}
+                            onCustomApply={applyListCustomRange}
+                            maxDate={listMaxDate}
                         />
                         <div className="min-w-0 flex-1 sm:w-44 sm:flex-none">
                             <CustomSelect
@@ -286,17 +284,17 @@ const Invoices = () => {
                                         onClick={() => navigate(`/invoices/${invoice.id}`)}
                                     >
                                         <DataTableCell>
-                                            <span className="font-medium text-zinc-950">
+                                            <span className="font-medium text-foreground">
                                                 {getDisplayNumber(invoice) || '—'}
                                             </span>
                                         </DataTableCell>
                                         <DataTableCell>
                                             <div className="min-w-0">
-                                                <p className="text-zinc-950 truncate max-w-[200px]">
+                                                <p className="text-foreground truncate max-w-[200px]">
                                                     {clientLabel(invoice)}
                                                 </p>
                                                 {business ? (
-                                                    <p className="text-xs text-zinc-500 truncate max-w-[200px]">
+                                                    <p className="text-xs text-foreground-muted truncate max-w-[200px]">
                                                         {business}
                                                     </p>
                                                 ) : null}
@@ -313,12 +311,12 @@ const Invoices = () => {
                                                 : '—'}
                                         </DataTableCell>
                                         <DataTableCell className="text-right">
-                                            <span className="font-medium text-zinc-950 tabular-nums">
+                                            <span className="font-medium text-foreground tabular-nums">
                                                 {formatCurrency(invoice.total, invoice.currency)}
                                             </span>
                                             {hasRecordedPayments(invoice) &&
                                             invoice.status !== 'paid' ? (
-                                                <p className="text-xs text-zinc-500 mt-0.5 tabular-nums">
+                                                <p className="text-xs text-foreground-muted mt-0.5 tabular-nums">
                                                     Paid{' '}
                                                     {formatCurrency(
                                                         getInvoiceAmountPaid(invoice),

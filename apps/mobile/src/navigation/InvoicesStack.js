@@ -3,13 +3,16 @@ import { InvoicesListScreen } from '../screens/InvoicesListScreen';
 import { InvoiceDetailScreen } from '../screens/InvoiceDetailScreen';
 import { CreateInvoiceScreen } from '../screens/CreateInvoiceScreen';
 import { DraftsScreen } from '../screens/DraftsScreen';
-import { stackScreenOptions } from './headerOptions';
+import { getStackScreenOptions } from './headerOptions';
+import { useTheme } from '../theme';
 
 const Stack = createNativeStackNavigator();
 
 export function InvoicesStack() {
+    const { colors } = useTheme();
+
     return (
-        <Stack.Navigator screenOptions={stackScreenOptions}>
+        <Stack.Navigator screenOptions={getStackScreenOptions(colors)}>
             <Stack.Screen
                 name="InvoicesList"
                 component={InvoicesListScreen}

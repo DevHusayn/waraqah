@@ -53,8 +53,8 @@ function SectionCard({ title, icon: Icon, children, className = '' }) {
     return (
         <section className={`card ${className}`.trim()}>
             <div className="flex items-center gap-2 mb-4">
-                {Icon ? <Icon size={18} className="text-zinc-400 shrink-0" aria-hidden /> : null}
-                <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
+                {Icon ? <Icon size={18} className="text-foreground-muted/70 shrink-0" aria-hidden /> : null}
+                <h2 className="text-sm font-semibold text-foreground">{title}</h2>
             </div>
             {children}
         </section>
@@ -64,8 +64,8 @@ function SectionCard({ title, icon: Icon, children, className = '' }) {
 function StatItem({ label, value }) {
     return (
         <div className="min-w-0">
-            <p className="text-xs text-zinc-500 font-medium">{label}</p>
-            <p className="text-lg font-semibold text-zinc-900 tabular-nums mt-0.5">{value}</p>
+            <p className="text-xs text-foreground-muted font-medium">{label}</p>
+            <p className="text-lg font-semibold text-foreground tabular-nums mt-0.5">{value}</p>
         </div>
     );
 }
@@ -124,14 +124,14 @@ function ActivityFeed({ userId }) {
                     return (
                         <li key={event.id} className="flex gap-3 py-3 first:pt-0 last:pb-0">
                             <div className="h-8 w-8 rounded-lg bg-zinc-100 flex items-center justify-center shrink-0">
-                                <Icon size={14} className="text-zinc-500" aria-hidden />
+                                <Icon size={14} className="text-foreground-muted" aria-hidden />
                             </div>
                             <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium text-zinc-900">{event.title}</p>
+                                <p className="text-sm font-medium text-foreground">{event.title}</p>
                                 {event.description ? (
-                                    <p className="text-xs text-zinc-500 mt-0.5">{event.description}</p>
+                                    <p className="text-xs text-foreground-muted mt-0.5">{event.description}</p>
                                 ) : null}
-                                <p className="text-[11px] text-zinc-400 mt-1 tabular-nums">
+                                <p className="text-[11px] text-foreground-muted/70 mt-1 tabular-nums">
                                     {formatDateTime(event.at)}
                                 </p>
                             </div>
@@ -139,7 +139,7 @@ function ActivityFeed({ userId }) {
                     );
                 })}
             </ul>
-            <div className="mt-4 pt-4 border-t border-zinc-100">
+            <div className="mt-4 pt-4 border-t border-border/50">
                 <PaginationBar
                     page={pagination.page}
                     totalPages={pagination.totalPages}
@@ -196,12 +196,12 @@ function PaymentHistoryTable({ userId }) {
                 {payments.map((payment) => (
                     <DataTableRow key={payment.id}>
                         <DataTableCell>
-                            <span className="text-zinc-700 tabular-nums">
+                            <span className="text-foreground-muted tabular-nums">
                                 {formatDate(payment.paidAt || payment.createdAt)}
                             </span>
                         </DataTableCell>
                         <DataTableCell className="text-right">
-                            <span className="font-medium text-zinc-950 tabular-nums">
+                            <span className="font-medium text-foreground tabular-nums">
                                 {formatCurrency(payment.amount)}
                             </span>
                         </DataTableCell>
@@ -209,7 +209,7 @@ function PaymentHistoryTable({ userId }) {
                             <PaymentStatusBadge status={payment.status} />
                         </DataTableCell>
                         <DataTableCell>
-                            <span className="text-xs text-zinc-500 font-mono truncate max-w-[180px] block">
+                            <span className="text-xs text-foreground-muted font-mono truncate max-w-[180px] block">
                                 {payment.reference || '—'}
                             </span>
                         </DataTableCell>
@@ -253,7 +253,7 @@ function SubscriptionHistory({ userId }) {
     }
 
     if (events.length === 0) {
-        return <p className="text-sm text-zinc-500">No subscription changes recorded.</p>;
+        return <p className="text-sm text-foreground-muted">No subscription changes recorded.</p>;
     }
 
     return (
@@ -261,11 +261,11 @@ function SubscriptionHistory({ userId }) {
             <ul className="divide-y divide-zinc-100">
                 {events.map((event) => (
                     <li key={event.id} className="py-2.5 first:pt-0 last:pb-0">
-                        <p className="text-sm font-medium text-zinc-800">{event.title}</p>
+                        <p className="text-sm font-medium text-foreground">{event.title}</p>
                         {event.description ? (
-                            <p className="text-xs text-zinc-500 mt-0.5">{event.description}</p>
+                            <p className="text-xs text-foreground-muted mt-0.5">{event.description}</p>
                         ) : null}
-                        <p className="text-[11px] text-zinc-400 mt-0.5">{formatDateTime(event.at)}</p>
+                        <p className="text-[11px] text-foreground-muted/70 mt-0.5">{formatDateTime(event.at)}</p>
                     </li>
                 ))}
             </ul>
@@ -374,11 +374,11 @@ function AdminNotesSection({ userId }) {
                     <Spinner size="sm" />
                 </div>
             ) : notes.length === 0 ? (
-                <p className="text-sm text-zinc-500">No admin notes yet.</p>
+                <p className="text-sm text-foreground-muted">No admin notes yet.</p>
             ) : (
                 <ul className="space-y-3">
                     {notes.map((note) => (
-                        <li key={note.id} className="rounded-xl border border-zinc-100 bg-zinc-50/50 p-3">
+                        <li key={note.id} className="rounded-xl border border-border/50 bg-surface-muted/50 p-3">
                             {editingId === note.id ? (
                                 <>
                                     <textarea
@@ -411,14 +411,14 @@ function AdminNotesSection({ userId }) {
                                 </>
                             ) : (
                                 <>
-                                    <p className="text-sm text-zinc-800 whitespace-pre-wrap">{note.body}</p>
+                                    <p className="text-sm text-foreground whitespace-pre-wrap">{note.body}</p>
                                     <div className="mt-2 flex items-center justify-between gap-2">
-                                        <p className="text-[11px] text-zinc-400">
+                                        <p className="text-[11px] text-foreground-muted/70">
                                             {note.authorName || 'Admin'} · {formatDateTime(note.createdAt)}
                                         </p>
                                         <button
                                             type="button"
-                                            className="inline-flex items-center gap-1 text-xs font-medium text-zinc-500 hover:text-zinc-800"
+                                            className="inline-flex items-center gap-1 text-xs font-medium text-foreground-muted hover:text-foreground"
                                             onClick={() => {
                                                 setEditingId(note.id);
                                                 setEditDraft(note.body);
@@ -459,12 +459,12 @@ function DeleteAccountModal({ open, email, onConfirm, onCancel, loading }) {
                     <div className="flex h-9 w-9 items-center justify-center rounded-md mb-3 bg-red-50 text-red-600">
                         <AlertTriangle size={18} aria-hidden />
                     </div>
-                    <h2 id="delete-user-title" className="text-base font-semibold text-zinc-950">
+                    <h2 id="delete-user-title" className="text-base font-semibold text-foreground">
                         Delete account permanently?
                     </h2>
-                    <p className="mt-1.5 text-sm text-zinc-500 leading-relaxed">
+                    <p className="mt-1.5 text-sm text-foreground-muted leading-relaxed">
                         This removes the user, their business info, invoices, clients, and all related
-                        data. Type <strong className="font-medium text-zinc-800">{email}</strong> to
+                        data. Type <strong className="font-medium text-foreground">{email}</strong> to
                         confirm.
                     </p>
                 </div>
@@ -681,7 +681,7 @@ export default function AdminUserDetail() {
             <div className="max-w-6xl mx-auto">
                 <Link
                     to="/admin"
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-800 mb-4 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground-muted hover:text-foreground mb-4 transition-colors"
                 >
                     <ArrowLeft size={16} aria-hidden />
                     Back to users
@@ -692,7 +692,7 @@ export default function AdminUserDetail() {
                         <UserAvatar name={user.name} email={user.email} />
                         <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
-                                <h1 className="text-xl font-semibold text-zinc-950 truncate">
+                                <h1 className="text-xl font-semibold text-foreground truncate">
                                     {user.name || 'Unnamed user'}
                                 </h1>
                                 {user.isAdmin ? (
@@ -701,9 +701,9 @@ export default function AdminUserDetail() {
                                 <StatusBadge status={user.status} />
                                 <PlanBadge plan={billing.plan} />
                             </div>
-                            <p className="text-sm text-zinc-500 mt-1 truncate">{user.email}</p>
+                            <p className="text-sm text-foreground-muted mt-1 truncate">{user.email}</p>
                             {businessInfo?.name ? (
-                                <p className="text-sm text-zinc-700 mt-0.5 font-medium">{businessInfo.name}</p>
+                                <p className="text-sm text-foreground-muted mt-0.5 font-medium">{businessInfo.name}</p>
                             ) : (
                                 <p className="text-xs text-red-600 mt-0.5 font-medium">Business info missing</p>
                             )}
@@ -774,21 +774,21 @@ export default function AdminUserDetail() {
                                 <StatItem label="Last login" value={formatDateTime(user.lastLogin)} />
                                 <StatItem label="Last active" value={formatDateTime(user.lastActiveAt)} />
                             </div>
-                            <div className="pt-4 border-t border-zinc-100">
-                                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-2">
+                            <div className="pt-4 border-t border-border/50">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted/70 mb-2">
                                     Free quota this month
                                 </p>
                                 <div className="flex flex-wrap items-center gap-3">
                                     <UsageBadge usage={invoiceUsage} />
                                     {!invoiceUsage?.unlimited && invoiceUsage?.periodEnd ? (
-                                        <span className="text-xs text-zinc-500">
+                                        <span className="text-xs text-foreground-muted">
                                             Resets {formatDate(invoiceUsage.periodEnd)}
                                         </span>
                                     ) : null}
                                 </div>
                             </div>
-                            <div className="pt-4 mt-4 border-t border-zinc-100">
-                                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-3">
+                            <div className="pt-4 mt-4 border-t border-border/50">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted/70 mb-3">
                                     All-time totals
                                 </p>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -805,40 +805,40 @@ export default function AdminUserDetail() {
                         </SectionCard>
 
                         <SectionCard title="Billing & subscription" icon={Receipt}>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5 pb-5 border-b border-zinc-100">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5 pb-5 border-b border-border/50">
                                 <div>
-                                    <p className="text-xs text-zinc-500">Current plan</p>
+                                    <p className="text-xs text-foreground-muted">Current plan</p>
                                     <div className="mt-1">
                                         <PlanBadge plan={billing.plan} />
                                     </div>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-zinc-500">Billing cycle</p>
-                                    <p className="text-sm font-medium text-zinc-900 mt-1 capitalize">
+                                    <p className="text-xs text-foreground-muted">Billing cycle</p>
+                                    <p className="text-sm font-medium text-foreground mt-1 capitalize">
                                         {billing.billingInterval || (billing.plan === 'premium' ? '—' : 'N/A')}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-zinc-500">Subscription status</p>
-                                    <p className="text-sm font-medium text-zinc-900 mt-1 capitalize">
+                                    <p className="text-xs text-foreground-muted">Subscription status</p>
+                                    <p className="text-sm font-medium text-foreground mt-1 capitalize">
                                         {billing.subscriptionStatus || '—'}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-zinc-500">Next billing date</p>
-                                    <p className="text-sm font-medium text-zinc-900 mt-1 tabular-nums">
+                                    <p className="text-xs text-foreground-muted">Next billing date</p>
+                                    <p className="text-sm font-medium text-foreground mt-1 tabular-nums">
                                         {formatDate(billing.subscriptionRenews || billing.premiumUntil)}
                                     </p>
                                 </div>
                             </div>
 
-                            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-3">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted/70 mb-3">
                                 Payment history
                             </p>
                             <PaymentHistoryTable userId={userId} />
 
-                            <div className="mt-6 pt-5 border-t border-zinc-100">
-                                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400 mb-3">
+                            <div className="mt-6 pt-5 border-t border-border/50">
+                                <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted/70 mb-3">
                                     Subscription status history
                                 </p>
                                 <SubscriptionHistory userId={userId} />
@@ -850,16 +850,16 @@ export default function AdminUserDetail() {
                         <AdminNotesSection userId={userId} />
 
                         <SectionCard title="Danger zone" icon={AlertTriangle} className="border-red-100">
-                            <p className="text-sm text-zinc-600 mb-4">
+                            <p className="text-sm text-foreground-muted mb-4">
                                 Destructive actions for this account. Use with care.
                             </p>
                             <div className="space-y-3">
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-xl border border-zinc-100 bg-zinc-50/50">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-xl border border-border/50 bg-surface-muted/50">
                                     <div>
-                                        <p className="text-sm font-medium text-zinc-900">
+                                        <p className="text-sm font-medium text-foreground">
                                             {user.status === 'active' ? 'Suspend account' : 'Reactivate account'}
                                         </p>
-                                        <p className="text-xs text-zinc-500 mt-0.5">
+                                        <p className="text-xs text-foreground-muted mt-0.5">
                                             {user.status === 'active'
                                                 ? 'Block sign-in without deleting data.'
                                                 : 'Restore access for this user.'}

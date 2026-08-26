@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Facebook, Instagram, Linkedin } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
@@ -12,7 +13,7 @@ import {
     APP_VERSION,
     APP_WEBSITE_URL,
 } from '../../constants/brand';
-import { colors, fontFamily, fontSize, spacing } from '../../theme';
+import { colors, fontFamily, fontSize, spacing , useTheme } from '../../theme';
 
 function XIcon({ size = 22, color = colors.brand }) {
     return (
@@ -33,6 +34,8 @@ const SOCIAL_ICONS = {
 };
 
 export function AboutSettingsScreen() {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     return (
         <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
             <Card elevated>
@@ -70,7 +73,8 @@ export function AboutSettingsScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.surfaceMuted },
     content: { padding: spacing.lg, paddingBottom: spacing.xxl },
     tagline: { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.muted, marginTop: spacing.sm },
@@ -81,3 +85,4 @@ const styles = StyleSheet.create({
     socialRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginTop: spacing.sm },
     socialButton: { padding: 2 },
 });
+}

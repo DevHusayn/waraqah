@@ -60,7 +60,7 @@ export default function Spinner({
                 />
             </svg>
             {label ? (
-                <span className="text-[12px] font-medium text-zinc-500 tracking-normal">{label}</span>
+                <span className="text-[12px] font-medium text-foreground-muted tracking-normal">{label}</span>
             ) : (
                 <span className="sr-only">Loading</span>
             )}
@@ -70,7 +70,7 @@ export default function Spinner({
 
 export function SpinnerOverlay({ label = 'Loading…' }) {
     return (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px] rounded-lg">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-surface/70 backdrop-blur-[1px] rounded-lg">
             <Spinner size="lg" label={label} centered />
         </div>
     );

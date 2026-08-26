@@ -58,27 +58,27 @@ const Clients = () => {
         setMonthInputValue,
         periodLabel,
         isCurrentPeriod,
-        listYear,
-        listMonth,
-        listQueryPeriod,
+        listQueryParams,
         listPeriodMode,
         setListPeriodMode,
         listPeriodLabel,
-        listIsThisMonth,
-        listMonthInputValue,
-        setListMonthInputValue,
+        listCustomDraftStartDate,
+        listCustomDraftEndDate,
+        setListCustomDraftRange,
+        applyListCustomRange,
+        listMaxDate,
     } = useListMonthFilter();
 
     const fetcher = useCallback(
-        ({ page, limit, search, year, month, period }) =>
+        ({ page, limit, search, period, startDate, endDate }) =>
             apiFetch(
                 `/clients?${buildListQuery({
                     page,
                     limit,
                     search,
-                    year,
-                    month,
                     period,
+                    startDate,
+                    endDate,
                 })}`
             ),
         []
@@ -98,14 +98,14 @@ const Clients = () => {
     } = usePagedQuery({
         queryKeyBase: 'clients',
         fetcher,
-        extraParams: { year: listYear, month: listMonth, period: listQueryPeriod },
+        extraParams: listQueryParams,
     });
 
     const clients = data.map(mapClient);
 
     useEffect(() => {
         setPage(1);
-    }, [listYear, listMonth, listQueryPeriod, setPage]);
+    }, [listQueryParams, setPage]);
 
     useEffect(() => {
         if (shouldOpenAdd && !openedAddModal.current) {
@@ -248,9 +248,7 @@ const Clients = () => {
                                     companyName={businessInfo?.name}
                                     filters={{
                                         search: debouncedSearch,
-                                        year: listYear,
-                                        month: listMonth,
-                                        period: listQueryPeriod,
+                                        ...listQueryParams,
                                     }}
                                     disabled={pagination.total === 0}
                                     onExported={() => showToast('Clients exported successfully.', 'success')}
@@ -260,12 +258,14 @@ const Clients = () => {
                         />
                         <ToolbarActions>
                         <ListMonthToolbarFilter
-                            monthInputValue={listMonthInputValue}
-                            onMonthChange={setListMonthInputValue}
                             periodMode={listPeriodMode}
                             onPeriodModeChange={setListPeriodMode}
                             periodLabel={listPeriodLabel}
-                            isThisMonth={listIsThisMonth}
+                            customDraftStartDate={listCustomDraftStartDate}
+                            customDraftEndDate={listCustomDraftEndDate}
+                            onCustomDraftRangeChange={setListCustomDraftRange}
+                            onCustomApply={applyListCustomRange}
+                            maxDate={listMaxDate}
                         />
                     </ToolbarActions>
                 </Toolbar>
@@ -295,17 +295,17 @@ const Clients = () => {
                                         className="cursor-pointer"
                                     >
                                         <DataTableCell>
-                                            <span className={`font-medium text-zinc-950 ${REPLAY_MASK.SENSITIVE}`}>
+                                            <span className={`font-medium text-foreground ${REPLAY_MASK.SENSITIVE}`}>
                                                 {client.name}
                                             </span>
                                         </DataTableCell>
                                         <DataTableCell>
-                                            <span className={`text-zinc-600 truncate max-w-[160px] block ${REPLAY_MASK.SENSITIVE}`}>
+                                            <span className={`text-foreground-muted truncate max-w-[160px] block ${REPLAY_MASK.SENSITIVE}`}>
                                                 {getClientBusiness(client) || '—'}
                                             </span>
                                         </DataTableCell>
                                         <DataTableCell>
-                                            <span className={`text-zinc-600 truncate max-w-[180px] block ${REPLAY_MASK.SENSITIVE}`}>
+                                            <span className={`text-foreground-muted truncate max-w-[180px] block ${REPLAY_MASK.SENSITIVE}`}>
                                                 {client.email || '—'}
                                             </span>
                                         </DataTableCell>

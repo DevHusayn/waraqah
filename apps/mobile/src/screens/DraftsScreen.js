@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { formatDistanceToNow } from 'date-fns';
 import { PenLine } from 'lucide-react-native';
@@ -11,7 +11,7 @@ import { EmptyState, ListRow, PageHeader, PageLoader, StatusBadge } from '../com
 import { usePagedList } from '../hooks/usePagedList';
 import { apiFetch } from '../api/client';
 import { buildListQuery } from '../utils/pagination';
-import { colors, fontFamily, spacing } from '../theme';
+import { colors, fontFamily, spacing, useTheme } from '../theme';
 
 const mapDraft = (d) => ({
     ...d,
@@ -36,6 +36,8 @@ function TypeBadge({ type }) {
 }
 
 export function DraftsScreen({ navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { deleteInvoice, refreshMeta } = useInvoice();
     const { deleteQuotation } = useQuotation();
     const [refreshing, setRefreshing] = useState(false);
@@ -152,7 +154,8 @@ export function DraftsScreen({ navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.surfaceMuted },
     list: { padding: spacing.lg, paddingBottom: spacing.xxl, flexGrow: 1 },
     badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -179,3 +182,4 @@ const styles = StyleSheet.create({
     typeInvoiceText: { color: colors.brandDark },
     typeQuotationText: { color: '#0369A1' },
 });
+}

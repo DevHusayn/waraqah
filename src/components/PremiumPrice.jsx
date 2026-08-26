@@ -19,12 +19,12 @@ export default function PremiumPrice({
                 <span
                     className={`${
                         isLarge ? 'text-4xl' : 'text-2xl'
-                    } font-bold text-zinc-900 tracking-tight`}
+                    } font-bold text-foreground tracking-tight`}
                 >
                     ₦{formatPremiumPrice(amount)}
                 </span>
                 {suffix ? (
-                    <span className={`${isLarge ? 'text-base' : 'text-sm'} font-normal text-zinc-500`}>
+                    <span className={`${isLarge ? 'text-base' : 'text-sm'} font-normal text-foreground-muted`}>
                         {suffix}
                     </span>
                 ) : null}

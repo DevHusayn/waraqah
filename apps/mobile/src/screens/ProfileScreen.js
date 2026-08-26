@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -8,30 +9,28 @@ import {
     Shield,
     Bell,
     Moon,
+    Sun,
     HelpCircle,
 } from 'lucide-react-native';
 import { getBusinessInitials, isPremiumUser } from '@waraqah/shared';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
-import { useAppStore } from '../stores/appStore';
 import { AvatarInitials, ListRow } from '../components/ui';
 import { APP_SUPPORT_EMAIL, APP_VERSION } from '../constants/brand';
-import { colors, fontFamily, fontSize, lineHeight, radii, spacing } from '../theme';
+import { fontFamily, fontSize, lineHeight, radii, spacing, useTheme } from '../theme';
 
 export function ProfileScreen({ navigation }) {
+    const { colors, themeMode, toggleThemeMode, oppositeOfSystem, isDark } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { logout, isAdmin, user } = useAuth();
     const { businessInfo } = useSettings();
-    const themeMode = useAppStore((s) => s.themeMode);
-    const setThemeMode = useAppStore((s) => s.setThemeMode);
     const premium = isPremiumUser(businessInfo);
     const businessName = businessInfo?.name || 'Your business';
     const displayName = user?.name || businessName;
 
-    const cycleTheme = () => {
-        const order = ['system', 'light', 'dark'];
-        const next = order[(order.indexOf(themeMode) + 1) % order.length];
-        setThemeMode(next);
-    };
+    const followingSystem = themeMode === 'system';
+    const overrideLabel = oppositeOfSystem === 'dark' ? 'Dark' : 'Light';
+    const AppearanceIcon = isDark ? Sun : Moon;
 
     return (
         <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -85,11 +84,15 @@ export function ProfileScreen({ navigation }) {
                 <View style={styles.group}>
                     <ListRow
                         title="Appearance"
-                        subtitle={`Theme: ${themeMode}`}
-                        onPress={cycleTheme}
-                        left={<Moon size={20} color={colors.slate600} strokeWidth={2} />}
+                        subtitle={
+                            followingSystem
+                                ? `Following system · tap for ${overrideLabel.toLowerCase()}`
+                                : `${overrideLabel} · tap to match system`
+                        }
+                        onPress={toggleThemeMode}
+                        left={<AppearanceIcon size={20} color={colors.slate600} strokeWidth={2} />}
                         showChevron={false}
-                        right={<Text style={styles.value}>{themeMode}</Text>}
+                        right={<Text style={styles.value}>{followingSystem ? 'System' : overrideLabel}</Text>}
                         dense
                     />
                     <ListRow
@@ -142,7 +145,8 @@ export function ProfileScreen({ navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.surfaceMuted },
     content: { paddingBottom: spacing.huge },
     pageTitle: {
@@ -221,3 +225,4 @@ const styles = StyleSheet.create({
         color: colors.slate400,
     },
 });
+}

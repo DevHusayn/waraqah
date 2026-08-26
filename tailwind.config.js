@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+    darkMode: 'class',
     content: [
         "./index.html",
         "./src/**/*.{js,ts,jsx,tsx}",
@@ -18,11 +19,6 @@ export default {
                     subtle: 'var(--brand-subtle)',
                     secondary: 'var(--brand-secondary)',
                 },
-                surface: {
-                    DEFAULT: 'var(--surface)',
-                    muted: 'var(--surface-muted)',
-                    elevated: 'var(--surface-elevated)',
-                },
                 primary: {
                     50: '#F0FDF4',
                     100: '#DCFCE7',
@@ -34,6 +30,25 @@ export default {
                     700: '#15803D',
                     800: '#166534',
                     900: '#14532D',
+                },
+            },
+            textColor: {
+                foreground: {
+                    DEFAULT: 'rgb(var(--foreground) / <alpha-value>)',
+                    muted: 'rgb(var(--muted-foreground) / <alpha-value>)',
+                },
+            },
+            backgroundColor: {
+                surface: {
+                    DEFAULT: 'rgb(var(--surface) / <alpha-value>)',
+                    muted: 'rgb(var(--surface-muted) / <alpha-value>)',
+                    elevated: 'rgb(var(--surface-elevated) / <alpha-value>)',
+                },
+                border: 'rgb(var(--border) / <alpha-value>)',
+            },
+            borderColor: {
+                border: {
+                    DEFAULT: 'rgb(var(--border) / <alpha-value>)',
                 },
             },
             boxShadow: {

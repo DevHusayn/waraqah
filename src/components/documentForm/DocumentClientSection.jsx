@@ -36,7 +36,7 @@ export default function DocumentClientSection({
                 <div>
                     <label htmlFor={`${idPrefix}-client-email`} className="label">
                         Email{' '}
-                        <span className="text-zinc-400 font-normal">(optional)</span>
+                        <span className="text-foreground-muted/70 font-normal">(optional)</span>
                     </label>
                     <input
                         id={`${idPrefix}-client-email`}
@@ -49,7 +49,7 @@ export default function DocumentClientSection({
                         aria-invalid={Boolean(fieldErrors.clientEmail)}
                     />
                     <FieldValidationMessage message={fieldErrors.clientEmail} />
-                    <p className="mt-1.5 text-xs text-zinc-500">
+                    <p className="mt-1.5 text-xs text-foreground-muted">
                         Add an email to send this {docLabel} directly to your client.
                     </p>
                 </div>
@@ -60,7 +60,7 @@ export default function DocumentClientSection({
                         className={
                             hasClientDetails(formData)
                                 ? 'inline-flex items-center gap-2 text-sm font-medium text-brand hover:text-brand-dark transition-colors'
-                                : 'inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors'
+                                : 'inline-flex items-center gap-2 text-sm font-medium text-foreground-muted hover:text-foreground transition-colors'
                         }
                     >
                         {hasClientDetails(formData) ? (

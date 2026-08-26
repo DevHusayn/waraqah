@@ -7,13 +7,16 @@ import { AdminDashboardScreen } from '../screens/AdminDashboardScreen';
 import { ProductsScreen } from '../screens/ProductsScreen';
 import { SettingsStack } from './SettingsStack';
 import { QuotationsStack } from './QuotationsStack';
-import { stackScreenOptions } from './headerOptions';
+import { getStackScreenOptions } from './headerOptions';
+import { useTheme } from '../theme';
 
 const Stack = createNativeStackNavigator();
 
 export function MoreStack() {
+    const { colors } = useTheme();
+
     return (
-        <Stack.Navigator screenOptions={stackScreenOptions}>
+        <Stack.Navigator screenOptions={getStackScreenOptions(colors)}>
             <Stack.Screen name="MoreMenu" component={MoreScreen} options={{ headerShown: false }} />
             <Stack.Screen name="ProfileHome" component={ProfileScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Settings" component={SettingsStack} options={{ headerShown: false }} />

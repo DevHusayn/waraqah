@@ -1,9 +1,12 @@
+import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { Card } from '../../components/ui';
 import { APP_NAME, APP_SUPPORT_EMAIL } from '../../constants/brand';
-import { colors, fontFamily, fontSize, spacing } from '../../theme';
+import { colors, fontFamily, fontSize, spacing , useTheme } from '../../theme';
 
 export function TermsSettingsScreen() {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     return (
         <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
             <Card elevated>
@@ -21,9 +24,11 @@ export function TermsSettingsScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.surfaceMuted },
     content: { padding: spacing.lg, paddingBottom: spacing.xxl },
     title: { fontFamily: fontFamily.bold, fontSize: fontSize.lg, color: colors.foreground, marginBottom: spacing.md },
     body: { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.slate600, lineHeight: 22 },
 });
+}

@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { colors, fontFamily, fontSize, radii } from '../../theme';
+import { colors, fontFamily, fontSize, radii , useTheme } from '../../theme';
 
 function getInitials(name = '') {
     return (
@@ -13,6 +14,8 @@ function getInitials(name = '') {
 }
 
 export function Avatar({ name, size = 40, color = colors.brand, backgroundColor = colors.brandLight }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const dim = { width: size, height: size, borderRadius: Math.max(radii.sm, size / 3.5) };
     return (
         <View
@@ -24,7 +27,8 @@ export function Avatar({ name, size = 40, color = colors.brand, backgroundColor 
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     wrap: {
         alignItems: 'center',
         justifyContent: 'center',
@@ -34,3 +38,4 @@ const styles = StyleSheet.create({
         fontWeight: '700',
     },
 });
+}

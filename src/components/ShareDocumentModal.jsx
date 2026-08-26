@@ -33,12 +33,12 @@ export default function ShareDocumentModal({
                     <div className="flex h-9 w-9 items-center justify-center rounded-lg mb-3 mx-auto sm:mx-0 bg-brand-subtle text-brand">
                         <Share2 size={18} aria-hidden />
                     </div>
-                    <h2 id="share-doc-modal-title" className="text-base font-semibold text-zinc-900">
+                    <h2 id="share-doc-modal-title" className="text-base font-semibold text-foreground">
                         {docLabel.charAt(0).toUpperCase() + docLabel.slice(1)} ready to share
                     </h2>
-                    <p id="share-doc-modal-message" className="mt-1.5 text-sm text-zinc-600 leading-relaxed">
+                    <p id="share-doc-modal-message" className="mt-1.5 text-sm text-foreground-muted leading-relaxed">
                         {docNumber ? (
-                            <span className="font-medium text-zinc-900">{docNumber}</span>
+                            <span className="font-medium text-foreground">{docNumber}</span>
                         ) : (
                             `Your ${docLabel}`
                         )}

@@ -40,8 +40,8 @@ export default function PlanBillingSettings() {
                     <div
                         className={`p-4 sm:p-5 rounded-xl border ${
                             premium
-                                ? 'border-amber-300/80 bg-white'
-                                : 'border-zinc-200 bg-zinc-50/60'
+                                ? 'border-amber-300/80 bg-surface'
+                                : 'border-border bg-surface-muted/60'
                         }`}
                     >
                         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -50,11 +50,11 @@ export default function PlanBillingSettings() {
                                     {premium ? (
                                         <Crown className="h-4 w-4 text-amber-500 shrink-0" aria-hidden />
                                     ) : null}
-                                    <p className="text-sm font-semibold text-zinc-900">
+                                    <p className="text-sm font-semibold text-foreground">
                                         {premium ? 'Premium plan' : 'Free plan'}
                                     </p>
                                 </div>
-                                <p className="text-sm text-zinc-500 mt-0.5">
+                                <p className="text-sm text-foreground-muted mt-0.5">
                                     {premium
                                         ? 'Unlimited sales documents, brand assets, and PDF customization'
                                         : 'Limited monthly sales documents. Upgrade for full branding.'}

@@ -64,19 +64,19 @@ const Quotations = () => {
         setMonthInputValue,
         periodLabel,
         isCurrentPeriod,
-        listYear,
-        listMonth,
-        listQueryPeriod,
+        listQueryParams,
         listPeriodMode,
         setListPeriodMode,
         listPeriodLabel,
-        listIsThisMonth,
-        listMonthInputValue,
-        setListMonthInputValue,
+        listCustomDraftStartDate,
+        listCustomDraftEndDate,
+        setListCustomDraftRange,
+        applyListCustomRange,
+        listMaxDate,
     } = useListMonthFilter();
 
     const fetcher = useCallback(
-        ({ page, limit, search, status, sort, year, month, period }) =>
+        ({ page, limit, search, status, sort, period, startDate, endDate }) =>
             apiFetch(
                 `/quotations?${buildListQuery({
                     page,
@@ -84,9 +84,9 @@ const Quotations = () => {
                     search,
                     status,
                     sort,
-                    year,
-                    month,
                     period,
+                    startDate,
+                    endDate,
                 })}`
             ),
         []
@@ -110,9 +110,7 @@ const Quotations = () => {
         extraParams: {
             status: filter,
             sort: sortBy,
-            year: listYear,
-            month: listMonth,
-            period: listQueryPeriod,
+            ...listQueryParams,
         },
     });
 
@@ -120,7 +118,7 @@ const Quotations = () => {
 
     useEffect(() => {
         setPage(1);
-    }, [filter, sortBy, listYear, listMonth, listQueryPeriod, setPage]);
+    }, [filter, sortBy, listQueryParams, setPage]);
 
     const handleFilterChange = useCallback(
         (next) => {
@@ -198,9 +196,7 @@ const Quotations = () => {
                                     search: debouncedSearch,
                                     status: filter,
                                     sort: sortBy,
-                                    year: listYear,
-                                    month: listMonth,
-                                    period: listQueryPeriod,
+                                    ...listQueryParams,
                                 }}
                                 disabled={pagination.total === 0}
                                 onExported={() => showToast('Quotations exported successfully.', 'success')}
@@ -210,12 +206,14 @@ const Quotations = () => {
                     />
                     <ToolbarActions>
                         <ListMonthToolbarFilter
-                            monthInputValue={listMonthInputValue}
-                            onMonthChange={setListMonthInputValue}
                             periodMode={listPeriodMode}
                             onPeriodModeChange={setListPeriodMode}
                             periodLabel={listPeriodLabel}
-                            isThisMonth={listIsThisMonth}
+                            customDraftStartDate={listCustomDraftStartDate}
+                            customDraftEndDate={listCustomDraftEndDate}
+                            onCustomDraftRangeChange={setListCustomDraftRange}
+                            onCustomApply={applyListCustomRange}
+                            maxDate={listMaxDate}
                         />
                         <div className="min-w-0 flex-1 sm:w-44 sm:flex-none">
                             <CustomSelect
@@ -288,17 +286,17 @@ const Quotations = () => {
                                         onClick={() => navigate(`/quotations/${quotation.id}`)}
                                     >
                                         <DataTableCell>
-                                            <span className="font-medium text-zinc-950">
+                                            <span className="font-medium text-foreground">
                                                 {getDisplayNumber(quotation) || '—'}
                                             </span>
                                         </DataTableCell>
                                         <DataTableCell>
                                             <div className="min-w-0">
-                                                <p className="text-zinc-950 truncate max-w-[200px]">
+                                                <p className="text-foreground truncate max-w-[200px]">
                                                     {clientLabel(quotation)}
                                                 </p>
                                                 {business ? (
-                                                    <p className="text-xs text-zinc-500 truncate max-w-[200px]">
+                                                    <p className="text-xs text-foreground-muted truncate max-w-[200px]">
                                                         {business}
                                                     </p>
                                                 ) : null}
@@ -315,7 +313,7 @@ const Quotations = () => {
                                                 : '—'}
                                         </DataTableCell>
                                         <DataTableCell className="text-right">
-                                            <span className="font-medium text-zinc-950 tabular-nums">
+                                            <span className="font-medium text-foreground tabular-nums">
                                                 {formatCurrency(quotation.total, quotation.currency)}
                                             </span>
                                         </DataTableCell>

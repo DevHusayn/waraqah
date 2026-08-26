@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Button } from '../components/ui';
-import { colors, fontFamily, fontSize, radii, spacing } from '../theme';
+import { colors, fontFamily, fontSize, radii, spacing, useTheme } from '../theme';
 
 export function CheckEmailScreen({ navigation, route }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const email = route.params?.email || '';
     const { resendVerificationEmail } = useAuth();
     const { showToast } = useToast();
@@ -47,7 +49,8 @@ export function CheckEmailScreen({ navigation, route }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.surface },
     content: {
         flex: 1,
@@ -81,3 +84,4 @@ const styles = StyleSheet.create({
         lineHeight: 22,
     },
 });
+}

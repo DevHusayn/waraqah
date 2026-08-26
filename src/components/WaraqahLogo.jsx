@@ -91,7 +91,7 @@ export default function WaraqahLogo({
             {subtitle?.trim() ? (
                 <span
                     className={`mt-2 block w-full truncate font-sans leading-tight ${s.subtitle} ${
-                        inverted ? 'text-zinc-300' : 'text-zinc-500'
+                        inverted ? 'text-zinc-300' : 'text-foreground-muted'
                     } ${centered ? 'text-center' : ''}`}
                     style={withIcon && !centered ? { paddingLeft: `${s.icon + LOCKUP_GAP_PX}px` } : undefined}
                     title={subtitle}

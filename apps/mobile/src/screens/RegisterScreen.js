@@ -1,9 +1,12 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RegisterWizard } from '../components/auth/RegisterWizard';
-import { colors, fontFamily, fontSize, spacing } from '../theme';
+import { colors, fontFamily, fontSize, spacing, useTheme } from '../theme';
 
 export function RegisterScreen({ navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     return (
         <SafeAreaView style={styles.root}>
             <View style={styles.header}>
@@ -29,7 +32,8 @@ export function RegisterScreen({ navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.surface },
     header: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
     body: { flex: 1, paddingHorizontal: spacing.xl },
@@ -57,3 +61,4 @@ const styles = StyleSheet.create({
     switchText: { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.muted },
     link: { color: colors.brand, fontFamily: fontFamily.semibold },
 });
+}

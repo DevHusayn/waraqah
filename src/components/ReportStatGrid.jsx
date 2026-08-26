@@ -16,8 +16,8 @@ export function ReportStatCell({
     const showTrendArea = reserveTrendSpace || comparison || detail;
 
     return (
-        <div className={`bg-white p-3.5 sm:p-4 flex flex-col gap-1.5 min-w-0 ${className}`.trim()}>
-            <p className={`text-xs text-zinc-500 font-medium leading-snug ${titleClassName}`.trim()}>
+        <div className={`bg-surface p-3.5 sm:p-4 flex flex-col gap-1.5 min-w-0 ${className}`.trim()}>
+            <p className={`text-xs text-foreground-muted font-medium leading-snug ${titleClassName}`.trim()}>
                 {title}
             </p>
             <AdaptiveStatValue value={value} variant="grid" valueClassName={valueClassName} />
@@ -28,7 +28,7 @@ export function ReportStatCell({
                         positiveDirection={positiveDirection}
                         label={comparisonLabel}
                     />
-                    {detail ? <p className="text-[11px] text-zinc-500 leading-snug">{detail}</p> : null}
+                    {detail ? <p className="text-[11px] text-foreground-muted leading-snug">{detail}</p> : null}
                 </div>
             ) : null}
         </div>
@@ -43,9 +43,9 @@ export default function ReportStatGrid({
 }) {
     return (
         <div
-            className={`mb-6 rounded-lg border border-zinc-200/80 overflow-hidden ${className}`.trim()}
+            className={`mb-6 rounded-lg border border-border/80 overflow-hidden ${className}`.trim()}
         >
-            <div className={`grid ${columns} gap-px bg-zinc-200/80`}>{children}</div>
+            <div className={`grid ${columns} gap-px bg-border`}>{children}</div>
             {footer}
         </div>
     );
@@ -54,7 +54,7 @@ export default function ReportStatGrid({
 export function ReportStatFooter({ title, value, titleClassName = '', valueClassName = '', className = '' }) {
     return (
         <div
-            className={`border-t border-zinc-200/80 bg-white px-3.5 py-3.5 sm:px-4 sm:py-4 ${className}`.trim()}
+            className={`border-t border-border/80 bg-surface px-3.5 py-3.5 sm:px-4 sm:py-4 ${className}`.trim()}
         >
             <p className={`text-xs font-medium uppercase tracking-wide ${titleClassName}`.trim()}>{title}</p>
             <AdaptiveStatValue value={value} variant="grid" valueClassName={valueClassName} className="mt-1" />
@@ -70,21 +70,21 @@ export function ReportStatGridSkeleton({
 }) {
     return (
         <div
-            className={`mb-6 rounded-lg border border-zinc-200/80 overflow-hidden animate-pulse ${className}`.trim()}
+            className={`mb-6 rounded-lg border border-border/80 overflow-hidden animate-pulse ${className}`.trim()}
         >
-            <div className={`grid ${columns} gap-px bg-zinc-200/80`}>
+            <div className={`grid ${columns} gap-px bg-border`}>
                 {Array.from({ length: count }).map((_, index) => (
-                    <div key={index} className="bg-white p-3.5 sm:p-4 space-y-2">
-                        <div className="h-3 w-16 rounded bg-zinc-200/80" />
-                        <div className="h-5 sm:h-6 w-20 max-w-full rounded bg-zinc-200/80" />
-                        <div className="h-3 w-24 rounded bg-zinc-200/80" />
+                    <div key={index} className="bg-surface p-3.5 sm:p-4 space-y-2">
+                        <div className="h-3 w-16 skeleton-bar" />
+                        <div className="h-5 sm:h-6 w-20 max-w-full skeleton-bar" />
+                        <div className="h-3 w-24 skeleton-bar" />
                     </div>
                 ))}
             </div>
             {footer ? (
-                <div className="border-t border-zinc-200/80 bg-white px-3.5 py-3.5 sm:px-4 sm:py-4 space-y-2">
-                    <div className="h-3 w-20 rounded bg-zinc-200/80" />
-                    <div className="h-5 sm:h-6 w-28 max-w-full rounded bg-zinc-200/80" />
+                <div className="border-t border-border/80 bg-surface px-3.5 py-3.5 sm:px-4 sm:py-4 space-y-2">
+                    <div className="h-3 w-20 skeleton-bar" />
+                    <div className="h-5 sm:h-6 w-28 max-w-full skeleton-bar" />
                 </div>
             ) : null}
         </div>

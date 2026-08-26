@@ -17,26 +17,26 @@ export default function LineItemSummaryCard({
     const lineTotal = quantity * rate;
 
     return (
-        <div className="rounded-xl border border-zinc-200 bg-white px-3 py-2.5 sm:px-4 sm:py-3 hover:border-zinc-300 transition-colors">
+        <div className="rounded-xl border border-border bg-surface px-3 py-2.5 sm:px-4 sm:py-3 hover:border-zinc-300 transition-colors">
             <div className="flex items-start gap-3">
                 <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
-                        <p className="text-sm font-medium text-zinc-900 line-clamp-2 leading-snug">
+                        <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug">
                             {description}
                         </p>
-                        <p className="text-sm font-semibold text-zinc-900 tabular-nums shrink-0">
+                        <p className="text-sm font-semibold text-foreground tabular-nums shrink-0">
                             {formatCurrency(lineTotal, currency)}
                         </p>
                     </div>
                     <div className="mt-1 flex items-center justify-between gap-3">
-                        <p className="text-xs text-zinc-500 tabular-nums">
+                        <p className="text-xs text-foreground-muted tabular-nums">
                             {quantity} {unit} × {formatCurrency(rate, currency)}
                         </p>
                         <div className="flex items-center gap-1 shrink-0">
                             <button
                                 type="button"
                                 onClick={() => onEdit(index)}
-                                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-zinc-600 hover:text-brand hover:bg-brand-subtle/40 transition-colors"
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium text-foreground-muted hover:text-brand hover:bg-brand-subtle/40 transition-colors"
                                 aria-label={`Edit item ${index + 1}`}
                             >
                                 <Pencil size={13} aria-hidden />

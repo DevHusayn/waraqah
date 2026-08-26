@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
     Easing,
@@ -7,7 +7,7 @@ import Animated, {
     withRepeat,
     withTiming,
 } from 'react-native-reanimated';
-import { colors, radii, spacing } from '../../theme';
+import { colors, radii, spacing , useTheme } from '../../theme';
 
 function ShimmerBlock({ width, height, style }) {
     const opacity = useSharedValue(0.35);
@@ -26,6 +26,8 @@ function ShimmerBlock({ width, height, style }) {
 }
 
 export function SkeletonCard() {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     return (
         <View style={styles.card}>
             <ShimmerBlock width="40%" height={10} />
@@ -66,7 +68,8 @@ export function PageLoader() {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     block: {
         backgroundColor: colors.slate200,
         borderRadius: radii.sm,
@@ -102,3 +105,4 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.sm,
     },
 });
+}

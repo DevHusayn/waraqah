@@ -15,7 +15,7 @@ import { RegisterScreen } from '../screens/RegisterScreen';
 import { CheckEmailScreen } from '../screens/CheckEmailScreen';
 import { ResetPasswordScreen } from '../screens/ResetPasswordScreen';
 import { MainTabs } from './MainTabs';
-import { colors } from '../theme/colors';
+import { useTheme } from '../theme';
 
 const Stack = createNativeStackNavigator();
 
@@ -58,6 +58,7 @@ const linking = {
 
 function AuthStack() {
     const onboardingComplete = useAppStore((s) => s.onboardingComplete);
+    const { colors } = useTheme();
 
     return (
         <Stack.Navigator
@@ -80,6 +81,7 @@ function AuthStack() {
 
 export function RootNavigator() {
     const { isAuthenticated, booting, logout } = useAuth();
+    const { navigationTheme } = useTheme();
     const hydrate = useAppStore((s) => s.hydrate);
     const hydrated = useAppStore((s) => s.hydrated);
     const [splashDone, setSplashDone] = useState(false);
@@ -102,6 +104,7 @@ export function RootNavigator() {
 
     return (
         <NavigationContainer
+            theme={navigationTheme}
             linking={linking}
             onStateChange={(state) => {
                 captureScreen(getActiveRouteName(state));

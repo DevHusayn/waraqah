@@ -52,7 +52,7 @@ function PasswordToggle({ visible, onToggle, label }) {
         <button
             type="button"
             onClick={onToggle}
-            className="absolute right-3 top-[34px] p-1 rounded-lg text-zinc-400 hover:text-zinc-600 transition-colors"
+            className="absolute right-3 top-[34px] p-1 rounded-lg text-foreground-muted/70 hover:text-foreground-muted transition-colors"
             aria-label={visible ? `Hide ${label}` : `Show ${label}`}
         >
             {visible ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -109,7 +109,7 @@ function StepIndicator({ currentStep }) {
                     );
                 })}
             </div>
-            <p className="text-xs font-medium text-zinc-500">
+            <p className="text-xs font-medium text-foreground-muted">
                 Step {currentStep} of {REGISTER_STEPS.length}
             </p>
         </div>
@@ -453,10 +453,10 @@ export default function RegisterWizard({
 
                 {step === 4 && (
                     <div className="space-y-4">
-                        <p className="text-sm text-zinc-500">
+                        <p className="text-sm text-foreground-muted">
                             Used in PDF headers, accents, and your invoice theme.
                         </p>
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-zinc-200 bg-zinc-50/60">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-border bg-surface-muted/60">
                             <div
                                 className="w-full sm:w-20 h-14 rounded-xl border-2 border-white shadow-md shrink-0"
                                 style={{ backgroundColor: form.brandColor || '#16A34A' }}
@@ -469,7 +469,7 @@ export default function RegisterWizard({
                                         name="brandColor"
                                         value={form.brandColor || '#16A34A'}
                                         onChange={handleFieldChange}
-                                        className="h-11 w-14 rounded-lg border border-zinc-200 cursor-pointer bg-white p-1"
+                                        className="h-11 w-14 rounded-lg border border-border cursor-pointer bg-surface p-1"
                                         aria-label="Pick brand color"
                                     />
                                     <input
@@ -490,7 +490,7 @@ export default function RegisterWizard({
                             </div>
                         </div>
                         <div>
-                            <p className="text-xs font-medium text-zinc-500 mb-2.5">Quick picks</p>
+                            <p className="text-xs font-medium text-foreground-muted mb-2.5">Quick picks</p>
                             <div className="flex flex-wrap gap-2">
                                 {BRAND_PRESETS.map((preset) => {
                                     const selected =
@@ -511,7 +511,7 @@ export default function RegisterWizard({
                                             className={`w-9 h-9 rounded-xl border-2 transition-all hover:scale-105 ${
                                                 selected
                                                     ? 'border-zinc-900 ring-2 ring-offset-2 ring-zinc-400'
-                                                    : 'border-white shadow-sm hover:border-zinc-200'
+                                                    : 'border-white shadow-sm hover:border-border'
                                             }`}
                                             style={{ backgroundColor: preset.color }}
                                             aria-label={`${preset.name}${selected ? ' (selected)' : ''}`}

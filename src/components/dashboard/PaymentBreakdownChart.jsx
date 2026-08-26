@@ -8,10 +8,10 @@ function BreakdownRow({ label, value, max, barClass, muted = false }) {
     return (
         <div className={`space-y-1.5 ${muted ? 'opacity-70' : ''}`}>
             <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-zinc-700">{label}</span>
-                <span className="font-semibold text-zinc-950 tabular-nums">{value}</span>
+                <span className="text-foreground-muted">{label}</span>
+                <span className="font-semibold text-foreground tabular-nums">{value}</span>
             </div>
-            <div className="h-2 rounded-full bg-zinc-100 overflow-hidden" aria-hidden>
+            <div className="h-2 rounded-full bg-surface-muted overflow-hidden" aria-hidden>
                 <div
                     className={`h-full rounded-full transition-all duration-300 ${barClass}`}
                     style={{ width: `${widthPercent}%` }}
@@ -31,19 +31,20 @@ export default function PaymentBreakdownChart({ breakdown, periodLabel }) {
         [breakdown]
     );
 
-    const total = breakdown?.total ?? 0;
+    const issuedInPeriod = breakdown?.issuedInPeriod ?? 0;
+    const overdue = breakdown?.overdue ?? 0;
     const maxValue = useMemo(() => Math.max(...rows.map((row) => row.value), 0), [rows]);
-    const hasData = total > 0;
+    const hasData = issuedInPeriod > 0 || overdue > 0;
 
     return (
         <ChartCard
             title="Payment breakdown"
             subtitle={
                 hasData
-                    ? `Issued in ${periodLabel || 'selected month'} — ${total} total · fully paid shown above`
+                    ? `${issuedInPeriod} issued in ${periodLabel || 'selected period'} · overdue by due date in period`
                     : periodLabel
                       ? `Issued in ${periodLabel}`
-                      : 'Documents issued in the selected month'
+                      : 'Documents issued in the selected period'
             }
         >
             <div className="flex h-[220px] flex-col justify-center gap-4 py-1">
@@ -59,7 +60,7 @@ export default function PaymentBreakdownChart({ breakdown, periodLabel }) {
                 ))}
             </div>
             {!hasData ? (
-                <p className="mt-1 text-center text-xs text-zinc-500">
+                <p className="mt-1 text-center text-xs text-foreground-muted">
                     Create invoices or receipts to see your payment breakdown.
                 </p>
             ) : null}

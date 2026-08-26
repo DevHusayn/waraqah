@@ -12,7 +12,7 @@ function ProfileFieldLabel({ htmlFor, required, children }) {
     return (
         <label htmlFor={htmlFor} className="label">
             {children}{' '}
-            <span className="text-zinc-400 font-normal">(optional)</span>
+            <span className="text-foreground-muted/70 font-normal">(optional)</span>
         </label>
     );
 }
@@ -124,7 +124,7 @@ export default function ProfileFormFields({
 
             <div>
                 <label htmlFor={fieldId('website')} className="label">
-                    Website <span className="text-zinc-400 font-normal">(optional)</span>
+                    Website <span className="text-foreground-muted/70 font-normal">(optional)</span>
                 </label>
                 <input
                     id={fieldId('website')}
@@ -159,7 +159,7 @@ export default function ProfileFormFields({
                             </option>
                         ))}
                     </select>
-                    <p className="text-xs text-zinc-500 mt-1.5">
+                    <p className="text-xs text-foreground-muted mt-1.5">
                         Used for monthly stats and reporting boundaries.
                     </p>
                     <FieldValidationMessage message={errors.timezone} />

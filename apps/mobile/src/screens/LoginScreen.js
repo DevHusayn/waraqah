@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
     KeyboardAvoidingView,
     Platform,
@@ -18,10 +18,12 @@ import { ANALYTICS_EVENTS } from '@waraqah/shared';
 import { useToast } from '../context/ToastContext';
 import { WaraqahLogo } from '../components/WaraqahLogo';
 import { Button, FieldError, Input, Label } from '../components/ui';
-import { colors, fontFamily, fontSize, spacing } from '../theme';
+import { colors, fontFamily, fontSize, spacing, useTheme } from '../theme';
 import { hapticSuccess } from '../utils/haptics';
 
 export function LoginScreen({ navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { login, forgotPassword } = useAuth();
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
@@ -186,7 +188,8 @@ export function LoginScreen({ navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.surface },
     content: { padding: spacing.xl, paddingBottom: spacing.huge },
     back: {
@@ -223,3 +226,4 @@ const styles = StyleSheet.create({
     switchRow: { marginTop: spacing.xxl, alignItems: 'center', minHeight: 44, justifyContent: 'center' },
     switchText: { fontFamily: fontFamily.regular, fontSize: fontSize.sm, color: colors.muted },
 });
+}

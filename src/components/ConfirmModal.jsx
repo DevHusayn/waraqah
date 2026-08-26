@@ -34,12 +34,12 @@ export default function ConfirmModal({
                     >
                         <AlertTriangle size={18} aria-hidden />
                     </div>
-                    <h2 id="confirm-modal-title" className="text-base font-semibold text-zinc-950">
+                    <h2 id="confirm-modal-title" className="text-base font-semibold text-foreground">
                         {title}
                     </h2>
                     <p
                         id="confirm-modal-message"
-                        className="mt-1.5 text-sm text-zinc-500 leading-relaxed"
+                        className="mt-1.5 text-sm text-foreground-muted leading-relaxed"
                     >
                         {description || message || 'Are you sure you want to continue?'}
                     </p>

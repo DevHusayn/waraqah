@@ -63,7 +63,7 @@ function AdminActionItem({
     tone = 'default',
 }) {
     const tones = {
-        default: 'text-zinc-700 hover:bg-zinc-50',
+        default: 'text-foreground-muted hover:bg-surface-muted',
         premium: 'text-amber-800 hover:bg-amber-50',
         success: 'text-green-800 hover:bg-green-50',
         danger: 'text-red-700 hover:bg-red-50',
@@ -169,7 +169,7 @@ function AdminActionsMenu({
                   <div
                       ref={menuRef}
                       style={menuStyle}
-                      className="rounded-xl border border-zinc-200 bg-white shadow-card p-1.5"
+                      className="rounded-xl border border-border bg-surface shadow-card p-1.5"
                       role="menu"
                   >
                       <AdminActionItem
@@ -178,8 +178,8 @@ function AdminActionsMenu({
                           disabled={busy}
                           onClick={() => closeAnd(() => onView(user._id))}
                       />
-                      <div className="my-1 border-t border-zinc-100" />
-                      <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+                      <div className="my-1 border-t border-border/50" />
+                      <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-foreground-muted/70">
                           Plan & billing
                       </p>
                       <AdminActionItem
@@ -203,8 +203,8 @@ function AdminActionsMenu({
                           />
                       )}
 
-                      <div className="my-1 border-t border-zinc-100" />
-                      <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+                      <div className="my-1 border-t border-border/50" />
+                      <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-foreground-muted/70">
                           Account
                       </p>
                       <AdminActionItem
@@ -227,7 +227,7 @@ function AdminActionsMenu({
                           onClick={() => closeAnd(() => onUnlock(user._id))}
                       />
 
-                      <div className="my-1 border-t border-zinc-100" />
+                      <div className="my-1 border-t border-border/50" />
                       <AdminActionItem
                           icon={Trash2}
                           label="Delete user"
@@ -247,7 +247,7 @@ function AdminActionsMenu({
                 type="button"
                 onClick={() => setOpen((v) => !v)}
                 disabled={busy}
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-200 bg-white text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors disabled:opacity-50 min-w-[108px]"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border bg-surface text-sm font-medium text-foreground-muted hover:bg-surface-muted transition-colors disabled:opacity-50 min-w-[108px]"
                 aria-expanded={open}
                 aria-haspopup="menu"
             >
@@ -520,19 +520,19 @@ export default function AdminDashboard() {
 
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                     <div className="stat-card">
-                        <p className="text-xs text-zinc-500 font-medium leading-snug truncate">
+                        <p className="text-xs text-foreground-muted font-medium leading-snug truncate">
                             Total users
                         </p>
                         <AdaptiveStatValue value={stats.total} />
                     </div>
                     <div className="stat-card">
-                        <p className="text-xs text-zinc-500 font-medium leading-snug truncate">
+                        <p className="text-xs text-foreground-muted font-medium leading-snug truncate">
                             Premium
                         </p>
                         <AdaptiveStatValue value={stats.premium} />
                     </div>
                     <div className="stat-card">
-                        <p className="text-xs text-zinc-500 font-medium leading-snug truncate">
+                        <p className="text-xs text-foreground-muted font-medium leading-snug truncate">
                             Suspended
                         </p>
                         <AdaptiveStatValue value={stats.suspended} />
@@ -546,21 +546,21 @@ export default function AdminDashboard() {
                 ) : null}
 
                 <div className="card !p-0 overflow-hidden">
-                    <div className="px-4 sm:px-6 py-4 border-b border-zinc-100 space-y-3">
+                    <div className="px-4 sm:px-6 py-4 border-b border-border/50 space-y-3">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                            <div className="flex items-center gap-2 text-sm text-zinc-600">
+                            <div className="flex items-center gap-2 text-sm text-foreground-muted">
                                 <FileText size={16} aria-hidden />
                                 <span>
                                     {pagination.total} user{pagination.total === 1 ? '' : 's'}
                                     {hasActiveFilters ? (
-                                        <span className="text-zinc-400"> (filtered)</span>
+                                        <span className="text-foreground-muted/70"> (filtered)</span>
                                     ) : null}
                                 </span>
                             </div>
                             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:items-center">
                                 <div className="relative flex-1 sm:w-72">
                                     <Search
-                                        className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400"
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted/70"
                                         aria-hidden
                                     />
                                     <input
@@ -575,7 +575,7 @@ export default function AdminDashboard() {
                                     type="button"
                                     onClick={handleExport}
                                     disabled={exportLoading || tableLoading || pagination.total === 0}
-                                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-200 bg-white text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors disabled:opacity-50 min-w-[108px]"
+                                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border bg-surface text-sm font-medium text-foreground-muted hover:bg-surface-muted transition-colors disabled:opacity-50 min-w-[108px]"
                                 >
                                     {exportLoading ? (
                                         <Spinner size="sm" inline />
@@ -611,7 +611,7 @@ export default function AdminDashboard() {
                             {hasActiveFilters ? (
                                 <button
                                     type="button"
-                                    className="inline-flex items-center px-3 py-2 rounded-xl border border-zinc-200 bg-zinc-50 text-sm font-medium text-zinc-600 hover:bg-zinc-100 transition-colors"
+                                    className="inline-flex items-center px-3 py-2 rounded-xl border border-border bg-surface-muted text-sm font-medium text-foreground-muted hover:bg-surface-muted transition-colors"
                                     onClick={() => {
                                         setPlanFilter('all');
                                         setStatusFilter('all');
@@ -628,7 +628,7 @@ export default function AdminDashboard() {
                     <div className="overflow-x-auto scroll-x-touch">
                         <table className="w-full min-w-[960px] text-sm">
                             <thead>
-                                <tr className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                                <tr className="bg-surface-muted text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">
                                     <th className="px-4 sm:px-6 py-3">User</th>
                                     <th className="px-4 py-3">Status</th>
                                     <th className="px-4 py-3">Plan</th>
@@ -645,12 +645,12 @@ export default function AdminDashboard() {
                                 users.map((user) => (
                                     <tr
                                         key={user._id}
-                                        className="hover:bg-zinc-50/80 transition-colors cursor-pointer"
+                                        className="hover:bg-surface-muted/80 transition-colors cursor-pointer"
                                         onClick={() => navigate(`/admin/users/${user._id}`)}
                                     >
                                         <td className="px-4 sm:px-6 py-4">
                                             <div className="min-w-[180px]">
-                                                <p className="font-semibold text-zinc-900 flex items-center gap-2">
+                                                <p className="font-semibold text-foreground flex items-center gap-2">
                                                     {user.name || '—'}
                                                     {user.isAdmin ? (
                                                         <Shield
@@ -660,7 +660,7 @@ export default function AdminDashboard() {
                                                         />
                                                     ) : null}
                                                 </p>
-                                                <p className="text-zinc-500 text-xs mt-0.5 truncate max-w-[220px]">
+                                                <p className="text-foreground-muted text-xs mt-0.5 truncate max-w-[220px]">
                                                     {user.email}
                                                 </p>
                                             </div>
@@ -674,9 +674,9 @@ export default function AdminDashboard() {
                                         <td className="px-4 py-4">
                                             <UsageBadge usage={user.invoiceUsage} />
                                         </td>
-                                        <td className="px-4 py-4 text-zinc-600 whitespace-nowrap">
+                                        <td className="px-4 py-4 text-foreground-muted whitespace-nowrap">
                                             <p>{user.invoiceCount ?? 0} inv · {user.clientCount ?? 0} clients</p>
-                                            <p className="text-xs text-zinc-400 mt-0.5">
+                                            <p className="text-xs text-foreground-muted/70 mt-0.5">
                                                 Joined{' '}
                                                 {user.createdAt
                                                     ? new Date(user.createdAt).toLocaleDateString('en-NG', {
@@ -690,10 +690,10 @@ export default function AdminDashboard() {
                                         <td className="px-4 py-4">
                                             {user.businessInfo?.name ? (
                                                 <div className="min-w-[120px]">
-                                                    <p className="font-medium text-zinc-800 truncate max-w-[160px]">
+                                                    <p className="font-medium text-foreground truncate max-w-[160px]">
                                                         {user.businessInfo.name}
                                                     </p>
-                                                    <p className="text-xs text-zinc-400 truncate max-w-[160px]">
+                                                    <p className="text-xs text-foreground-muted/70 truncate max-w-[160px]">
                                                         {user.businessInfo.phone || user.businessInfo.email || '—'}
                                                     </p>
                                                 </div>

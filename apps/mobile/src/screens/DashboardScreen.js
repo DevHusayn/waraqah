@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import {
     Dimensions,
     FlatList,
@@ -48,7 +48,7 @@ import {
 } from '../components/ui';
 import { useInvoiceCreateGuard } from '../hooks/useInvoiceCreateGuard';
 import { useQuotationCreateGuard } from '../hooks/useQuotationCreateGuard';
-import { colors, fontFamily, fontSize, lineHeight, radii, shadows, spacing } from '../theme';
+import { colors, fontFamily, fontSize, lineHeight, radii, shadows, spacing, useTheme } from '../theme';
 import { hapticSelection } from '../utils/haptics';
 
 const CARD_WIDTH = Dimensions.get('window').width - spacing.xl * 2;
@@ -68,6 +68,8 @@ function StatCell({ icon: Icon, label, value, iconBg, iconColor, valueColor }) {
 }
 
 export function DashboardScreen({ navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { user, logout } = useAuth();
     const { businessInfo } = useSettings();
     const [data, setData] = useState(null);
@@ -392,7 +394,8 @@ export function DashboardScreen({ navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     safe: { flex: 1, backgroundColor: colors.surfaceMuted },
     screen: { flex: 1 },
     content: { paddingBottom: spacing.huge },
@@ -578,3 +581,4 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.sm,
     },
 });
+}

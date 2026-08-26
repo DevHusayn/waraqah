@@ -27,7 +27,7 @@ function AvatarContent({ businessInfo, premium, size }) {
             <img
                 src={logo}
                 alt=""
-                className={`${box} rounded-full object-cover bg-white border border-zinc-200/60 shadow-soft`}
+                className={`${box} rounded-full object-cover bg-surface border border-border/60 shadow-soft`}
             />
         );
     }

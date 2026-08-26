@@ -1,7 +1,8 @@
+import { useMemo } from 'react';
 import { Text, StyleSheet, View } from 'react-native';
 import { ClipboardList, FileText, Package, Users } from 'lucide-react-native';
 import { BottomSheet, ListRow } from './ui';
-import { colors, fontFamily, fontSize, spacing } from '../theme';
+import { colors, fontFamily, fontSize, spacing, useTheme } from '../theme';
 
 const OPTIONS = [
     {
@@ -35,6 +36,8 @@ const OPTIONS = [
 ];
 
 export function CreateActionSheet({ sheetRef, onSelect }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     return (
         <BottomSheet ref={sheetRef} snapPoints={['48%']}>
             <Text style={styles.title}>Create</Text>
@@ -59,7 +62,8 @@ export function CreateActionSheet({ sheetRef, onSelect }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     title: {
         fontFamily: fontFamily.semibold,
         fontSize: fontSize.lg,
@@ -74,3 +78,4 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.sm,
     },
 });
+}

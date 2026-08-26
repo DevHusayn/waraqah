@@ -49,16 +49,16 @@ export default function ClientDetailsModal({ open, onClose, initialData = EMPTY_
             ariaLabelledby="client-details-modal-title"
             panelClassName="sm:max-h-[85vh]"
         >
-            <div className="px-6 pt-6 pb-4 border-b border-zinc-100">
+            <div className="px-6 pt-6 pb-4 border-b border-border/50">
                 <div className="flex items-start gap-3 pr-8">
                     <div className="p-2.5 rounded-xl bg-brand-subtle shrink-0">
                         <UserRound className="h-5 w-5 text-brand" aria-hidden />
                     </div>
                     <div>
-                        <h2 id="client-details-modal-title" className="text-lg font-semibold text-zinc-900">
+                        <h2 id="client-details-modal-title" className="text-lg font-semibold text-foreground">
                             Client details
                         </h2>
-                        <p className="text-sm text-zinc-500 mt-0.5">
+                        <p className="text-sm text-foreground-muted mt-0.5">
                             Optional — shown on the PDF when provided.
                         </p>
                     </div>
@@ -69,7 +69,7 @@ export default function ClientDetailsModal({ open, onClose, initialData = EMPTY_
                 <div>
                     <label htmlFor="client-details-business" className="label">
                         Business name{' '}
-                        <span className="text-zinc-400 font-normal">(optional)</span>
+                        <span className="text-foreground-muted/70 font-normal">(optional)</span>
                     </label>
                     <input
                         id="client-details-business"
@@ -84,7 +84,7 @@ export default function ClientDetailsModal({ open, onClose, initialData = EMPTY_
 
                 <div>
                     <label htmlFor="client-details-phone" className="label">
-                        Phone <span className="text-zinc-400 font-normal">(optional)</span>
+                        Phone <span className="text-foreground-muted/70 font-normal">(optional)</span>
                     </label>
                     <input
                         id="client-details-phone"
@@ -99,7 +99,7 @@ export default function ClientDetailsModal({ open, onClose, initialData = EMPTY_
 
                 <div>
                     <label htmlFor="client-details-address" className="label">
-                        Address <span className="text-zinc-400 font-normal">(optional)</span>
+                        Address <span className="text-foreground-muted/70 font-normal">(optional)</span>
                     </label>
                     <textarea
                         id="client-details-address"
@@ -115,7 +115,7 @@ export default function ClientDetailsModal({ open, onClose, initialData = EMPTY_
                 <div>
                     <label htmlFor="client-details-additional" className="label">
                         Additional information{' '}
-                        <span className="text-zinc-400 font-normal">(optional)</span>
+                        <span className="text-foreground-muted/70 font-normal">(optional)</span>
                     </label>
                     <textarea
                         id="client-details-additional"

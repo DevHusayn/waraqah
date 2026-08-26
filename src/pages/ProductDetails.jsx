@@ -4,7 +4,6 @@ import { format, parseISO } from 'date-fns';
 import {
     ArrowLeft,
     Edit,
-    History,
     Package,
     PackagePlus,
     Trash2,
@@ -24,7 +23,7 @@ import MonthPickerField from '../components/MonthPickerField';
 import MonthComparisonTrend from '../components/MonthComparisonTrend';
 import AdaptiveStatValue from '../components/AdaptiveStatValue';
 import { useSettings } from '../context/SettingsContext';
-import { getDatePartsInTimezone, isOversellingAllowed } from '@waraqah/shared';
+import { isOversellingAllowed, resolveClientPeriodFromFilter } from '@waraqah/shared';
 import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
@@ -37,11 +36,7 @@ import { getSoldPeriodSummary } from '../utils/productSoldPeriod';
 import ActionMenu from '../components/ActionMenu';
 import PaginationBar from '../components/PaginationBar';
 import { useClientPagedList } from '../hooks/useClientPagedList';
-import {
-    formatStockDelta,
-    formatStockMovementDescription,
-    getStockMovementLink,
-} from '../utils/stockMovementLabels';
+import StockMovementTable from '../components/StockMovementTable';
 
 const ACTIVITY_COLUMNS = [
     { key: 'date', label: 'Date', width: '14%' },
@@ -59,13 +54,6 @@ const CLIENT_COLUMNS = [
     { key: 'revenue', label: 'Revenue', className: 'text-right', width: '20%' },
     { key: 'last', label: 'Last purchase', width: '18%' },
     { key: 'payment', label: 'Last payment', width: '16%' },
-];
-
-const STOCK_HISTORY_COLUMNS = [
-    { key: 'date', label: 'Date', width: '18%' },
-    { key: 'change', label: 'Change', className: 'text-right', width: '14%' },
-    { key: 'balance', label: 'Balance', className: 'text-right', width: '14%' },
-    { key: 'source', label: 'Source', width: '54%' },
 ];
 
 function formatDisplayDate(value) {
@@ -123,7 +111,7 @@ function PeriodStatCard({
 }) {
     return (
         <div className={`stat-card stat-card-compact min-w-0 ${className}`.trim()}>
-            <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
+            <p className="text-xs text-foreground-muted font-medium leading-snug">{title}</p>
             <AdaptiveStatValue value={value} variant="compact" valueClassName={valueClassName} />
             {comparison ? (
                 <div className="min-h-[1rem]">
@@ -136,9 +124,9 @@ function PeriodStatCard({
 
 function CatalogMetric({ label, value }) {
     return (
-        <div className="rounded-lg border border-zinc-200/60 bg-zinc-50/50 px-3 py-2.5 min-w-0">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-400">{label}</p>
-            <p className="mt-0.5 text-sm font-semibold tabular-nums text-zinc-950 truncate">{value}</p>
+        <div className="rounded-lg border border-border/60 bg-surface-muted/50 px-3 py-2.5 min-w-0">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-foreground-muted/70">{label}</p>
+            <p className="mt-0.5 text-sm font-semibold tabular-nums text-foreground truncate">{value}</p>
         </div>
     );
 }
@@ -160,10 +148,6 @@ export default function ProductDetails() {
     const [stockAdjustOpen, setStockAdjustOpen] = useState(false);
 
     const {
-        summaryYear,
-        summaryMonth,
-        monthInputValue,
-        setMonthInputValue,
         periodLabel,
         timezone,
         isCurrentPeriod,
@@ -171,6 +155,13 @@ export default function ProductDetails() {
         setPeriodMode,
         showComparison,
         comparisonLabel,
+        startDate,
+        endDate,
+        customDraftStartDate,
+        customDraftEndDate,
+        setCustomDraftRange,
+        applyCustomRange,
+        maxDate,
     } = usePeriodFilter();
 
     const loadActivity = useCallback(async () => {
@@ -196,13 +187,10 @@ export default function ProductDetails() {
 
     const product = activity?.product;
     const summary = activity?.summary;
-    const soldPeriod = useMemo(() => {
-        if (mode === 'all') return { kind: 'all' };
-        if (mode === 'today') {
-            return { kind: 'day', ...getDatePartsInTimezone(timezone) };
-        }
-        return { kind: 'month', year: summaryYear, month: summaryMonth };
-    }, [mode, summaryYear, summaryMonth, timezone]);
+    const soldPeriod = useMemo(
+        () => resolveClientPeriodFromFilter(mode, timezone, { startDate, endDate }),
+        [mode, timezone, startDate, endDate]
+    );
 
     const soldInPeriod = useMemo(
         () => getSoldPeriodSummary(activity?.transactions, soldPeriod, timezone),
@@ -355,7 +343,7 @@ export default function ProductDetails() {
 
             <Link
                 to="/products"
-                className="inline-flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900 mb-4"
+                className="inline-flex items-center gap-2 text-sm text-foreground-muted hover:text-foreground mb-4"
             >
                 <ArrowLeft size={16} aria-hidden />
                 Back to products
@@ -369,13 +357,13 @@ export default function ProductDetails() {
                         </div>
                         <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                                <h1 className="text-2xl font-bold tracking-tight text-zinc-950 break-words">
+                                <h1 className="text-2xl font-bold tracking-tight text-foreground break-words">
                                     {product.name}
                                 </h1>
                                 <ProductStockStatusBadge product={product} />
                             </div>
                             {product.description ? (
-                                <p className="mt-1 text-sm leading-relaxed text-zinc-500 max-w-2xl">
+                                <p className="mt-1 text-sm leading-relaxed text-foreground-muted max-w-2xl">
                                     {product.description}
                                 </p>
                             ) : null}
@@ -431,13 +419,13 @@ export default function ProductDetails() {
                     />
                 </div>
 
-                <div className="border-t border-zinc-200/60 bg-zinc-50/30 px-5 py-5">
+                <div className="border-t border-border/60 bg-surface-muted/30 px-5 py-5">
                     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                         <div>
-                            <h2 className="text-sm font-semibold text-zinc-900">
+                            <h2 className="text-sm font-semibold text-foreground">
                                 {mode === 'month' && isCurrentPeriod ? 'This month' : periodLabel}
                             </h2>
-                            <p className="mt-0.5 text-xs text-zinc-500">Paid and partial sales only</p>
+                            <p className="mt-0.5 text-xs text-foreground-muted">Paid and partial sales only</p>
                         </div>
                         <MonthPickerField
                             variant="compact"
@@ -446,9 +434,12 @@ export default function ProductDetails() {
                             periodMode={mode}
                             isThisMonth={isCurrentPeriod}
                             onPeriodModeChange={setPeriodMode}
-                            value={monthInputValue}
-                            onChange={setMonthInputValue}
                             displayLabel={periodLabel}
+                            maxDate={maxDate}
+                            customDraftStartDate={customDraftStartDate}
+                            customDraftEndDate={customDraftEndDate}
+                            onCustomDraftRangeChange={setCustomDraftRange}
+                            onCustomApply={applyCustomRange}
                             triggerAriaLabel={`Change period from ${periodLabel}`}
                         />
                     </div>
@@ -477,11 +468,11 @@ export default function ProductDetails() {
                 </div>
 
                 {mode === 'all' ? null : (
-                <div className="border-t border-zinc-200/60 px-5 py-3 text-sm text-zinc-600">
-                    <span className="text-zinc-400">All time · </span>
+                <div className="border-t border-border/60 px-5 py-3 text-sm text-foreground-muted">
+                    <span className="text-foreground-muted/70">All time · </span>
                     <span className="tabular-nums">{summary?.totalQuantitySold ?? 0}</span> sold
                     <span className="mx-2 text-zinc-300">·</span>
-                    <span className="font-medium tabular-nums text-zinc-800">
+                    <span className="font-medium tabular-nums text-foreground">
                         {formatCurrency(summary?.totalRevenue || 0)}
                     </span>{' '}
                     revenue
@@ -508,72 +499,21 @@ export default function ProductDetails() {
 
             {product.trackInventory ? (
                 <section className="mb-8">
-                    <h2 className="text-sm font-semibold text-zinc-900 mb-3">Stock history</h2>
+                    <h2 className="text-sm font-semibold text-foreground mb-3">Stock history</h2>
                     {activity?.stockHistory?.length ? (
-                        <>
-                        <DataTable
-                            columns={STOCK_HISTORY_COLUMNS}
-                            fixedLayout
-                            minWidth={640}
-                            className="scroll-x-touch"
-                        >
-                            {stockHistoryPage.data.map((row) => {
-                                const href = getStockMovementLink(row);
-                                const description = formatStockMovementDescription(row);
-                                const delta = Number(row.delta) || 0;
-                                const deltaClass =
-                                    delta > 0
-                                        ? 'text-green-700 font-medium'
-                                        : delta < 0
-                                          ? 'text-red-600 font-medium'
-                                          : 'text-zinc-700';
-
-                                return (
-                                    <DataTableRow key={row.id}>
-                                        <DataTableCell>
-                                            {formatDisplayDate(row.date?.slice(0, 10))}
-                                        </DataTableCell>
-                                        <DataTableCell className="text-right tabular-nums">
-                                            <span className={deltaClass}>{formatStockDelta(delta)}</span>
-                                        </DataTableCell>
-                                        <DataTableCell className="text-right tabular-nums text-zinc-900">
-                                            {row.balanceAfter ?? '—'}
-                                        </DataTableCell>
-                                        <DataTableCell>
-                                            {href ? (
-                                                <Link
-                                                    to={href}
-                                                    className="font-medium text-brand hover:underline"
-                                                >
-                                                    {description}
-                                                </Link>
-                                            ) : (
-                                                <span className="text-zinc-700">{description}</span>
-                                            )}
-                                        </DataTableCell>
-                                    </DataTableRow>
-                                );
-                            })}
-                        </DataTable>
-                        <PaginationBar
+                        <StockMovementTable
+                            rows={stockHistoryPage.data}
                             pagination={stockHistoryPage.pagination}
                             onPageChange={stockHistoryPage.setPage}
                         />
-                        </>
                     ) : (
-                        <div className="card">
-                            <EmptyState
-                                icon={History}
-                                title="No stock movements yet"
-                                description="Manual adjustments and sales from issued invoices or receipts will appear here."
-                            />
-                        </div>
+                        <StockMovementTable rows={[]} />
                     )}
                 </section>
             ) : null}
 
             <section className="mb-8">
-                <h2 className="text-sm font-semibold text-zinc-900 mb-3">Customers</h2>
+                <h2 className="text-sm font-semibold text-foreground mb-3">Customers</h2>
                 {activity?.byClient?.length ? (
                     <>
                     <DataTable
@@ -585,7 +525,7 @@ export default function ProductDetails() {
                         {clientsPage.data.map((row) => (
                             <DataTableRow key={row.clientId}>
                                 <DataTableCell>
-                                    <span className="font-medium text-zinc-950">{row.clientName}</span>
+                                    <span className="font-medium text-foreground">{row.clientName}</span>
                                 </DataTableCell>
                                 <DataTableCell className="text-right tabular-nums">
                                     {row.quantitySold}
@@ -619,7 +559,7 @@ export default function ProductDetails() {
             </section>
 
             <section>
-                <h2 className="text-sm font-semibold text-zinc-900 mb-3">Activity</h2>
+                <h2 className="text-sm font-semibold text-foreground mb-3">Activity</h2>
                 {activity?.transactions?.length ? (
                     <>
                     <DataTable
@@ -648,7 +588,7 @@ export default function ProductDetails() {
                                 <DataTableCell className="text-right tabular-nums font-medium">
                                     <span>{formatCurrency(lineAmount.amount || 0)}</span>
                                     {lineAmount.detail ? (
-                                        <p className="text-[11px] font-normal text-zinc-500 mt-0.5">
+                                        <p className="text-[11px] font-normal text-foreground-muted mt-0.5">
                                             {lineAmount.detail}
                                         </p>
                                     ) : null}

@@ -5,7 +5,7 @@ export default function InvoiceUsageBanner({ label, className = '' }) {
 
     return (
         <div
-            className={`flex items-center justify-between gap-3 text-sm font-medium text-amber-900 bg-amber-50 border border-amber-200/80 rounded-lg px-3 py-2.5 ${className}`.trim()}
+            className={`flex items-center justify-between gap-3 text-sm font-medium text-amber-900 bg-amber-50 border border-amber-200/80 rounded-lg px-3 py-2.5 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/60 ${className}`.trim()}
         >
             <span>{label}</span>
             <Link to="/upgrade" className="font-medium text-brand hover:underline shrink-0">

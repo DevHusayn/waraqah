@@ -98,8 +98,8 @@ export default function PublicQuotation() {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
                 <div className="max-w-md w-full card text-center">
-                    <h1 className="text-xl font-semibold text-zinc-900">Quotation unavailable</h1>
-                    <p className="mt-2 text-sm text-zinc-600">
+                    <h1 className="text-xl font-semibold text-foreground">Quotation unavailable</h1>
+                    <p className="mt-2 text-sm text-foreground-muted">
                         {error || 'This link may have expired or been removed.'}
                     </p>
                     <Link to="/" className="btn-primary inline-flex mt-6">
@@ -111,16 +111,16 @@ export default function PublicQuotation() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 py-8 px-4 print:min-h-0 print:bg-white print:p-0">
+        <div className="min-h-screen bg-slate-50 py-8 px-4 print:min-h-0 print:bg-surface print:p-0">
             <div className="max-w-3xl mx-auto print:max-w-none">
                 <div className="mb-4 print:hidden">
-                    <p className="text-sm text-zinc-600">
+                    <p className="text-sm text-foreground-muted">
                         Quotation from {business?.name || 'Business'}
                     </p>
-                    <h1 className="text-lg font-semibold text-zinc-900 mt-1">{docTitle}</h1>
+                    <h1 className="text-lg font-semibold text-foreground mt-1">{docTitle}</h1>
                 </div>
 
-                <div className="card !p-0 overflow-hidden shadow-card border border-zinc-200 print:shadow-none print:border-0 print:rounded-none">
+                <div className="card !p-0 overflow-hidden shadow-card border border-border print:shadow-none print:border-0 print:rounded-none">
                     <InvoiceDocumentPreview
                         invoice={quotation}
                         client={client}
@@ -156,7 +156,7 @@ export default function PublicQuotation() {
                     </button>
                 </div>
 
-                <footer className="mt-8 text-center text-xs text-zinc-500 print:hidden">
+                <footer className="mt-8 text-center text-xs text-foreground-muted print:hidden">
                     <Link to="/" className="inline-flex items-center gap-1.5 hover:text-brand transition-colors">
                         <span>Powered by</span>
                         <WaraqahLogo size="sm" />

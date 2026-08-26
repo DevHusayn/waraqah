@@ -233,7 +233,7 @@ function ReceiptActionsPanel({
 
     return (
         <div className="card overflow-visible">
-            <h3 className="text-sm font-semibold text-zinc-900 pb-3 mb-4 border-b border-zinc-200">
+            <h3 className="text-sm font-semibold text-foreground pb-3 mb-4 border-b border-border">
                 Actions
             </h3>
             <div className="flex items-stretch gap-2">
@@ -249,7 +249,7 @@ function ReceiptActionsPanel({
                 <ActionMenu items={menuItems} disabled={saving} ariaLabel="Receipt actions" />
             </div>
             {contactResolved && receipt?.status === 'paid' && !canEmailClient && canEditClient ? (
-                <p className="mt-3 text-sm text-zinc-500">
+                <p className="mt-3 text-sm text-foreground-muted">
                     No email on file.{' '}
                     <button
                         type="button"
@@ -575,7 +575,7 @@ const ReceiptDetails = () => {
             <div className="max-w-6xl mx-auto pb-8">
                 <Link
                     to="/receipts"
-                    className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-brand mb-6 transition-colors"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-foreground-muted hover:text-brand mb-6 transition-colors"
                 >
                     <ArrowLeft size={16} aria-hidden />
                     Back to receipts
@@ -603,7 +603,7 @@ const ReceiptDetails = () => {
 
                     <div className="space-y-6 order-1 xl:order-2">
                         <div className="card xl:sticky xl:top-24">
-                            <h3 className="text-sm font-semibold text-zinc-900 mb-4">Summary</h3>
+                            <h3 className="text-sm font-semibold text-foreground mb-4">Summary</h3>
                             <dl className="space-y-3">
                                 <SummaryRow
                                     label="Issue date"
@@ -643,8 +643,8 @@ const ReceiptDetails = () => {
                                     label={`Tax (${receipt.taxRate}%)`}
                                     value={formatCurrency(receipt.tax, receipt.currency)}
                                 />
-                                <div className="pt-3 border-t border-zinc-200 flex justify-between items-center">
-                                    <dt className="text-base font-semibold text-zinc-900">Total</dt>
+                                <div className="pt-3 border-t border-border flex justify-between items-center">
+                                    <dt className="text-base font-semibold text-foreground">Total</dt>
                                     <dd className="text-2xl font-bold text-brand">
                                         {formatCurrency(receipt.total, receipt.currency)}
                                     </dd>
@@ -664,7 +664,7 @@ const ReceiptDetails = () => {
 
                         {paymentHistory.length > 0 ? (
                             <div className="card">
-                                <h3 className="text-sm font-semibold text-zinc-900 mb-4">
+                                <h3 className="text-sm font-semibold text-foreground mb-4">
                                     Payment history
                                 </h3>
                                 <ul className="space-y-3">
@@ -674,10 +674,10 @@ const ReceiptDetails = () => {
                                             className="flex items-start justify-between gap-3 text-sm"
                                         >
                                             <div className="min-w-0">
-                                                <p className="font-medium text-zinc-900">
+                                                <p className="font-medium text-foreground">
                                                     {formatCurrency(payment.amount, receipt.currency)}
                                                 </p>
-                                                <p className="text-xs text-zinc-500 mt-0.5">
+                                                <p className="text-xs text-foreground-muted mt-0.5">
                                                     {payment.date
                                                         ? format(new Date(payment.date), 'MMM dd, yyyy')
                                                         : '—'}

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { apiFetch } from '../api/client';
 import { useToast } from '../context/ToastContext';
@@ -8,9 +8,11 @@ import { Button, Card, Title, Subtitle, SearchBar } from '../components/ui';
 import { usePagedList } from '../hooks/usePagedList';
 import { buildListQuery } from '../utils/pagination';
 import { colors } from '../theme/colors';
-import { spacing } from '../theme';
+import { spacing, useTheme } from '../theme';
 
 export function AdminDashboardScreen() {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { showToast } = useToast();
     const [refreshing, setRefreshing] = useState(false);
 
@@ -130,7 +132,8 @@ export function AdminDashboardScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.surfaceMuted || '#f4f4f5' },
     header: { padding: 16, paddingBottom: 8 },
     list: { padding: 16, paddingTop: 8, paddingBottom: 40 },
@@ -141,3 +144,4 @@ const styles = StyleSheet.create({
     btn: { flex: 1 },
     empty: { textAlign: 'center', color: colors.muted, marginTop: 24 },
 });
+}

@@ -59,7 +59,7 @@ export default function ModalShell({
                 aria-modal="true"
                 aria-labelledby={ariaLabelledby}
                 aria-describedby={ariaDescribedby}
-                className={`relative w-full ${sizes[size] || sizes.sm} bg-white rounded-lg border border-zinc-200/60 shadow-lift animate-modal-scale ${
+                className={`relative w-full ${sizes[size] || sizes.sm} bg-surface rounded-lg border border-border/60 shadow-lift animate-modal-scale ${
                     scrollable ? 'max-h-[min(90vh,100%)] overflow-y-auto' : 'overflow-visible'
                 } ${panelClassName}`}
             >
@@ -67,7 +67,7 @@ export default function ModalShell({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="absolute top-3 right-3 p-1.5 rounded-md text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-colors z-10"
+                        className="absolute top-3 right-3 p-1.5 rounded-md text-foreground-muted hover:text-foreground hover:bg-surface-muted transition-colors z-10"
                         aria-label="Close"
                     >
                         <X size={18} aria-hidden />

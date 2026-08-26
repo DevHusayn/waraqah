@@ -21,39 +21,39 @@ export default function DocumentClientDisplay({
                     {client.id ? (
                         <Link
                             to={`/clients/${client.id}`}
-                            className="font-semibold text-zinc-900 text-lg hover:text-brand hover:underline"
+                            className="font-semibold text-foreground text-lg hover:text-brand hover:underline"
                         >
                             {client.name}
                         </Link>
                     ) : (
-                        <p className="font-semibold text-zinc-900 text-lg">{client.name}</p>
+                        <p className="font-semibold text-foreground text-lg">{client.name}</p>
                     )}
                     {getClientBusiness(client) && (
-                        <p className="text-sm text-zinc-600 flex items-center gap-1.5">
-                            <Building2 size={14} className="text-zinc-400" aria-hidden />
+                        <p className="text-sm text-foreground-muted flex items-center gap-1.5">
+                            <Building2 size={14} className="text-foreground-muted/70" aria-hidden />
                             {getClientBusiness(client)}
                         </p>
                     )}
                     {emailOnFile ? (
-                        <p className="text-sm text-zinc-600 flex items-center gap-1.5">
-                            <Mail size={14} className="text-zinc-400" aria-hidden />
+                        <p className="text-sm text-foreground-muted flex items-center gap-1.5">
+                            <Mail size={14} className="text-foreground-muted/70" aria-hidden />
                             {emailOnFile}
                         </p>
                     ) : null}
                     {client.phone && (
-                        <p className="text-sm text-zinc-600 flex items-center gap-1.5">
-                            <Phone size={14} className="text-zinc-400" aria-hidden />
+                        <p className="text-sm text-foreground-muted flex items-center gap-1.5">
+                            <Phone size={14} className="text-foreground-muted/70" aria-hidden />
                             {client.phone}
                         </p>
                     )}
                     {client.address && (
-                        <p className="text-sm text-zinc-600 whitespace-pre-wrap">{client.address}</p>
+                        <p className="text-sm text-foreground-muted whitespace-pre-wrap">{client.address}</p>
                     )}
                     {additionalInfo && (
-                        <p className="text-sm text-zinc-600 whitespace-pre-wrap">{additionalInfo}</p>
+                        <p className="text-sm text-foreground-muted whitespace-pre-wrap">{additionalInfo}</p>
                     )}
                     {missingEmail ? (
-                        <p className="text-sm text-zinc-500">
+                        <p className="text-sm text-foreground-muted">
                             No email on file.{' '}
                             <button
                                 type="button"
@@ -66,7 +66,7 @@ export default function DocumentClientDisplay({
                     ) : null}
                 </div>
             ) : (
-                <p className="text-zinc-500 text-sm">Client not found</p>
+                <p className="text-foreground-muted text-sm">Client not found</p>
             )}
         </FormSection>
     );

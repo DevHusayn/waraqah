@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
     APP_CURRENCY,
@@ -14,10 +14,12 @@ import { captureEvent } from '../../monitoring/posthog';
 import { useToast } from '../../context/ToastContext';
 import { Button, FieldError, Input, Label, Subtitle, Title } from '../ui';
 import { ReplayMask } from '../ReplayMask';
-import { colors, fontFamily, fontSize, radii, spacing } from '../../theme';
+import { colors, fontFamily, fontSize, radii, spacing , useTheme } from '../../theme';
 import { hapticSuccess } from '../../utils/haptics';
 
 export function RegisterWizard({ onComplete }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { register } = useAuth();
     const { showToast } = useToast();
     const [step, setStep] = useState(1);
@@ -172,7 +174,8 @@ export function RegisterWizard({ onComplete }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     progress: {
         flexDirection: 'row',
         gap: spacing.sm,
@@ -232,3 +235,4 @@ const styles = StyleSheet.create({
         marginBottom: spacing.lg,
     },
 });
+}

@@ -1,16 +1,15 @@
-import { format } from 'date-fns';
 import MonthPickerField from './MonthPickerField';
 
 export default function ListMonthToolbarFilter({
-    monthInputValue,
-    onMonthChange,
-    periodMode = 'all',
+    periodMode = 'month',
     onPeriodModeChange,
     periodLabel,
-    isThisMonth = false,
+    customDraftStartDate,
+    customDraftEndDate,
+    onCustomDraftRangeChange,
+    onCustomApply,
+    maxDate,
 }) {
-    const maxMonth = format(new Date(), 'yyyy-MM');
-
     return (
         <div className="min-w-0 flex-1 sm:flex-none">
             <MonthPickerField
@@ -19,12 +18,13 @@ export default function ListMonthToolbarFilter({
                 portal
                 showPeriodPresets
                 periodMode={periodMode}
-                isThisMonth={isThisMonth}
                 onPeriodModeChange={onPeriodModeChange}
-                value={monthInputValue}
-                onChange={onMonthChange}
                 displayLabel={periodLabel}
-                max={maxMonth}
+                maxDate={maxDate}
+                customDraftStartDate={customDraftStartDate}
+                customDraftEndDate={customDraftEndDate}
+                onCustomDraftRangeChange={onCustomDraftRangeChange}
+                onCustomApply={onCustomApply}
                 triggerAriaLabel="Filter list by period"
                 className="!block w-full sm:!inline"
                 triggerClassName="w-full justify-between sm:w-auto sm:justify-start"

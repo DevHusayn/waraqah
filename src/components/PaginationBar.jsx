@@ -28,10 +28,10 @@ export default function PaginationBar({
             role="navigation"
             aria-label="Pagination"
         >
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-foreground-muted">
                 Page {page} of {totalPages}
                 {total > 0 ? (
-                    <span className="text-zinc-400"> · {total} total</span>
+                    <span className="text-foreground-muted/70"> · {total} total</span>
                 ) : null}
             </p>
             <div className="flex items-center gap-2">

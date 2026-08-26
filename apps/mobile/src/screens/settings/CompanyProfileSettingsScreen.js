@@ -1,10 +1,13 @@
+import { useMemo } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { Button, Card, FieldError, Input, Label } from '../../components/ui';
 import { ReplayMask } from '../../components/ReplayMask';
 import { useSettingsForm } from '../../hooks/useSettingsForm';
-import { colors, spacing } from '../../theme';
+import { colors, spacing , useTheme } from '../../theme';
 
 export function CompanyProfileSettingsScreen() {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { form, setField, errors, saving, save, loading } = useSettingsForm('profile');
 
     if (loading) return null;
@@ -34,8 +37,10 @@ export function CompanyProfileSettingsScreen() {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.surfaceMuted },
     content: { padding: spacing.lg, paddingBottom: spacing.xxl },
     block: { marginBottom: spacing.lg },
 });
+}

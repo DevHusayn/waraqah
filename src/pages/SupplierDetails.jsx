@@ -50,9 +50,9 @@ function formatDisplayDate(value) {
 function StatCard({ title, value, detail, className = '' }) {
     return (
         <div className={`stat-card stat-card-compact ${className}`.trim()}>
-            <p className="text-xs text-zinc-500 font-medium leading-snug">{title}</p>
+            <p className="text-xs text-foreground-muted font-medium leading-snug">{title}</p>
             <AdaptiveStatValue value={value} variant="compact" />
-            {detail ? <p className="text-[11px] text-zinc-500 leading-snug">{detail}</p> : null}
+            {detail ? <p className="text-[11px] text-foreground-muted leading-snug">{detail}</p> : null}
         </div>
     );
 }
@@ -202,7 +202,7 @@ export default function SupplierDetails() {
             <div className="mb-4">
                 <Link
                     to="/suppliers"
-                    className="inline-flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900"
+                    className="inline-flex items-center gap-2 text-sm text-foreground-muted hover:text-foreground"
                 >
                     <ArrowLeft size={16} aria-hidden />
                     Back to suppliers
@@ -215,16 +215,16 @@ export default function SupplierDetails() {
                         <Truck className="h-6 w-6 text-brand" aria-hidden />
                     </div>
                     <div className="min-w-0">
-                        <h1 className="text-2xl font-bold text-zinc-950 truncate">{supplier.name}</h1>
+                        <h1 className="text-2xl font-bold text-foreground truncate">{supplier.name}</h1>
                         {supplier.company ? (
-                            <p className="text-sm text-zinc-600 mt-0.5">{supplier.company}</p>
+                            <p className="text-sm text-foreground-muted mt-0.5">{supplier.company}</p>
                         ) : null}
-                        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-500">
+                        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-foreground-muted">
                             {supplier.email ? <span>{supplier.email}</span> : null}
                             {supplier.phone ? <span>{supplier.phone}</span> : null}
                         </div>
                         {supplier.address ? (
-                            <p className="mt-1 text-sm text-zinc-500 whitespace-pre-wrap">{supplier.address}</p>
+                            <p className="mt-1 text-sm text-foreground-muted whitespace-pre-wrap">{supplier.address}</p>
                         ) : null}
                     </div>
                 </div>
@@ -274,7 +274,7 @@ export default function SupplierDetails() {
             </div>
 
             <section className="card mb-6">
-                <h2 className="text-sm font-semibold text-zinc-950 mb-4">Purchase orders</h2>
+                <h2 className="text-sm font-semibold text-foreground mb-4">Purchase orders</h2>
                 {activity.purchaseOrders?.length ? (
                     <>
                     <DataTable columns={PO_COLUMNS}>
@@ -284,7 +284,7 @@ export default function SupplierDetails() {
                                 onClick={() => navigate(`/purchase-orders/${order.id}`)}
                                 className="cursor-pointer"
                             >
-                                <DataTableCell className="font-medium text-zinc-950">
+                                <DataTableCell className="font-medium text-foreground">
                                     {order.purchaseOrderNumber}
                                 </DataTableCell>
                                 <DataTableCell>{formatDisplayDate(order.date)}</DataTableCell>
@@ -324,7 +324,7 @@ export default function SupplierDetails() {
             </section>
 
             <section className="card">
-                <h2 className="text-sm font-semibold text-zinc-950 mb-4">Products bought</h2>
+                <h2 className="text-sm font-semibold text-foreground mb-4">Products bought</h2>
                 {activity.byProduct?.length ? (
                     <>
                     <DataTable columns={PRODUCT_COLUMNS}>
@@ -340,7 +340,7 @@ export default function SupplierDetails() {
                                             {row.displayName}
                                         </Link>
                                     ) : (
-                                        <span className="font-medium text-zinc-950">{row.displayName}</span>
+                                        <span className="font-medium text-foreground">{row.displayName}</span>
                                     )}
                                 </DataTableCell>
                                 <DataTableCell className="text-right tabular-nums">
@@ -362,7 +362,7 @@ export default function SupplierDetails() {
                     />
                     </>
                 ) : (
-                    <p className="text-sm text-zinc-500 py-4 text-center">
+                    <p className="text-sm text-foreground-muted py-4 text-center">
                         Products will appear here once you place purchase orders with line items.
                     </p>
                 )}

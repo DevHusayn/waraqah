@@ -1,7 +1,7 @@
 import { forwardRef, useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import GorhomBottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
-import { colors, radii, spacing } from '../../theme';
+import { colors, radii, spacing , useTheme } from '../../theme';
 
 export const BottomSheet = forwardRef(function BottomSheet(
     { children, snapPoints = ['50%'], onClose, enablePanDownToClose = true, ...rest },
@@ -41,10 +41,13 @@ export const BottomSheet = forwardRef(function BottomSheet(
 });
 
 export function BottomSheetModalContent({ children, style }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     return <View style={[styles.content, style]}>{children}</View>;
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     background: {
         backgroundColor: colors.surface,
         borderTopLeftRadius: 20,
@@ -60,3 +63,4 @@ const styles = StyleSheet.create({
         paddingBottom: spacing.huge,
     },
 });
+}

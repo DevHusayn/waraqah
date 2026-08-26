@@ -5,20 +5,25 @@ import { AccountDetailsSettingsScreen } from '../screens/settings/AccountDetails
 import { BrandingSettingsScreen } from '../screens/settings/BrandingSettingsScreen';
 import { PlanBillingSettingsScreen } from '../screens/settings/PlanBillingSettingsScreen';
 import { AboutSettingsScreen } from '../screens/settings/AboutSettingsScreen';
+import { PrivacySettingsScreen } from '../screens/settings/PrivacySettingsScreen';
 import { TermsSettingsScreen } from '../screens/settings/TermsSettingsScreen';
-import { stackScreenOptions } from './headerOptions';
+import { getStackScreenOptions } from './headerOptions';
+import { useTheme } from '../theme';
 
 const Stack = createNativeStackNavigator();
 
 export function SettingsStack() {
+    const { colors } = useTheme();
+
     return (
-        <Stack.Navigator screenOptions={stackScreenOptions}>
+        <Stack.Navigator screenOptions={getStackScreenOptions(colors)}>
             <Stack.Screen name="SettingsIndex" component={SettingsIndexScreen} options={{ title: 'Settings' }} />
             <Stack.Screen name="CompanyProfile" component={CompanyProfileSettingsScreen} options={{ title: 'Company profile' }} />
             <Stack.Screen name="AccountDetails" component={AccountDetailsSettingsScreen} options={{ title: 'Account details' }} />
             <Stack.Screen name="Branding" component={BrandingSettingsScreen} options={{ title: 'Branding' }} />
             <Stack.Screen name="PlanBilling" component={PlanBillingSettingsScreen} options={{ title: 'Plan & billing' }} />
             <Stack.Screen name="About" component={AboutSettingsScreen} options={{ title: 'About' }} />
+            <Stack.Screen name="Privacy" component={PrivacySettingsScreen} options={{ title: 'Privacy' }} />
             <Stack.Screen name="Terms" component={TermsSettingsScreen} options={{ title: 'Terms' }} />
         </Stack.Navigator>
     );

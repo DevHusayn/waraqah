@@ -1,6 +1,7 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
-import { colors, fontFamily, fontSize, spacing } from '../theme';
+import { colors, fontFamily, fontSize, spacing, useTheme } from '../theme';
 
 /**
  * Prev / page indicator / Next for offset-paginated mobile lists.
@@ -14,6 +15,8 @@ export function PaginationBar({
     disabled = false,
     style,
 }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     if (!totalPages || totalPages <= 1) return null;
 
     const canPrev = page > 1 && !disabled;
@@ -51,7 +54,8 @@ export function PaginationBar({
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     wrap: {
         paddingTop: spacing.md,
         paddingBottom: spacing.sm,
@@ -91,5 +95,6 @@ const styles = StyleSheet.create({
         color: colors.muted,
     },
 });
+}
 
 export default PaginationBar;

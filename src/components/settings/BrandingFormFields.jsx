@@ -13,10 +13,10 @@ export default function BrandingFormFields({
     return (
         <div>
             <RequiredLabel htmlFor="settings-brand-color">Brand color</RequiredLabel>
-            <p className="text-sm text-zinc-500 mb-4">
+            <p className="text-sm text-foreground-muted mb-4">
                 Used in PDF headers, accents, and your invoice theme. Save changes below to apply.
             </p>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-zinc-200 bg-zinc-50/60">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-border bg-surface-muted/60">
                 <div
                     className="w-full sm:w-24 h-16 sm:h-24 rounded-xl border-2 border-white shadow-md shrink-0"
                     style={{ backgroundColor: formData.brandColor || '#16A34A' }}
@@ -29,7 +29,7 @@ export default function BrandingFormFields({
                             name="brandColor"
                             value={formData.brandColor || '#16A34A'}
                             onChange={onChange}
-                            className="h-11 w-14 rounded-lg border border-zinc-200 cursor-pointer bg-white p-1"
+                            className="h-11 w-14 rounded-lg border border-border cursor-pointer bg-surface p-1"
                             aria-label="Pick brand color"
                         />
                         <input
@@ -47,7 +47,7 @@ export default function BrandingFormFields({
                 </div>
             </div>
             <div className="mt-4">
-                <p className="text-xs font-medium text-zinc-500 mb-2.5">Quick picks</p>
+                <p className="text-xs font-medium text-foreground-muted mb-2.5">Quick picks</p>
                 <div className="flex flex-wrap gap-2">
                     {BRAND_PRESETS.map((preset) => {
                         const selected =
@@ -64,7 +64,7 @@ export default function BrandingFormFields({
                                 className={`w-9 h-9 rounded-xl border-2 transition-all hover:scale-105 ${
                                     selected
                                         ? 'border-zinc-900 ring-2 ring-offset-2 ring-zinc-400'
-                                        : 'border-white shadow-sm hover:border-zinc-200'
+                                        : 'border-white shadow-sm hover:border-border'
                                 }`}
                                 style={{ backgroundColor: preset.color }}
                                 aria-label={`${preset.name}${selected ? ' (selected)' : ''}`}

@@ -14,13 +14,15 @@ import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { ConfirmModal } from '../components/Modal';
 import { Button, PageLoader, StatusBadge } from '../components/ui';
-import { colors, fontFamily, fontSize, lineHeight, spacing } from '../theme';
+import { colors, fontFamily, fontSize, lineHeight, spacing, useTheme } from '../theme';
 
 function quotationHasLineItems(quotation) {
     return Boolean(quotation && Array.isArray(quotation.items) && quotation.items.length > 0);
 }
 
 export function QuotationDetailScreen({ route, navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { id } = route.params;
     const insets = useSafeAreaInsets();
     const {
@@ -383,7 +385,8 @@ function MetaRow({ label, value, bold, last }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.surface },
     screen: { flex: 1 },
     content: { paddingTop: spacing.lg },
@@ -515,3 +518,4 @@ const styles = StyleSheet.create({
     },
     actionBtn: { flex: 1, minWidth: '30%' },
 });
+}

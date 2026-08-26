@@ -18,7 +18,7 @@ function FeatureCarouselCard({ item }) {
 
     return (
         <article
-            className="feature-carousel-card group relative w-[85vw] sm:w-[300px] md:w-[340px] flex-shrink-0 rounded-lg border border-zinc-200/80 bg-zinc-50/50 p-6 pb-8 transition-all duration-300 ease-smooth hover:-translate-y-1 hover:border-brand/40 hover:shadow-lift"
+            className="feature-carousel-card group relative w-[85vw] sm:w-[300px] md:w-[340px] flex-shrink-0 rounded-lg border border-border/80 bg-surface-muted/50 p-6 pb-8 transition-all duration-300 ease-smooth hover:-translate-y-1 hover:border-brand/40 hover:shadow-lift"
         >
             <span
                 className="feature-carousel-stamp"
@@ -27,14 +27,14 @@ function FeatureCarouselCard({ item }) {
                 {item.stamp}
             </span>
 
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-zinc-100 text-zinc-600 transition-all duration-300 ease-smooth group-hover:rotate-6 group-hover:bg-brand group-hover:text-white">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-zinc-100 text-foreground-muted transition-all duration-300 ease-smooth group-hover:rotate-6 group-hover:bg-brand group-hover:text-white">
                 <Icon className="h-5 w-5" />
             </div>
 
-            <h3 className="mt-4 font-brand text-lg font-semibold text-zinc-950">
+            <h3 className="mt-4 font-brand text-lg font-semibold text-foreground">
                 {item.title}
             </h3>
-            <p className="mt-2 text-sm text-zinc-500 leading-relaxed">{item.text}</p>
+            <p className="mt-2 text-sm text-foreground-muted leading-relaxed">{item.text}</p>
         </article>
     );
 }

@@ -111,16 +111,16 @@ export default function MarkAsPaidModal({
             showClose
             ariaLabelledby="record-payment-title"
         >
-            <div className="px-6 pt-6 pb-4 border-b border-zinc-100">
+            <div className="px-6 pt-6 pb-4 border-b border-border/50">
                 <div className="flex items-start gap-3 pr-8">
                     <div className="p-2.5 rounded-xl bg-green-100 shrink-0">
                         <CheckCircle className="h-5 w-5 text-green-600" aria-hidden />
                     </div>
                     <div>
-                        <h2 id="record-payment-title" className="text-lg font-semibold text-zinc-900">
+                        <h2 id="record-payment-title" className="text-lg font-semibold text-foreground">
                             Record payment
                         </h2>
-                        <p className="text-sm text-zinc-500 mt-0.5">
+                        <p className="text-sm text-foreground-muted mt-0.5">
                             {isReceipt ? 'Balance remaining' : 'Balance due'}{' '}
                             {formatCurrency(balanceDue, currency)}
                         </p>
@@ -137,7 +137,7 @@ export default function MarkAsPaidModal({
                         onChange={handleAmountChange}
                         numeric
                         disabled={saving || paidFully}
-                        className="disabled:bg-zinc-50 disabled:text-zinc-600"
+                        className="disabled:bg-surface-muted disabled:text-foreground-muted"
                     />
                     <label
                         htmlFor="record-payment-paid-fully"
@@ -151,11 +151,11 @@ export default function MarkAsPaidModal({
                             onChange={(e) => handlePaidFullyChange(e.target.checked)}
                             className="h-4 w-4 rounded border-zinc-300 accent-brand focus:ring-brand/30"
                         />
-                        <span className="text-sm text-zinc-700">Paid fully</span>
+                        <span className="text-sm text-foreground-muted">Paid fully</span>
                     </label>
-                    <p className="text-xs text-zinc-500 mt-2">
+                    <p className="text-xs text-foreground-muted mt-2">
                         Balance after this payment:{' '}
-                        <span className="font-medium text-zinc-700">
+                        <span className="font-medium text-foreground-muted">
                             {formatCurrency(balanceAfter, currency)}
                         </span>
                     </p>
@@ -233,7 +233,7 @@ export default function MarkAsPaidModal({
                 </div>
             </div>
 
-            <div className="flex flex-col-reverse sm:flex-row gap-3 p-6 border-t border-zinc-100">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 p-6 border-t border-border/50">
                 <button type="button" onClick={onCancel} className="btn-secondary flex-1" disabled={saving}>
                     Cancel
                 </button>

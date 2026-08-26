@@ -21,7 +21,7 @@ import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { ConfirmModal } from '../components/Modal';
 import { BottomSheet, Button, Input, PageLoader, StatusBadge } from '../components/ui';
-import { colors, fontFamily, fontSize, lineHeight, radii, spacing } from '../theme';
+import { colors, fontFamily, fontSize, lineHeight, radii, spacing, useTheme } from '../theme';
 
 const MONEY_EPS = 0.009;
 
@@ -30,6 +30,8 @@ function amountsMatch(a, b) {
 }
 
 export function InvoiceDetailScreen({ route, navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { id } = route.params;
     const insets = useSafeAreaInsets();
     const { invoices, clients, updateInvoice, recordInvoicePayment, deleteInvoice, loading } =
@@ -400,7 +402,8 @@ function MetaRow({ label, value, bold, last }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.surface },
     screen: { flex: 1 },
     content: { paddingTop: spacing.lg },
@@ -603,3 +606,4 @@ const styles = StyleSheet.create({
         fontSize: fontSize.md,
     },
 });
+}

@@ -10,7 +10,7 @@ import { apiFetch } from '../utils/api';
 import { APP_CURRENCY, normalizeCurrency, formatCurrency } from '../utils/currency';
 import { useDocumentFormHandlers } from '../hooks/useDocumentFormHandlers';
 import DocumentLineItemsSection from '../components/documentForm/DocumentLineItemsSection';
-import CustomSelect from '../components/CustomSelect';
+import SupplierNameCombobox from '../components/documentForm/SupplierNameCombobox';
 import FormSection from '../components/FormSection';
 import RequiredLabel from '../components/RequiredLabel';
 import FieldValidationMessage from '../components/FieldValidationMessage';
@@ -28,6 +28,7 @@ import { DEFAULT_INVOICE_UNIT, normalizeInvoiceUnit } from '@waraqah/shared';
 
 const EMPTY_FORM = {
     supplierId: '',
+    supplierName: '',
     date: format(new Date(), 'yyyy-MM-dd'),
     expectedDate: '',
     notes: '',
@@ -66,6 +67,7 @@ export default function CreatePurchaseOrder() {
         setFormData,
         products,
         markDirty: () => {},
+        productPriceField: 'unitCost',
     });
 
     const totals = useMemo(
@@ -85,10 +87,23 @@ export default function CreatePurchaseOrder() {
 
     useEffect(() => {
         const supplierId = searchParams.get('supplierId');
-        if (supplierId && !id) {
-            setFormData((prev) => ({ ...prev, supplierId }));
+        if (!supplierId || id || suppliers.length === 0) return;
+        const supplier = suppliers.find((entry) => String(entry.id) === supplierId);
+        if (!supplier) return;
+        setFormData((prev) => ({
+            ...prev,
+            supplierId: supplier.id,
+            supplierName: supplier.name || '',
+        }));
+    }, [searchParams, id, suppliers]);
+
+    useEffect(() => {
+        if (!formData.supplierId || formData.supplierName || suppliers.length === 0) return;
+        const supplier = suppliers.find((entry) => String(entry.id) === String(formData.supplierId));
+        if (supplier) {
+            setFormData((prev) => ({ ...prev, supplierName: supplier.name || '' }));
         }
-    }, [searchParams, id]);
+    }, [formData.supplierId, formData.supplierName, suppliers]);
 
     useEffect(() => {
         if (!id) return undefined;
@@ -104,6 +119,7 @@ export default function CreatePurchaseOrder() {
                 }
                 setFormData({
                     supplierId: order.supplierId ? String(order.supplierId) : '',
+                    supplierName: '',
                     date: order.date || format(new Date(), 'yyyy-MM-dd'),
                     expectedDate: order.expectedDate || '',
                     notes: order.notes || '',
@@ -124,16 +140,30 @@ export default function CreatePurchaseOrder() {
         };
     }, [id, navigate]);
 
-    const supplierOptions = useMemo(
-        () =>
-            suppliers.map((supplier) => ({
-                value: supplier.id,
-                label: supplier.company
-                    ? `${supplier.name} — ${supplier.company}`
-                    : supplier.name,
-            })),
-        [suppliers]
-    );
+    const handleSupplierNameChange = (event) => {
+        const { value } = event.target;
+        setFormData((prev) => {
+            const next = { ...prev, supplierName: value };
+            if (prev.supplierId) {
+                const linked = suppliers.find((supplier) => supplier.id === prev.supplierId);
+                if (linked && linked.name !== value) {
+                    next.supplierId = '';
+                }
+            }
+            return next;
+        });
+        setFieldErrors((prev) => ({ ...prev, supplierId: undefined }));
+    };
+
+    const handleSelectSupplier = (supplier) => {
+        if (!supplier) return;
+        setFormData((prev) => ({
+            ...prev,
+            supplierId: supplier.id,
+            supplierName: supplier.name || '',
+        }));
+        setFieldErrors((prev) => ({ ...prev, supplierId: undefined }));
+    };
 
     const validate = useCallback(
         (requireSupplier = true) => {
@@ -152,13 +182,12 @@ export default function CreatePurchaseOrder() {
         [formData]
     );
 
-    const persist = async (status) => {
-        const requireSupplier = status !== 'draft';
-        if (!validate(requireSupplier)) return;
+    const persist = async () => {
+        if (!validate(true)) return;
 
         setSaving(true);
         try {
-            const payload = buildPurchaseOrderPayload(formData, status);
+            const payload = buildPurchaseOrderPayload(formData, 'sent');
             let saved;
             if (id) {
                 saved = await apiFetch(`/purchase-orders/${id}`, {
@@ -172,13 +201,8 @@ export default function CreatePurchaseOrder() {
                 });
             }
             const savedId = saved._id || saved.id;
-            showToast(
-                status === 'draft' ? 'Purchase order draft saved' : 'Purchase order placed',
-                'success'
-            );
-            navigate(status === 'draft' ? `/purchase-orders/edit/${savedId}` : `/purchase-orders/${savedId}`, {
-                replace: true,
-            });
+            showToast('Purchase order placed', 'success');
+            navigate(`/purchase-orders/${savedId}`, { replace: true });
         } catch (err) {
             showToast(err.message || 'Failed to save purchase order', 'error');
         } finally {
@@ -202,7 +226,11 @@ export default function CreatePurchaseOrder() {
             });
             const supplierId = String(created._id || created.id);
             await fetchSuppliers();
-            setFormData((prev) => ({ ...prev, supplierId }));
+            setFormData((prev) => ({
+                ...prev,
+                supplierId,
+                supplierName: formData.name,
+            }));
             setFieldErrors((prev) => ({ ...prev, supplierId: undefined }));
             setSupplierModalOpen(false);
             showToast('Supplier added successfully', 'success');
@@ -227,7 +255,7 @@ export default function CreatePurchaseOrder() {
             <div className="mb-6">
                 <Link
                     to="/purchase-orders"
-                    className="inline-flex items-center gap-2 text-sm text-zinc-600 hover:text-zinc-900"
+                    className="inline-flex items-center gap-2 text-sm text-foreground-muted hover:text-foreground"
                 >
                     <ArrowLeft size={16} aria-hidden />
                     Back to purchase orders
@@ -239,10 +267,10 @@ export default function CreatePurchaseOrder() {
                     <ShoppingCart className="h-6 w-6 text-brand" aria-hidden />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-bold text-zinc-950">
-                        {id ? 'Edit purchase order draft' : 'New purchase order'}
+                    <h1 className="text-2xl font-bold text-foreground">
+                        {id ? 'Edit purchase order' : 'New purchase order'}
                     </h1>
-                    <p className="text-sm text-zinc-500 mt-1">
+                    <p className="text-sm text-foreground-muted mt-1">
                         Order stock from a supplier and receive it into inventory later.
                     </p>
                 </div>
@@ -253,24 +281,27 @@ export default function CreatePurchaseOrder() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="sm:col-span-2">
                             <RequiredLabel htmlFor="po-supplier">Supplier</RequiredLabel>
-                            <CustomSelect
+                            <SupplierNameCombobox
                                 id="po-supplier"
-                                value={formData.supplierId}
-                                onChange={(value) =>
-                                    setFormData((prev) => ({ ...prev, supplierId: value || '' }))
-                                }
-                                options={supplierOptions}
-                                placeholder="Select a supplier…"
+                                value={formData.supplierName}
+                                suppliers={suppliers}
+                                selectedSupplierId={formData.supplierId}
+                                onNameChange={handleSupplierNameChange}
+                                onSelectSupplier={handleSelectSupplier}
+                                error={Boolean(fieldErrors.supplierId)}
+                                placeholder="Start typing supplier name…"
                             />
                             <FieldValidationMessage message={fieldErrors.supplierId} />
-                            <p className="mt-2 text-xs text-zinc-500">
+                            <p className="mt-1.5 text-xs text-foreground-muted">
+                                Pick a saved supplier from the list, or{' '}
                                 <button
                                     type="button"
                                     onClick={() => setSupplierModalOpen(true)}
                                     className="text-brand font-medium hover:underline"
                                 >
-                                    Add a supplier
+                                    add a new one
                                 </button>
+                                .
                             </p>
                         </div>
                         <div>
@@ -296,7 +327,7 @@ export default function CreatePurchaseOrder() {
                         </div>
                         <div>
                             <label htmlFor="po-expected-date" className="label">
-                                Expected delivery <span className="text-zinc-400 font-normal">(optional)</span>
+                                Expected delivery <span className="text-foreground-muted/70 font-normal">(optional)</span>
                             </label>
                             <DatePickerField
                                 id="po-expected-date"
@@ -325,8 +356,10 @@ export default function CreatePurchaseOrder() {
                     onCurrencyChange={handlers.handleCurrencyChange}
                     onAddItem={handlers.addItem}
                     onRemoveItem={handlers.removeItem}
-                    onAddProductItem={handlers.addProductItem}
+                    onApplyProductToLine={handlers.applyProductToLine}
                     showStockWarnings={false}
+                    productPriceField="unitCost"
+                    rateLabel="Unit cost"
                 />
 
                 <FormSection title="Notes" description="Optional instructions for your records">
@@ -341,29 +374,19 @@ export default function CreatePurchaseOrder() {
 
                 <div className="card flex items-center justify-between gap-4">
                     <div>
-                        <p className="text-sm text-zinc-500">Estimated total</p>
-                        <p className="text-xl font-bold text-zinc-950">
+                        <p className="text-sm text-foreground-muted">Estimated total</p>
+                        <p className="text-xl font-bold text-foreground">
                             {formatCurrency(totals.subtotal, formData.currency)}
                         </p>
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                        <button
-                            type="button"
-                            className="btn-secondary"
-                            disabled={saving}
-                            onClick={() => persist('draft')}
-                        >
-                            Save draft
-                        </button>
-                        <button
-                            type="button"
-                            className="btn-primary"
-                            disabled={saving}
-                            onClick={() => persist('sent')}
-                        >
-                            Place order
-                        </button>
-                    </div>
+                    <button
+                        type="button"
+                        className="btn-primary"
+                        disabled={saving}
+                        onClick={persist}
+                    >
+                        Place order
+                    </button>
                 </div>
             </div>
         </div>

@@ -17,7 +17,7 @@ export default function TermsSettings() {
             ]}
         >
             <div className="card space-y-6">
-                <p className="text-sm text-zinc-500">
+                <p className="text-sm text-foreground-muted">
                     Public version also available at{' '}
                     <a href={TERMS_PATH} target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">
                         {APP_DOMAIN}{TERMS_PATH}

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import {
     Dimensions,
     FlatList,
@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ClipboardList, TrendingUp, Wallet } from 'lucide-react-native';
 import { useAppStore } from '../stores/appStore';
 import { Button } from '../components/ui';
-import { colors, fontFamily, fontSize, lineHeight, radii, spacing } from '../theme';
+import { colors, fontFamily, fontSize, lineHeight, radii, spacing, useTheme } from '../theme';
 import { hapticSelection } from '../utils/haptics';
 
 const { width } = Dimensions.get('window');
@@ -60,6 +60,8 @@ function Slide({ item }) {
 }
 
 export function OnboardingScreen({ navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const completeOnboarding = useAppStore((s) => s.completeOnboarding);
     const [index, setIndex] = useState(0);
     const listRef = useRef(null);
@@ -115,7 +117,8 @@ export function OnboardingScreen({ navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.surface },
     topBar: {
         alignItems: 'flex-end',
@@ -188,3 +191,4 @@ const styles = StyleSheet.create({
         backgroundColor: colors.brand,
     },
 });
+}

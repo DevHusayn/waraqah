@@ -120,7 +120,7 @@ export default function ProductFormModal({
             ariaLabelledby="product-modal-title"
             panelClassName="sm:max-h-[85vh]"
         >
-            <div className="px-6 pt-6 pb-4 border-b border-zinc-100">
+            <div className="px-6 pt-6 pb-4 border-b border-border/50">
                 <div className="flex items-start gap-3 pr-8">
                     <div className="p-2.5 rounded-xl bg-brand-subtle shrink-0">
                         {isEdit ? (
@@ -130,10 +130,10 @@ export default function ProductFormModal({
                         )}
                     </div>
                     <div>
-                        <h2 id="product-modal-title" className="text-lg font-semibold text-zinc-900">
+                        <h2 id="product-modal-title" className="text-lg font-semibold text-foreground">
                             {isEdit ? 'Edit product' : 'Add product'}
                         </h2>
-                        <p className="text-sm text-zinc-500 mt-0.5">
+                        <p className="text-sm text-foreground-muted mt-0.5">
                             Saved to your catalog for quick line items on any document
                         </p>
                     </div>
@@ -157,7 +157,7 @@ export default function ProductFormModal({
                 </div>
                 <div>
                     <label htmlFor="product-description" className="label">
-                        Description <span className="text-zinc-400 font-normal">(optional)</span>
+                        Description <span className="text-foreground-muted/70 font-normal">(optional)</span>
                     </label>
                     <textarea
                         id="product-description"
@@ -184,7 +184,7 @@ export default function ProductFormModal({
                     </div>
                     <div>
                         <label htmlFor="product-unitCost" className="label">
-                            Cost (NGN) <span className="text-zinc-400 font-normal">(optional)</span>
+                            Cost (NGN) <span className="text-foreground-muted/70 font-normal">(optional)</span>
                         </label>
                         <AmountInput
                             id="product-unitCost"
@@ -196,14 +196,14 @@ export default function ProductFormModal({
                     </div>
                 </div>
                 {marginPreview.marginPercent != null ? (
-                    <p className="text-xs text-zinc-500 -mt-1">
+                    <p className="text-xs text-foreground-muted -mt-1">
                         Margin {formatMarginPercent(marginPreview.marginPercent)}
                         {' · '}
                         Markup {formatMarginPercent(marginPreview.markupPercent)}
                     </p>
                 ) : null}
 
-                <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4 space-y-4">
+                <div className="rounded-xl border border-border bg-surface-muted/70 p-4 space-y-4">
                     <label className="flex items-start gap-3 cursor-pointer">
                         <input
                             type="checkbox"
@@ -213,8 +213,8 @@ export default function ProductFormModal({
                             className="mt-1 h-4 w-4 rounded border-zinc-300 text-brand focus:ring-brand"
                         />
                         <span>
-                            <span className="block text-sm font-medium text-zinc-900">Track inventory</span>
-                            <span className="block text-sm text-zinc-500 mt-0.5">
+                            <span className="block text-sm font-medium text-foreground">Track inventory</span>
+                            <span className="block text-sm text-foreground-muted mt-0.5">
                                 Reduce stock automatically when linked items are issued on invoices or receipts.
                             </span>
                         </span>
@@ -240,7 +240,7 @@ export default function ProductFormModal({
                             </div>
                             <div>
                                 <label htmlFor="product-lowStockThreshold" className="label">
-                                    Low stock alert <span className="text-zinc-400 font-normal">(optional)</span>
+                                    Low stock alert <span className="text-foreground-muted/70 font-normal">(optional)</span>
                                 </label>
                                 <input
                                     id="product-lowStockThreshold"

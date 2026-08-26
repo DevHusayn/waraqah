@@ -9,7 +9,7 @@ export default function SettingsSaveBar({
     desktopOnly = false,
 }) {
     const wrapperClass = mobileOnly
-        ? 'fixed bottom-0 inset-x-0 z-40 lg:hidden border-t border-zinc-200 bg-white/95 backdrop-blur-sm shadow-[0_-4px_24px_rgba(15,23,42,0.08)]'
+        ? 'fixed bottom-0 inset-x-0 z-40 lg:hidden border-t border-border bg-surface/95 backdrop-blur-sm shadow-[0_-4px_24px_rgba(15,23,42,0.08)]'
         : desktopOnly
           ? 'hidden lg:block'
           : '';
@@ -63,7 +63,7 @@ export default function SettingsSaveBar({
 
 export function SettingsEditingBanner() {
     return (
-        <div className="mb-6 rounded-xl border border-brand/20 bg-brand-subtle/60 px-4 py-3 text-sm text-zinc-700">
+        <div className="mb-6 rounded-xl border border-brand/20 bg-brand-subtle/60 px-4 py-3 text-sm text-foreground-muted">
             You are editing your settings. Changes apply to all future invoices and PDFs.
         </div>
     );

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     FileText,
@@ -31,6 +31,7 @@ import EmptyState from '../components/EmptyState';
 import InvoiceUsageBanner from '../components/InvoiceUsageBanner';
 import DashboardAnalytics from '../components/dashboard/DashboardAnalytics';
 import { TableSkeleton } from '../components/Skeleton';
+import { formatDashboardDate, getTimeOfDayGreeting } from '../utils/dashboardGreeting';
 
 const RECENT_COLUMNS = [
     { key: 'number', label: 'Document' },
@@ -45,9 +46,9 @@ function DocumentTypeBadge({ doc }) {
     return (
         <span
             className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wide border ${isQuotation
-                ? 'bg-sky-50 text-sky-700 border-sky-200/70'
+                ? 'bg-sky-50 text-sky-700 border-sky-200/70 dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-800/60'
                 : isReceipt
-                    ? 'bg-teal-50 text-teal-700 border-teal-200/70'
+                    ? 'bg-teal-50 text-teal-700 border-teal-200/70 dark:bg-teal-950/50 dark:text-teal-300 dark:border-teal-800/60'
                     : 'bg-brand-subtle text-brand border-brand/20'
                 }`}
         >
@@ -61,23 +62,21 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen } = useInvoiceCreateGuard();
     const {
-        summaryYear,
-        summaryMonth,
-        monthInputValue,
-        setMonthInputValue,
         periodLabel,
         mode,
         setPeriodMode,
-        queryPeriod,
+        queryParams,
         isCurrentPeriod,
         showComparison,
         comparisonLabel,
+        customDraftStartDate,
+        customDraftEndDate,
+        setCustomDraftRange,
+        applyCustomRange,
+        maxDate,
+        timezone,
     } = usePeriodFilter();
-    const { data, isPending, isFetching, isPlaceholderData } = useDashboardQuery(
-        queryPeriod,
-        summaryYear,
-        summaryMonth
-    );
+    const { data, isPending, isFetching, isPlaceholderData } = useDashboardQuery(queryParams);
     const [createModalOpen, setCreateModalOpen] = useState(false);
 
     const businessInfo = data?.businessInfo || settingsBusinessInfo;
@@ -99,7 +98,12 @@ const Dashboard = () => {
 
     const dashboardLoading = isPending;
     const periodUpdating = Boolean(isPlaceholderData && isFetching);
-    const maxMonth = format(new Date(), 'yyyy-MM');
+
+    const dashboardTitle = useMemo(
+        () => `${getTimeOfDayGreeting(timezone)}, ${displayBusinessName}`,
+        [timezone, displayBusinessName]
+    );
+    const dashboardSubtitle = useMemo(() => formatDashboardDate(timezone), [timezone]);
 
     const resolveDocumentStatusBadge = (doc) => {
         if (isReceiptDocument(doc) || doc.documentType === 'receipt') {
@@ -137,8 +141,8 @@ const Dashboard = () => {
                 navigate={navigate}
             />
             <PageHeader
-                title={displayBusinessName}
-                subtitle={`Overview for ${periodLabel}`}
+                title={dashboardTitle}
+                subtitle={dashboardSubtitle}
                 inlineActions
             >
                 <MonthPickerField
@@ -149,10 +153,12 @@ const Dashboard = () => {
                     periodMode={mode}
                     isThisMonth={isCurrentPeriod}
                     onPeriodModeChange={setPeriodMode}
-                    value={monthInputValue}
-                    onChange={setMonthInputValue}
                     displayLabel={periodLabel}
-                    max={maxMonth}
+                    maxDate={maxDate}
+                    customDraftStartDate={customDraftStartDate}
+                    customDraftEndDate={customDraftEndDate}
+                    onCustomDraftRangeChange={setCustomDraftRange}
+                    onCustomApply={applyCustomRange}
                     triggerAriaLabel="Select dashboard period"
                 />
             </PageHeader>
@@ -167,11 +173,12 @@ const Dashboard = () => {
                 fetching={isFetching && !isPending}
                 periodUpdating={periodUpdating}
                 premium={premium}
-                comparisonLabel={showComparison ? comparisonLabel : undefined}
+                showComparison={showComparison}
+                comparisonLabel={comparisonLabel}
             />
 
             <div className="card mb-6">
-                <h2 className="text-sm font-semibold text-zinc-950 mb-3">Quick actions</h2>
+                <h2 className="text-sm font-semibold text-foreground mb-3">Quick actions</h2>
                 <div className="flex flex-col gap-2">
                     <button
                         type="button"
@@ -209,22 +216,25 @@ const Dashboard = () => {
             {dashboardLoading ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
-                        <h2 className="text-sm font-semibold text-zinc-950 mb-3">Recent sales documents</h2>
+                        <h2 className="text-sm font-semibold text-foreground mb-3">Recent sales documents</h2>
                         <TableSkeleton rows={5} columns={4} />
                     </div>
                     <div>
-                        <h2 className="text-sm font-semibold text-zinc-950 mb-3">Alerts</h2>
+                        <h2 className="text-sm font-semibold text-foreground">Alerts</h2>
+                        <p className="text-xs text-foreground-muted mt-0.5 mb-3">
+                            All overdue invoices
+                        </p>
                         <div className="card flex flex-col items-center gap-3 py-8">
-                            <div className="h-10 w-10 rounded-full bg-zinc-200/80 animate-pulse" aria-hidden />
-                            <div className="h-4 w-28 rounded bg-zinc-200/80 animate-pulse" aria-hidden />
-                            <div className="h-3 w-40 rounded bg-zinc-200/80 animate-pulse" aria-hidden />
+                            <div className="h-10 w-10 rounded-full skeleton-bar" aria-hidden />
+                            <div className="h-4 w-28 skeleton-bar" aria-hidden />
+                            <div className="h-3 w-40 skeleton-bar" aria-hidden />
                         </div>
                     </div>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
-                        <h2 className="text-sm font-semibold text-zinc-950 mb-3">Recent sales documents</h2>
+                        <h2 className="text-sm font-semibold text-foreground mb-3">Recent sales documents</h2>
                         {recentDocuments.length === 0 ? (
                             <div className="data-table-wrap">
                                 <EmptyState
@@ -251,7 +261,7 @@ const Dashboard = () => {
                                         <DataTableCell>
                                             <div className="flex items-center gap-2 min-w-0">
                                                 <DocumentTypeBadge doc={doc} />
-                                                <span className="font-medium text-zinc-950 truncate">
+                                                <span className="font-medium text-foreground truncate">
                                                     {doc.displayNumber || getDisplayNumber(doc)}
                                                 </span>
                                             </div>
@@ -276,7 +286,10 @@ const Dashboard = () => {
                     </div>
 
                     <div>
-                        <h2 className="text-sm font-semibold text-zinc-950 mb-3">Alerts</h2>
+                        <h2 className="text-sm font-semibold text-foreground">Alerts</h2>
+                        <p className="text-xs text-foreground-muted mt-0.5 mb-3">
+                            All overdue invoices
+                        </p>
                         {overdueInvoices.length === 0 ? (
                             <div className="card">
                                 <EmptyState
@@ -304,10 +317,10 @@ const Dashboard = () => {
                                                 }
                                             >
                                                 <DataTableCell>
-                                                    <p className="font-medium text-zinc-950">
+                                                    <p className="font-medium text-foreground">
                                                         {getDisplayNumber(invoice)}
                                                     </p>
-                                                    <p className="text-xs text-zinc-500">
+                                                    <p className="text-xs text-foreground-muted">
                                                         {invoice.clientName || 'Unknown Client'}
                                                     </p>
                                                 </DataTableCell>

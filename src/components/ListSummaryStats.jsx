@@ -34,11 +34,11 @@ export default function ListSummaryStats({
     return (
         <div className="grid grid-cols-2 gap-3 mb-6 max-w-lg">
             <div className="stat-card stat-card-compact">
-                <p className="text-xs text-zinc-500 font-medium leading-snug">{totalLabel}</p>
+                <p className="text-xs text-foreground-muted font-medium leading-snug">{totalLabel}</p>
                 <AdaptiveStatValue value={total ?? '—'} variant="compact" />
             </div>
             <div className="stat-card stat-card-compact overflow-visible">
-                <p className="text-xs text-zinc-500 font-medium leading-snug min-w-0">
+                <p className="text-xs text-foreground-muted font-medium leading-snug min-w-0">
                     <span>{periodPrefix} </span>
                     <MonthPickerField
                         variant="inline"

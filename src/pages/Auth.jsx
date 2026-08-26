@@ -51,7 +51,7 @@ function PasswordToggle({ visible, onToggle, label }) {
         <button
             type="button"
             onClick={onToggle}
-            className="absolute right-3 top-[34px] p-1 rounded-lg text-zinc-400 hover:text-zinc-600 transition-colors"
+            className="absolute right-3 top-[34px] p-1 rounded-lg text-foreground-muted/70 hover:text-foreground-muted transition-colors"
             aria-label={visible ? `Hide ${label}` : `Show ${label}`}
         >
             {visible ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -281,7 +281,7 @@ function Auth() {
                     <ul className="mt-10 space-y-4">
                         {FEATURES.map(({ id, icon: Icon, text }) => (
                             <li key={id} className="flex items-center gap-3 text-white/90">
-                                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface/15">
                                     <Icon size={18} aria-hidden />
                                 </span>
                                 <span className="text-sm font-medium">{text}</span>
@@ -292,7 +292,7 @@ function Auth() {
                 <p className="text-sm text-white/60">Trusted by businesses across Nigeria</p>
             </div>
 
-            <div className="min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col bg-zinc-50/80">
+            <div className="min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col bg-surface-muted/80">
                 <div className="flex-1 flex flex-col justify-center px-5 py-8 sm:px-8 sm:py-10">
                     <div className="w-full max-w-[420px] mx-auto">
                         <div className="mb-6 flex justify-center lg:hidden">
@@ -302,7 +302,7 @@ function Auth() {
                             <WaraqahLogo size="md" />
                         </div>
 
-                        <div className="rounded-xl border border-zinc-200/60 bg-white shadow-soft p-6 sm:p-8">
+                        <div className="rounded-xl border border-border/60 bg-surface shadow-soft p-6 sm:p-8">
                             {isLogin ? (
                                 <>
                                     <div className="mb-6">
@@ -310,7 +310,7 @@ function Auth() {
                                         <p className="page-subtitle">Sign in to your workspace</p>
                                     </div>
 
-                                    <div className="flex rounded-md border border-zinc-200/80 bg-zinc-50/50 p-1 mb-6">
+                                    <div className="flex rounded-md border border-border/80 bg-surface-muted/50 p-1 mb-6">
                                         <button
                                             type="button"
                                             onClick={() => switchMode(true)}
@@ -323,7 +323,7 @@ function Auth() {
                                             type="button"
                                             onClick={() => switchMode(false)}
                                             disabled={submitLoading}
-                                            className="flex-1 rounded-[5px] py-2 text-[13px] font-medium transition-all duration-200 text-zinc-500 hover:text-zinc-800"
+                                            className="flex-1 rounded-[5px] py-2 text-[13px] font-medium transition-all duration-200 text-foreground-muted hover:text-foreground"
                                         >
                                             Register
                                         </button>
@@ -412,7 +412,7 @@ function Auth() {
                                         onError={(message) => setError(message)}
                                     />
 
-                                    <p className="mt-5 pt-5 border-t border-zinc-100 text-center text-[13px] text-zinc-500">
+                                    <p className="mt-5 pt-5 border-t border-border/50 text-center text-[13px] text-foreground-muted">
                                         Don&apos;t have an account?{' '}
                                         <button
                                             type="button"
@@ -426,12 +426,12 @@ function Auth() {
                                 </>
                             ) : (
                                 <>
-                                    <div className="flex rounded-md border border-zinc-200/80 bg-zinc-50/50 p-1 mb-6">
+                                    <div className="flex rounded-md border border-border/80 bg-surface-muted/50 p-1 mb-6">
                                         <button
                                             type="button"
                                             onClick={() => switchMode(true)}
                                             disabled={submitLoading}
-                                            className="flex-1 rounded-[5px] py-2 text-[13px] font-medium transition-all duration-200 text-zinc-500 hover:text-zinc-800"
+                                            className="flex-1 rounded-[5px] py-2 text-[13px] font-medium transition-all duration-200 text-foreground-muted hover:text-foreground"
                                         >
                                             Sign in
                                         </button>
@@ -451,7 +451,7 @@ function Auth() {
                                         socialDisabled={submitLoading}
                                     />
 
-                                    <p className="mt-5 pt-5 border-t border-zinc-100 text-center text-[13px] text-zinc-500">
+                                    <p className="mt-5 pt-5 border-t border-border/50 text-center text-[13px] text-foreground-muted">
                                         Already have an account?{' '}
                                         <button
                                             type="button"

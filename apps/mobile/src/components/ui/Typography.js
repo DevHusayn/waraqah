@@ -1,15 +1,18 @@
 import { Text } from 'react-native';
-import { baseStyles } from './styles';
+import { useBaseStyles } from './styles';
 
 export function Title({ children, style }) {
+    const baseStyles = useBaseStyles();
     return <Text style={[baseStyles.title, style]}>{children}</Text>;
 }
 
 export function Subtitle({ children, style }) {
+    const baseStyles = useBaseStyles();
     return <Text style={[baseStyles.subtitle, style]}>{children}</Text>;
 }
 
 export function Label({ children, required }) {
+    const baseStyles = useBaseStyles();
     return (
         <Text style={baseStyles.label}>
             {children}
@@ -19,6 +22,7 @@ export function Label({ children, required }) {
 }
 
 export function FieldError({ message }) {
+    const baseStyles = useBaseStyles();
     if (!message) return null;
     return <Text style={baseStyles.fieldError}>{message}</Text>;
 }

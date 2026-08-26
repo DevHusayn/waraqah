@@ -138,7 +138,7 @@ export default function PurchaseOrders() {
                                 onClick={() => navigate(`/purchase-orders/${order.id}`)}
                                 className="cursor-pointer"
                             >
-                                <DataTableCell className="font-medium text-zinc-950">
+                                <DataTableCell className="font-medium text-foreground">
                                     {order.purchaseOrderNumber || '—'}
                                 </DataTableCell>
                                 <DataTableCell>{order.supplierName || '—'}</DataTableCell>

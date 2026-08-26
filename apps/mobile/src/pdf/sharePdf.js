@@ -31,6 +31,7 @@ export async function shareInvoicePdf(invoice, client, businessInfo, mode = 'aut
     const html = buildInvoiceHtml(invoice, client, businessInfo, mode);
     const resolvedMode = resolvePdfMode(invoice, mode);
     const footer = buildDocumentFooterConfig(
+        invoice,
         businessInfo,
         resolvedMode === 'receipt' ? 'receipt' : 'invoice'
     );
@@ -58,7 +59,7 @@ export async function shareInvoicePdf(invoice, client, businessInfo, mode = 'aut
 export async function shareQuotationPdf(quotation, client, businessInfo) {
     const filename = getPdfFileName(quotation, 'quotation');
     const html = buildQuotationHtml(quotation, client, businessInfo);
-    const footer = buildDocumentFooterConfig(businessInfo, 'quotation');
+    const footer = buildDocumentFooterConfig(quotation, businessInfo, 'quotation');
     const premium = isPremiumUser(businessInfo);
     const pdfUri = await shareHtmlAsPdf(html, filename, {
         footer,

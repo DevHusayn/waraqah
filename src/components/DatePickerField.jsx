@@ -104,7 +104,7 @@ export default function DatePickerField({
                 aria-expanded={open}
                 aria-invalid={error}
                 className={`input-field mt-1 flex items-center justify-between gap-2 text-left ${
-                    !selected ? 'text-zinc-400' : 'text-zinc-900'
+                    !selected ? 'text-foreground-muted/70' : 'text-foreground'
                 } ${error ? 'input-field--error' : ''}`}
             >
                 <span className="flex items-center gap-2 truncate">
@@ -113,7 +113,7 @@ export default function DatePickerField({
                 </span>
                 <ChevronDown
                     size={18}
-                    className={`shrink-0 text-zinc-400 transition-transform ${open ? 'rotate-180' : ''}`}
+                    className={`shrink-0 text-foreground-muted/70 transition-transform ${open ? 'rotate-180' : ''}`}
                 />
             </button>
 
@@ -121,24 +121,24 @@ export default function DatePickerField({
                 <div
                     role="dialog"
                     aria-label="Choose date"
-                    className="absolute z-30 mt-1.5 w-full min-w-[288px] rounded-xl border border-zinc-200 bg-white p-4 shadow-card animate-fade-in"
+                    className="absolute z-30 mt-1.5 w-full min-w-[288px] rounded-xl border border-border bg-surface p-4 shadow-card animate-fade-in"
                 >
                     <div className="mb-3 flex items-center justify-between">
                         <button
                             type="button"
                             onClick={() => setViewMonth((m) => subMonths(m, 1))}
-                            className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 transition-colors"
+                            className="rounded-lg p-1.5 text-foreground-muted hover:bg-surface-muted hover:text-foreground transition-colors"
                             aria-label="Previous month"
                         >
                             <ChevronLeft size={18} />
                         </button>
-                        <p className="text-sm font-semibold text-zinc-900">
+                        <p className="text-sm font-semibold text-foreground">
                             {format(viewMonth, 'MMMM yyyy')}
                         </p>
                         <button
                             type="button"
                             onClick={() => setViewMonth((m) => addMonths(m, 1))}
-                            className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 transition-colors"
+                            className="rounded-lg p-1.5 text-foreground-muted hover:bg-surface-muted hover:text-foreground transition-colors"
                             aria-label="Next month"
                         >
                             <ChevronRight size={18} />
@@ -149,7 +149,7 @@ export default function DatePickerField({
                         {WEEKDAYS.map((day) => (
                             <div
                                 key={day}
-                                className="py-1 text-center text-xs font-medium text-zinc-400"
+                                className="py-1 text-center text-xs font-medium text-foreground-muted/70"
                             >
                                 {day}
                             </div>
@@ -174,7 +174,7 @@ export default function DatePickerField({
                                             : isToday && !disabledDay
                                               ? 'border border-brand/40 text-brand font-medium'
                                               : !disabledDay
-                                                ? 'text-zinc-700 hover:bg-brand-light hover:text-brand'
+                                                ? 'text-foreground-muted hover:bg-brand-light hover:text-brand'
                                                 : 'text-zinc-300 opacity-40 cursor-not-allowed'
                                     }`}
                                 >
@@ -184,7 +184,7 @@ export default function DatePickerField({
                         })}
                     </div>
 
-                    <div className="mt-3 flex items-center justify-between border-t border-zinc-100 pt-3">
+                    <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-3">
                         {allowClear ? (
                             <button
                                 type="button"
@@ -192,7 +192,7 @@ export default function DatePickerField({
                                     onChange('');
                                     setOpen(false);
                                 }}
-                                className="text-sm font-medium text-zinc-500 hover:text-zinc-800 transition-colors"
+                                className="text-sm font-medium text-foreground-muted hover:text-foreground transition-colors"
                             >
                                 Clear
                             </button>

@@ -27,12 +27,17 @@ import {
     normalizeCurrency,
     normalizeInvoiceUnit,
     SUPPORTED_CURRENCIES,
+    getDefaultDocumentFooter,
+    isAiDraftsEnabled,
+    isPremiumUser,
 } from '@waraqah/shared';
 import { apiFetch } from '../api/client';
 import { useQuotation } from '../context/QuotationContext';
 import { useInvoice } from '../context/InvoiceContext';
+import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { InvoiceLimitModal } from '../components/InvoiceLimitModal';
+import { AiDraftComposer, applyMobileAiDraft } from '../components/AiDraftComposer';
 import { ClientNameCombobox } from '../components/ClientNameCombobox';
 import { ClientDetailsModal } from '../components/ClientDetailsModal';
 import {
@@ -51,7 +56,7 @@ import {
     buildQuotationDraftFieldErrors,
     buildQuotationFieldErrors,
 } from '../utils/quotationFormValidation';
-import { colors, fontFamily, fontSize, lineHeight, radii, spacing, touchTarget } from '../theme';
+import { colors, fontFamily, fontSize, lineHeight, radii, spacing, touchTarget, useTheme } from '../theme';
 
 const emptyItem = () => ({
     description: '',
@@ -75,6 +80,7 @@ function buildPayload(form, status) {
         quantity: Number(it.quantity),
         rate: Number(it.rate),
         unit: normalizeInvoiceUnit(it.unit),
+        ...(it.productId ? { productId: it.productId } : {}),
     }));
     const totals = calculateInvoiceTotals(items, {
         taxRate: form.taxRate,
@@ -88,6 +94,7 @@ function buildPayload(form, status) {
         validUntil: form.hasValidUntil ? form.validUntil : null,
         items,
         notes: form.notes || '',
+        documentFooter: form.documentFooter || '',
         clientAdditionalInfo: form.clientAdditionalInfo || '',
         terms: form.terms ?? DEFAULT_QUOTATION_TERMS,
         status,
@@ -103,10 +110,14 @@ function buildPayload(form, status) {
 }
 
 export function CreateQuotationScreen({ route, navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const editId = route.params?.id;
     const insets = useSafeAreaInsets();
     const { quotations, addQuotation, updateQuotation, upsertQuotation } = useQuotation();
     const { clients, products, addClient, updateClient, fetchProducts } = useInvoice();
+    const { businessInfo } = useSettings();
+    const premium = isPremiumUser(businessInfo);
     const { showToast } = useToast();
     const limitModalRef = useRef(null);
     const productSheetRef = useRef(null);
@@ -172,6 +183,7 @@ export function CreateQuotationScreen({ route, navigation }) {
         hasValidUntil: true,
         items: [emptyItem()],
         notes: '',
+        documentFooter: '',
         terms: DEFAULT_QUOTATION_TERMS,
         currency: APP_CURRENCY,
         taxRate: '0',
@@ -181,6 +193,17 @@ export function CreateQuotationScreen({ route, navigation }) {
     useEffect(() => {
         fetchProducts().catch(() => {});
     }, [fetchProducts]);
+
+    useEffect(() => {
+        if (editId || !premium) return;
+        setForm((prev) => {
+            if (String(prev.documentFooter || '').trim()) return prev;
+            return {
+                ...prev,
+                documentFooter: getDefaultDocumentFooter(businessInfo?.name, 'quotation'),
+            };
+        });
+    }, [editId, premium, businessInfo?.name]);
 
     useEffect(() => {
         if (!editId || !existing) return;
@@ -210,9 +233,13 @@ export function CreateQuotationScreen({ route, navigation }) {
                           quantity: String(it.quantity ?? 1),
                           rate: String(it.rate ?? 0),
                           unit: normalizeInvoiceUnit(it.unit),
+                          ...(it.productId ? { productId: it.productId } : {}),
                       }))
                     : [emptyItem()],
             notes: existing.notes || '',
+            documentFooter:
+                existing.documentFooter?.trim() ||
+                getDefaultDocumentFooter(businessInfo?.name, 'quotation'),
             terms: existing.terms || DEFAULT_QUOTATION_TERMS,
             currency: normalizeCurrency(existing.currency || APP_CURRENCY),
             taxRate: String(existing.taxRate ?? 0),
@@ -221,7 +248,7 @@ export function CreateQuotationScreen({ route, navigation }) {
                     ? String(existing.discountValue)
                     : '',
         });
-    }, [editId, existing, clients, navigation]);
+    }, [editId, existing, clients, navigation, businessInfo?.name]);
 
     const clearError = (key) => {
         setFieldErrors((prev) => {
@@ -454,6 +481,20 @@ export function CreateQuotationScreen({ route, navigation }) {
                 <Text style={styles.pageSub}>
                     {isDraftFlow ? 'Fill in the details below' : 'Update details before sending'}
                 </Text>
+
+                {isAiDraftsEnabled() && isDraftFlow ? (
+                    <AiDraftComposer
+                        documentType="quotation"
+                        premium={premium}
+                        disabled={saving}
+                        onUpgrade={goUpgrade}
+                        onApply={(draft) => {
+                            setForm((prev) => applyMobileAiDraft(prev, draft));
+                            setFieldErrors({});
+                            showToast('Draft filled in. Review it before saving.', 'success');
+                        }}
+                    />
+                ) : null}
 
                 <Text style={styles.section}>Quotation details</Text>
                 <View style={styles.fieldBlock}>
@@ -697,6 +738,22 @@ export function CreateQuotationScreen({ route, navigation }) {
                     />
                 </View>
 
+                {premium ? (
+                    <>
+                        <Text style={styles.section}>Footer message</Text>
+                        <Text style={styles.hint}>Shown at the bottom of the PDF</Text>
+                        <View style={styles.fieldBlock}>
+                            <Input
+                                value={form.documentFooter}
+                                onChangeText={(v) => setField('documentFooter', v)}
+                                multiline
+                                placeholder={getDefaultDocumentFooter(businessInfo?.name, 'quotation')}
+                                style={{ minHeight: 80, textAlignVertical: 'top' }}
+                            />
+                        </View>
+                    </>
+                ) : null}
+
                 <Text style={styles.section}>Summary</Text>
                 <View style={styles.summary}>
                     {form.clientName ? (
@@ -857,7 +914,8 @@ function SummaryRow({ label, value, bold }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     root: { flex: 1, backgroundColor: colors.surface },
     screen: { flex: 1 },
     content: { paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
@@ -1071,3 +1129,4 @@ const styles = StyleSheet.create({
         gap: spacing.sm,
     },
 });
+}

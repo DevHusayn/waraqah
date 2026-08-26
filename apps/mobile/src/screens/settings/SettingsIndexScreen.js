@@ -1,9 +1,10 @@
+import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Building2, CreditCard, Palette, Crown, Info, FileText } from 'lucide-react-native';
+import { Building2, CreditCard, Palette, Crown, Info, FileText, Shield } from 'lucide-react-native';
 import { getBusinessInitials, isPremiumUser } from '@waraqah/shared';
 import { useSettings } from '../../context/SettingsContext';
 import { AvatarInitials, ListRow } from '../../components/ui';
-import { colors, fontFamily, fontSize, spacing } from '../../theme';
+import { colors, fontFamily, fontSize, spacing , useTheme } from '../../theme';
 
 const MENU = [
     { screen: 'CompanyProfile', title: 'Company profile', subtitle: 'Business name, address, contact', icon: Building2 },
@@ -11,10 +12,13 @@ const MENU = [
     { screen: 'Branding', title: 'Branding', subtitle: 'Logo, color, stamp', icon: Palette },
     { screen: 'PlanBilling', title: 'Plan & billing', subtitle: 'Subscription and usage', icon: Crown },
     { screen: 'About', title: 'About', subtitle: 'App info and support', icon: Info },
+    { screen: 'Privacy', title: 'Privacy', subtitle: 'How we use your data', icon: Shield },
     { screen: 'Terms', title: 'Terms', subtitle: 'Terms of service', icon: FileText },
 ];
 
 export function SettingsIndexScreen({ navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { businessInfo } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const initials = getBusinessInitials(businessInfo?.name || 'W');
@@ -49,7 +53,8 @@ export function SettingsIndexScreen({ navigation }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.surface },
     content: { paddingBottom: spacing.huge, paddingTop: spacing.lg },
     summary: {
@@ -77,3 +82,4 @@ const styles = StyleSheet.create({
         borderColor: colors.borderLight,
     },
 });
+}

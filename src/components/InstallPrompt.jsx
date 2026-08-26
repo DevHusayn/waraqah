@@ -53,7 +53,7 @@ export default function InstallPrompt() {
 
     return (
         <div className="fixed inset-x-0 bottom-0 z-[60] px-4 pb-4 md:hidden pointer-events-none">
-            <div className="pointer-events-auto mx-auto flex max-w-lg items-center gap-3 rounded-xl border border-zinc-200/80 bg-white p-3 shadow-lift">
+            <div className="pointer-events-auto mx-auto flex max-w-lg items-center gap-3 rounded-xl border border-border/80 bg-surface p-3 shadow-lift">
                 <img
                     src="/pwa/apple-touch-icon.png"
                     alt=""
@@ -61,8 +61,8 @@ export default function InstallPrompt() {
                     aria-hidden
                 />
                 <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-zinc-950">Install {APP_NAME}</p>
-                    <p className="text-xs text-zinc-500">Add to your home screen for quick access.</p>
+                    <p className="text-sm font-semibold text-foreground">Install {APP_NAME}</p>
+                    <p className="text-xs text-foreground-muted">Add to your home screen for quick access.</p>
                 </div>
                 <button
                     type="button"

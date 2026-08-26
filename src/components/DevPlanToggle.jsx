@@ -77,7 +77,7 @@ export default function DevPlanToggle({ formData, setFormData, className = '' })
                     <span className="font-normal text-amber-700">(Paystack test)</span>
                 ) : null}
             </p>
-            <div className="flex rounded-lg border border-amber-200/80 bg-white p-0.5 shadow-sm">
+            <div className="flex rounded-lg border border-amber-200/80 bg-surface p-0.5 shadow-sm">
                 <button
                     type="button"
                     disabled={switching}
@@ -85,7 +85,7 @@ export default function DevPlanToggle({ formData, setFormData, className = '' })
                     className={`flex-1 rounded-md py-2 text-sm font-semibold transition-all ${
                         !premium
                             ? 'bg-zinc-800 text-white shadow-sm'
-                            : 'text-zinc-600 hover:bg-zinc-50'
+                            : 'text-foreground-muted hover:bg-surface-muted'
                     }`}
                 >
                     Free
@@ -97,7 +97,7 @@ export default function DevPlanToggle({ formData, setFormData, className = '' })
                     className={`flex-1 rounded-md py-2 text-sm font-semibold transition-all ${
                         premium
                             ? 'bg-amber-500 text-white shadow-sm'
-                            : 'text-zinc-600 hover:bg-zinc-50'
+                            : 'text-foreground-muted hover:bg-surface-muted'
                     }`}
                 >
                     Premium

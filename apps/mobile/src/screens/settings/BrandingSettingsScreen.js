@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -7,7 +7,7 @@ import { useSettings } from '../../context/SettingsContext';
 import { useToast } from '../../context/ToastContext';
 import { Button, Card, FieldError, Input, Label } from '../../components/ui';
 import { useSettingsForm } from '../../hooks/useSettingsForm';
-import { colors, fontFamily, fontSize, radii, spacing } from '../../theme';
+import { colors, fontFamily, fontSize, radii, spacing , useTheme } from '../../theme';
 
 async function pickImageAsBase64() {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -30,6 +30,8 @@ async function pickImageAsBase64() {
 }
 
 export function BrandingSettingsScreen({ navigation }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const { businessInfo, saveBusinessAsset } = useSettings();
     const { showToast } = useToast();
     const { form, setField, errors, saving, save, loading } = useSettingsForm('branding');
@@ -124,7 +126,8 @@ function AssetRow({ label, hint, uri, onUpload, loading }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.surfaceMuted },
     content: { padding: spacing.lg, paddingBottom: spacing.xxl },
     block: { marginBottom: spacing.lg },
@@ -145,3 +148,4 @@ const styles = StyleSheet.create({
     assetHint: { fontFamily: fontFamily.regular, fontSize: fontSize.xs, color: colors.muted, marginBottom: 6 },
     preview: { width: 80, height: 80, borderRadius: radii.sm, backgroundColor: colors.slate100 },
 });
+}

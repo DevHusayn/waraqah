@@ -1,4 +1,5 @@
 import { FREE_MONTHLY_INVOICE_LIMIT, formatFreeSalesDocumentsLimit } from './invoiceLimits.js';
+import { AI_DRAFTS_ENABLED } from './aiDraft.js';
 
 export const FREE_PLAN_FEATURES = [
     formatFreeSalesDocumentsLimit(FREE_MONTHLY_INVOICE_LIMIT),
@@ -27,4 +28,5 @@ export const PREMIUM_PLAN_FEATURES = [
     'Logo on your account profile',
     'Monthly billing statements (PDF and print)',
     'Monthly statement PDF emailed on the 1st of each month',
+    ...(AI_DRAFTS_ENABLED ? ['Draft invoices and quotations from a sentence'] : []),
 ];

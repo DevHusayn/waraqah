@@ -1,14 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Plus, List, Package } from 'lucide-react';
+import { Plus, List } from 'lucide-react';
 import { buildLineItemAddFieldErrors } from '@waraqah/shared';
 import FormSection from '../FormSection';
 import LineItemEditor from './LineItemEditor';
 import LineItemSummaryCard from './LineItemSummaryCard';
-import CustomSelect from '../CustomSelect';
-import { formatCurrency } from '../../utils/currency';
 import { focusFieldById } from '../../utils/formFieldValidation';
-import { formatStockLabel } from '../../utils/stockWarnings';
 import { isEmptyLineItem } from '../../utils/documentFormHelpers';
 
 const ADD_ITEM_FIELD_ORDER = ['description', 'quantity', 'rate'];
@@ -33,8 +29,11 @@ export default function DocumentLineItemsSection({
     onCurrencyChange,
     onAddItem,
     onRemoveItem,
-    onAddProductItem,
+    onApplyProductToLine,
     showStockWarnings = true,
+    /** 'unitPrice' for sales documents; 'unitCost' for purchase orders */
+    productPriceField = 'unitPrice',
+    rateLabel = 'Rate',
 }) {
     const items = formData.items || [];
     const itemsLength = items.length;
@@ -103,6 +102,15 @@ export default function DocumentLineItemsSection({
         setActiveIndex(index);
     }, []);
 
+    const handleApplyProduct = useCallback(
+        (product) => {
+            if (onApplyProductToLine) {
+                onApplyProductToLine(activeIndex, product);
+            }
+        },
+        [activeIndex, onApplyProductToLine]
+    );
+
     const showSavedItems = savedItemIndices.length > 0;
     const canAddAnotherItem =
         activeItem && (showSavedItems || !isEmptyLineItem(activeItem));
@@ -126,9 +134,9 @@ export default function DocumentLineItemsSection({
             }
         >
             {activeItem ? (
-                <div className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-4">
+                <div className="rounded-xl border border-border bg-surface-muted/60 p-4">
                     <div className="mb-3">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-foreground-muted/70">
                             {showSavedItems ? 'New item' : 'Item details'}
                         </span>
                     </div>
@@ -144,53 +152,17 @@ export default function DocumentLineItemsSection({
                         onItemChange={onItemChange}
                         onUnitChange={onUnitChange}
                         onCurrencyChange={onCurrencyChange}
+                        onApplyProduct={handleApplyProduct}
                         showStockWarnings={showStockWarnings}
+                        productPriceField={productPriceField}
+                        rateLabel={rateLabel}
                     />
                 </div>
             ) : null}
 
-            {products.length > 0 ? (
-                <div className="mt-3 flex flex-col sm:flex-row sm:items-end gap-3 p-4 rounded-xl border border-brand/20 bg-brand-subtle/30">
-                    <div className="flex-1 min-w-0">
-                        <label htmlFor={`${idPrefix}-product-pick`} className="label">
-                            Add from product
-                        </label>
-                        <CustomSelect
-                            id={`${idPrefix}-product-pick`}
-                            value=""
-                            onChange={(productId) => {
-                                if (productId) onAddProductItem(productId, activeIndex);
-                            }}
-                            options={products.map((product) => {
-                                const stockLabel = formatStockLabel(product);
-                                const priceLabel = formatCurrency(
-                                    product.unitPrice || 0,
-                                    formData.currency
-                                );
-                                return {
-                                    value: product.id,
-                                    label: `${product.name} — ${priceLabel} — ${stockLabel}`,
-                                };
-                            })}
-                            placeholder="Select a saved product…"
-                            leadingIcon={<Package size={18} aria-hidden />}
-                            aria-label="Add line item from saved product"
-                        />
-                    </div>
-                </div>
-            ) : (
-                <p className="mt-3 text-sm text-zinc-500 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3">
-                    Save products in{' '}
-                    <Link to="/products" className="text-brand font-medium hover:underline">
-                        Products
-                    </Link>{' '}
-                    to add line items in one click.
-                </p>
-            )}
-
             {showSavedItems ? (
                 <div className="mt-6 space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted/70">
                         Added items ({savedItemIndices.length})
                     </p>
                     <div className="space-y-2">

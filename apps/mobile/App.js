@@ -11,7 +11,18 @@ import { View } from 'react-native';
 import { AppProviders } from './src/providers/AppProviders';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { Spinner } from './src/components/Spinner';
-import { colors } from './src/theme/colors';
+import { useTheme } from './src/theme';
+
+function AppShell() {
+    const { isDark } = useTheme();
+
+    return (
+        <>
+            <RootNavigator />
+            <StatusBar style={isDark ? 'light' : 'dark'} />
+        </>
+    );
+}
 
 export default function App() {
     const [fontsLoaded] = useFonts({
@@ -24,7 +35,7 @@ export default function App() {
 
     if (!fontsLoaded) {
         return (
-            <View style={{ flex: 1, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center' }}>
+            <View style={{ flex: 1, backgroundColor: '#16A34A', alignItems: 'center', justifyContent: 'center' }}>
                 <Spinner />
             </View>
         );
@@ -32,8 +43,7 @@ export default function App() {
 
     return (
         <AppProviders>
-            <RootNavigator />
-            <StatusBar style="dark" />
+            <AppShell />
         </AppProviders>
     );
 }

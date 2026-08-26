@@ -9,6 +9,8 @@ import {
 } from 'recharts';
 import { format, subMonths } from 'date-fns';
 import { formatCurrency } from '../../utils/currency';
+import { useTheme } from '../../context/ThemeContext';
+import { getChartTheme } from '../../utils/chartTheme';
 import ChartCard from './ChartCard';
 
 function buildPlaceholderTrend(count = 12) {
@@ -39,27 +41,29 @@ function formatAxisCurrency(value) {
     return formatCurrency(amount);
 }
 
-function RevenueTooltip({ active, payload }) {
+function RevenueTooltip({ active, payload, theme }) {
     if (!active || !payload?.length) return null;
 
     const point = payload[0]?.payload;
     if (!point) return null;
 
     return (
-        <div className="rounded-lg border border-zinc-200/80 bg-white px-3 py-2 shadow-soft text-xs">
-            <p className="font-medium text-zinc-950">{point.label}</p>
-            <p className="mt-1 text-zinc-600">
-                Paid: <span className="font-medium text-zinc-950">{formatCurrency(point.paid)}</span>
+        <div className={theme.tooltipPanel}>
+            <p className={theme.tooltipTitle}>{point.label}</p>
+            <p className={`mt-1 ${theme.tooltipMuted}`}>
+                Paid: <span className={theme.tooltipValue}>{formatCurrency(point.paid)}</span>
             </p>
-            <p className="text-zinc-600">
+            <p className={theme.tooltipMuted}>
                 Outstanding:{' '}
-                <span className="font-medium text-zinc-950">{formatCurrency(point.outstanding)}</span>
+                <span className={theme.tooltipValue}>{formatCurrency(point.outstanding)}</span>
             </p>
         </div>
     );
 }
 
 export default function RevenueTrendChart({ trend = [] }) {
+    const { isDark } = useTheme();
+    const chartTheme = getChartTheme(isDark);
     const chartData = trend.length ? trend : buildPlaceholderTrend();
     const hasData = trend.some((point) => point.paid > 0 || point.outstanding > 0);
 
@@ -78,24 +82,24 @@ export default function RevenueTrendChart({ trend = [] }) {
                                 <stop offset="100%" stopColor="#16A34A" stopOpacity={0} />
                             </linearGradient>
                         </defs>
-                        <CartesianGrid stroke="#e4e4e7" strokeDasharray="3 3" vertical={false} />
+                        <CartesianGrid stroke={chartTheme.grid} strokeDasharray="3 3" vertical={false} />
                         <XAxis
                             dataKey="label"
-                            tick={{ fill: '#71717a', fontSize: 11 }}
+                            tick={{ fill: chartTheme.tick, fontSize: 11 }}
                             axisLine={false}
                             tickLine={false}
                             interval="preserveStartEnd"
                             minTickGap={24}
                         />
                         <YAxis
-                            tick={{ fill: '#71717a', fontSize: 11 }}
+                            tick={{ fill: chartTheme.tick, fontSize: 11 }}
                             axisLine={false}
                             tickLine={false}
                             tickFormatter={formatAxisCurrency}
                             width={56}
                             domain={[0, 'auto']}
                         />
-                        <Tooltip content={<RevenueTooltip />} cursor={{ stroke: '#16A34A', strokeOpacity: 0.2 }} />
+                        <Tooltip content={<RevenueTooltip theme={chartTheme} />} cursor={{ stroke: '#16A34A', strokeOpacity: 0.2 }} />
                         <Area
                             type="monotone"
                             dataKey="paid"
@@ -104,13 +108,13 @@ export default function RevenueTrendChart({ trend = [] }) {
                             strokeOpacity={hasData ? 1 : 0.35}
                             fill="url(#revenueTrendFill)"
                             dot={false}
-                            activeDot={hasData ? { r: 4, fill: '#16A34A', stroke: '#fff', strokeWidth: 2 } : false}
+                            activeDot={hasData ? { r: 4, fill: '#16A34A', stroke: chartTheme.activeDotStroke, strokeWidth: 2 } : false}
                         />
                     </AreaChart>
                 </ResponsiveContainer>
             </div>
             {!hasData ? (
-                <p className="mt-3 text-center text-xs text-zinc-500">
+                <p className={chartTheme.emptyHint}>
                     Issue invoices or receipts to see monthly revenue trends.
                 </p>
             ) : null}

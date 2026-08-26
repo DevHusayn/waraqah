@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { colors, fontFamily } from '../theme';
+import { colors, fontFamily, useTheme } from '../theme';
 
 const SIZES = {
     sm: { text: 18, icon: 28 },
@@ -16,6 +17,8 @@ const ICONS = {
  * Circular W mark — green badge on light backgrounds, white badge when inverted.
  */
 export function WaraqahIcon({ size = 'md', inverted = false, style }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     const s = SIZES[size] || SIZES.md;
     const source = inverted ? ICONS.light : ICONS.default;
 
@@ -53,7 +56,8 @@ export function WaraqahLogo({ size = 'md', inverted = false, showIcon = true }) 
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     row: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -64,3 +68,4 @@ const styles = StyleSheet.create({
         letterSpacing: -0.3,
     },
 });
+}

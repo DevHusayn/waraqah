@@ -102,8 +102,8 @@ function DocumentTypeToggle({ documentMode, onDocumentModeChange }) {
                     onClick={() => onDocumentModeChange(value)}
                     className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                         documentMode === value
-                            ? 'bg-white text-zinc-900 shadow-sm'
-                            : 'text-zinc-600 hover:text-zinc-900'
+                            ? 'bg-surface text-foreground shadow-sm'
+                            : 'text-foreground-muted hover:text-foreground'
                     }`}
                 >
                     {label}
@@ -117,8 +117,8 @@ function PaymentReminderInfo({ reminderContext }) {
     if (!reminderContext) return null;
 
     return (
-        <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 space-y-1.5 text-sm text-zinc-600">
-            <p className="font-medium text-zinc-800 flex items-center gap-1.5">
+        <div className="rounded-xl border border-border bg-surface-muted px-3 py-2.5 space-y-1.5 text-sm text-foreground-muted">
+            <p className="font-medium text-foreground flex items-center gap-1.5">
                 <Bell size={14} aria-hidden />
                 Payment reminders
             </p>
@@ -131,13 +131,13 @@ function PaymentReminderInfo({ reminderContext }) {
                 <p>{reminderContext.nextAvailableLabel}</p>
             ) : null}
             {reminderContext.autoRemindersOn ? (
-                <p className="text-xs text-zinc-500 leading-relaxed">
+                <p className="text-xs text-foreground-muted leading-relaxed">
                     Automatic reminders are on. Waraqah may email your client when payment is due within{' '}
                     {PAYMENT_REMINDER_DUE_WINDOW_DAYS} days or overdue, at most once every{' '}
                     {PAYMENT_REMINDER_MIN_DAYS_BETWEEN} days.
                 </p>
             ) : (
-                <p className="text-xs text-zinc-500 leading-relaxed">
+                <p className="text-xs text-foreground-muted leading-relaxed">
                     Turn on automatic reminders in Settings → Notifications if you want Waraqah to follow up for you.
                 </p>
             )}
@@ -309,13 +309,13 @@ function InvoiceActionsPanel({
 
     return (
         <div className="card overflow-visible">
-            <h3 className="text-sm font-semibold text-zinc-900 pb-3 mb-4 border-b border-zinc-200">
+            <h3 className="text-sm font-semibold text-foreground pb-3 mb-4 border-b border-border">
                 Actions
             </h3>
 
             <div className="space-y-3">
                 {cancelled && (
-                    <p className="text-sm text-zinc-600 bg-zinc-50 border border-zinc-200 rounded-xl px-3 py-2.5">
+                    <p className="text-sm text-foreground-muted bg-surface-muted border border-border rounded-xl px-3 py-2.5">
                         Cancelled — kept for your records
                     </p>
                 )}
@@ -349,7 +349,7 @@ function InvoiceActionsPanel({
                 {reminderContext ? <PaymentReminderInfo reminderContext={reminderContext} /> : null}
 
                 {contactResolved && paid && !canEmailClient && canEditClient ? (
-                    <p className="text-sm text-zinc-500">
+                    <p className="text-sm text-foreground-muted">
                         No email on file.{' '}
                         <button
                             type="button"
@@ -839,7 +839,7 @@ const InvoiceDetails = () => {
             <div className="max-w-6xl mx-auto pb-8">
                 <Link
                     to="/invoices"
-                    className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-brand mb-6 transition-colors"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-foreground-muted hover:text-brand mb-6 transition-colors"
                 >
                     <ArrowLeft size={16} aria-hidden />
                     Back to invoices
@@ -875,7 +875,7 @@ const InvoiceDetails = () => {
 
                     <div className="space-y-6 order-1 xl:order-2">
                         <div className="card xl:sticky xl:top-24">
-                            <h3 className="text-sm font-semibold text-zinc-900 mb-4">Summary</h3>
+                            <h3 className="text-sm font-semibold text-foreground mb-4">Summary</h3>
                             <dl className="space-y-3">
                                 <SummaryRow
                                     label="Issue date"
@@ -930,8 +930,8 @@ const InvoiceDetails = () => {
                                     label={`Tax (${invoice.taxRate}%)`}
                                     value={formatCurrency(invoice.tax, invoice.currency)}
                                 />
-                                <div className="pt-3 border-t border-zinc-200 flex justify-between items-center">
-                                    <dt className="text-base font-semibold text-zinc-900">Total</dt>
+                                <div className="pt-3 border-t border-border flex justify-between items-center">
+                                    <dt className="text-base font-semibold text-foreground">Total</dt>
                                     <dd className="text-2xl font-bold text-brand">
                                         {formatCurrency(invoice.total, invoice.currency)}
                                     </dd>
@@ -955,7 +955,7 @@ const InvoiceDetails = () => {
 
                         {paymentHistory.length > 0 ? (
                             <div className="card">
-                                <h3 className="text-sm font-semibold text-zinc-900 mb-4">
+                                <h3 className="text-sm font-semibold text-foreground mb-4">
                                     Payment history
                                 </h3>
                                 <ul className="space-y-3">
@@ -965,10 +965,10 @@ const InvoiceDetails = () => {
                                             className="flex items-start justify-between gap-3 text-sm"
                                         >
                                             <div className="min-w-0">
-                                                <p className="font-medium text-zinc-900">
+                                                <p className="font-medium text-foreground">
                                                     {formatCurrency(payment.amount, invoice.currency)}
                                                 </p>
-                                                <p className="text-xs text-zinc-500 mt-0.5">
+                                                <p className="text-xs text-foreground-muted mt-0.5">
                                                     {payment.date
                                                         ? format(new Date(payment.date), 'MMM dd, yyyy')
                                                         : '—'}
@@ -976,7 +976,7 @@ const InvoiceDetails = () => {
                                                     {getPaymentMethodLabel(payment.method)}
                                                 </p>
                                                 {payment.note ? (
-                                                    <p className="text-xs text-zinc-500 mt-1">
+                                                    <p className="text-xs text-foreground-muted mt-1">
                                                         {payment.note}
                                                     </p>
                                                 ) : null}

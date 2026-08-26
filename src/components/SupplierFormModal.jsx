@@ -85,7 +85,7 @@ export default function SupplierFormModal({
             ariaLabelledby="supplier-modal-title"
             panelClassName="sm:max-h-[85vh]"
         >
-            <div className="px-6 pt-6 pb-4 border-b border-zinc-100">
+            <div className="px-6 pt-6 pb-4 border-b border-border/50">
                 <div className="flex items-start gap-3 pr-8">
                     <div className="p-2.5 rounded-xl bg-brand-subtle shrink-0">
                         {isEdit ? (
@@ -95,10 +95,10 @@ export default function SupplierFormModal({
                         )}
                     </div>
                     <div>
-                        <h2 id="supplier-modal-title" className="text-lg font-semibold text-zinc-900">
+                        <h2 id="supplier-modal-title" className="text-lg font-semibold text-foreground">
                             {isEdit ? 'Edit supplier' : 'Add supplier'}
                         </h2>
-                        <p className="text-sm text-zinc-500 mt-0.5">
+                        <p className="text-sm text-foreground-muted mt-0.5">
                             Vendors you buy stock or materials from
                         </p>
                     </div>
@@ -124,7 +124,7 @@ export default function SupplierFormModal({
                 <div>
                     <label htmlFor="supplier-business" className="label">
                         Company name{' '}
-                        <span className="text-zinc-400 font-normal">(optional)</span>
+                        <span className="text-foreground-muted/70 font-normal">(optional)</span>
                     </label>
                     <input
                         id="supplier-business"
@@ -140,7 +140,7 @@ export default function SupplierFormModal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label htmlFor="supplier-email" className="label">
-                            Email <span className="text-zinc-400 font-normal">(optional)</span>
+                            Email <span className="text-foreground-muted/70 font-normal">(optional)</span>
                         </label>
                         <input
                             id="supplier-email"
@@ -156,7 +156,7 @@ export default function SupplierFormModal({
                     </div>
                     <div>
                         <label htmlFor="supplier-phone" className="label">
-                            Phone <span className="text-zinc-400 font-normal">(optional)</span>
+                            Phone <span className="text-foreground-muted/70 font-normal">(optional)</span>
                         </label>
                         <input
                             id="supplier-phone"
@@ -172,7 +172,7 @@ export default function SupplierFormModal({
 
                 <div>
                     <label htmlFor="supplier-address" className="label">
-                        Address <span className="text-zinc-400 font-normal">(optional)</span>
+                        Address <span className="text-foreground-muted/70 font-normal">(optional)</span>
                     </label>
                     <textarea
                         id="supplier-address"

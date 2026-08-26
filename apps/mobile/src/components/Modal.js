@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, fontFamily, fontSize, lineHeight, radii, spacing } from '../theme';
+import { colors, fontFamily, fontSize, lineHeight, radii, spacing, useTheme } from '../theme';
 import { Button } from './ui';
 
 export function ConfirmModal({
@@ -12,6 +13,8 @@ export function ConfirmModal({
     danger,
     loading,
 }) {
+    const { colors } = useTheme();
+    const styles = useMemo(() => createStyles(colors), [colors]);
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
             <View style={styles.overlay}>
@@ -47,7 +50,8 @@ export function AlertModal({ visible, message, onClose }) {
     );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors) {
+    return StyleSheet.create({
     overlay: {
         flex: 1,
         backgroundColor: colors.overlay,
@@ -81,3 +85,4 @@ const styles = StyleSheet.create({
         flex: 1,
     },
 });
+}
