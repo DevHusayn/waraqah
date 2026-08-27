@@ -30,7 +30,7 @@ export default function PremiumPrice({
                 ) : null}
             </div>
             {savingsLabel ? (
-                <p className="mt-1 text-xs font-semibold text-green-700">{savingsLabel}</p>
+                <p className="mt-1 text-xs font-semibold text-green-700 dark:text-green-400">{savingsLabel}</p>
             ) : null}
         </div>
     );

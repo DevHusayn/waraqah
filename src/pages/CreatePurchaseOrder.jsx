@@ -22,6 +22,7 @@ import {
     getPurchaseOrderFieldFocusOrder,
 } from '../utils/purchaseOrderFormValidation';
 import { buildPurchaseOrderPayload } from '../utils/sendPurchaseOrderFlow';
+import { ensurePurchaseOrderSupplier } from '../utils/ensurePurchaseOrderSupplier';
 import { focusFieldById, firstFieldError, inputClass } from '../utils/formFieldValidation';
 import { calculateInvoiceTotals } from '../utils/invoiceTotals';
 import { DEFAULT_INVOICE_UNIT, normalizeInvoiceUnit } from '@waraqah/shared';
@@ -187,7 +188,25 @@ export default function CreatePurchaseOrder() {
 
         setSaving(true);
         try {
-            const payload = buildPurchaseOrderPayload(formData, 'sent');
+            const supplierId = await ensurePurchaseOrderSupplier(formData, suppliers, {
+                createSupplier: async (name) => {
+                    const created = await apiFetch('/suppliers', {
+                        method: 'POST',
+                        body: JSON.stringify({ name }),
+                    });
+                    const mapped = mapSupplier(created);
+                    setSuppliers((prev) => [...prev, mapped]);
+                    return mapped;
+                },
+            });
+
+            if (!supplierId) {
+                setFieldErrors({ supplierId: 'Enter a supplier name.' });
+                focusFieldById('po-supplier');
+                return;
+            }
+
+            const payload = buildPurchaseOrderPayload({ ...formData, supplierId }, 'sent');
             let saved;
             if (id) {
                 saved = await apiFetch(`/purchase-orders/${id}`, {
@@ -293,15 +312,15 @@ export default function CreatePurchaseOrder() {
                             />
                             <FieldValidationMessage message={fieldErrors.supplierId} />
                             <p className="mt-1.5 text-xs text-foreground-muted">
-                                Pick a saved supplier from the list, or{' '}
+                                Pick a saved supplier or type a new name — new suppliers are saved when
+                                you place the order.{' '}
                                 <button
                                     type="button"
                                     onClick={() => setSupplierModalOpen(true)}
                                     className="text-brand font-medium hover:underline"
                                 >
-                                    add a new one
+                                    Add full details
                                 </button>
-                                .
                             </p>
                         </div>
                         <div>

@@ -5,7 +5,7 @@ import PageHeader from '../components/PageHeader';
 import MonthPickerField from '../components/MonthPickerField';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
-import { StatementContentSkeleton } from '../components/Skeleton';
+import { StatementContentSkeleton, ProfitChartSkeleton } from '../components/Skeleton';
 import ReportStatGrid, { ReportStatCell } from '../components/ReportStatGrid';
 import { useSettings } from '../context/SettingsContext';
 import { usePeriodFilter } from '../hooks/usePeriodFilter';
@@ -33,18 +33,6 @@ const EXPENSE_COLUMNS = [
     { key: 'amount', label: 'Amount', className: 'text-right', width: '30%' },
     { key: 'share', label: '% of expenses', className: 'text-right', width: '30%' },
 ];
-
-function ChartSkeleton() {
-    return (
-        <div className="card lg:col-span-2 min-h-[280px] animate-pulse">
-            <div className="mb-4 space-y-2">
-                <div className="h-4 w-32 skeleton-bar" />
-                <div className="h-3 w-56 max-w-full skeleton-bar" />
-            </div>
-            <div className="h-[220px] skeleton-bar" />
-        </div>
-    );
-}
 
 export default function Profit() {
     const { businessInfo } = useSettings();
@@ -113,7 +101,10 @@ export default function Profit() {
             />
 
             {isPending ? (
-                <StatementContentSkeleton />
+                <div role="status" aria-live="polite" aria-busy="true" aria-label="Loading profit report">
+                    <StatementContentSkeleton />
+                    <span className="sr-only">Loading profit report</span>
+                </div>
             ) : (
                 <div className={`transition-opacity ${isFetching ? 'opacity-80' : ''}`}>
                     <div className="mb-4 flex justify-end">
@@ -199,7 +190,7 @@ export default function Profit() {
                     ) : null}
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-                        <Suspense fallback={<ChartSkeleton />}>
+                        <Suspense fallback={<ProfitChartSkeleton />}>
                             <ProfitTrendChart trend={data?.trend} />
                         </Suspense>
                     </div>

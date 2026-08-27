@@ -19,6 +19,7 @@ import {
     ListPageSkeleton,
     DetailPageSkeleton,
     StatementPageSkeleton,
+    ProfitPageSkeleton,
     UpgradePageSkeleton,
     AdminPageSkeleton,
 } from './components/Skeleton';
@@ -186,7 +187,7 @@ function App() {
                                                 <Route path="profile" element={<Navigate to="/settings/business/company-profile" replace />} />
                                             </Route>
                                             <Route path="/statements" element={<PrivateRoute><RouteSuspense fallback={<StatementPageSkeleton />}><MonthlyStatement /></RouteSuspense></PrivateRoute>} />
-                                            <Route path="/profit" element={<PrivateRoute><RouteSuspense fallback={<StatementPageSkeleton />}><Profit /></RouteSuspense></PrivateRoute>} />
+                                            <Route path="/profit" element={<PrivateRoute><RouteSuspense fallback={<ProfitPageSkeleton />}><Profit /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/expenses" element={<PrivateRoute><ListRoute><Expenses /></ListRoute></PrivateRoute>} />
                                             <Route path="/upgrade" element={<PrivateRoute><RouteSuspense fallback={<UpgradePageSkeleton />}><Upgrade /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/admin" element={<PrivateRoute><AdminRoute><RouteSuspense fallback={<AdminPageSkeleton />}><AdminDashboard /></RouteSuspense></AdminRoute></PrivateRoute>} />

@@ -12,7 +12,7 @@ import ProductStockStatusBadge from '../components/ProductStockStatusBadge';
 import StockMovementTable from '../components/StockMovementTable';
 import ListMonthToolbarFilter from '../components/ListMonthToolbarFilter';
 import AdaptiveStatValue from '../components/AdaptiveStatValue';
-import { ListPageSkeleton, ToolbarSkeleton } from '../components/Skeleton';
+import { ListPageSkeleton } from '../components/Skeleton';
 import { usePagedQuery } from '../hooks/usePagedQuery';
 import { useListMonthFilter } from '../hooks/useListMonthFilter';
 import { useAuth } from '../context/AuthContext';
@@ -182,31 +182,16 @@ export default function Inventory() {
         count: stockStatusCounts?.[tab.value],
     }));
 
-    const isInitialLoading =
-        view === 'movements'
-            ? movementsLoading && movementRows.length === 0 && !movementsSearch
-            : stockLoading && stockRows.length === 0 && !stockSearch;
-
-    if (isInitialLoading) {
-        return (
-            <>
-                <PageHeader
-                    title="Inventory"
-                    subtitle="Track your stock levels and inventory movements"
-                />
-                {view === 'stock' ? <InventorySummaryCards loading /> : null}
-                <ToolbarSkeleton />
-                <ListPageSkeleton rows={8} columns={view === 'stock' ? 5 : 5} withAction={false} />
-            </>
-        );
-    }
-
     const hasNoTrackedStock =
         view === 'stock' &&
         !stockLoading &&
         !stockSearch &&
         stockStatus === 'all' &&
         (summary?.trackedProducts === 0 || stockPagination.total === 0);
+
+    const showStockTableSkeleton = stockLoading && stockRows.length === 0 && !stockSearch;
+    const showMovementsTableSkeleton =
+        movementsLoading && movementRows.length === 0 && !movementsSearch;
 
     return (
         <>
@@ -264,6 +249,14 @@ export default function Inventory() {
                                 }
                             />
                         </div>
+                    ) : showStockTableSkeleton ? (
+                        <ListPageSkeleton
+                            rows={8}
+                            columns={5}
+                            withHeader={false}
+                            withToolbar={false}
+                            withAction={false}
+                        />
                     ) : stockRows.length === 0 ? (
                         <div className="data-table-wrap">
                             <EmptyState
@@ -341,7 +334,15 @@ export default function Inventory() {
                         </ToolbarActions>
                     </Toolbar>
 
-                    {movementRows.length === 0 && !movementsLoading ? (
+                    {showMovementsTableSkeleton ? (
+                        <ListPageSkeleton
+                            rows={8}
+                            columns={5}
+                            withHeader={false}
+                            withToolbar={false}
+                            withAction={false}
+                        />
+                    ) : movementRows.length === 0 && !movementsLoading ? (
                         <StockMovementTable
                             rows={[]}
                             showProductColumn

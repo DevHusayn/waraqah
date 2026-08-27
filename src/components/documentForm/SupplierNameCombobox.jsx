@@ -184,7 +184,7 @@ export default function SupplierNameCombobox({
                     })}
                     {showEmptyHint ? (
                         <div className="px-3 py-2.5 text-xs text-foreground-muted border-t border-border/50">
-                            No match — add this supplier using the link below
+                            New supplier — saved when you place the order
                         </div>
                     ) : null}
                 </div>

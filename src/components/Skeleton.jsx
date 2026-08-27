@@ -264,20 +264,63 @@ export function StatementPageSkeleton() {
                 </div>
                 <Skeleton className="h-12 w-full sm:w-56 rounded-xl" />
             </div>
+            <StatementContentSkeleton variant="statement" />
+        </LoadingStatus>
+    );
+}
+
+export function ProfitPageSkeleton() {
+    return (
+        <LoadingStatus label="Loading profit report">
+            <PageHeaderSkeleton withAction={false} />
             <StatementContentSkeleton />
         </LoadingStatus>
+    );
+}
+
+export function ProfitChartSkeleton() {
+    return (
+        <div className="card lg:col-span-2 min-h-[280px] animate-pulse">
+            <div className="mb-4 space-y-2">
+                <div className="h-4 w-32 skeleton-bar" />
+                <div className="h-3 w-56 max-w-full skeleton-bar" />
+            </div>
+            <div className="h-[220px] skeleton-bar" />
+        </div>
     );
 }
 
 export function StatementContentSkeleton({ variant = 'profit' }) {
     const isStatement = variant === 'statement';
 
+    if (!isStatement) {
+        return (
+            <>
+                <div className="mb-4 flex justify-end">
+                    <Skeleton className="h-9 w-44 rounded-lg" />
+                </div>
+                <ReportStatGridSkeleton count={6} columns="grid-cols-2 sm:grid-cols-3" />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                    <ProfitChartSkeleton />
+                </div>
+                <section className="mb-6">
+                    <Skeleton className="h-4 w-24 mb-3" />
+                    <TableSkeleton rows={3} columns={3} />
+                </section>
+                <section>
+                    <Skeleton className="h-4 w-24 mb-3" />
+                    <TableSkeleton rows={5} columns={6} />
+                </section>
+            </>
+        );
+    }
+
     return (
         <>
             <ReportStatGridSkeleton
-                count={isStatement ? 5 : 6}
-                columns={isStatement ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : 'grid-cols-2 sm:grid-cols-3'}
-                footer={isStatement}
+                count={5}
+                columns="grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
+                footer
             />
             <div className="card overflow-hidden !p-0">
                 <div className="px-6 py-4 border-b border-border bg-surface-muted/80 space-y-2">

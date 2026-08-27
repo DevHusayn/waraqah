@@ -84,20 +84,20 @@ export default function Upgrade() {
             </div>
 
             <div className="premium-card">
-                <div className="px-5 py-4 border-b border-amber-200/70">
+                <div className="px-5 py-4 border-b border-amber-200/70 dark:border-amber-800/50">
                     <div className="flex items-center gap-2 mb-3">
                         <Crown className="h-4 w-4 text-amber-600" />
                         <span className="text-sm font-semibold text-foreground">Premium</span>
                     </div>
 
                     {!premium && (
-                        <div className="grid grid-cols-2 gap-1 rounded-lg bg-zinc-100 p-1 mb-3">
+                        <div className="grid grid-cols-2 gap-1 rounded-lg bg-zinc-100 p-1 mb-3 dark:bg-black/30">
                             <button
                                 type="button"
                                 onClick={() => setBillingInterval('monthly')}
                                 className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
                                     billingInterval === 'monthly'
-                                        ? 'bg-surface text-foreground shadow-sm'
+                                        ? 'bg-surface text-foreground shadow-sm dark:bg-surface-elevated'
                                         : 'text-foreground-muted hover:text-foreground'
                                 }`}
                             >
@@ -108,12 +108,12 @@ export default function Upgrade() {
                                 onClick={() => setBillingInterval('yearly')}
                                 className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
                                     billingInterval === 'yearly'
-                                        ? 'bg-surface text-foreground shadow-sm'
+                                        ? 'bg-surface text-foreground shadow-sm dark:bg-surface-elevated'
                                         : 'text-foreground-muted hover:text-foreground'
                                 }`}
                             >
                                 Yearly
-                                <span className="ml-1 text-[10px] font-bold uppercase text-green-700">
+                                <span className="ml-1 text-[10px] font-bold uppercase text-green-700 dark:text-green-400">
                                     Save ₦{savings.toLocaleString('en-NG')}
                                 </span>
                             </button>
@@ -130,7 +130,7 @@ export default function Upgrade() {
                 </div>
 
                 <ul className="px-5 py-4 space-y-2.5">
-                    <li className="flex items-start gap-2 text-sm font-semibold text-foreground pb-2 border-b border-amber-200/70">
+                    <li className="flex items-start gap-2 text-sm font-semibold text-foreground pb-2 border-b border-amber-200/70 dark:border-amber-800/50">
                         <Check className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" strokeWidth={2.5} />
                         Everything in Free, plus:
                     </li>
@@ -152,7 +152,7 @@ export default function Upgrade() {
 
                 <div className="px-5 pb-5 space-y-2">
                     {premium ? (
-                        <div className="rounded-md bg-zinc-100 border border-border px-3 py-2 text-sm text-foreground-muted text-center font-medium">
+                        <div className="rounded-md bg-zinc-100 border border-border px-3 py-2 text-sm text-foreground-muted text-center font-medium dark:bg-surface-muted">
                             You already have Premium active.
                         </div>
                     ) : (

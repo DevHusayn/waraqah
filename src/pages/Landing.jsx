@@ -219,12 +219,12 @@ function LandingPremiumCard() {
                 <h3 className="text-lg font-semibold text-foreground">Premium</h3>
             </div>
 
-            <div className="grid grid-cols-2 gap-1 rounded-lg bg-zinc-100 p-1 mt-4 mb-3">
+            <div className="grid grid-cols-2 gap-1 rounded-lg bg-zinc-100 p-1 mt-4 mb-3 dark:bg-black/30">
                 <button
                     type="button"
                     onClick={() => setBillingInterval('monthly')}
                     className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${billingInterval === 'monthly'
-                        ? 'bg-surface text-foreground shadow-sm'
+                        ? 'bg-surface text-foreground shadow-sm dark:bg-surface-elevated'
                         : 'text-foreground-muted hover:text-foreground'
                         }`}
                 >
@@ -234,12 +234,12 @@ function LandingPremiumCard() {
                     type="button"
                     onClick={() => setBillingInterval('yearly')}
                     className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${billingInterval === 'yearly'
-                        ? 'bg-surface text-foreground shadow-sm'
+                        ? 'bg-surface text-foreground shadow-sm dark:bg-surface-elevated'
                         : 'text-foreground-muted hover:text-foreground'
                         }`}
                 >
                     Yearly
-                    <span className="ml-1 text-[10px] font-bold uppercase text-green-700">
+                    <span className="ml-1 text-[10px] font-bold uppercase text-green-700 dark:text-green-400">
                         Save ₦{PREMIUM_YEARLY_SAVINGS_NGN.toLocaleString('en-NG')}
                     </span>
                 </button>
