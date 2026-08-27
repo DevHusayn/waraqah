@@ -67,10 +67,10 @@ export function TableSkeleton({ rows = 6, columns = 5, className = '' }) {
                                     <td key={col}>
                                         <Skeleton
                                             className={`h-4 ${col === 0
-                                                    ? 'w-28'
-                                                    : col === columns - 1
-                                                        ? 'w-16 ml-auto'
-                                                        : 'w-20'
+                                                ? 'w-28'
+                                                : col === columns - 1
+                                                    ? 'w-16 ml-auto'
+                                                    : 'w-20'
                                                 }`}
                                         />
                                     </td>
@@ -402,8 +402,8 @@ export function AppShellSkeleton() {
     return (
         <LoadingStatus label="Loading">
             <div className="min-h-screen bg-surface-muted">
-                <header className="hidden md:flex fixed top-0 inset-x-0 z-50 h-14 items-center border-b border-border/50 bg-surface px-4">
-                    <div className="flex h-full w-[15.5rem] shrink-0 items-center gap-2 min-w-0">
+                <header className="hidden md:flex fixed top-0 inset-x-0 z-50 h-14 items-center border-b border-border/50 bg-surface">
+                    <div className="flex h-full w-[var(--sidebar-width)] shrink-0 items-center gap-2 min-w-0 overflow-hidden px-4">
                         <Skeleton className="h-7 w-7 rounded-md shrink-0" />
                         <Skeleton className="h-4 w-24" />
                     </div>
@@ -412,7 +412,7 @@ export function AppShellSkeleton() {
                     </div>
                 </header>
 
-                <aside className="hidden md:fixed md:left-0 md:top-14 md:bottom-0 md:flex md:w-[15.5rem] md:flex-col border-r border-border/50 bg-surface-muted/80">
+                <aside className="hidden md:fixed md:left-0 md:top-14 md:bottom-0 md:flex md:w-[var(--sidebar-width)] md:flex-col border-r border-border/50 bg-surface-muted/80">
                     <div className="flex flex-1 flex-col overflow-y-auto px-2.5 py-4">
                         <div className="flex flex-col gap-1 px-2">
                             {Array.from({ length: 6 }).map((_, i) => (
@@ -422,7 +422,7 @@ export function AppShellSkeleton() {
                     </div>
                 </aside>
 
-                <div className="md:pl-[15.5rem] md:pt-14 flex flex-col flex-1 min-h-screen min-w-0">
+                <div className="md:pl-[var(--sidebar-width)] md:pt-14 flex flex-col flex-1 min-h-screen min-w-0">
                     <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border/50 bg-surface/80 px-4 py-2.5 md:hidden">
                         <Skeleton className="h-7 w-28" />
                         <Skeleton className="h-9 w-9 rounded-md" />

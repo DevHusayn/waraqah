@@ -813,7 +813,7 @@ const CreateReceipt = () => {
                 onSave={handlers.handleSaveClientDetails}
             />
 
-            <div className="fixed bottom-0 inset-x-0 z-30 border-t border-border bg-surface/95 backdrop-blur p-4 xl:hidden">
+            <div className="fixed bottom-0 inset-x-0 md:left-[var(--sidebar-width)] z-30 border-t border-border bg-surface/95 backdrop-blur p-4 xl:hidden md:transition-[left] duration-200 ease-smooth motion-reduce:transition-none">
                 {actionButtons('mobile')}
             </div>
         </div>

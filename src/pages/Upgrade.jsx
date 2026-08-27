@@ -95,22 +95,20 @@ export default function Upgrade() {
                             <button
                                 type="button"
                                 onClick={() => setBillingInterval('monthly')}
-                                className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
-                                    billingInterval === 'monthly'
+                                className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${billingInterval === 'monthly'
                                         ? 'bg-surface text-foreground shadow-sm dark:bg-surface-elevated'
                                         : 'text-foreground-muted hover:text-foreground'
-                                }`}
+                                    }`}
                             >
                                 Monthly
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setBillingInterval('yearly')}
-                                className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
-                                    billingInterval === 'yearly'
+                                className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors ${billingInterval === 'yearly'
                                         ? 'bg-surface text-foreground shadow-sm dark:bg-surface-elevated'
                                         : 'text-foreground-muted hover:text-foreground'
-                                }`}
+                                    }`}
                             >
                                 Yearly
                                 <span className="ml-1 text-[10px] font-bold uppercase text-green-700 dark:text-green-400">

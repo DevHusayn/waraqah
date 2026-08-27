@@ -20,7 +20,7 @@ import { APP_SUPPORT_EMAIL, APP_VERSION } from '../constants/brand';
 import { fontFamily, fontSize, lineHeight, radii, spacing, useTheme } from '../theme';
 
 export function ProfileScreen({ navigation }) {
-    const { colors, themeMode, toggleThemeMode, oppositeOfSystem, isDark } = useTheme();
+    const { colors, toggleThemeMode, isDark } = useTheme();
     const styles = useMemo(() => createStyles(colors), [colors]);
     const { logout, isAdmin, user } = useAuth();
     const { businessInfo } = useSettings();
@@ -28,8 +28,8 @@ export function ProfileScreen({ navigation }) {
     const businessName = businessInfo?.name || 'Your business';
     const displayName = user?.name || businessName;
 
-    const followingSystem = themeMode === 'system';
-    const overrideLabel = oppositeOfSystem === 'dark' ? 'Dark' : 'Light';
+    const currentLabel = isDark ? 'Dark' : 'Light';
+    const nextLabel = isDark ? 'light' : 'dark';
     const AppearanceIcon = isDark ? Sun : Moon;
 
     return (
@@ -84,15 +84,11 @@ export function ProfileScreen({ navigation }) {
                 <View style={styles.group}>
                     <ListRow
                         title="Appearance"
-                        subtitle={
-                            followingSystem
-                                ? `Following system · tap for ${overrideLabel.toLowerCase()}`
-                                : `${overrideLabel} · tap to match system`
-                        }
+                        subtitle={`${currentLabel} · tap for ${nextLabel}`}
                         onPress={toggleThemeMode}
                         left={<AppearanceIcon size={20} color={colors.slate600} strokeWidth={2} />}
                         showChevron={false}
-                        right={<Text style={styles.value}>{followingSystem ? 'System' : overrideLabel}</Text>}
+                        right={<Text style={styles.value}>{currentLabel}</Text>}
                         dense
                     />
                     <ListRow

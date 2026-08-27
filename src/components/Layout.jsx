@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
+    Home,
     FileText,
     ClipboardList,
     Receipt,
@@ -17,12 +18,14 @@ import {
     TrendingUp,
     Wallet,
     Settings,
+    PanelLeft,
 } from 'lucide-react';
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, useLayoutEffect, memo } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { useInvoice } from '../context/InvoiceContext';
 import { useAuth } from '../context/AuthContext';
-import WaraqahLogo from './WaraqahLogo';
+import WaraqahLogo, { WaraqahIcon } from './WaraqahLogo';
+import HoverTooltip from './HoverTooltip';
 import AccountAvatarPill from './AccountAvatarPill';
 import BusinessSetupCoachmark from './BusinessSetupCoachmark';
 import ConfirmModal from './ConfirmModal';
@@ -39,10 +42,15 @@ import useAppLogout from '../hooks/useAppLogout';
 import InstallPrompt from './InstallPrompt';
 import NavLinks from './NavLinks';
 import ThemeToggle from './ThemeToggle';
+import {
+    applySidebarCollapsed,
+    persistSidebarCollapsed,
+    readSidebarCollapsed,
+} from '../utils/sidebarLayout';
 
 const NAV_SECTIONS = [
     {
-        items: [{ name: 'Dashboard', href: '/', icon: LayoutDashboard }],
+        items: [{ name: 'Home', href: '/', icon: Home }],
     },
     {
         label: 'Sales',
@@ -76,6 +84,7 @@ const NAV_SECTIONS = [
 const Layout = ({ children }) => {
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(readSidebarCollapsed);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const handleLogout = useAppLogout();
     const {
@@ -139,6 +148,10 @@ const Layout = ({ children }) => {
         setSidebarOpen(false);
     }, [location.pathname]);
 
+    useLayoutEffect(() => {
+        applySidebarCollapsed(sidebarCollapsed);
+    }, [sidebarCollapsed]);
+
     useEffect(() => {
         if (!sidebarOpen) return undefined;
 
@@ -149,6 +162,14 @@ const Layout = ({ children }) => {
         window.addEventListener('keydown', onKeyDown);
         return () => window.removeEventListener('keydown', onKeyDown);
     }, [sidebarOpen]);
+
+    const toggleSidebarCollapsed = () => {
+        setSidebarCollapsed((current) => {
+            const next = !current;
+            persistSidebarCollapsed(next);
+            return next;
+        });
+    };
 
     const adminItem = isAdmin
         ? [{ name: 'Admin', href: '/admin', icon: LayoutDashboard }]
@@ -171,38 +192,52 @@ const Layout = ({ children }) => {
         badges: { drafts: draftCount },
     };
 
-    const logoutButton = (
-        <button
-            type="button"
-            onClick={() => setShowLogoutModal(true)}
-            className="nav-link text-red-600 hover:bg-red-50/80 hover:text-red-700 dark:hover:bg-red-950/40 w-full"
-        >
-            <LogOut className="h-4 w-4 flex-shrink-0" strokeWidth={1.75} />
-            Log out
-        </button>
+    const iconLinkClass = (active, iconOnly = false) =>
+        `${active ? 'nav-link nav-link-active' : 'nav-link'}${iconOnly ? ' nav-link-icon' : ''}`;
+
+    const logoutButton = (iconOnly = false) => (
+        <HoverTooltip label="Log out" enabled={iconOnly}>
+            <button
+                type="button"
+                onClick={() => setShowLogoutModal(true)}
+                className={`nav-link text-red-600 hover:bg-red-50/80 hover:text-red-700 dark:hover:bg-red-950/40 w-full${
+                    iconOnly ? ' nav-link-icon' : ''
+                }`}
+                aria-label={iconOnly ? 'Log out' : undefined}
+            >
+                <LogOut className={`${iconOnly ? 'h-[18px] w-[18px]' : 'h-4 w-4'} flex-shrink-0`} strokeWidth={1.75} />
+                {iconOnly ? null : 'Log out'}
+            </button>
+        </HoverTooltip>
     );
 
-    const settingsLink = (onNavigate, { className = '' } = {}) => (
-        <Link
-            to="/settings"
-            onClick={onNavigate}
-            className={`${isActive('/settings') ? 'nav-link nav-link-active' : 'nav-link'} ${className}`.trim()}
-        >
-            <Settings className="h-4 w-4 flex-shrink-0 opacity-80" strokeWidth={1.75} />
-            Settings
-        </Link>
+    const settingsLink = (onNavigate, { className = '', iconOnly = false } = {}) => (
+        <HoverTooltip label="Settings" enabled={iconOnly}>
+            <Link
+                to="/settings"
+                onClick={onNavigate}
+                className={`${iconLinkClass(isActive('/settings'), iconOnly)} ${className}`.trim()}
+                aria-label={iconOnly ? 'Settings' : undefined}
+            >
+                <Settings
+                    className={`${iconOnly ? 'h-[18px] w-[18px]' : 'h-4 w-4'} flex-shrink-0 opacity-80`}
+                    strokeWidth={1.75}
+                />
+                {iconOnly ? null : 'Settings'}
+            </Link>
+        </HoverTooltip>
     );
 
-    const sidebarFooter = (onNavigate, { linkClassName = '' } = {}) => (
+    const sidebarFooter = (onNavigate, { linkClassName = '', iconOnly = false } = {}) => (
         isAuthenticated ? (
-            <div className={`mt-4 pt-4 border-t border-border/50 flex flex-col gap-0.5 ${linkClassName}`.trim()}>
-                {settingsLink(onNavigate)}
-                {logoutButton}
+            <div className={`mt-4 pt-4 border-t border-border/50 flex flex-col ${iconOnly ? 'gap-1' : 'gap-0.5'} ${linkClassName}`.trim()}>
+                {settingsLink(onNavigate, { iconOnly })}
+                {logoutButton(iconOnly)}
             </div>
         ) : null
     );
 
-    const sidebarContent = (onNavigate, { showBrand = true, showFooter = true, footerClassName = '' } = {}) => (
+    const sidebarContent = (onNavigate, { showBrand = true, showFooter = true, footerClassName = '', iconOnly = false } = {}) => (
         <>
             {showBrand ? (
                 <div className="px-2 mb-5 min-w-0">
@@ -210,36 +245,74 @@ const Layout = ({ children }) => {
                 </div>
             ) : null}
             <nav className="flex flex-col gap-0.5">
-                <NavLinks sections={NAV_SECTIONS} onNavigate={onNavigate} {...navLinkProps} />
+                <NavLinks sections={NAV_SECTIONS} onNavigate={onNavigate} iconOnly={iconOnly} {...navLinkProps} />
                 {adminItem.length > 0 ? (
-                    <div className="mt-2">
-                        <NavLinks items={adminItem} onNavigate={onNavigate} {...navLinkProps} />
+                    <div className={iconOnly ? 'mt-1' : 'mt-2'}>
+                        <NavLinks items={adminItem} onNavigate={onNavigate} iconOnly={iconOnly} {...navLinkProps} />
                     </div>
                 ) : null}
-                {showFooter ? sidebarFooter(onNavigate, { linkClassName: footerClassName }) : null}
+                {showFooter ? sidebarFooter(onNavigate, { linkClassName: footerClassName, iconOnly }) : null}
             </nav>
         </>
+    );
+
+    const collapseLabel = sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar';
+    const sidebarToggle = (
+        <HoverTooltip label={collapseLabel}>
+            <button
+                type="button"
+                onClick={toggleSidebarCollapsed}
+                className="inline-flex items-center justify-center rounded-md p-2 text-foreground-muted hover:text-foreground hover:bg-surface-muted transition-colors"
+                aria-label={collapseLabel}
+                aria-expanded={!sidebarCollapsed}
+                aria-controls="desktop-sidebar-nav"
+            >
+                <PanelLeft className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
+            </button>
+        </HoverTooltip>
     );
 
     return (
         <div className="min-h-screen bg-surface-muted">
             <header className="hidden md:flex fixed top-0 inset-x-0 z-50 h-14 items-center border-b border-border/50 bg-surface">
-                <div className="flex h-full w-[15.5rem] shrink-0 items-center px-4 min-w-0">
-                    <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
+                <div
+                    className={`flex h-full w-[var(--sidebar-width)] shrink-0 items-center overflow-hidden min-w-0 transition-[width] duration-200 ease-smooth motion-reduce:transition-none ${
+                        sidebarCollapsed ? 'justify-center px-0' : 'justify-between gap-1 px-3'
+                    }`}
+                >
+                    {sidebarCollapsed ? (
+                        <span className="inline-flex items-center justify-center">
+                            <WaraqahIcon size="sm" />
+                            <span className="sr-only">Waraqah</span>
+                        </span>
+                    ) : (
+                        <>
+                            <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
+                            {sidebarToggle}
+                        </>
+                    )}
                 </div>
-                <div className="flex flex-1 items-center justify-end gap-2 px-4 sm:px-6 lg:px-8">
-                    <ThemeToggle />
-                    {showAccountAvatar ? <AccountAvatarPill /> : null}
+                <div className="flex flex-1 items-center gap-2 px-4 sm:px-6 lg:px-8">
+                    {sidebarCollapsed ? sidebarToggle : null}
+                    <div className="ml-auto flex items-center gap-2">
+                        <ThemeToggle />
+                        {showAccountAvatar ? <AccountAvatarPill /> : null}
+                    </div>
                 </div>
             </header>
 
-            <aside className="hidden md:fixed md:left-0 md:top-14 md:bottom-0 md:flex md:w-[15.5rem] md:flex-col border-r border-border/50 bg-surface-muted/80">
-                <div className="flex flex-1 flex-col overflow-y-auto scroll-x-touch px-2.5 py-4">
-                    {sidebarContent(undefined, { showBrand: false })}
+            <aside className="hidden md:fixed md:left-0 md:top-14 md:bottom-0 md:flex md:w-[var(--sidebar-width)] md:flex-col overflow-hidden border-r border-border/50 bg-surface-muted/80 transition-[width] duration-200 ease-smooth motion-reduce:transition-none">
+                <div
+                    id="desktop-sidebar-nav"
+                    className={`flex flex-1 flex-col overflow-y-auto scroll-x-touch py-4 ${
+                        sidebarCollapsed ? 'px-1.5' : 'px-2.5'
+                    }`}
+                >
+                    {sidebarContent(undefined, { showBrand: false, iconOnly: sidebarCollapsed })}
                 </div>
             </aside>
 
-            <div className="md:pl-[15.5rem] md:pt-14 flex flex-col flex-1 min-h-screen min-w-0">
+            <div className="md:pl-[var(--sidebar-width)] md:pt-14 flex flex-col flex-1 min-h-screen min-w-0 md:transition-[padding] duration-200 ease-smooth motion-reduce:transition-none">
                 <header className="sticky top-0 z-50 flex md:hidden h-14 shrink-0 items-center justify-between border-b border-border/50 bg-surface px-4">
                     <button
                         type="button"
@@ -300,7 +373,7 @@ const Layout = ({ children }) => {
                     {isAuthenticated ? (
                         <div className="shrink-0 border-t border-border/50 px-4 py-4 flex flex-col gap-0.5 [&_.nav-link]:py-2.5">
                             {settingsLink(() => setSidebarOpen(false))}
-                            {logoutButton}
+                            {logoutButton()}
                         </div>
                     ) : null}
                 </aside>

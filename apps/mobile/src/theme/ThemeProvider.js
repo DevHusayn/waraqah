@@ -1,5 +1,4 @@
 import { createContext, useCallback, useContext, useMemo } from 'react';
-import { useColorScheme } from 'react-native';
 import { DarkTheme, DefaultTheme } from '@react-navigation/native';
 import { useAppStore } from '../stores/appStore';
 import {
@@ -29,18 +28,12 @@ function buildNavigationTheme(colors, isDark) {
 export function ThemeProvider({ children }) {
     const themeMode = useAppStore((s) => s.themeMode);
     const setThemeMode = useAppStore((s) => s.setThemeMode);
-    const systemScheme = useColorScheme();
 
-    const resolvedTheme = useMemo(
-        () => resolveThemeMode(themeMode, systemScheme),
-        [themeMode, systemScheme],
-    );
-    const prefersDark = systemScheme === 'dark';
-    const oppositeOfSystem = prefersDark ? 'light' : 'dark';
+    const resolvedTheme = useMemo(() => resolveThemeMode(themeMode), [themeMode]);
 
     const toggleThemeMode = useCallback(() => {
-        setThemeMode(themeMode === 'system' ? oppositeOfSystem : 'system');
-    }, [themeMode, oppositeOfSystem, setThemeMode]);
+        setThemeMode(themeMode === 'dark' ? 'light' : 'dark');
+    }, [themeMode, setThemeMode]);
 
     const colors = useMemo(() => getThemeColors(resolvedTheme), [resolvedTheme]);
     const statIconThemes = useMemo(() => getStatIconThemes(colors), [colors]);
@@ -55,8 +48,6 @@ export function ThemeProvider({ children }) {
             setThemeMode,
             toggleThemeMode,
             resolvedTheme,
-            prefersDark,
-            oppositeOfSystem,
             isDark: resolvedTheme === 'dark',
             colors,
             statIconThemes,
@@ -67,8 +58,6 @@ export function ThemeProvider({ children }) {
             setThemeMode,
             toggleThemeMode,
             resolvedTheme,
-            prefersDark,
-            oppositeOfSystem,
             colors,
             statIconThemes,
             navigationTheme,

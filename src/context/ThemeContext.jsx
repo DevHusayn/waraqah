@@ -1,21 +1,23 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 const THEME_KEY = 'waraqah_theme_mode';
-const THEME_MODES = ['system', 'light', 'dark'];
+const THEME_MODES = ['light', 'dark'];
+
+function normalizeThemeMode(value) {
+    return THEME_MODES.includes(value) ? value : 'dark';
+}
 
 function readStoredThemeMode() {
     try {
         const stored = localStorage.getItem(THEME_KEY);
-        return THEME_MODES.includes(stored) ? stored : 'system';
+        const mode = normalizeThemeMode(stored);
+        if (stored !== mode) {
+            localStorage.setItem(THEME_KEY, mode);
+        }
+        return mode;
     } catch {
-        return 'system';
+        return 'dark';
     }
-}
-
-function resolveTheme(themeMode, prefersDark) {
-    if (themeMode === 'dark') return 'dark';
-    if (themeMode === 'light') return 'light';
-    return prefersDark ? 'dark' : 'light';
 }
 
 function applyThemeClass(resolvedTheme) {
@@ -26,42 +28,24 @@ const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
     const [themeMode, setThemeModeState] = useState(readStoredThemeMode);
-    const [prefersDark, setPrefersDark] = useState(() => {
-        if (typeof window === 'undefined') return false;
-        return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    });
-
-    const resolvedTheme = useMemo(
-        () => resolveTheme(themeMode, prefersDark),
-        [themeMode, prefersDark],
-    );
 
     useEffect(() => {
-        applyThemeClass(resolvedTheme);
-    }, [resolvedTheme]);
-
-    useEffect(() => {
-        const media = window.matchMedia('(prefers-color-scheme: dark)');
-        const handleChange = (event) => setPrefersDark(event.matches);
-        media.addEventListener('change', handleChange);
-        return () => media.removeEventListener('change', handleChange);
-    }, []);
+        applyThemeClass(themeMode);
+    }, [themeMode]);
 
     const setThemeMode = useCallback((mode) => {
-        if (!THEME_MODES.includes(mode)) return;
+        const next = normalizeThemeMode(mode);
         try {
-            localStorage.setItem(THEME_KEY, mode);
+            localStorage.setItem(THEME_KEY, next);
         } catch {
             // ignore storage failures
         }
-        setThemeModeState(mode);
+        setThemeModeState(next);
     }, []);
 
-    const oppositeOfSystem = prefersDark ? 'light' : 'dark';
-
     const toggleThemeMode = useCallback(() => {
-        setThemeMode(themeMode === 'system' ? oppositeOfSystem : 'system');
-    }, [themeMode, oppositeOfSystem, setThemeMode]);
+        setThemeMode(themeMode === 'dark' ? 'light' : 'dark');
+    }, [themeMode, setThemeMode]);
 
     const value = useMemo(
         () => ({
@@ -69,12 +53,10 @@ export function ThemeProvider({ children }) {
             setThemeMode,
             toggleThemeMode,
             cycleThemeMode: toggleThemeMode,
-            resolvedTheme,
-            prefersDark,
-            oppositeOfSystem,
-            isDark: resolvedTheme === 'dark',
+            resolvedTheme: themeMode,
+            isDark: themeMode === 'dark',
         }),
-        [themeMode, setThemeMode, toggleThemeMode, resolvedTheme, prefersDark, oppositeOfSystem],
+        [themeMode, setThemeMode, toggleThemeMode],
     );
 
     return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

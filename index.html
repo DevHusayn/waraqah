@@ -6,11 +6,12 @@
     <script>
         (function () {
             try {
-                var mode = localStorage.getItem('waraqah_theme_mode') || 'system';
-                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                var isDark = mode === 'dark' || (mode === 'system' && prefersDark);
-                if (isDark) {
+                var mode = localStorage.getItem('waraqah_theme_mode');
+                if (mode !== 'light') {
                     document.documentElement.classList.add('dark');
+                }
+                if (localStorage.getItem('waraqah_sidebar_collapsed') === '1') {
+                    document.documentElement.classList.add('sidebar-collapsed');
                 }
             } catch (_) { }
         })();

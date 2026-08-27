@@ -752,7 +752,7 @@ const CreateQuotation = () => {
                 onSave={handlers.handleSaveClientDetails}
             />
 
-            <div className="fixed bottom-0 left-0 right-0 md:left-[15.5rem] z-30 xl:hidden border-t border-border bg-surface/95 backdrop-blur-sm shadow-[0_-4px_16px_rgba(15,23,42,0.06)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+            <div className="fixed bottom-0 left-0 right-0 md:left-[var(--sidebar-width)] z-30 xl:hidden border-t border-border bg-surface/95 backdrop-blur-sm shadow-[0_-4px_16px_rgba(15,23,42,0.06)] px-4 sm:px-6 lg:px-8 py-3 sm:py-4 md:transition-[left] duration-200 ease-smooth motion-reduce:transition-none">
                 <div className="max-w-6xl mx-auto w-full">{actionButtons()}</div>
             </div>
         </div>

@@ -90,10 +90,8 @@ export function getStatIconThemes(palette) {
 
 export const statIconThemes = getStatIconThemes(lightColors);
 
-export function resolveThemeMode(themeMode, systemScheme) {
-    if (themeMode === 'dark') return 'dark';
-    if (themeMode === 'light') return 'light';
-    return systemScheme === 'dark' ? 'dark' : 'light';
+export function resolveThemeMode(themeMode) {
+    return themeMode === 'light' ? 'light' : 'dark';
 }
 
 export function getThemeColors(resolvedTheme) {

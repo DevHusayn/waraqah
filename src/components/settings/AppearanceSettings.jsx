@@ -3,24 +3,20 @@ import SettingsListItem from './SettingsListItem';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function AppearanceSettings() {
-    const { themeMode, toggleThemeMode, isDark, oppositeOfSystem } = useTheme();
-    const followingSystem = themeMode === 'system';
+    const { toggleThemeMode, isDark } = useTheme();
     const Icon = isDark ? Sun : Moon;
-    const overrideLabel = oppositeOfSystem === 'dark' ? 'Dark' : 'Light';
+    const currentLabel = isDark ? 'Dark' : 'Light';
+    const nextLabel = isDark ? 'light' : 'dark';
 
     return (
         <SettingsListItem
             icon={Icon}
             title="Appearance"
-            description={
-                followingSystem
-                    ? `Following system · tap for ${overrideLabel.toLowerCase()}`
-                    : `${overrideLabel} · tap to match system`
-            }
+            description={`${currentLabel} · tap for ${nextLabel}`}
             onClick={toggleThemeMode}
             right={
                 <span className="text-[13px] font-medium text-foreground-muted">
-                    {followingSystem ? 'System' : overrideLabel}
+                    {currentLabel}
                 </span>
             }
         />
