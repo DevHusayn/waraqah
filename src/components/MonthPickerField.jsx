@@ -120,7 +120,7 @@ function PeriodPresetsPanel({
         <div className="space-y-3">
             <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-foreground-muted/80">
-                    Time period
+                    Filtered by
                 </p>
                 <div className="mt-2 grid grid-cols-2 gap-1.5">
                     {QUICK_PERIOD_PRESETS.map((preset) => (
