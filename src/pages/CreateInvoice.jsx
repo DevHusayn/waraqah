@@ -35,6 +35,7 @@ import DocumentPreviewOverlay from '../components/documentForm/DocumentPreviewOv
 import { DocumentNotesSection } from '../components/documentForm/DocumentNotesSection';
 import { DocumentFooterSection } from '../components/documentForm/DocumentFooterSection';
 import { useDocumentFooterPrefill, resolveFormDocumentFooter } from '../hooks/useDocumentFooterPrefill';
+import { useUnmountDraftAutosave } from '../hooks/useUnmountDraftAutosave';
 import { buildDocumentPreviewFromForm } from '../utils/buildDocumentPreviewData';
 import { hasDraftContent, hasAutoSaveDraftContent, resolvePersistClientId } from '../utils/documentFormHelpers';
 import { applyAiDraftToForm, DEFAULT_INVOICE_UNIT, isAiDraftsEnabled, normalizeInvoiceUnit } from '@waraqah/shared';
@@ -331,14 +332,12 @@ const CreateInvoice = () => {
         [isDraftFlow, id, addInvoice, updateInvoice, navigate, showToast, handlers]
     );
 
-    useEffect(() => {
-        return () => {
-            if (!isDraftFlow) return;
-            if (!isDirtyRef.current) return;
-            if (!hasAutoSaveDraftContent(formDataRef.current)) return;
-            persistDraft({ silent: true, redirectAfterCreate: false });
-        };
-    }, [isDraftFlow, persistDraft]);
+    useUnmountDraftAutosave({
+        persistDraft,
+        isDraftFlow,
+        isDirtyRef,
+        formDataRef,
+    });
 
     const handleSaveDraft = async () => {
         try {

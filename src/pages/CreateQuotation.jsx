@@ -35,6 +35,7 @@ import DocumentPreviewOverlay from '../components/documentForm/DocumentPreviewOv
 import { DocumentNotesSection, DocumentTermsSection } from '../components/documentForm/DocumentNotesSection';
 import { DocumentFooterSection } from '../components/documentForm/DocumentFooterSection';
 import { useDocumentFooterPrefill, resolveFormDocumentFooter } from '../hooks/useDocumentFooterPrefill';
+import { useUnmountDraftAutosave } from '../hooks/useUnmountDraftAutosave';
 import { buildDocumentPreviewFromForm } from '../utils/buildDocumentPreviewData';
 import { hasDraftContent, hasAutoSaveDraftContent, resolvePersistClientId } from '../utils/documentFormHelpers';
 import { DEFAULT_QUOTATION_TERMS } from '../utils/documentHelpers';
@@ -322,14 +323,13 @@ const CreateQuotation = () => {
         [isDraftFlow, id, addQuotation, updateQuotation, navigate, showToast, handlers]
     );
 
-    useEffect(() => {
-        return () => {
-            if (!isDraftFlow) return;
-            if (!isDirtyRef.current) return;
-            if (!hasAutoSaveDraftContent(formDataRef.current, { extraCheck: quotationDraftContentCheck })) return;
-            persistDraft({ silent: true, redirectAfterCreate: false });
-        };
-    }, [isDraftFlow, persistDraft]);
+    useUnmountDraftAutosave({
+        persistDraft,
+        isDraftFlow,
+        isDirtyRef,
+        formDataRef,
+        extraCheck: quotationDraftContentCheck,
+    });
 
     const handleSaveDraft = async () => {
         try {

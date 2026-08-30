@@ -86,7 +86,7 @@ async function generateInvoicePdf(invoice, client, businessInfo, options) {
 function DocumentTypeToggle({ documentMode, onDocumentModeChange }) {
     return (
         <div
-            className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-zinc-100"
+            className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-zinc-100 dark:bg-black/30"
             role="tablist"
             aria-label="Document type"
         >
@@ -102,7 +102,7 @@ function DocumentTypeToggle({ documentMode, onDocumentModeChange }) {
                     onClick={() => onDocumentModeChange(value)}
                     className={`py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                         documentMode === value
-                            ? 'bg-surface text-foreground shadow-sm'
+                            ? 'bg-surface text-foreground shadow-sm dark:bg-surface-elevated'
                             : 'text-foreground-muted hover:text-foreground'
                     }`}
                 >

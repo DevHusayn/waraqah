@@ -189,21 +189,6 @@ function CtaButton({ className = '', children = 'Get started' }) {
     );
 }
 
-function PlanAudienceLine({ children, variant = 'free' }) {
-    const styles =
-        variant === 'premium'
-            ? 'border-amber-300/80 bg-amber-50/60 text-amber-950/80'
-            : 'border-zinc-300 bg-surface-muted text-foreground-muted';
-
-    return (
-        <p
-            className={`mt-3 rounded-md border-l-[3px] px-3 py-2 text-[13px] font-medium italic leading-snug ${styles}`}
-        >
-            {children}
-        </p>
-    );
-}
-
 function LandingPremiumCard() {
     const [billingInterval, setBillingInterval] = useState('monthly');
     const isYearly = billingInterval === 'yearly';
@@ -250,9 +235,6 @@ function LandingPremiumCard() {
                 suffix={premiumIntervalSuffix(billingInterval)}
                 savingsLabel={isYearly ? '2 months free' : ''}
             />
-            <PlanAudienceLine variant="premium">
-                For growing businesses that care about branding and clean books.
-            </PlanAudienceLine>
             <ul className="mt-8 space-y-3 flex-1">
                 <li className="flex items-start gap-3 text-sm font-semibold text-foreground pb-3 mb-1 border-b border-amber-200/70">
                     <Check className="h-5 w-5 text-amber-600 flex-shrink-0" />
@@ -430,9 +412,6 @@ export default function Landing() {
                                     ₦{formatPrice(0)}
                                     <span className="text-base font-normal text-foreground-muted">/month</span>
                                 </p>
-                                <PlanAudienceLine>
-                                    For freelancers and solo operators getting started.
-                                </PlanAudienceLine>
                                 <ul className="mt-8 space-y-3 flex-1">
                                     {FREE_PLAN_FEATURES.map((f) => (
                                         <li key={f} className="flex items-start gap-3 text-foreground-muted text-sm">
