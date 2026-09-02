@@ -25,6 +25,7 @@ function formatMoney(value, currencySymbol) {
 }
 
 function statusLabel(status) {
+    if (status === 'partial') return 'Balance';
     return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
@@ -74,7 +75,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
 
     const summaryBody = [
         ['Paid', formatMoney(statement.totals.paid, currencySymbol)],
-        ['Partial', formatMoney(statement.totals.partial, currencySymbol)],
+        ['Balance', formatMoney(statement.totals.partial, currencySymbol)],
         ['Pending', formatMoney(statement.totals.pending, currencySymbol)],
         ['Overdue', formatMoney(statement.totals.overdue, currencySymbol)],
         ['Cancelled', formatMoney(statement.totals.cancelled, currencySymbol)],
@@ -118,7 +119,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
         const tableHead = [
             'Client',
             'Paid',
-            'Partial',
+            'Balance',
             'Pending',
             'Overdue',
             'Cancelled',

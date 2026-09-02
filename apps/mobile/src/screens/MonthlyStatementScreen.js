@@ -93,7 +93,7 @@ export function MonthlyStatementScreen({ navigation }) {
             <Card style={styles.block}>
                 <Text style={styles.section}>Totals</Text>
                 <Row label="Paid" value={formatCurrency(statement.totals.paid)} />
-                <Row label="Partial" value={formatCurrency(statement.totals.partial)} />
+                <Row label="Balance" value={formatCurrency(statement.totals.partial)} />
                 <Row label="Pending" value={formatCurrency(statement.totals.pending)} />
                 <Row label="Overdue" value={formatCurrency(statement.totals.overdue)} />
                 <Row label="Total billed" value={formatCurrency(statement.totals.total)} bold />
@@ -103,7 +103,7 @@ export function MonthlyStatementScreen({ navigation }) {
                 <Card key={row.clientId} style={styles.block}>
                     <Text style={styles.clientName}>{row.clientName}</Text>
                     <Row label="Paid" value={formatCurrency(row.paid)} />
-                    <Row label="Partial" value={formatCurrency(row.partial)} />
+                    <Row label="Balance" value={formatCurrency(row.partial)} />
                     <Row label="Pending" value={formatCurrency(row.pending)} />
                     <Row label="Total" value={formatCurrency(row.total)} bold />
                 </Card>

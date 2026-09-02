@@ -8,7 +8,7 @@ export function buildStatementHtml(statement, businessInfo) {
 
     const summaryRows = [
         ['Paid', statement.totals.paid],
-        ['Partial', statement.totals.partial],
+        ['Balance', statement.totals.partial],
         ['Pending', statement.totals.pending],
         ['Overdue', statement.totals.overdue],
         ['Cancelled', statement.totals.cancelled],
@@ -51,7 +51,7 @@ export function buildStatementHtml(statement, businessInfo) {
         <tr style="background:${escapeHtml(brand)}">
           <th>Client</th>
           <th class="num">Paid</th>
-          <th class="num">Partial</th>
+          <th class="num">Balance</th>
           <th class="num">Pending</th>
           <th class="num">Total</th>
         </tr>
