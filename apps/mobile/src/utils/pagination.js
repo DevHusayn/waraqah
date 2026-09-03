@@ -41,6 +41,8 @@ export function buildListQuery({
     month,
     summaryYear,
     summaryMonth,
+    recurring,
+    category,
 } = {}) {
     const params = new URLSearchParams();
     params.set('page', String(page));
@@ -52,6 +54,12 @@ export function buildListQuery({
     if (month != null && month !== '') params.set('month', String(month));
     if (summaryYear != null && summaryYear !== '') params.set('summaryYear', String(summaryYear));
     if (summaryMonth != null && summaryMonth !== '') params.set('summaryMonth', String(summaryMonth));
+    if (recurring === true || recurring === '1' || recurring === 'true') {
+        params.set('recurring', '1');
+    }
+    if (category && String(category).trim() && category !== 'all') {
+        params.set('category', String(category).trim());
+    }
     return params.toString();
 }
 

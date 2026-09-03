@@ -7,7 +7,6 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
-import { CheckCircle, Clock, FileText, TrendingUp } from 'lucide-react';
 import { formatCurrency } from '../utils/currency';
 import { PAYMENT_BREAKDOWN_ROWS } from './dashboard/chartColors';
 
@@ -66,21 +65,13 @@ function formatAxisCurrency(value) {
 function MiniStat({
     title,
     value,
-    icon: Icon,
-    iconBg,
-    iconColor,
     comparison,
     positiveDirection = 'up',
     detail,
 }) {
     return (
         <div className="rounded-md border border-zinc-200/60 bg-white p-2.5 shadow-soft min-w-0 flex flex-col gap-1.5">
-            <div className="flex items-start justify-between gap-1.5">
-                <p className="text-[9px] font-medium text-zinc-500 leading-snug">{title}</p>
-                <div className={`shrink-0 rounded-md p-1 ${iconBg}`}>
-                    <Icon className={`h-3 w-3 ${iconColor}`} aria-hidden />
-                </div>
-            </div>
+            <p className="text-[9px] font-medium text-zinc-500 leading-snug">{title}</p>
             <p className="text-[13px] font-semibold text-zinc-950 tabular-nums tracking-tight truncate leading-tight">
                 {value}
             </p>
@@ -176,35 +167,23 @@ export default function LandingDashboardPreview() {
                     <MiniStat
                         title="Total Revenue"
                         value={formatCurrency(SAMPLE_STATS.totalRevenue)}
-                        icon={FileText}
-                        iconBg="bg-brand-light"
-                        iconColor="text-brand"
                         comparison={SAMPLE_COMPARISONS.totalRevenue}
                     />
                     <MiniStat
                         title="Outstanding"
                         value={formatCurrency(SAMPLE_STATS.outstanding)}
-                        icon={Clock}
-                        iconBg="bg-amber-50"
-                        iconColor="text-amber-600"
                         comparison={SAMPLE_COMPARISONS.outstanding}
                         positiveDirection="down"
                     />
                     <MiniStat
                         title="Fully received payment"
                         value={String(SAMPLE_STATS.paymentsReceived)}
-                        icon={CheckCircle}
-                        iconBg="bg-green-50"
-                        iconColor="text-green-600"
                         comparison={SAMPLE_COMPARISONS.paymentsReceived}
                         detail={`${SAMPLE_STATS.paidInvoices} invoices · ${SAMPLE_STATS.paidReceipts} receipts`}
                     />
                     <MiniStat
                         title="Gross profit"
                         value={formatCurrency(SAMPLE_STATS.grossProfit)}
-                        icon={TrendingUp}
-                        iconBg="bg-emerald-50"
-                        iconColor="text-emerald-600"
                         comparison={SAMPLE_COMPARISONS.grossProfit}
                     />
                 </div>

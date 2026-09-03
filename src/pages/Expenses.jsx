@@ -1,8 +1,15 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
-import { Crown, Copy, Edit, Plus, Search, Trash2, Wallet } from 'lucide-react';
-import { getExpenseCategoryLabel } from '@waraqah/shared';
+import { Crown, Copy, Edit, ListFilter, Plus, Repeat, Search, Trash2, Wallet } from 'lucide-react';
+import {
+    EXPENSE_CATEGORIES,
+    getExpenseCategoryLabel,
+    isPresetExpenseCategory,
+    recurringFieldsFromRecord,
+} from '@waraqah/shared';
+import CustomSelect from '../components/CustomSelect';
+import Toolbar, { ToolbarSearch, ToolbarActions } from '../components/Toolbar';
 import PageHeader from '../components/PageHeader';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
@@ -12,9 +19,9 @@ import ExpenseFormModal, {
 } from '../components/ExpenseFormModal';
 import MonthPickerField from '../components/MonthPickerField';
 import MonthComparisonTrend from '../components/MonthComparisonTrend';
+import AdaptiveStatValue from '../components/AdaptiveStatValue';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
-import Toolbar, { ToolbarSearch } from '../components/Toolbar';
 import PaginationBar from '../components/PaginationBar';
 import { ListPageSkeleton } from '../components/Skeleton';
 import { usePagedQuery } from '../hooks/usePagedQuery';
@@ -28,6 +35,9 @@ import { buildListQuery } from '../utils/pagination';
 import { formatCurrency } from '../utils/currency';
 import { isPremiumUser } from '../utils/premium';
 import { invalidateExpenseQueries } from '../lib/queryClient';
+
+const FILTER_ALL = 'all';
+const FILTER_RECURRING = 'recurring';
 
 const COLUMNS = [
     { key: 'date', label: 'Date', width: '16%' },
@@ -75,11 +85,18 @@ export default function Expenses() {
     const [confirmExpense, setConfirmExpense] = useState(null);
     const [deleting, setDeleting] = useState(false);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
+    const [listFilter, setListFilter] = useState(FILTER_ALL);
+    const [stoppingId, setStoppingId] = useState(null);
 
-    const listParams = useMemo(() => ({ ...queryParams }), [queryParams]);
+    const listParams = useMemo(() => {
+        const next = { ...queryParams };
+        if (listFilter === FILTER_RECURRING) next.recurring = true;
+        else if (listFilter && listFilter !== FILTER_ALL) next.category = listFilter;
+        return next;
+    }, [queryParams, listFilter]);
 
     const fetcher = useCallback(
-        ({ page, limit, search, period, startDate, endDate }) =>
+        ({ page, limit, search, period, startDate, endDate, recurring, category }) =>
             apiFetch(
                 `/expenses?${buildListQuery({
                     page,
@@ -88,6 +105,8 @@ export default function Expenses() {
                     period,
                     startDate,
                     endDate,
+                    recurring,
+                    category,
                 })}`
             ),
         []
@@ -111,6 +130,38 @@ export default function Expenses() {
 
     const expenses = data.map(mapExpense);
 
+    const filterOptions = useMemo(() => {
+        const customCategories = (summary?.byCategory || [])
+            .map((row) => row.category)
+            .filter((category) => category && !isPresetExpenseCategory(category));
+        if (
+            listFilter &&
+            listFilter !== FILTER_ALL &&
+            listFilter !== FILTER_RECURRING &&
+            !isPresetExpenseCategory(listFilter) &&
+            !customCategories.includes(listFilter)
+        ) {
+            customCategories.push(listFilter);
+        }
+        return [
+            { value: FILTER_ALL, label: 'All expenses' },
+            { value: FILTER_RECURRING, label: 'Recurring' },
+            ...EXPENSE_CATEGORIES.map((category) => ({
+                value: category.id,
+                label: category.label,
+            })),
+            ...customCategories.map((category) => ({
+                value: category,
+                label: getExpenseCategoryLabel(category),
+            })),
+        ];
+    }, [summary, listFilter]);
+
+    const topCategories = useMemo(
+        () => (summary?.byCategory || []).slice(0, 4),
+        [summary]
+    );
+
     const openModal = (expense = null) => {
         if (expense) {
             setEditingExpense(expense);
@@ -120,6 +171,7 @@ export default function Expenses() {
                 category: expense.category || EMPTY_EXPENSE.category,
                 vendor: expense.vendor || '',
                 description: expense.description || '',
+                ...recurringFieldsFromRecord(expense),
             });
         } else {
             setEditingExpense(null);
@@ -177,6 +229,24 @@ export default function Expenses() {
         }
     };
 
+    const handleStopRecurring = async (expense) => {
+        setStoppingId(expense.id);
+        try {
+            await apiFetch(`/expenses/${expense.id}/stop-recurring`, { method: 'POST' });
+            showToast('This expense will no longer repeat.', 'success');
+            invalidateExpenseQueries(user?.id);
+            await refresh();
+        } catch (err) {
+            setAlert({
+                open: true,
+                message: err.message || 'Could not stop repeating this expense.',
+                type: 'error',
+            });
+        } finally {
+            setStoppingId(null);
+        }
+    };
+
     const handleDelete = async () => {
         if (!confirmExpense) return;
         setDeleting(true);
@@ -197,9 +267,7 @@ export default function Expenses() {
         }
     };
 
-    if (loading && expenses.length === 0 && !search) {
-        return <ListPageSkeleton rows={8} columns={5} withAction={false} />;
-    }
+    const showTableSkeleton = loading && expenses.length === 0;
 
     return (
         <>
@@ -235,39 +303,67 @@ export default function Expenses() {
                 </button>
             </PageHeader>
 
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                    <p className="text-xs text-foreground-muted font-medium">Total expenses</p>
-                    <p className="text-2xl font-semibold tabular-nums text-foreground">
-                        {formatCurrency(summary?.totals?.totalExpenses ?? 0)}
-                    </p>
-                    <div className="mt-1 min-h-[1rem]">
-                        {showComparison ? (
-                            <MonthComparisonTrend
-                                comparison={summary?.comparison?.totalExpenses}
-                                label={comparisonLabel}
-                                positiveDirection="down"
-                            />
-                        ) : null}
+            <section
+                className={`mb-6 overflow-hidden rounded-xl border border-border/80 bg-surface shadow-soft transition-opacity ${
+                    summaryFetching ? 'opacity-80' : ''
+                }`}
+                aria-label="Expense summary"
+            >
+                <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6 sm:p-5">
+                    <div className="min-w-0">
+                        <p className="text-xs font-medium text-foreground-muted">Total expenses</p>
+                        <AdaptiveStatValue
+                            value={formatCurrency(summary?.totals?.totalExpenses ?? 0)}
+                            variant="card"
+                            className="mt-1"
+                        />
+                        <div className="mt-1.5 min-h-[1rem]">
+                            {showComparison ? (
+                                <MonthComparisonTrend
+                                    comparison={summary?.comparison?.totalExpenses}
+                                    label={comparisonLabel}
+                                    positiveDirection="down"
+                                />
+                            ) : (
+                                <p className="text-xs text-foreground-muted">{periodLabel}</p>
+                            )}
+                        </div>
                     </div>
-                    <p className="mt-1 text-xs text-foreground-muted">{periodLabel}</p>
+                    <MonthPickerField
+                        variant="compact"
+                        portal
+                        showPeriodPresets
+                        periodMode={mode}
+                        isThisMonth={isCurrentPeriod}
+                        onPeriodModeChange={setPeriodMode}
+                        displayLabel={periodLabel}
+                        maxDate={maxDate}
+                        customDraftStartDate={customDraftStartDate}
+                        customDraftEndDate={customDraftEndDate}
+                        onCustomDraftRangeChange={setCustomDraftRange}
+                        onCustomApply={applyCustomRange}
+                        triggerAriaLabel={`Change period from ${periodLabel}`}
+                    />
                 </div>
-                <MonthPickerField
-                    variant="compact"
-                    portal
-                    showPeriodPresets
-                    periodMode={mode}
-                    isThisMonth={isCurrentPeriod}
-                    onPeriodModeChange={setPeriodMode}
-                    displayLabel={periodLabel}
-                    maxDate={maxDate}
-                    customDraftStartDate={customDraftStartDate}
-                    customDraftEndDate={customDraftEndDate}
-                    onCustomDraftRangeChange={setCustomDraftRange}
-                    onCustomApply={applyCustomRange}
-                    triggerAriaLabel={`Change period from ${periodLabel}`}
-                />
-            </div>
+
+                {topCategories.length ? (
+                    <div className="border-t border-border/70 bg-surface-muted/40 px-4 py-3 sm:px-5">
+                        <div className="flex flex-wrap gap-2">
+                            {topCategories.map((row) => (
+                                <span
+                                    key={row.category}
+                                    className="inline-flex items-center gap-2 rounded-lg border border-border/80 bg-surface px-3 py-1.5 text-xs text-foreground-muted"
+                                >
+                                    <span>{row.label}</span>
+                                    <span className="font-medium tabular-nums text-foreground">
+                                        {formatCurrency(row.amount)}
+                                    </span>
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                ) : null}
+            </section>
 
             {!premium ? (
                 <div className="mb-4 flex items-start gap-3 rounded-xl border border-violet-200/80 bg-violet-50/60 px-4 py-3 text-sm text-violet-950">
@@ -282,47 +378,59 @@ export default function Expenses() {
                 </div>
             ) : null}
 
-            {summary?.byCategory?.length ? (
-                <div className="mb-6 flex flex-wrap gap-2">
-                    {summary.byCategory.slice(0, 4).map((row) => (
-                        <span
-                            key={row.category}
-                            className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-surface px-3 py-1 text-xs text-foreground-muted"
-                        >
-                            <span>{row.label}</span>
-                            <span className="font-medium tabular-nums text-foreground">
-                                {formatCurrency(row.amount)}
-                            </span>
-                        </span>
-                    ))}
-                </div>
-            ) : null}
-
             <Toolbar className="mb-4">
                 <ToolbarSearch
                     value={search}
-                    onChange={(value) => {
-                        setSearch(value);
+                    onChange={(e) => {
+                        setSearch(e.target.value);
                         setPage(1);
                     }}
                     placeholder="Search paid to or description…"
                     icon={Search}
+                    aria-label="Search expenses"
                 />
+                <ToolbarActions>
+                    <div className="min-w-0 flex-1 sm:w-52 sm:flex-none">
+                        <CustomSelect
+                            value={listFilter}
+                            onChange={(next) => {
+                                setListFilter(next);
+                                setPage(1);
+                            }}
+                            options={filterOptions}
+                            placeholder="Filter"
+                            leadingIcon={<ListFilter size={14} />}
+                            aria-label="Filter expenses"
+                        />
+                    </div>
+                </ToolbarActions>
             </Toolbar>
 
-            {expenses.length === 0 && !loading ? (
+            {showTableSkeleton ? (
+                <ListPageSkeleton
+                    rows={8}
+                    columns={5}
+                    withHeader={false}
+                    withToolbar={false}
+                    withAction={false}
+                />
+            ) : expenses.length === 0 ? (
                 <EmptyState
                     icon={Wallet}
                     title={
                         search
                             ? 'No expenses found'
-                            : mode === 'month'
-                              ? 'No expenses this month'
-                              : 'No expenses in this period'
+                            : listFilter !== FILTER_ALL
+                              ? 'No matching expenses'
+                              : mode === 'month'
+                                ? 'No expenses this month'
+                                : 'No expenses in this period'
                     }
                     description={
                         search
                             ? 'Try a different search term.'
+                            : listFilter !== FILTER_ALL
+                              ? 'Try a different filter or add an expense in this group.'
                             : 'Add rent, salaries, transport, and other running costs.'
                     }
                     action={
@@ -352,7 +460,12 @@ export default function Expenses() {
                                 <DataTableRow key={expense.id}>
                                     <DataTableCell>{formatDisplayDate(expense.date)}</DataTableCell>
                                     <DataTableCell>
-                                        {getExpenseCategoryLabel(expense.category)}
+                                        <span className="inline-flex items-center gap-1.5">
+                                            {getExpenseCategoryLabel(expense.category)}
+                                            {expense.isRecurring ? (
+                                                <Repeat size={12} className="text-brand" aria-label="Recurring" />
+                                            ) : null}
+                                        </span>
                                     </DataTableCell>
                                     <DataTableCell>
                                         <span className="text-foreground-muted">{details || '—'}</span>
@@ -371,6 +484,18 @@ export default function Expenses() {
                                             >
                                                 <Copy size={16} aria-hidden />
                                             </button>
+                                            {expense.isRecurring ? (
+                                                <button
+                                                    type="button"
+                                                    className="inline-flex items-center justify-center rounded-md p-1.5 text-foreground-muted hover:bg-surface-muted"
+                                                    aria-label="Stop repeating"
+                                                    title="Stop repeating"
+                                                    disabled={stoppingId === expense.id}
+                                                    onClick={() => handleStopRecurring(expense)}
+                                                >
+                                                    <Repeat size={16} aria-hidden />
+                                                </button>
+                                            ) : null}
                                             <button
                                                 type="button"
                                                 className="inline-flex items-center justify-center rounded-md p-1.5 text-foreground-muted hover:bg-surface-muted"

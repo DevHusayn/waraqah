@@ -119,7 +119,7 @@ Expected: **39 tests passing** (shared + backend).
 ## 10. Not in scope for web MVP
 
 - **Mobile App Store / Play Store** — needs `eas init` and real EAS project ID
-- **Recurring invoices** — disabled in code; do not advertise yet
+- **Recurring invoices and expenses** — shipped (all plans, web and mobile)
 
 ---
 

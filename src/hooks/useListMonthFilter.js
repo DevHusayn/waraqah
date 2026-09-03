@@ -4,11 +4,11 @@ import { usePeriodFilter } from './usePeriodFilter';
 /**
  * List pages expose two independent period controls:
  * - Stat card ("New this …") → summaryYear / summaryMonth (counts only, month-only)
- * - Toolbar filter → period presets on the document list (defaults to this month)
+ * - Toolbar filter → period presets on the document list (defaults to all time)
  */
 export function useListMonthFilter() {
     const summary = useSummaryPeriod();
-    const listPeriod = usePeriodFilter();
+    const listPeriod = usePeriodFilter('all');
 
     return {
         summaryYear: summary.summaryYear,
@@ -32,7 +32,7 @@ export function useListMonthFilter() {
         setListCustomDraftRange: listPeriod.setCustomDraftRange,
         applyListCustomRange: listPeriod.applyCustomRange,
         listMaxDate: listPeriod.maxDate,
-        filterActive: listPeriod.mode !== 'month' || Boolean(listPeriod.startDate),
-        isDefaultListPeriod: listPeriod.mode === 'month',
+        filterActive: listPeriod.mode !== 'all',
+        isDefaultListPeriod: listPeriod.mode === 'all',
     };
 }

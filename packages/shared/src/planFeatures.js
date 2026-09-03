@@ -6,6 +6,7 @@ export const FREE_PLAN_FEATURES = [
     'Clients, products, and inventory',
     'Professional PDFs and email',
     'Expense tracking',
+    'Recurring invoices and expenses',
     'Dashboard and CSV export',
 ];
 

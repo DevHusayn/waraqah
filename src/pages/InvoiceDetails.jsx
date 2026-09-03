@@ -19,6 +19,7 @@ import {
     Copy,
     Download,
     Printer,
+    Repeat,
 } from 'lucide-react';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
@@ -32,7 +33,7 @@ import FormSection from '../components/FormSection';
 import StatusBadge from '../components/StatusBadge';
 import ActionMenu from '../components/ActionMenu';
 import { shareInvoicePdf, getShareFallbackHint, downloadPdfBlob, printPdfBlob } from '../utils/shareInvoicePdf';
-import { PDF_DOCUMENT_TYPES } from '@waraqah/shared';
+import { formatRecurringSummary, PDF_DOCUMENT_TYPES } from '@waraqah/shared';
 import { getCachedPdf, setCachedPdf, clearCachedPdf } from '../utils/pdfCache';
 import { formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
@@ -400,6 +401,7 @@ const InvoiceDetails = () => {
     const [resolving, setResolving] = useState(false);
     const [clientEditOpen, setClientEditOpen] = useState(false);
     const [clientOverride, setClientOverride] = useState(null);
+    const [stoppingRecurring, setStoppingRecurring] = useState(false);
 
     const invoiceFromList = useMemo(
         () => invoices.find((inv) => String(inv.id) === String(id) || String(inv._id) === String(id)),
@@ -628,6 +630,21 @@ const InvoiceDetails = () => {
         }
     };
 
+    const handleStopRecurring = async () => {
+        setStoppingRecurring(true);
+        try {
+            const updated = await apiFetch(`/invoices/${id}/stop-recurring`, { method: 'POST' });
+            const mapped = mapInvoiceRecord(updated);
+            setFetchedInvoice(mapped);
+            upsertInvoice(mapped);
+            showToast('This invoice will no longer repeat.', 'success');
+        } catch (err) {
+            setAlert({ open: true, message: err.message || 'Could not stop repeating this invoice.' });
+        } finally {
+            setStoppingRecurring(false);
+        }
+    };
+
     const handleCancelInvoice = async () => {
         setSaving(true);
         try {
@@ -850,6 +867,12 @@ const InvoiceDetails = () => {
                         <div className="flex flex-wrap items-center gap-3">
                             <h1 className="page-title">{displayNumber}</h1>
                             <StatusBadge status={invoice.status} />
+                            {invoice.isRecurring ? (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-brand-subtle px-2.5 py-0.5 text-xs font-medium text-brand">
+                                    <Repeat size={12} aria-hidden />
+                                    Recurring
+                                </span>
+                            ) : null}
                         </div>
                         <p className="page-subtitle mt-1">
                             {paid && receiptNumber
@@ -911,6 +934,29 @@ const InvoiceDetails = () => {
                                         label="Last reminder"
                                         value={format(new Date(invoice.lastPaymentReminderAt), 'MMM dd, yyyy')}
                                     />
+                                ) : null}
+                                {invoice.isRecurring ? (
+                                    <div className="pt-3 border-t border-border space-y-2">
+                                        <p className="text-sm text-foreground">
+                                            {formatRecurringSummary({
+                                                frequency: invoice.recurringFrequency,
+                                                endDate: invoice.recurringEndDate,
+                                                nextDate: invoice.recurringNextDate,
+                                            })}
+                                        </p>
+                                        <button
+                                            type="button"
+                                            className="btn-secondary text-sm w-full"
+                                            onClick={handleStopRecurring}
+                                            disabled={stoppingRecurring}
+                                        >
+                                            {stoppingRecurring ? 'Stopping…' : 'Stop repeating'}
+                                        </button>
+                                    </div>
+                                ) : invoice.recurringSourceId ? (
+                                    <p className="text-xs text-foreground-muted pt-2">
+                                        Created from a recurring invoice
+                                    </p>
                                 ) : null}
                                 <SummaryRow
                                     label="Subtotal"

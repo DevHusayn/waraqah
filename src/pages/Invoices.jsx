@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
-import { Plus, FileText, Search, ArrowUpDown } from 'lucide-react';
+import { Plus, FileText, Search, ArrowUpDown, Repeat } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatCurrency } from '../utils/currency';
 import { getInvoiceAmountPaid, hasRecordedPayments } from '@waraqah/shared';
@@ -57,6 +57,7 @@ const Invoices = () => {
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
     const [filter, setFilter] = useState('all');
+    const [recurringOnly, setRecurringOnly] = useState(false);
     const [sortBy, setSortBy] = useState('newest');
     const {
         summaryYear,
@@ -77,7 +78,7 @@ const Invoices = () => {
     } = useListMonthFilter();
 
     const fetcher = useCallback(
-        ({ page, limit, search, status, sort, period, startDate, endDate }) =>
+        ({ page, limit, search, status, sort, period, startDate, endDate, recurring }) =>
             apiFetch(
                 `/invoices?${buildListQuery({
                     page,
@@ -88,6 +89,7 @@ const Invoices = () => {
                     period,
                     startDate,
                     endDate,
+                    recurring,
                 })}`
             ),
         []
@@ -111,6 +113,7 @@ const Invoices = () => {
         extraParams: {
             status: filter,
             sort: sortBy,
+            recurring: recurringOnly || undefined,
             ...listQueryParams,
         },
     });
@@ -119,7 +122,7 @@ const Invoices = () => {
 
     useEffect(() => {
         setPage(1);
-    }, [filter, sortBy, listQueryParams, setPage]);
+    }, [filter, sortBy, recurringOnly, listQueryParams, setPage]);
 
     const handleFilterChange = useCallback(
         (next) => {
@@ -230,7 +233,22 @@ const Invoices = () => {
                     </ToolbarActions>
                 </Toolbar>
 
-                <FilterTabs tabs={filterTabs} value={filter} onChange={handleFilterChange} className="mb-4" />
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <FilterTabs tabs={filterTabs} value={filter} onChange={handleFilterChange} className="mb-0 flex-1" />
+                    <button
+                        type="button"
+                        onClick={() => setRecurringOnly((prev) => !prev)}
+                        className={`inline-flex items-center gap-1.5 self-start rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                            recurringOnly
+                                ? 'border-brand bg-brand-subtle text-brand'
+                                : 'border-border text-foreground-muted hover:bg-surface-muted'
+                        }`}
+                        aria-pressed={recurringOnly}
+                    >
+                        <Repeat size={12} aria-hidden />
+                        Recurring
+                    </button>
+                </div>
 
                 {loading && invoices.length === 0 ? (
                     <ListPageSkeleton
@@ -287,6 +305,11 @@ const Invoices = () => {
                                             <span className="font-medium text-foreground">
                                                 {getDisplayNumber(invoice) || '—'}
                                             </span>
+                                            {invoice.isRecurring ? (
+                                                <span className="ml-2 inline-flex align-middle text-brand" title="Recurring">
+                                                    <Repeat size={12} aria-hidden />
+                                                </span>
+                                            ) : null}
                                         </DataTableCell>
                                         <DataTableCell>
                                             <div className="min-w-0">

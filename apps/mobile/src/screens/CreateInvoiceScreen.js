@@ -33,6 +33,10 @@ import {
     getDefaultDocumentFooter,
     isAiDraftsEnabled,
     isPremiumUser,
+    RECURRING_FREQUENCY_OPTIONS,
+    getRecurringFrequencyLabel,
+    recurringFieldsFromRecord,
+    toRecurringApiFields,
 } from '@waraqah/shared';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
@@ -101,6 +105,7 @@ function buildPayload(form, status) {
         discount: totals.discount,
         tax: totals.tax,
         total: totals.total,
+        ...toRecurringApiFields(form),
     };
 
     return payload;
@@ -129,6 +134,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
     const productSheetRef = useRef(null);
     const unitSheetRef = useRef(null);
     const currencySheetRef = useRef(null);
+    const frequencySheetRef = useRef(null);
     const [unitSheetIndex, setUnitSheetIndex] = useState(null);
     const [customUnitIndex, setCustomUnitIndex] = useState(null);
     const [customUnitName, setCustomUnitName] = useState('');
@@ -167,6 +173,9 @@ export function CreateInvoiceScreen({ route, navigation }) {
         currency: APP_CURRENCY,
         taxRate: '10',
         discountValue: '',
+        isRecurring: false,
+        recurringFrequency: 'monthly',
+        recurringEndDate: '',
     });
 
     useEffect(() => {
@@ -227,6 +236,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
                 existing.discountValue != null && existing.discountValue !== ''
                     ? String(existing.discountValue)
                     : '',
+            ...recurringFieldsFromRecord(existing),
         });
     }, [editId, existing, clients, navigation, businessInfo?.name]);
 
@@ -700,6 +710,47 @@ export function CreateInvoiceScreen({ route, navigation }) {
                     );
                 })}
 
+                <Text style={styles.section}>Repeating</Text>
+                <View style={styles.fieldBlock}>
+                    <View style={styles.dueToggleRow}>
+                        <Label>Repeat this invoice</Label>
+                        <Switch
+                            value={Boolean(form.isRecurring)}
+                            onValueChange={(on) => setField('isRecurring', on)}
+                            trackColor={{ false: colors.slate200, true: colors.brandSecondary }}
+                            thumbColor={form.isRecurring ? colors.brand : colors.slate400}
+                            accessibilityLabel="Repeat this invoice"
+                        />
+                    </View>
+                    {form.isRecurring ? (
+                        <>
+                            <Label>Frequency</Label>
+                            <Pressable
+                                onPress={() => frequencySheetRef.current?.expand()}
+                                style={styles.selectTrigger}
+                                accessibilityRole="button"
+                                accessibilityLabel="Choose frequency"
+                            >
+                                <Text style={styles.selectText}>
+                                    {getRecurringFrequencyLabel(form.recurringFrequency || 'monthly')}
+                                </Text>
+                                <ChevronDown size={18} color={colors.slate400} />
+                            </Pressable>
+                            <View style={{ height: spacing.md }} />
+                            <Label>End date (optional)</Label>
+                            <Input
+                                value={form.recurringEndDate || ''}
+                                onChangeText={(v) => setField('recurringEndDate', v)}
+                                placeholder="YYYY-MM-DD"
+                                autoCapitalize="none"
+                            />
+                            <Text style={styles.hint}>Leave blank to keep repeating until you stop it.</Text>
+                        </>
+                    ) : (
+                        <Text style={styles.hint}>Turn this on to automatically create the next invoice.</Text>
+                    )}
+                </View>
+
                 {/* Notes */}
                 <Text style={styles.section}>Notes</Text>
                 <View style={styles.fieldBlock}>
@@ -797,6 +848,24 @@ export function CreateInvoiceScreen({ route, navigation }) {
                             title={opt.label}
                             onPress={() => handleUnitOptionSelect(opt.value)}
                             last={i === unitSheetOptions.length - 1}
+                            dense
+                        />
+                    ))}
+                </ScrollView>
+            </BottomSheet>
+
+            <BottomSheet ref={frequencySheetRef} snapPoints={['50%']}>
+                <Text style={styles.sheetTitle}>How often</Text>
+                <ScrollView>
+                    {RECURRING_FREQUENCY_OPTIONS.map((opt, i, arr) => (
+                        <ListRow
+                            key={opt.value}
+                            title={opt.label}
+                            onPress={() => {
+                                setField('recurringFrequency', opt.value);
+                                frequencySheetRef.current?.close();
+                            }}
+                            last={i === arr.length - 1}
                             dense
                         />
                     ))}

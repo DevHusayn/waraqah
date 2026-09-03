@@ -34,11 +34,12 @@ import DocumentActionButtons from '../components/documentForm/DocumentActionButt
 import DocumentPreviewOverlay from '../components/documentForm/DocumentPreviewOverlay';
 import { DocumentNotesSection } from '../components/documentForm/DocumentNotesSection';
 import { DocumentFooterSection } from '../components/documentForm/DocumentFooterSection';
+import DocumentRecurringSection from '../components/documentForm/DocumentRecurringSection';
 import { useDocumentFooterPrefill, resolveFormDocumentFooter } from '../hooks/useDocumentFooterPrefill';
 import { useUnmountDraftAutosave } from '../hooks/useUnmountDraftAutosave';
 import { buildDocumentPreviewFromForm } from '../utils/buildDocumentPreviewData';
 import { hasDraftContent, hasAutoSaveDraftContent, resolvePersistClientId } from '../utils/documentFormHelpers';
-import { applyAiDraftToForm, DEFAULT_INVOICE_UNIT, isAiDraftsEnabled, normalizeInvoiceUnit } from '@waraqah/shared';
+import { applyAiDraftToForm, DEFAULT_INVOICE_UNIT, isAiDraftsEnabled, normalizeInvoiceUnit, recurringFieldsFromRecord } from '@waraqah/shared';
 import { isPremiumUser } from '../utils/premium';
 import AiDraftComposer from '../components/documentForm/AiDraftComposer';
 
@@ -123,6 +124,9 @@ const CreateInvoice = () => {
         taxRate: 0,
         discountType: 'percent',
         discountValue: '',
+        isRecurring: false,
+        recurringFrequency: 'monthly',
+        recurringEndDate: '',
     });
 
     formDataRef.current = formData;
@@ -155,6 +159,24 @@ const CreateInvoice = () => {
 
     const handleDueDateToggle = handlers.createExpiryToggleHandler('hasDueDate', 'dueDate');
     const handleIssueDateChange = handlers.createIssueDateChangeHandler();
+    const handleRecurringToggle = () => {
+        setFormData((prev) => ({ ...prev, isRecurring: !prev.isRecurring }));
+        markDirty();
+    };
+    const handleRecurringFrequencyChange = (recurringFrequency) => {
+        setFormData((prev) => ({ ...prev, recurringFrequency }));
+        markDirty();
+    };
+    const handleRecurringEndDateChange = (recurringEndDate) => {
+        setFormData((prev) => ({ ...prev, recurringEndDate: recurringEndDate || '' }));
+        markDirty();
+        setFieldErrors((prev) => {
+            if (!prev.recurringEndDate) return prev;
+            const next = { ...prev };
+            delete next.recurringEndDate;
+            return next;
+        });
+    };
     const handleDueDateChange = handlers.createExpiryDateChangeHandler('dueDate');
 
     useEffect(() => {
@@ -205,6 +227,7 @@ const CreateInvoice = () => {
                     ...item,
                     unit: normalizeInvoiceUnit(item.unit),
                 })),
+                ...recurringFieldsFromRecord(invoice),
             });
             committedCatalogQuantitiesRef.current =
                 invoice.status && invoice.status !== 'draft' && invoice.status !== 'cancelled'
@@ -729,6 +752,15 @@ const CreateInvoice = () => {
                             onAddItem={handlers.addItem}
                             onRemoveItem={handlers.removeItem}
                             onApplyProductToLine={handlers.applyProductToLine}
+                        />
+
+                        <DocumentRecurringSection
+                            idPrefix="invoice"
+                            formData={formData}
+                            fieldErrors={fieldErrors}
+                            onToggle={handleRecurringToggle}
+                            onFrequencyChange={handleRecurringFrequencyChange}
+                            onEndDateChange={handleRecurringEndDateChange}
                         />
 
                         <DocumentNotesSection

@@ -10,6 +10,7 @@ import {
     Shield,
     UserRound,
     ClipboardList,
+    Wallet,
 } from 'lucide-react-native';
 import { getBusinessInitials, isPremiumUser } from '@waraqah/shared';
 import { useAuth } from '../context/AuthContext';
@@ -31,6 +32,7 @@ export function MoreScreen({ navigation }) {
         { label: 'Settings', subtitle: 'Business, branding, billing', screen: 'Settings', icon: Settings },
         { label: 'Quotations', subtitle: 'Estimates and proposals', screen: 'Quotations', icon: ClipboardList },
         { label: 'Products', subtitle: 'Product catalog', screen: 'Products', icon: Package },
+        { label: 'Expenses', subtitle: 'Rent, salaries, and running costs', screen: 'Expenses', icon: Wallet },
         { label: 'Statements', subtitle: 'Monthly income & trends', screen: 'MonthlyStatement', icon: FileBarChart },
         { label: 'Upgrade to Premium', subtitle: 'Unlimited invoices & branding', screen: 'Upgrade', icon: Crown },
         ...(isAdmin ? [{ label: 'Admin', subtitle: 'Platform overview', screen: 'Admin', icon: Shield }] : []),

@@ -13,28 +13,26 @@ function normalizeScrollLeft(scroller) {
     }
 }
 
-function FeatureCarouselCard({ item }) {
-    const Icon = item.icon;
-
+function FeatureCarouselCard({ item, ordinal }) {
     return (
-        <article
-            className="feature-carousel-card group relative w-[85vw] sm:w-[300px] md:w-[340px] flex-shrink-0 rounded-lg border border-border/80 bg-surface-muted/50 p-6 pb-8 transition-all duration-300 ease-smooth hover:-translate-y-1 hover:border-brand/40 hover:shadow-lift"
-        >
-            <span
-                className="feature-carousel-stamp"
-                aria-hidden
-            >
-                {item.stamp}
-            </span>
-
-            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-zinc-100 text-foreground-muted transition-all duration-300 ease-smooth group-hover:rotate-6 group-hover:bg-brand group-hover:text-white">
-                <Icon className="h-5 w-5" />
+        <article className="feature-carousel-card relative w-[85vw] sm:w-[300px] md:w-[340px] min-h-[228px] flex-shrink-0 flex flex-col rounded-xl p-6 sm:p-7">
+            <div className="flex items-center justify-between gap-3">
+                <span className="text-[11px] font-semibold tabular-nums tracking-[0.18em] text-brand">
+                    {String(ordinal).padStart(2, '0')}
+                </span>
+                {item.stamp ? (
+                    <span className="rounded-full border border-border/80 bg-surface-muted/80 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground-muted">
+                        {item.stamp}
+                    </span>
+                ) : null}
             </div>
 
-            <h3 className="mt-4 font-brand text-lg font-semibold text-foreground">
+            <h3 className="mt-5 font-brand text-[1.35rem] font-semibold tracking-tight text-foreground leading-snug">
                 {item.title}
             </h3>
-            <p className="mt-2 text-sm text-foreground-muted leading-relaxed">{item.text}</p>
+            <p className="mt-3 text-sm text-foreground-muted leading-relaxed">
+                {item.text}
+            </p>
         </article>
     );
 }
@@ -175,11 +173,12 @@ export default function FeatureCarousel({ items, className = '', ariaLabel = 'Wh
                     onPointerUp={endDrag}
                     onPointerCancel={endDrag}
                 >
-                    <div className="flex w-max gap-6 px-[7.5vw] sm:px-6 py-1">
+                    <div className="flex w-max gap-5 px-[7.5vw] sm:px-6 py-2">
                         {loopedItems.map((item, index) => (
                             <FeatureCarouselCard
                                 key={`${item.title}-${index}`}
                                 item={item}
+                                ordinal={(index % items.length) + 1}
                             />
                         ))}
                     </div>

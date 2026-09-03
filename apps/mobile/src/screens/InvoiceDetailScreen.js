@@ -15,7 +15,9 @@ import {
     isReceipt,
     MARK_PAID_METHODS,
     normalizeInvoiceUnit,
+    formatRecurringSummary,
 } from '@waraqah/shared';
+import { apiFetch } from '../api/client';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
@@ -34,7 +36,7 @@ export function InvoiceDetailScreen({ route, navigation }) {
     const styles = useMemo(() => createStyles(colors), [colors]);
     const { id } = route.params;
     const insets = useSafeAreaInsets();
-    const { invoices, clients, updateInvoice, recordInvoicePayment, deleteInvoice, loading } =
+    const { invoices, clients, updateInvoice, recordInvoicePayment, deleteInvoice, upsertInvoice, loading } =
         useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
@@ -45,6 +47,7 @@ export function InvoiceDetailScreen({ route, navigation }) {
     const [paymentAmount, setPaymentAmount] = useState('');
     const [paidFully, setPaidFully] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [stoppingRecurring, setStoppingRecurring] = useState(false);
     const markPaidSheetRef = useRef(null);
 
     const invoice = useMemo(() => invoices.find((i) => i.id === id), [invoices, id]);
@@ -135,6 +138,19 @@ export function InvoiceDetailScreen({ route, navigation }) {
         }
     };
 
+    const handleStopRecurring = async () => {
+        setStoppingRecurring(true);
+        try {
+            const updated = await apiFetch(`/invoices/${id}/stop-recurring`, { method: 'POST' });
+            upsertInvoice(updated);
+            showToast('This invoice will no longer repeat.', 'success');
+        } catch (err) {
+            showToast(err.message || 'Could not stop repeating this invoice.', 'error');
+        } finally {
+            setStoppingRecurring(false);
+        }
+    };
+
     const handleDelete = async () => {
         try {
             await deleteInvoice(id);
@@ -179,6 +195,9 @@ export function InvoiceDetailScreen({ route, navigation }) {
                     </View>
                     <StatusBadge status={invoice.status} />
                 </View>
+                {invoice.isRecurring ? (
+                    <Text style={styles.recurringBadge}>Recurring</Text>
+                ) : null}
 
                 <Text style={styles.amountHero}>
                     {formatCurrency(paid ? invoice.total : balanceDue, invoice.currency)}
@@ -275,6 +294,29 @@ export function InvoiceDetailScreen({ route, navigation }) {
                         <Text style={styles.section}>Notes</Text>
                         <Text style={styles.notes}>{invoice.notes}</Text>
                     </>
+                ) : null}
+
+                {invoice.isRecurring ? (
+                    <>
+                        <Text style={styles.section}>Repeating</Text>
+                        <Text style={styles.notes}>
+                            {formatRecurringSummary({
+                                frequency: invoice.recurringFrequency,
+                                endDate: invoice.recurringEndDate,
+                                nextDate: invoice.recurringNextDate,
+                            })}
+                        </Text>
+                        <View style={{ paddingHorizontal: spacing.xl, marginTop: spacing.md }}>
+                            <Button
+                                title={stoppingRecurring ? 'Stopping…' : 'Stop repeating'}
+                                variant="secondary"
+                                onPress={handleStopRecurring}
+                                disabled={stoppingRecurring}
+                            />
+                        </View>
+                    </>
+                ) : invoice.recurringSourceId ? (
+                    <Text style={styles.notes}>Created from a recurring invoice</Text>
                 ) : null}
 
                 {canEdit || canCancel ? (
@@ -439,6 +481,14 @@ function createStyles(colors) {
         fontFamily: fontFamily.medium,
         fontSize: fontSize.sm,
         color: colors.muted,
+    },
+    recurringBadge: {
+        paddingHorizontal: spacing.xl,
+        marginTop: -spacing.md,
+        marginBottom: spacing.md,
+        fontFamily: fontFamily.semibold,
+        fontSize: fontSize.xs,
+        color: colors.brand,
     },
     section: {
         paddingHorizontal: spacing.xl,

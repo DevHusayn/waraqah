@@ -14,10 +14,10 @@ function createCustomRange() {
     return { startDate: today, endDate: today, draftStartDate: today, draftEndDate: today };
 }
 
-export function usePeriodFilter() {
+export function usePeriodFilter(defaultMode = 'month') {
     const { businessInfo } = useSettings();
     const timezone = businessInfo?.timezone || DEFAULT_BUSINESS_TIMEZONE;
-    const [mode, setMode] = useState('month');
+    const [mode, setMode] = useState(defaultMode);
     const [customRange, setCustomRange] = useState(createCustomRange);
     const [appliedCustomRange, setAppliedCustomRange] = useState(createCustomRange);
 

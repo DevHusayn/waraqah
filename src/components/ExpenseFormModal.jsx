@@ -4,8 +4,11 @@ import { Wallet, Pencil, Tag } from 'lucide-react';
 import {
     EXPENSE_CATEGORIES,
     isPresetExpenseCategory,
+    recurringFieldsFromRecord,
+    toRecurringApiFields,
     REPLAY_MASK,
 } from '@waraqah/shared';
+import RecurringScheduleFields from './RecurringScheduleFields';
 import Spinner from './Spinner';
 import ModalShell from './ModalShell';
 import DatePickerField from './DatePickerField';
@@ -31,6 +34,9 @@ export const EMPTY_EXPENSE = {
     category: 'rent',
     vendor: '',
     description: '',
+    isRecurring: false,
+    recurringFrequency: 'monthly',
+    recurringEndDate: '',
 };
 
 function resolveCategorySelectValue(category) {
@@ -63,6 +69,7 @@ export function buildDuplicateExpenseInitialData(
         category: expense.category || EMPTY_EXPENSE.category,
         vendor: expense.vendor || '',
         description: expense.description || '',
+        ...recurringFieldsFromRecord(expense),
     };
 }
 
@@ -188,6 +195,7 @@ export default function ExpenseFormModal({
                     category: formData.category.trim(),
                     vendor: formData.vendor.trim(),
                     description: formData.description.trim(),
+                    ...toRecurringApiFields(formData),
                 },
                 editingExpense
             );
@@ -205,7 +213,8 @@ export default function ExpenseFormModal({
                 onClose={saving ? undefined : onClose}
                 size="md"
                 showClose
-                scrollable={false}
+                scrollable
+                panelClassName="scroll-x-touch"
                 ariaLabelledby="expense-modal-title"
             >
                 <div className="px-6 pt-6 pb-4 border-b border-border/50">
@@ -284,6 +293,24 @@ export default function ExpenseFormModal({
                             placeholder="Who was paid?"
                         />
                     </div>
+
+                    <RecurringScheduleFields
+                        idPrefix="expense"
+                        compact
+                        isRecurring={Boolean(formData.isRecurring)}
+                        frequency={formData.recurringFrequency || 'monthly'}
+                        endDate={formData.recurringEndDate}
+                        onToggle={() =>
+                            setFormData((prev) => ({ ...prev, isRecurring: !prev.isRecurring }))
+                        }
+                        onFrequencyChange={(recurringFrequency) =>
+                            setFormData((prev) => ({ ...prev, recurringFrequency }))
+                        }
+                        onEndDateChange={(recurringEndDate) =>
+                            setFormData((prev) => ({ ...prev, recurringEndDate: recurringEndDate || '' }))
+                        }
+                        fieldErrors={fieldErrors}
+                    />
 
                     <div>
                         <label htmlFor="expense-description" className="label">

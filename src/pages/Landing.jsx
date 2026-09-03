@@ -7,8 +7,6 @@ import {
     Check,
     ChevronDown,
     ArrowRight,
-    TrendingUp,
-    Smartphone,
     Instagram,
     Facebook,
     Linkedin,
@@ -62,25 +60,21 @@ function formatPrice(amount) {
 
 const WHY_ITEMS = [
     {
-        icon: TrendingUp,
         title: 'See profit, not just revenue',
         text: 'Track margins on products and operating costs. Premium shows gross and net profit with trends.',
         stamp: 'Profit',
     },
     {
-        icon: Package,
         title: 'Inventory that stays in sync',
         text: 'Stock updates when you bill or receipt. Low-stock alerts keep you ahead of empty shelves.',
         stamp: 'In stock',
     },
     {
-        icon: ClipboardList,
         title: 'From quote to payment',
         text: 'Quote, convert to invoice, collect partial payments, and email polished PDFs.',
         stamp: 'Signed',
     },
     {
-        icon: Smartphone,
         title: 'Work from anywhere',
         text: 'Run your business from phone or laptop. Dashboard, documents, and records stay in sync.',
         stamp: 'Synced',

@@ -1,4 +1,5 @@
 import { calculateInvoiceTotals } from './invoiceTotals';
+import { toRecurringApiFields } from '@waraqah/shared';
 import { setCachedPdf } from './pdfCache';
 
 export function buildInvoicePayload(formData, status) {
@@ -43,9 +44,7 @@ export function buildInvoicePayload(formData, status) {
     delete payload.clientPhone;
     delete payload.clientAddress;
 
-    delete payload.isRecurring;
-    delete payload.recurringFrequency;
-    delete payload.recurringEndDate;
+    Object.assign(payload, toRecurringApiFields(formData));
 
     return payload;
 }
