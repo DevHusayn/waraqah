@@ -12,6 +12,8 @@ import {
     getAuthorizedSignatureUrl,
     resolveQuantityColumnLabel,
     getClientBusiness,
+    formatDocumentAdditionalInfo,
+    formatDocumentItemDescription,
 } from '@waraqah/shared';
 import { escapeHtml, formatMoney, wrapHtml } from './htmlUtils';
 
@@ -34,7 +36,7 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
         .map(
             (item) => `
       <tr>
-        <td>${escapeHtml(item.description)}</td>
+        <td class="desc">${escapeHtml(formatDocumentItemDescription(item.description))}</td>
         <td class="num">${escapeHtml(item.quantity)}</td>
         <td class="num">${escapeHtml(formatMoney(item.rate, symbol))}</td>
         <td class="num"><strong>${escapeHtml(formatMoney(Number(item.quantity) * Number(item.rate), symbol))}</strong></td>
@@ -103,7 +105,7 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
         ${client?.email ? `<p class="muted">${escapeHtml(client.email)}</p>` : ''}
         ${client?.phone ? `<p class="muted">${escapeHtml(client.phone)}</p>` : ''}
         ${client?.address ? `<p class="muted" style="white-space:pre-wrap">${escapeHtml(client.address)}</p>` : ''}
-        ${invoice?.clientAdditionalInfo ? `<p class="muted" style="white-space:pre-wrap">${escapeHtml(invoice.clientAdditionalInfo)}</p>` : ''}
+        ${invoice?.clientAdditionalInfo ? `<p class="muted" style="white-space:pre-wrap;line-height:1.45">${escapeHtml(formatDocumentAdditionalInfo(invoice.clientAdditionalInfo))}</p>` : ''}
       </div>
       <div class="info-box">
         <div class="info-label" style="color:${escapeHtml(brand)}">ISSUE DATE</div>

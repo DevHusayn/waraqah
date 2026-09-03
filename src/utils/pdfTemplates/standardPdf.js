@@ -8,6 +8,9 @@ import {
     getFooterZoneHeight,
     contentFitsAboveFooter,
     resolveDocumentFooter,
+    preparePdfAdditionalInfo,
+    preparePdfItemDescription,
+    toPdfSafeText,
 } from '@waraqah/shared';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
@@ -60,9 +63,15 @@ function hasPaymentDetails(businessInfo) {
     );
 }
 
-/** jsPDF Helvetica only supports normal/bold — bold at small sizes reads slightly heavier. */
+/** Built-in Helvetica looks thin at 8pt; keep labels bold, body regular so wraps stay readable. */
 function setPdfBodyFont(doc) {
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'normal');
+}
+
+const PDF_LINE_HEIGHT_FACTOR = 1.45;
+
+function pdfLineHeightMm(fontSizePt) {
+    return (fontSizePt * PDF_LINE_HEIGHT_FACTOR * 25.4) / 72;
 }
 
 const PDF_TOTALS_LABEL_X = 130;
@@ -139,14 +148,14 @@ const BILL_TO_BOX_W = 88;
 const BILL_TO_TEXT_X = 19;
 const BILL_TO_TEXT_PAD = BILL_TO_TEXT_X - BILL_TO_BOX_X;
 const BILL_TO_MAX_WIDTH = BILL_TO_BOX_W - BILL_TO_TEXT_PAD * 2 - 2;
-const BILL_TO_LINE_HEIGHT = 3.8;
+const BILL_TO_FIELD_GAP = 0.8;
 const PAYMENT_BOX_X = 15;
 const PAYMENT_BOX_W = 88;
 const PAYMENT_TEXT_X = 19;
 const PAYMENT_TEXT_MAX_WIDTH = PAYMENT_BOX_W - (PAYMENT_TEXT_X - PAYMENT_BOX_X) * 2 - 2;
 
 function splitWrappedParagraphs(doc, text, maxWidth) {
-    return String(text || '')
+    return toPdfSafeText(text)
         .split(/\r?\n/)
         .flatMap((paragraph) => {
             const trimmed = paragraph.trim();
@@ -161,39 +170,37 @@ function countWrappedLines(doc, text, maxWidth) {
 }
 
 function measureBillToBoxHeight(doc, client, business, additionalInfo) {
-    let height = 13;
+    let height = 14;
+    const nameLh = pdfLineHeightMm(10);
+    const bodyLh = pdfLineHeightMm(8);
 
     doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    height += countWrappedLines(doc, client?.name || 'Client', BILL_TO_MAX_WIDTH) * BILL_TO_LINE_HEIGHT;
+    doc.setFont('helvetica', 'bold');
+    height += countWrappedLines(doc, client?.name || 'Client', BILL_TO_MAX_WIDTH) * nameLh;
+    height += BILL_TO_FIELD_GAP;
 
     doc.setFontSize(8);
     setPdfBodyFont(doc);
-    if (business) {
-        height += countWrappedLines(doc, business, BILL_TO_MAX_WIDTH) * BILL_TO_LINE_HEIGHT;
-    }
-    if (client?.email) {
-        height += countWrappedLines(doc, client.email, BILL_TO_MAX_WIDTH) * BILL_TO_LINE_HEIGHT;
-    }
-    if (client?.phone) {
-        height += countWrappedLines(doc, client.phone, BILL_TO_MAX_WIDTH) * BILL_TO_LINE_HEIGHT;
-    }
-    if (client?.address) {
-        height += countWrappedLines(doc, client.address, BILL_TO_MAX_WIDTH) * BILL_TO_LINE_HEIGHT;
-    }
-    if (additionalInfo) {
-        height += 2;
-        height += countWrappedLines(doc, additionalInfo, BILL_TO_MAX_WIDTH) * BILL_TO_LINE_HEIGHT;
-    }
+    const bodyFields = [business, client?.email, client?.phone, client?.address, additionalInfo].filter(
+        Boolean
+    );
+    bodyFields.forEach((field, index) => {
+        height += countWrappedLines(doc, field, BILL_TO_MAX_WIDTH) * bodyLh;
+        if (index < bodyFields.length - 1) height += BILL_TO_FIELD_GAP;
+    });
 
-    return Math.max(36, height + 5);
+    return Math.max(36, height + 7);
 }
 
 function drawWrappedBillToField(doc, text, x, y, maxWidth = BILL_TO_MAX_WIDTH) {
     const lines = splitWrappedParagraphs(doc, text, maxWidth);
     if (!lines.length) return y;
-    doc.text(lines, x, y);
-    return y + lines.length * BILL_TO_LINE_HEIGHT;
+    const lineHeight = pdfLineHeightMm(doc.getFontSize());
+    for (const line of lines) {
+        doc.text(line, x, y);
+        y += lineHeight;
+    }
+    return y + BILL_TO_FIELD_GAP;
 }
 
 function ensureBottomSectionSpace(
@@ -248,7 +255,7 @@ function drawBillToAndDetails(
     const detailsHeight = isReceiptDoc ? 46 : hasSecondaryDate ? 38 : 28;
 
     const business = getClientBusiness(client);
-    const additionalInfo = String(invoice.clientAdditionalInfo || '').trim();
+    const additionalInfo = preparePdfAdditionalInfo(invoice.clientAdditionalInfo);
     const leftBoxH = measureBillToBoxHeight(doc, client, business, additionalInfo);
     const rightBoxH = Math.max(36, detailsHeight);
 
@@ -262,7 +269,7 @@ function drawBillToAndDetails(
     doc.text(isQuotationDoc ? 'QUOTED TO' : 'BILL TO', BILL_TO_TEXT_X, y + 6);
 
     doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(...textColor);
     let billY = drawWrappedBillToField(doc, client?.name || 'Client', BILL_TO_TEXT_X, y + 13);
 
@@ -282,7 +289,6 @@ function drawBillToAndDetails(
         billY = drawWrappedBillToField(doc, client.address, BILL_TO_TEXT_X, billY);
     }
     if (additionalInfo) {
-        billY += 2;
         drawWrappedBillToField(doc, additionalInfo, BILL_TO_TEXT_X, billY);
     }
 
@@ -367,24 +373,27 @@ async function drawCompanyHeader(doc, businessInfo, premium, logoUrl, pngCache, 
     }
 
     doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryColor);
-    doc.text(String(businessInfo.name || 'Your Business'), nameX, nameY);
+    doc.text(toPdfSafeText(businessInfo.name || 'Your Business'), nameX, nameY);
 
     doc.setFontSize(8);
     setPdfBodyFont(doc);
     doc.setTextColor(...grayColor);
     let detailY = nameY + 6;
-    const addressLines = doc.splitTextToSize(String(businessInfo.address || ''), 88);
-    doc.text(addressLines, leftX, detailY);
-    detailY += addressLines.length * 3.8;
+    const addressLines = splitWrappedParagraphs(doc, businessInfo.address || '', 88);
+    const addressLh = pdfLineHeightMm(8);
+    for (const line of addressLines) {
+        doc.text(line, leftX, detailY);
+        detailY += addressLh;
+    }
     if (businessInfo.email) {
-        doc.text(String(businessInfo.email), leftX, detailY);
-        detailY += 4;
+        doc.text(toPdfSafeText(businessInfo.email), leftX, detailY);
+        detailY += 4.4;
     }
     if (businessInfo.phone) {
-        doc.text(String(businessInfo.phone), leftX, detailY);
-        detailY += 4;
+        doc.text(toPdfSafeText(businessInfo.phone), leftX, detailY);
+        detailY += 4.4;
     }
 
     return detailY;
@@ -407,9 +416,9 @@ function drawBottomBoxes(
     const isReceiptDoc = mode === 'receipt';
     const isQuotationDoc = mode === 'quotation';
     const hasPayment = !isReceiptDoc && !isQuotationDoc && hasPaymentDetails(businessInfo);
-    const notesText = invoice.notes?.trim() || '';
+    const notesText = toPdfSafeText(invoice.notes?.trim() || '').trim();
     const hasNotes = Boolean(notesText);
-    const termsText = isQuotationDoc ? invoice.terms?.trim() || '' : '';
+    const termsText = isQuotationDoc ? toPdfSafeText(invoice.terms?.trim() || '').trim() : '';
     const hasTerms = Boolean(termsText);
 
     let y = startY;
@@ -439,10 +448,11 @@ function drawBottomBoxes(
             ? paymentLines.flatMap((line) => splitWrappedParagraphs(doc, line, PAYMENT_TEXT_MAX_WIDTH))
             : [];
 
+        const notesLh = pdfLineHeightMm(7.5);
         const boxH = Math.max(
             24,
-            hasPayment ? 14 + wrappedPaymentLines.length * 3.5 : 0,
-            hasNotes ? 14 + notesLines.length * 3.5 : 0
+            hasPayment ? 14 + wrappedPaymentLines.length * notesLh : 0,
+            hasNotes ? 14 + notesLines.length * notesLh : 0
         );
         y = ensureBottomSectionSpace(startY, boxH, signatureBlockH, pageHeight, startNewPage);
 
@@ -458,9 +468,10 @@ function drawBottomBoxes(
 
             doc.setTextColor(...grayColor);
             let py = y + 12;
+            const paymentLh = pdfLineHeightMm(7.5);
             for (const line of wrappedPaymentLines) {
                 doc.text(line, PAYMENT_TEXT_X, py);
-                py += 3.5;
+                py += paymentLh;
             }
         }
 
@@ -479,9 +490,10 @@ function drawBottomBoxes(
             setPdfBodyFont(doc);
             doc.setTextColor(...grayColor);
             let ny = y + 13;
+            const noteLineHeight = pdfLineHeightMm(7.5);
             for (const line of notesLines) {
                 doc.text(line, notesX + 4, ny);
-                ny += 3.8;
+                ny += noteLineHeight;
             }
         }
 
@@ -489,8 +501,9 @@ function drawBottomBoxes(
     }
 
     if (hasTerms) {
-        const termsLines = doc.splitTextToSize(termsText, 168);
-        const termsBoxH = Math.max(24, 14 + termsLines.length * 3.5);
+        const termsLines = splitWrappedParagraphs(doc, termsText, 168);
+        const termsLh = pdfLineHeightMm(7.5);
+        const termsBoxH = Math.max(24, 14 + termsLines.length * termsLh);
         y = ensureBottomSectionSpace(y, termsBoxH, signatureBlockH, pageHeight, startNewPage);
 
         doc.setDrawColor(...lightGray);
@@ -508,7 +521,7 @@ function drawBottomBoxes(
         let ty = y + 13;
         for (const line of termsLines) {
             doc.text(line, 19, ty);
-            ty += 3.8;
+            ty += termsLh;
         }
 
         y += termsBoxH + 4;
@@ -677,6 +690,8 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
 
     const paperFormat = resolvePdfPaperFormat(options);
     const doc = new jsPDF({ unit: 'mm', format: paperFormat });
+    doc.setFont('helvetica', 'normal');
+    doc.setLineHeightFactor(PDF_LINE_HEIGHT_FACTOR);
     const pageHeight = doc.internal.pageSize.getHeight();
     const pageWidth = doc.internal.pageSize.getWidth();
     const premium = isPremiumUser(businessInfo);
@@ -762,18 +777,18 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
 
     const tableData = invoice.items.map((item, index) => [
         String(index + 1),
-        item.description || '',
+        preparePdfItemDescription(item.description || ''),
         (item.quantity || 0).toString(),
         `${currencySymbol}${formatMoney(item.rate)}`,
         `${currencySymbol}${formatMoney(Number(item.quantity || 0) * Number(item.rate || 0))}`,
     ]);
 
     const tableColumnWidths = {
-        0: 14,
-        1: 64,
-        2: 24,
-        3: 39,
-        4: 39,
+        0: 12,
+        1: 80,
+        2: 20,
+        3: 34,
+        4: 34,
     };
     const quantityColumnLabel = resolveQuantityColumnLabel(invoice.items).toUpperCase();
 
@@ -785,31 +800,37 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         showHead: 'everyPage',
         tableWidth: pdfContentWidth,
         headStyles: {
+            font: 'helvetica',
             fillColor: lightPrimary,
             textColor: primaryColor,
             fontStyle: 'bold',
             fontSize: 8,
             halign: 'center',
-            cellPadding: { top: 4, bottom: 4, left: 4, right: 4 },
+            valign: 'middle',
+            cellPadding: { top: 4, bottom: 4, left: 3, right: 3 },
         },
         styles: {
+            font: 'helvetica',
+            fontStyle: 'normal',
             fontSize: 8,
-            fontStyle: 'bold',
-            cellPadding: { top: 5, bottom: 5, left: 4, right: 4 },
+            overflow: 'linebreak',
+            valign: 'top',
+            cellPadding: { top: 4, bottom: 4, left: 3, right: 3 },
             lineColor: lightGray,
             lineWidth: 0.3,
             textColor,
         },
         columnStyles: {
-            0: { cellWidth: tableColumnWidths[0], halign: 'center', textColor: grayColor },
-            1: { cellWidth: tableColumnWidths[1], halign: 'left' },
-            2: { cellWidth: tableColumnWidths[2], halign: 'center', textColor: grayColor },
-            3: { cellWidth: tableColumnWidths[3], halign: 'right', textColor: grayColor },
-            4: { cellWidth: tableColumnWidths[4], halign: 'right', fontStyle: 'bold' },
+            0: { cellWidth: tableColumnWidths[0], halign: 'center', valign: 'top', textColor: grayColor },
+            1: { cellWidth: tableColumnWidths[1], halign: 'left', valign: 'top', overflow: 'linebreak' },
+            2: { cellWidth: tableColumnWidths[2], halign: 'center', valign: 'top', textColor: grayColor },
+            3: { cellWidth: tableColumnWidths[3], halign: 'right', valign: 'top', textColor: grayColor },
+            4: { cellWidth: tableColumnWidths[4], halign: 'right', valign: 'top', fontStyle: 'bold' },
         },
         didParseCell: (hookData) => {
             if (hookData.section === 'head') {
                 hookData.cell.styles.halign = 'center';
+                hookData.cell.styles.valign = 'middle';
             }
         },
         alternateRowStyles: { fillColor: [252, 252, 253] },

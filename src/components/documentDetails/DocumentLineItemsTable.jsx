@@ -1,6 +1,6 @@
 import { List } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
-import { normalizeInvoiceUnit, resolveQuantityColumnLabel } from '@waraqah/shared';
+import { formatDocumentItemDescription, normalizeInvoiceUnit, resolveQuantityColumnLabel } from '@waraqah/shared';
 
 export default function DocumentLineItemsTable({ items, currency }) {
     const lineItems = items || [];
@@ -22,7 +22,9 @@ export default function DocumentLineItemsTable({ items, currency }) {
             <div className="md:hidden divide-y divide-zinc-100">
                 {lineItems.map((item, index) => (
                     <div key={index} className="px-4 py-4">
-                        <p className="font-medium text-foreground">{item.description}</p>
+                        <p className="font-medium text-foreground whitespace-pre-wrap leading-relaxed">
+                            {formatDocumentItemDescription(item.description)}
+                        </p>
                         <div className="mt-2 flex items-center justify-between gap-3 text-sm">
                             <span className="text-foreground-muted">
                                 {normalizeInvoiceUnit(item.unit)} {item.quantity} ·{' '}
@@ -53,7 +55,9 @@ export default function DocumentLineItemsTable({ items, currency }) {
                 <tbody className="divide-y divide-zinc-100">
                     {lineItems.map((item, index) => (
                         <tr key={index}>
-                            <td className="px-6 py-4 text-foreground">{item.description}</td>
+                            <td className="px-6 py-4 text-foreground whitespace-pre-wrap leading-relaxed">
+                                {formatDocumentItemDescription(item.description)}
+                            </td>
                             <td className="px-4 py-4 text-center text-foreground-muted">{item.quantity}</td>
                             <td className="px-4 py-4 text-right text-foreground-muted whitespace-nowrap">
                                 {formatCurrency(item.rate, currency)}

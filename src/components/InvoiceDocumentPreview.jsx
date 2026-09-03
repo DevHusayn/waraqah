@@ -5,6 +5,8 @@ import {
     getInvoiceBalanceDue,
     hasRecordedPayments,
     resolveQuantityColumnLabel,
+    formatDocumentAdditionalInfo,
+    formatDocumentItemDescription,
 } from '@waraqah/shared';
 import { APP_DOMAIN, APP_TAGLINE, APP_WEBSITE_URL } from '../constants/brand';
 import WaraqahLogo from './WaraqahLogo';
@@ -215,8 +217,8 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                             </p>
                         ) : null}
                         {invoice?.clientAdditionalInfo ? (
-                            <p className="mt-1 text-xs sm:text-sm text-zinc-500 whitespace-pre-wrap">
-                                {invoice.clientAdditionalInfo}
+                            <p className="mt-1 text-xs sm:text-sm text-zinc-500 whitespace-pre-wrap leading-relaxed">
+                                {formatDocumentAdditionalInfo(invoice.clientAdditionalInfo)}
                             </p>
                         ) : null}
                     </DetailBox>
@@ -296,7 +298,9 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                                     style={{ borderBottom: '1px solid rgb(229 231 235)' }}
                                 >
                                     <td className="px-2 py-2.5 text-center text-zinc-500 whitespace-nowrap">{index + 1}</td>
-                                    <td className="px-2 py-2.5 text-zinc-800">{item.description}</td>
+                                    <td className="px-2 py-2.5 text-zinc-800 whitespace-pre-wrap break-words leading-relaxed">
+                                        {formatDocumentItemDescription(item.description)}
+                                    </td>
                                     <td className="px-2 py-2.5 text-center text-zinc-500">{item.quantity}</td>
                                     <td className="px-2 py-2.5 text-right text-zinc-500 whitespace-nowrap">
                                         {formatCurrency(item.rate, invoice.currency)}

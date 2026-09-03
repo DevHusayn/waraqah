@@ -48,7 +48,8 @@ export function wrapHtml(body, title = 'Document') {
   .info-box { flex: 1; background: #f1f5f9; border-radius: 6px; padding: 10px; }
   .info-label { font-size: 8px; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 4px; }
   table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-  th, td { padding: 8px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+  th, td { padding: 8px; text-align: left; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+  td.desc { white-space: pre-wrap; word-break: break-word; line-height: 1.45; }
   th { color: #fff; font-size: 9px; letter-spacing: 0.03em; }
   td.num, th.num { text-align: center; }
   .totals { width: 45%; margin-left: auto; margin-top: 12px; }

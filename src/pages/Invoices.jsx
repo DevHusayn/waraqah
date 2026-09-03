@@ -38,6 +38,7 @@ const SORT_OPTIONS = [
     { value: 'dueDate', label: 'Due date' },
     { value: 'amountHigh', label: 'Amount (high to low)' },
     { value: 'amountLow', label: 'Amount (low to high)' },
+    { value: 'recurring', label: 'Recurring' },
 ];
 
 const TABLE_COLUMNS = [
@@ -57,8 +58,9 @@ const Invoices = () => {
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
     const [filter, setFilter] = useState('all');
-    const [recurringOnly, setRecurringOnly] = useState(false);
     const [sortBy, setSortBy] = useState('newest');
+    const recurringOnly = sortBy === 'recurring';
+    const sortParam = recurringOnly ? 'newest' : sortBy;
     const {
         summaryYear,
         summaryMonth,
@@ -112,7 +114,7 @@ const Invoices = () => {
         fetcher,
         extraParams: {
             status: filter,
-            sort: sortBy,
+            sort: sortParam,
             recurring: recurringOnly || undefined,
             ...listQueryParams,
         },
@@ -122,7 +124,7 @@ const Invoices = () => {
 
     useEffect(() => {
         setPage(1);
-    }, [filter, sortBy, recurringOnly, listQueryParams, setPage]);
+    }, [filter, sortBy, listQueryParams, setPage]);
 
     const handleFilterChange = useCallback(
         (next) => {
@@ -227,28 +229,13 @@ const Invoices = () => {
                                 options={SORT_OPTIONS}
                                 placeholder="Sort by"
                                 leadingIcon={<ArrowUpDown size={14} />}
-                                aria-label="Sort invoices"
+                                aria-label="Sort or filter invoices"
                             />
                         </div>
                     </ToolbarActions>
                 </Toolbar>
 
-                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <FilterTabs tabs={filterTabs} value={filter} onChange={handleFilterChange} className="mb-0 flex-1" />
-                    <button
-                        type="button"
-                        onClick={() => setRecurringOnly((prev) => !prev)}
-                        className={`inline-flex items-center gap-1.5 self-start rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                            recurringOnly
-                                ? 'border-brand bg-brand-subtle text-brand'
-                                : 'border-border text-foreground-muted hover:bg-surface-muted'
-                        }`}
-                        aria-pressed={recurringOnly}
-                    >
-                        <Repeat size={12} aria-hidden />
-                        Recurring
-                    </button>
-                </div>
+                <FilterTabs tabs={filterTabs} value={filter} onChange={handleFilterChange} className="mb-4" />
 
                 {loading && invoices.length === 0 ? (
                     <ListPageSkeleton
@@ -265,16 +252,20 @@ const Invoices = () => {
                             title={
                                 search
                                     ? 'No matching invoices'
-                                    : filter === 'all'
-                                      ? 'No invoices yet'
-                                      : `No ${filter} invoices`
+                                    : recurringOnly
+                                      ? 'No recurring invoices'
+                                      : filter === 'all'
+                                        ? 'No invoices yet'
+                                        : `No ${filter} invoices`
                             }
                             description={
                                 search
                                     ? 'Try a different search term'
-                                    : filter === 'all'
-                                      ? 'Create your first invoice to get started'
-                                      : `You don't have any ${filter} invoices`
+                                    : recurringOnly
+                                      ? 'None of your invoices are set to repeat.'
+                                      : filter === 'all'
+                                        ? 'Create your first invoice to get started'
+                                        : `You don't have any ${filter} invoices`
                             }
                             action={
                                 filter === 'all' && !search ? (

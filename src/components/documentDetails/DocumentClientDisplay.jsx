@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { User, Mail, Phone, Building2 } from 'lucide-react';
 import FormSection from '../FormSection';
+import { formatDocumentAdditionalInfo } from '@waraqah/shared';
 import { getClientBusiness } from '../../utils/clientHelpers';
 
 export default function DocumentClientDisplay({
@@ -50,7 +51,9 @@ export default function DocumentClientDisplay({
                         <p className="text-sm text-foreground-muted whitespace-pre-wrap">{client.address}</p>
                     )}
                     {additionalInfo && (
-                        <p className="text-sm text-foreground-muted whitespace-pre-wrap">{additionalInfo}</p>
+                        <p className="text-sm text-foreground-muted whitespace-pre-wrap leading-relaxed">
+                            {formatDocumentAdditionalInfo(additionalInfo)}
+                        </p>
                     )}
                     {missingEmail ? (
                         <p className="text-sm text-foreground-muted">

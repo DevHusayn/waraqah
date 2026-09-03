@@ -31,6 +31,7 @@ export * from './inventorySettings.js';
 export * from './monthlyStatementEmail.js';
 export * from './pdfFooterLayout.js';
 export * from './pdfPageFormat.js';
+export * from './pdfText.js';
 export * from './analyticsEvents.js';
 export * from './replayMasking.js';
 export * from './timezone.js';
