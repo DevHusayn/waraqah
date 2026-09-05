@@ -272,7 +272,7 @@ function Auth() {
                 <div>
                     <WaraqahLogo size="lg" inverted iconStyle="solid" />
                     <h2 className="mt-10 text-3xl font-semibold leading-tight max-w-sm">
-                        Get paid. Keep records.
+                        {APP_TAGLINE}
                     </h2>
                     <p className="mt-4 text-white/80 text-base leading-relaxed max-w-md">
                         Send quotations and invoices, issue receipts, manage clients and products,

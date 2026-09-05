@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback, useRef, useEffect, useState, useMemo } from 'react';
+import { useContext, useCallback, useRef, useEffect, useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '../utils/api';
 import { useAuth } from './AuthContext';
@@ -9,8 +9,7 @@ import { isPremiumUser } from '../utils/premium';
 import { DEFAULT_BRAND_COLOR } from '@waraqah/shared';
 import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
 import { invalidateDashboardQueries } from '../lib/queryClient';
-
-const SettingsContext = createContext();
+import { SettingsContext } from './settingsStore';
 
 const EMPTY_BUSINESS = {
     name: '',
@@ -40,6 +39,23 @@ const EMPTY_BUSINESS = {
     autoEmailMonthlyStatements: true,
 };
 
+const noop = () => {};
+const asyncNoop = async () => {};
+
+const FALLBACK_SETTINGS = {
+    businessInfo: EMPTY_BUSINESS,
+    businessInfoReady: false,
+    updateBusinessInfo: asyncNoop,
+    setBusinessInfo: noop,
+    loading: false,
+    assetsReady: true,
+    refreshBusinessInfo: asyncNoop,
+    fetchBusinessAssets: asyncNoop,
+    saveBusinessLogo: asyncNoop,
+    saveCompanyLogo: asyncNoop,
+    saveBusinessAsset: asyncNoop,
+};
+
 function businessPlaceholder(userId) {
     const cached = userId ? getCachedBusinessSummary(userId) : null;
     return cached ? { ...EMPTY_BUSINESS, ...cached } : EMPTY_BUSINESS;
@@ -55,7 +71,7 @@ function businessInfoPlaceholder(prev, previousQuery, userId) {
 export const useSettings = () => {
     const context = useContext(SettingsContext);
     if (!context) {
-        throw new Error('useSettings must be used within SettingsProvider');
+        return FALLBACK_SETTINGS;
     }
     return context;
 };
