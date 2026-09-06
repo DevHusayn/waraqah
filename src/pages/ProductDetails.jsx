@@ -398,9 +398,9 @@ export default function ProductDetails() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 px-5 pb-5 sm:grid-cols-4">
-                    <CatalogMetric label="Price" value={formatCurrency(product.unitPrice || 0)} />
+                    <CatalogMetric label="Selling price" value={formatCurrency(product.unitPrice || 0)} />
                     <CatalogMetric
-                        label="Cost"
+                        label="Purchase cost"
                         value={
                             product.unitCost > 0 ? formatCurrency(product.unitCost) : 'Not set'
                         }

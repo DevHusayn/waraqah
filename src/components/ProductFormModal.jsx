@@ -150,7 +150,7 @@ export default function ProductFormModal({
                         value={formData.name}
                         onChange={handleChange}
                         className={inputClass(Boolean(fieldErrors.name))}
-                        placeholder="e.g. Website design"
+                        placeholder="e.g. Laptop"
                         aria-invalid={Boolean(fieldErrors.name)}
                     />
                     <FieldValidationMessage message={fieldErrors.name} />
@@ -172,7 +172,7 @@ export default function ProductFormModal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label htmlFor="product-unitPrice" className="label">
-                            Price (NGN)
+                            Selling price
                         </label>
                         <AmountInput
                             id="product-unitPrice"
@@ -184,7 +184,7 @@ export default function ProductFormModal({
                     </div>
                     <div>
                         <label htmlFor="product-unitCost" className="label">
-                            Cost (NGN) <span className="text-foreground-muted/70 font-normal">(optional)</span>
+                            Purchase cost <span className="text-foreground-muted/70 font-normal">(optional)</span>
                         </label>
                         <AmountInput
                             id="product-unitCost"
