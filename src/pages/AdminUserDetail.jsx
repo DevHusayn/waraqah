@@ -18,6 +18,7 @@ import {
     StickyNote,
     AlertTriangle,
     Pencil,
+    ChevronDown,
 } from 'lucide-react';
 import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
@@ -38,6 +39,7 @@ import {
     PaymentStatusBadge,
     UserAvatar,
 } from '../components/admin/AdminBadges';
+import AdminEmailModal from '../components/admin/AdminEmailModal';
 
 function formatDateTime(value) {
     if (!value) return '—';
@@ -83,16 +85,20 @@ const ACTIVITY_ICONS = {
     payment_failed: AlertTriangle,
     invoice_created: FileText,
     quotation_created: FileText,
+    admin_email_sent: Mail,
 };
 
-function ActivityFeed({ userId }) {
+function ActivityFeed({ userId, refreshKey = 0 }) {
     const fetcher = useCallback(
         ({ page, limit }) =>
             apiFetch(`/auth/admin/users/${userId}/activity?${buildListQuery({ page, limit })}`),
         [userId]
     );
 
-    const { setPage, data: events, pagination, loading, error } = usePagedList({ fetcher });
+    const { setPage, data: events, pagination, loading, error } = usePagedList({
+        fetcher,
+        extraDeps: [refreshKey],
+    });
 
     if (error) {
         return <p className="text-sm text-red-600">{error}</p>;
@@ -281,6 +287,122 @@ function SubscriptionHistory({ userId }) {
                 </div>
             ) : null}
         </>
+    );
+}
+
+function AdminEmailHistory({ userId, refreshKey = 0 }) {
+    const [expandedId, setExpandedId] = useState(null);
+    const fetcher = useCallback(
+        ({ page, limit }) =>
+            apiFetch(`/auth/admin/users/${userId}/emails?${buildListQuery({ page, limit })}`),
+        [userId]
+    );
+    const { setPage, data: emails, pagination, loading, error } = usePagedList({
+        fetcher,
+        limit: 10,
+        extraDeps: [refreshKey],
+    });
+
+    return (
+        <SectionCard title="Sent emails" icon={Mail}>
+            {error ? <p className="text-sm text-red-600 mb-3">{error}</p> : null}
+            {loading && emails.length === 0 ? (
+                <div className="flex justify-center py-6">
+                    <Spinner size="sm" />
+                </div>
+            ) : emails.length === 0 ? (
+                <p className="text-sm text-foreground-muted">
+                    Emails you send from this page will appear here.
+                </p>
+            ) : (
+                <>
+                    <ul className="space-y-3">
+                        {emails.map((email) => {
+                            const open = expandedId === email.id;
+                            return (
+                                <li
+                                    key={email.id}
+                                    className="rounded-xl border border-border/50 bg-surface-muted/50 p-3"
+                                >
+                                    <button
+                                        type="button"
+                                        className="w-full text-left"
+                                        onClick={() => setExpandedId(open ? null : email.id)}
+                                        aria-expanded={open}
+                                    >
+                                        <div className="flex items-start gap-2">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-sm font-medium text-foreground truncate">
+                                                    {email.subject || 'Email'}
+                                                </p>
+                                                {!open && email.preview ? (
+                                                    <p className="text-xs text-foreground-muted mt-0.5 line-clamp-2">
+                                                        {email.preview}
+                                                    </p>
+                                                ) : null}
+                                                <p className="text-[11px] text-foreground-muted/70 mt-1">
+                                                    {email.authorName || 'Admin'}
+                                                    {email.from ? ` · ${email.from}` : ''}
+                                                    {' · '}
+                                                    {formatDateTime(email.createdAt)}
+                                                </p>
+                                            </div>
+                                            <ChevronDown
+                                                size={16}
+                                                className={`mt-0.5 shrink-0 text-foreground-muted/70 transition-transform ${open ? 'rotate-180' : ''}`}
+                                                aria-hidden
+                                            />
+                                        </div>
+                                    </button>
+                                    {open ? (
+                                        <div className="mt-3 pt-3 border-t border-border/50 space-y-2">
+                                            {email.replyTo ? (
+                                                <p className="text-[11px] text-foreground-muted">
+                                                    Reply-to {email.replyTo}
+                                                </p>
+                                            ) : null}
+                                            {email.body ? (
+                                                <p className="text-sm text-foreground whitespace-pre-wrap">
+                                                    {email.body}
+                                                </p>
+                                            ) : (
+                                                <p className="text-sm text-foreground-muted">
+                                                    Message body was not stored for this send.
+                                                </p>
+                                            )}
+                                            {email.actionUrl ? (
+                                                <p className="text-xs text-foreground-muted">
+                                                    Button{' '}
+                                                    <a
+                                                        href={email.actionUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-brand font-medium break-all"
+                                                    >
+                                                        {email.actionLabel || 'Open Waraqah'}
+                                                    </a>
+                                                </p>
+                                            ) : null}
+                                        </div>
+                                    ) : null}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                    {pagination.totalPages > 1 ? (
+                        <div className="mt-3">
+                            <PaginationBar
+                                page={pagination.page}
+                                totalPages={pagination.totalPages}
+                                total={pagination.total}
+                                onPageChange={setPage}
+                                disabled={loading}
+                            />
+                        </div>
+                    ) : null}
+                </>
+            )}
+        </SectionCard>
     );
 }
 
@@ -516,6 +638,8 @@ export default function AdminUserDetail() {
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [confirmStatus, setConfirmStatus] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const [emailModalOpen, setEmailModalOpen] = useState(false);
+    const [emailHistoryKey, setEmailHistoryKey] = useState(0);
 
     const loadProfile = useCallback(async () => {
         setLoading(true);
@@ -677,6 +801,16 @@ export default function AdminUserDetail() {
                 onConfirm={handleDelete}
                 onCancel={() => setConfirmDelete(false)}
             />
+            <AdminEmailModal
+                open={emailModalOpen}
+                user={user}
+                senderName={currentUser?.name}
+                onClose={() => setEmailModalOpen(false)}
+                onSent={(message) => {
+                    setAlert({ open: true, message, type: 'success' });
+                    setEmailHistoryKey((key) => key + 1);
+                }}
+            />
 
             <div className="max-w-6xl mx-auto">
                 <Link
@@ -736,10 +870,15 @@ export default function AdminUserDetail() {
                                 <Crown size={14} aria-hidden />
                                 {isPremium ? 'Downgrade' : 'Upgrade'}
                             </button>
-                            <a href={`mailto:${user.email}`} className="btn-secondary text-sm">
+                            <button
+                                type="button"
+                                className="btn-secondary text-sm"
+                                disabled={busy || !user.email}
+                                onClick={() => setEmailModalOpen(true)}
+                            >
                                 <Mail size={14} aria-hidden />
                                 Email
-                            </a>
+                            </button>
                             {isLocked ? (
                                 <button
                                     type="button"
@@ -801,7 +940,7 @@ export default function AdminUserDetail() {
                         </SectionCard>
 
                         <SectionCard title="Activity timeline" icon={Activity}>
-                            <ActivityFeed userId={userId} />
+                            <ActivityFeed userId={userId} refreshKey={emailHistoryKey} />
                         </SectionCard>
 
                         <SectionCard title="Billing & subscription" icon={Receipt}>
@@ -847,6 +986,7 @@ export default function AdminUserDetail() {
                     </div>
 
                     <div className="space-y-6">
+                        <AdminEmailHistory userId={userId} refreshKey={emailHistoryKey} />
                         <AdminNotesSection userId={userId} />
 
                         <SectionCard title="Danger zone" icon={AlertTriangle} className="border-red-100">

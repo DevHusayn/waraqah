@@ -41,6 +41,8 @@ export default function ModalShell({
         sm: 'max-w-sm',
         md: 'max-w-md',
         lg: 'max-w-lg',
+        xl: 'max-w-3xl',
+        '2xl': 'max-w-5xl',
     };
 
     return (
