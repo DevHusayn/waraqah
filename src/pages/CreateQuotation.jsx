@@ -37,7 +37,8 @@ import { DocumentFooterSection } from '../components/documentForm/DocumentFooter
 import { useDocumentFooterPrefill, resolveFormDocumentFooter } from '../hooks/useDocumentFooterPrefill';
 import { useUnmountDraftAutosave } from '../hooks/useUnmountDraftAutosave';
 import { buildDocumentPreviewFromForm } from '../utils/buildDocumentPreviewData';
-import { hasDraftContent, hasAutoSaveDraftContent, resolvePersistClientId } from '../utils/documentFormHelpers';
+import { hasDraftContent, hasAutoSaveDraftContent, resolvePersistClientId, resolvePersistProductItems, applyClientSnapshotToPayload } from '../utils/documentFormHelpers';
+import { resolveFormClient } from '../utils/documentClient';
 import { DEFAULT_QUOTATION_TERMS } from '../utils/documentHelpers';
 import { applyAiDraftToForm, DEFAULT_INVOICE_UNIT, isAiDraftsEnabled, normalizeInvoiceUnit } from '@waraqah/shared';
 import { isPremiumUser } from '../utils/premium';
@@ -58,7 +59,7 @@ const CreateQuotation = () => {
         refreshQuotations,
         sendQuotationEmailToClient,
     } = useQuotation();
-    const { clients, products, addClient, updateClient, fetchProducts } = useInvoice();
+    const { clients, products, addClient, updateClient, addProduct, fetchProducts } = useInvoice();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen } = useQuotationCreateGuard();
     const { businessInfo } = useSettings();
     const premium = isPremiumUser(businessInfo);
@@ -147,6 +148,7 @@ const CreateQuotation = () => {
         products,
         addClient,
         updateClient,
+        addProduct,
         setCustomUnitModal,
         customUnitModal,
         markDirty,
@@ -170,20 +172,19 @@ const CreateQuotation = () => {
 
         let cancelled = false;
 
-        const applyQuotationToForm = (quotation) => {
+        const applyQuotationToForm = async (quotation) => {
             if (['converted', 'expired'].includes(quotation.status)) {
                 setQuotationLoading(false);
                 navigate(`/quotations/${id}`, { replace: true });
                 return;
             }
-            const client = quotation.clientId
-                ? clients.find((c) => c.id === quotation.clientId)
-                : null;
+            const client = await resolveFormClient(quotation, clients);
+            if (cancelled) return;
             loadedQuotationIdRef.current = id;
             setResolvedStatus(quotation.status || 'draft');
             setFormData({
                 ...quotation,
-                clientName: client?.name || '',
+                clientName: client?.name || quotation.clientName || '',
                 clientEmail: client?.email || '',
                 ...clientDetailsFromRecord(client),
                 clientAdditionalInfo: quotation.clientAdditionalInfo || '',
@@ -235,7 +236,7 @@ const CreateQuotation = () => {
                 }
             }
 
-            if (!cancelled) applyQuotationToForm(quotation);
+            if (!cancelled) await applyQuotationToForm(quotation);
         };
 
         loadQuotation();
@@ -295,7 +296,10 @@ const CreateQuotation = () => {
                 const clientId = await resolvePersistClientId(current, handlers, {
                     createIfMissing: false,
                 });
-                const payload = buildQuotationPayload({ ...current, clientId }, 'draft');
+                const items = await resolvePersistProductItems(current.items, handlers, {
+                    createIfMissing: !silent,
+                });
+                const payload = buildQuotationPayload({ ...current, clientId, items }, 'draft');
                 const draftId = id || draftIdRef.current;
                 let saved;
 
@@ -363,7 +367,8 @@ const CreateQuotation = () => {
         setSending(true);
         try {
             const clientId = await handlers.resolveClientId(formData);
-            const payload = buildQuotationPayload({ ...formData, clientId }, 'sent');
+            const items = await resolvePersistProductItems(formData.items, handlers);
+            const payload = buildQuotationPayload({ ...formData, clientId, items }, 'sent');
             const draftId = id || draftIdRef.current;
             let saved;
 
@@ -499,10 +504,12 @@ const CreateQuotation = () => {
         setSaving(true);
         try {
             const clientId = await handlers.resolveClientId(formData);
+            const items = await resolvePersistProductItems(formData.items, handlers);
             const totals = getTotals();
             const quotationData = {
                 ...formData,
                 clientId,
+                items,
                 validUntil: formData.hasValidUntil ? formData.validUntil : null,
                 status: formData.status === 'draft' ? 'sent' : formData.status,
                 currency: normalizeCurrency(formData.currency || APP_CURRENCY),
@@ -513,8 +520,7 @@ const CreateQuotation = () => {
                 tax: totals.tax,
                 total: totals.total,
             };
-            delete quotationData.clientName;
-            delete quotationData.clientEmail;
+            applyClientSnapshotToPayload(quotationData, formData);
             delete quotationData.hasValidUntil;
 
             await updateQuotation(id, quotationData);

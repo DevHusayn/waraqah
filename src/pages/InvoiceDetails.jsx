@@ -61,18 +61,14 @@ import SummaryRow from '../components/documentDetails/SummaryRow';
 import DocumentClientDisplay from '../components/documentDetails/DocumentClientDisplay';
 import DocumentLineItemsTable from '../components/documentDetails/DocumentLineItemsTable';
 import { DocumentNotesDisplay } from '../components/documentDetails/DocumentTextSections';
+import {
+    fetchClientById,
+    normalizeDocumentClientId,
+    resolveDisplayClient,
+} from '../utils/documentClient';
 
 function mapInvoiceRecord(invoice) {
     return { ...invoice, id: invoice._id || invoice.id };
-}
-
-function normalizeDocumentClientId(value) {
-    if (value == null || value === '') return null;
-    if (typeof value === 'object') {
-        const id = value._id || value.id;
-        return id ? String(id) : null;
-    }
-    return String(value);
 }
 
 function invoiceHasLineItems(invoice) {
@@ -401,6 +397,7 @@ const InvoiceDetails = () => {
     const [resolving, setResolving] = useState(false);
     const [clientEditOpen, setClientEditOpen] = useState(false);
     const [clientOverride, setClientOverride] = useState(null);
+    const [fetchedClient, setFetchedClient] = useState(null);
     const [stoppingRecurring, setStoppingRecurring] = useState(false);
 
     const invoiceFromList = useMemo(
@@ -412,20 +409,18 @@ const InvoiceDetails = () => {
         if (invoiceHasLineItems(fetchedInvoice)) return fetchedInvoice;
         return fetchedInvoice || invoiceFromList || null;
     }, [invoiceFromList, fetchedInvoice]);
-    const client = useMemo(() => {
-        const clientId = normalizeDocumentClientId(invoice?.clientId);
-        const fromList = clientId
-            ? clients.find(
-                  (c) => String(c.id) === clientId || String(c._id) === clientId
-              ) || null
-            : null;
-        if (!clientOverride) return fromList;
-        return {
-            ...(fromList || {}),
-            ...clientOverride,
-            id: normalizeDocumentClientId(clientOverride.id || clientId),
-        };
-    }, [clients, invoice?.clientId, clientOverride]);
+    const client = useMemo(
+        () =>
+            resolveDisplayClient({
+                clients,
+                clientId: invoice?.clientId,
+                clientName: invoice?.clientName,
+                clientCompany: invoice?.clientCompany,
+                liveClient: fetchedClient,
+                clientOverride,
+            }),
+        [clients, invoice?.clientId, invoice?.clientName, invoice?.clientCompany, fetchedClient, clientOverride]
+    );
 
     const paid = invoice ? isReceipt(invoice) : false;
     const cancelled = invoice?.status === 'cancelled';
@@ -441,7 +436,7 @@ const InvoiceDetails = () => {
     const paymentHistory = invoice ? getInvoicePayments(invoice) : [];
     const canSendReminderNow = canSendReminder && canSendPaymentReminderNow(invoice?.lastPaymentReminderAt);
     const canResendReceipt = paid && clientHasEmail;
-    const clientRecordId = normalizeDocumentClientId(client?.id || invoice?.clientId);
+    const clientRecordId = normalizeDocumentClientId(client?.id);
     const canEditClient = Boolean(clientRecordId);
     const contactResolved = Boolean(invoice && !loading && !resolving);
     const clientEditInitialData = client
@@ -475,7 +470,23 @@ const InvoiceDetails = () => {
 
     useEffect(() => {
         setClientOverride(null);
+        setFetchedClient(null);
     }, [id]);
+
+    useEffect(() => {
+        const clientId = normalizeDocumentClientId(invoice?.clientId);
+        if (!clientId) {
+            setFetchedClient(null);
+            return undefined;
+        }
+        let cancelled = false;
+        fetchClientById(clientId).then((loaded) => {
+            if (!cancelled) setFetchedClient(loaded);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [invoice?.clientId]);
 
     useEffect(() => {
         if (!id) {

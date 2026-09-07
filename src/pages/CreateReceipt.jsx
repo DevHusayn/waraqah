@@ -38,7 +38,8 @@ import { DocumentFooterSection } from '../components/documentForm/DocumentFooter
 import { useDocumentFooterPrefill, resolveFormDocumentFooter } from '../hooks/useDocumentFooterPrefill';
 import { useUnmountDraftAutosave } from '../hooks/useUnmountDraftAutosave';
 import { buildDocumentPreviewFromForm } from '../utils/buildDocumentPreviewData';
-import { hasDraftContent, hasAutoSaveDraftContent, resolvePersistClientId } from '../utils/documentFormHelpers';
+import { hasDraftContent, hasAutoSaveDraftContent, resolvePersistClientId, resolvePersistProductItems } from '../utils/documentFormHelpers';
+import { resolveFormClient } from '../utils/documentClient';
 import { DEFAULT_INVOICE_UNIT, normalizeInvoiceUnit } from '@waraqah/shared';
 import FormSection from '../components/FormSection';
 import RequiredLabel from '../components/RequiredLabel';
@@ -67,7 +68,7 @@ const CreateReceipt = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const { addReceipt, updateReceipt, refreshReceipts, sendReceiptEmailToClient } = useReceipt();
-    const { clients, products, addClient, updateClient, fetchProducts } = useInvoice();
+    const { clients, products, addClient, updateClient, addProduct, fetchProducts } = useInvoice();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen } = useReceiptCreateGuard();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
@@ -149,6 +150,7 @@ const CreateReceipt = () => {
         products,
         addClient,
         updateClient,
+        addProduct,
         setCustomUnitModal,
         customUnitModal,
         markDirty,
@@ -168,22 +170,21 @@ const CreateReceipt = () => {
 
         let cancelled = false;
 
-        const applyReceiptToForm = (receipt) => {
+        const applyReceiptToForm = async (receipt) => {
             if (receipt.status === 'paid') {
                 setReceiptLoading(false);
                 navigate(`/receipts/${id}`, { replace: true });
                 return;
             }
-            const client = receipt.clientId
-                ? clients.find((c) => c.id === receipt.clientId)
-                : null;
+            const client = await resolveFormClient(receipt, clients);
+            if (cancelled) return;
             loadedReceiptIdRef.current = id;
             setResolvedStatus(receipt.status || 'draft');
             setFormData({
                 ...receipt,
-                clientName: client?.name || '',
-                clientEmail: client?.email || '',
-                ...clientDetailsFromRecord(client),
+                clientName: client?.name || receipt.clientName || '',
+                clientEmail: client?.email || receipt.client?.email || '',
+                ...clientDetailsFromRecord(client || receipt.client),
                 clientAdditionalInfo: receipt.clientAdditionalInfo || '',
                 documentFooter: resolveFormDocumentFooter(
                     receipt.documentFooter,
@@ -208,7 +209,7 @@ const CreateReceipt = () => {
             setReceiptLoading(true);
             try {
                 const data = await apiFetch(`/receipts/${id}`);
-                if (!cancelled) applyReceiptToForm({ ...data, id: data._id || data.id });
+                if (!cancelled) await applyReceiptToForm({ ...data, id: data._id || data.id });
             } catch {
                 if (!cancelled) {
                     setReceiptLoading(false);
@@ -291,7 +292,10 @@ const CreateReceipt = () => {
                 const clientId = await resolvePersistClientId(current, handlers, {
                     createIfMissing: false,
                 });
-                const payload = buildReceiptPayload({ ...current, clientId }, 'draft');
+                const items = await resolvePersistProductItems(current.items, handlers, {
+                    createIfMissing: !silent,
+                });
+                const payload = buildReceiptPayload({ ...current, clientId, items }, 'draft');
                 const draftId = id || draftIdRef.current;
                 let saved;
 
@@ -366,7 +370,8 @@ const CreateReceipt = () => {
         setIssuing(true);
         try {
             const clientId = await handlers.resolveClientId(formData);
-            const payload = buildReceiptPayload({ ...formData, clientId }, 'paid');
+            const items = await resolvePersistProductItems(formData.items, handlers);
+            const payload = buildReceiptPayload({ ...formData, clientId, items }, 'paid');
             const draftId = id || draftIdRef.current;
             let saved;
 

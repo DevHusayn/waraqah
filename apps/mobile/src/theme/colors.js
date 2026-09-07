@@ -91,7 +91,7 @@ export function getStatIconThemes(palette) {
 export const statIconThemes = getStatIconThemes(lightColors);
 
 export function resolveThemeMode(themeMode) {
-    return themeMode === 'light' ? 'light' : 'dark';
+    return themeMode === 'dark' ? 'dark' : 'light';
 }
 
 export function getThemeColors(resolvedTheme) {

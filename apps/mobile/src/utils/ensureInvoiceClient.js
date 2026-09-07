@@ -51,13 +51,21 @@ export async function ensureInvoiceClient(
     if (!name && !clientId) return null;
 
     if (clientId) {
-        const existing = clients.find((c) => c.id === clientId);
+        const existing = clients.find((c) => c.id === clientId || String(c.id) === String(clientId));
         if (existing) {
             if (!clientDetailsMatch(existing, payload)) {
                 await updateClient(clientId, payload);
             }
             return clientId;
         }
+        if (name && updateClient) {
+            try {
+                await updateClient(clientId, payload);
+            } catch {
+                // Deleted or unreachable — keep the stored id and name snapshot.
+            }
+        }
+        return clientId;
     }
 
     if (!name) return null;

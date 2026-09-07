@@ -51,6 +51,7 @@ import SummaryRow from '../components/documentDetails/SummaryRow';
 import DocumentClientDisplay from '../components/documentDetails/DocumentClientDisplay';
 import DocumentLineItemsTable from '../components/documentDetails/DocumentLineItemsTable';
 import { DocumentNotesDisplay, DocumentTermsDisplay } from '../components/documentDetails/DocumentTextSections';
+import { fetchClientById, resolveDisplayClient } from '../utils/documentClient';
 
 function mapQuotationRecord(quotation) {
     return { ...quotation, id: quotation._id || quotation.id };
@@ -235,6 +236,7 @@ const QuotationDetails = () => {
     const [statusUpdating, setStatusUpdating] = useState(false);
     const [fetchedQuotation, setFetchedQuotation] = useState(null);
     const [resolving, setResolving] = useState(false);
+    const [fetchedClient, setFetchedClient] = useState(null);
 
     const quotationFromList = useMemo(
         () =>
@@ -249,8 +251,15 @@ const QuotationDetails = () => {
         return fetchedQuotation || quotationFromList || null;
     }, [quotationFromList, fetchedQuotation]);
     const client = useMemo(
-        () => clients.find((c) => c.id === quotation?.clientId || c._id === quotation?.clientId),
-        [clients, quotation?.clientId]
+        () =>
+            resolveDisplayClient({
+                clients,
+                clientId: quotation?.clientId,
+                clientName: quotation?.clientName,
+                clientCompany: quotation?.clientCompany,
+                liveClient: fetchedClient,
+            }),
+        [clients, quotation?.clientId, quotation?.clientName, quotation?.clientCompany, fetchedClient]
     );
 
     const status = quotation?.status || 'draft';
@@ -265,6 +274,24 @@ const QuotationDetails = () => {
     const convertedInvoiceId = quotation?.convertedInvoiceId
         ? String(quotation.convertedInvoiceId)
         : null;
+
+    useEffect(() => {
+        setFetchedClient(null);
+    }, [id]);
+
+    useEffect(() => {
+        if (!quotation?.clientId) {
+            setFetchedClient(null);
+            return undefined;
+        }
+        let cancelled = false;
+        fetchClientById(quotation.clientId).then((loaded) => {
+            if (!cancelled) setFetchedClient(loaded);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [quotation?.clientId]);
 
     useEffect(() => {
         if (!id) return undefined;

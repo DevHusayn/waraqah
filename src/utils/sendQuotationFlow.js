@@ -28,7 +28,8 @@ export function buildQuotationPayload(formData, status) {
 
     delete payload.quotationNumber;
     delete payload.hasValidUntil;
-    delete payload.clientName;
+    payload.clientName = String(formData.clientName || '').trim() || null;
+    payload.clientCompany = String(formData.clientBusiness || formData.clientCompany || '').trim() || null;
     delete payload.clientEmail;
     delete payload.clientBusiness;
     delete payload.clientPhone;

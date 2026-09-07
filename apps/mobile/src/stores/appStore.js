@@ -7,7 +7,7 @@ const THEME_KEY = 'waraqah_theme_mode';
 export const useAppStore = create((set, get) => ({
     hydrated: false,
     onboardingComplete: false,
-    themeMode: 'dark', // 'light' | 'dark'
+    themeMode: 'light', // 'light' | 'dark'
     isOffline: false,
 
     hydrate: async () => {
@@ -16,7 +16,7 @@ export const useAppStore = create((set, get) => ({
                 AsyncStorage.getItem(ONBOARDING_KEY),
                 AsyncStorage.getItem(THEME_KEY),
             ]);
-            const themeMode = theme === 'light' ? 'light' : 'dark';
+            const themeMode = theme === 'dark' ? 'dark' : 'light';
             if (theme !== themeMode) {
                 try {
                     await AsyncStorage.setItem(THEME_KEY, themeMode);
@@ -53,7 +53,7 @@ export const useAppStore = create((set, get) => ({
     },
 
     setThemeMode: async (mode) => {
-        const themeMode = mode === 'light' ? 'light' : 'dark';
+        const themeMode = mode === 'dark' ? 'dark' : 'light';
         try {
             await AsyncStorage.setItem(THEME_KEY, themeMode);
         } catch {

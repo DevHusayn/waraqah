@@ -315,6 +315,7 @@ export function InvoiceProvider({ children }) {
             name: product.name,
             description: product.description || '',
             unitPrice: Number(product.unitPrice ?? product.price ?? 0),
+            ...(product.unitCost !== undefined ? { unitCost: Number(product.unitCost) || 0 } : {}),
         };
         const created = await apiFetch('/products', {
             method: 'POST',

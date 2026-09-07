@@ -134,19 +134,22 @@ function resolveReceiptClient(receipt, clients, clientOverride = null, linkedCli
         embedded?.email
     );
 
-    if (!fromList && !embedded && !linked && !clientOverride && !email) {
+    const snapshotName = String(receipt?.clientName || '').trim();
+    const snapshotCompany = String(receipt?.clientCompany || '').trim();
+
+    if (!fromList && !embedded && !linked && !clientOverride && !email && !snapshotName && !snapshotCompany) {
         return null;
     }
 
     return {
         id: normalizeDocumentClientId(
-            clientOverride?.id || linked?.id || fromList?.id || embedded?.id || embedded?._id || clientId
+            clientOverride?.id || linked?.id || fromList?.id || embedded?.id || embedded?._id
         ),
-        name: clientOverride?.name || linked?.name || fromList?.name || embedded?.name || '',
+        name: clientOverride?.name || linked?.name || fromList?.name || embedded?.name || snapshotName || '',
         email,
         phone: clientOverride?.phone || linked?.phone || fromList?.phone || embedded?.phone || '',
         address: clientOverride?.address || linked?.address || fromList?.address || embedded?.address || '',
-        company: clientOverride?.company || linked?.company || fromList?.company || embedded?.company || '',
+        company: clientOverride?.company || linked?.company || fromList?.company || embedded?.company || snapshotCompany || '',
     };
 }
 

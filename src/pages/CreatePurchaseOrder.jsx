@@ -43,7 +43,7 @@ export default function CreatePurchaseOrder() {
     const { id } = useParams();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { products, fetchProducts } = useInvoice();
+    const { products, addProduct, fetchProducts } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
 
@@ -67,6 +67,7 @@ export default function CreatePurchaseOrder() {
         formData,
         setFormData,
         products,
+        addProduct,
         markDirty: () => {},
         productPriceField: 'unitCost',
     });
@@ -206,7 +207,8 @@ export default function CreatePurchaseOrder() {
                 return;
             }
 
-            const payload = buildPurchaseOrderPayload({ ...formData, supplierId }, 'sent');
+            const items = await handlers.resolveProductItems(formData.items);
+            const payload = buildPurchaseOrderPayload({ ...formData, supplierId, items }, 'sent');
             let saved;
             if (id) {
                 saved = await apiFetch(`/purchase-orders/${id}`, {

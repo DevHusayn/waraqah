@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { CUSTOM_UNIT_OPTION, DEFAULT_INVOICE_UNIT } from '@waraqah/shared';
+import { CUSTOM_UNIT_OPTION, DEFAULT_INVOICE_UNIT, ensureLineItemProducts } from '@waraqah/shared';
 import { normalizeCurrency } from '../utils/currency';
 import { clientDetailsFromRecord } from '../utils/ensureInvoiceClient';
 import { ensureInvoiceClient } from '../utils/ensureInvoiceClient';
@@ -14,6 +14,7 @@ export function useDocumentFormHandlers({
     products,
     addClient,
     updateClient,
+    addProduct,
     setCustomUnitModal,
     customUnitModal,
     markDirty,
@@ -24,6 +25,16 @@ export function useDocumentFormHandlers({
         async (data, { createIfMissing = true } = {}) =>
             ensureInvoiceClient(data, clients, { addClient, updateClient, createIfMissing }),
         [clients, addClient, updateClient]
+    );
+
+    const resolveProductItems = useCallback(
+        async (items, { createIfMissing = true } = {}) =>
+            ensureLineItemProducts(items, products, {
+                addProduct,
+                createIfMissing,
+                priceField: productPriceField,
+            }),
+        [products, addProduct, productPriceField]
     );
 
     const handleClientNameChange = useCallback((e) => {
@@ -262,6 +273,7 @@ export function useDocumentFormHandlers({
 
     return {
         resolveClientId,
+        resolveProductItems,
         handleClientNameChange,
         handleClientEmailChange,
         handleSelectClient,

@@ -7,7 +7,7 @@
         (function () {
             try {
                 var mode = localStorage.getItem('waraqah_theme_mode');
-                if (mode !== 'light') {
+                if (mode === 'dark') {
                     document.documentElement.classList.add('dark');
                 }
                 if (localStorage.getItem('waraqah_sidebar_collapsed') === '1') {

@@ -38,7 +38,8 @@ import DocumentRecurringSection from '../components/documentForm/DocumentRecurri
 import { useDocumentFooterPrefill, resolveFormDocumentFooter } from '../hooks/useDocumentFooterPrefill';
 import { useUnmountDraftAutosave } from '../hooks/useUnmountDraftAutosave';
 import { buildDocumentPreviewFromForm } from '../utils/buildDocumentPreviewData';
-import { hasDraftContent, hasAutoSaveDraftContent, resolvePersistClientId } from '../utils/documentFormHelpers';
+import { hasDraftContent, hasAutoSaveDraftContent, resolvePersistClientId, resolvePersistProductItems, applyClientSnapshotToPayload } from '../utils/documentFormHelpers';
+import { resolveFormClient } from '../utils/documentClient';
 import { applyAiDraftToForm, DEFAULT_INVOICE_UNIT, isAiDraftsEnabled, normalizeInvoiceUnit, recurringFieldsFromRecord } from '@waraqah/shared';
 import { isPremiumUser } from '../utils/premium';
 import AiDraftComposer from '../components/documentForm/AiDraftComposer';
@@ -52,6 +53,7 @@ const CreateInvoice = () => {
         products,
         addClient,
         updateClient,
+        addProduct,
         addInvoice,
         updateInvoice,
         invoices,
@@ -152,6 +154,7 @@ const CreateInvoice = () => {
         products,
         addClient,
         updateClient,
+        addProduct,
         setCustomUnitModal,
         customUnitModal,
         markDirty,
@@ -193,7 +196,7 @@ const CreateInvoice = () => {
 
         let cancelled = false;
 
-        const applyInvoiceToForm = (invoice) => {
+        const applyInvoiceToForm = async (invoice) => {
             if (
                 invoice.status === 'paid' ||
                 invoice.status === 'cancelled' ||
@@ -203,14 +206,13 @@ const CreateInvoice = () => {
                 navigate(`/invoices/${id}`, { replace: true });
                 return;
             }
-            const client = invoice.clientId
-                ? clients.find((c) => c.id === invoice.clientId)
-                : null;
+            const client = await resolveFormClient(invoice, clients);
+            if (cancelled) return;
             loadedInvoiceIdRef.current = id;
             setResolvedStatus(invoice.status || 'draft');
             setFormData({
                 ...invoice,
-                clientName: client?.name || '',
+                clientName: client?.name || invoice.clientName || '',
                 clientEmail: client?.email || '',
                 ...clientDetailsFromRecord(client),
                 clientAdditionalInfo: invoice.clientAdditionalInfo || '',
@@ -269,7 +271,7 @@ const CreateInvoice = () => {
                 }
             }
 
-            if (!cancelled) applyInvoiceToForm(invoice);
+            if (!cancelled) await applyInvoiceToForm(invoice);
         };
 
         loadInvoice();
@@ -329,7 +331,10 @@ const CreateInvoice = () => {
                 const clientId = await resolvePersistClientId(current, handlers, {
                     createIfMissing: false,
                 });
-                const payload = buildInvoicePayload({ ...current, clientId }, 'draft');
+                const items = await resolvePersistProductItems(current.items, handlers, {
+                    createIfMissing: !silent,
+                });
+                const payload = buildInvoicePayload({ ...current, clientId, items }, 'draft');
                 const draftId = id || draftIdRef.current;
                 let saved;
 
@@ -405,7 +410,8 @@ const CreateInvoice = () => {
         setSending(true);
         try {
             const clientId = await handlers.resolveClientId(formData);
-            const payload = buildInvoicePayload({ ...formData, clientId }, 'pending');
+            const items = await resolvePersistProductItems(formData.items, handlers);
+            const payload = buildInvoicePayload({ ...formData, clientId, items }, 'pending');
             const draftId = id || draftIdRef.current;
             let saved;
 
@@ -542,9 +548,11 @@ const CreateInvoice = () => {
         setSaving(true);
         try {
             const clientId = await handlers.resolveClientId(formData);
+            const items = await resolvePersistProductItems(formData.items, handlers);
             const invoiceData = {
                 ...formData,
                 clientId,
+                items,
                 dueDate: formData.hasDueDate ? formData.dueDate : null,
                 status: formData.status,
                 currency: normalizeCurrency(formData.currency || APP_CURRENCY),
@@ -556,8 +564,7 @@ const CreateInvoice = () => {
                 total: totals.total,
                 balance: totals.total,
             };
-            delete invoiceData.clientName;
-            delete invoiceData.clientEmail;
+            applyClientSnapshotToPayload(invoiceData, formData);
             delete invoiceData.hasDueDate;
 
             const saved = await updateInvoice(id, invoiceData);

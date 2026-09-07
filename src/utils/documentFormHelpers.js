@@ -34,6 +34,28 @@ export async function resolvePersistClientId(formData, handlers, { createIfMissi
     return handlers.resolveClientId(formData, { createIfMissing });
 }
 
+export async function resolvePersistProductItems(items, handlers, { createIfMissing = true } = {}) {
+    if (!handlers?.resolveProductItems) return items || [];
+    return handlers.resolveProductItems(items, { createIfMissing });
+}
+
 export function isEmptyLineItem(item) {
     return !String(item.description || '').trim();
+}
+
+/** Persist the typed bill-to name on the document even if the client is later deleted. */
+export function clientSnapshotFromForm(formData) {
+    return {
+        clientName: String(formData.clientName || '').trim() || null,
+        clientCompany: String(formData.clientBusiness || formData.clientCompany || '').trim() || null,
+    };
+}
+
+export function applyClientSnapshotToPayload(payload, formData) {
+    Object.assign(payload, clientSnapshotFromForm(formData || payload));
+    delete payload.clientEmail;
+    delete payload.clientBusiness;
+    delete payload.clientPhone;
+    delete payload.clientAddress;
+    return payload;
 }

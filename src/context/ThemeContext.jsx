@@ -4,7 +4,7 @@ const THEME_KEY = 'waraqah_theme_mode';
 const THEME_MODES = ['light', 'dark'];
 
 function normalizeThemeMode(value) {
-    return THEME_MODES.includes(value) ? value : 'dark';
+    return THEME_MODES.includes(value) ? value : 'light';
 }
 
 function readStoredThemeMode() {
@@ -16,7 +16,7 @@ function readStoredThemeMode() {
         }
         return mode;
     } catch {
-        return 'dark';
+        return 'light';
     }
 }
 

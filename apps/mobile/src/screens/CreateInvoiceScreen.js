@@ -37,6 +37,7 @@ import {
     getRecurringFrequencyLabel,
     recurringFieldsFromRecord,
     toRecurringApiFields,
+    ensureLineItemProducts,
 } from '@waraqah/shared';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
@@ -90,6 +91,8 @@ function buildPayload(form, status) {
 
     const payload = {
         clientId: form.clientId || null,
+        clientName: String(form.clientName || '').trim() || null,
+        clientCompany: String(form.clientBusiness || '').trim() || null,
         date: form.date,
         dueDate: form.hasDueDate ? form.dueDate : null,
         items,
@@ -125,6 +128,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
         updateInvoice,
         addClient,
         updateClient,
+        addProduct,
         fetchProducts,
     } = useInvoice();
     const { businessInfo } = useSettings();
@@ -207,7 +211,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
         setForm({
             invoiceNumber: existing.invoiceNumber || '',
             clientId: existing.clientId || '',
-            clientName: linked?.name || '',
+            clientName: linked?.name || existing.clientName || '',
             clientEmail: linked?.email || '',
             ...clientDetailsFromRecord(linked),
             clientAdditionalInfo: existing.clientAdditionalInfo || '',
@@ -371,6 +375,11 @@ export function CreateInvoiceScreen({ route, navigation }) {
                 );
             }
 
+            const items = await ensureLineItemProducts(form.items, products, {
+                addProduct,
+                createIfMissing: !asDraft,
+            });
+
             const status = asDraft
                 ? DRAFT_STATUS
                 : existing && !isDraft(existing)
@@ -378,7 +387,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
                   : 'pending';
 
             const payload = {
-                ...buildPayload({ ...form, clientId }, status),
+                ...buildPayload({ ...form, clientId, items }, status),
                 clientId: clientId || null,
             };
 

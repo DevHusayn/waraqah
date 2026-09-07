@@ -38,7 +38,8 @@ export function buildInvoicePayload(formData, status) {
     }
 
     delete payload.hasDueDate;
-    delete payload.clientName;
+    payload.clientName = String(formData.clientName || '').trim() || null;
+    payload.clientCompany = String(formData.clientBusiness || formData.clientCompany || '').trim() || null;
     delete payload.clientEmail;
     delete payload.clientBusiness;
     delete payload.clientPhone;

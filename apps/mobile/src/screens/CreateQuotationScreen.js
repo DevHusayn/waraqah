@@ -30,6 +30,7 @@ import {
     getDefaultDocumentFooter,
     isAiDraftsEnabled,
     isPremiumUser,
+    ensureLineItemProducts,
 } from '@waraqah/shared';
 import { apiFetch } from '../api/client';
 import { useQuotation } from '../context/QuotationContext';
@@ -90,6 +91,8 @@ function buildPayload(form, status) {
 
     return {
         clientId: form.clientId || null,
+        clientName: String(form.clientName || '').trim() || null,
+        clientCompany: String(form.clientBusiness || '').trim() || null,
         date: form.date,
         validUntil: form.hasValidUntil ? form.validUntil : null,
         items,
@@ -115,7 +118,7 @@ export function CreateQuotationScreen({ route, navigation }) {
     const editId = route.params?.id;
     const insets = useSafeAreaInsets();
     const { quotations, addQuotation, updateQuotation, upsertQuotation } = useQuotation();
-    const { clients, products, addClient, updateClient, fetchProducts } = useInvoice();
+    const { clients, products, addClient, updateClient, addProduct, fetchProducts } = useInvoice();
     const { businessInfo } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const { showToast } = useToast();
@@ -215,7 +218,7 @@ export function CreateQuotationScreen({ route, navigation }) {
         setForm({
             quotationNumber: existing.quotationNumber || '',
             clientId: existing.clientId || '',
-            clientName: linked?.name || '',
+            clientName: linked?.name || existing.clientName || '',
             clientEmail: linked?.email || '',
             ...clientDetailsFromRecord(linked),
             clientAdditionalInfo: existing.clientAdditionalInfo || '',
@@ -383,6 +386,11 @@ export function CreateQuotationScreen({ route, navigation }) {
                 );
             }
 
+            const items = await ensureLineItemProducts(form.items, products, {
+                addProduct,
+                createIfMissing: !asDraft,
+            });
+
             const status = asDraft
                 ? 'draft'
                 : existing && existing.status !== 'draft'
@@ -390,7 +398,7 @@ export function CreateQuotationScreen({ route, navigation }) {
                   : 'sent';
 
             const payload = {
-                ...buildPayload({ ...form, clientId }, status),
+                ...buildPayload({ ...form, clientId, items }, status),
                 clientId: clientId || null,
             };
 
