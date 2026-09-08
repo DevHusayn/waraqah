@@ -21,7 +21,7 @@ const EMPTY_FORM = {
     preview: '',
     body: '',
     fromPreset: 'support',
-    fromName: '',
+    fromName: 'Zahrah',
     replyTo: '',
     actionPreset: 'none',
     actionPath: '',
@@ -58,7 +58,7 @@ const FALLBACK_PRESETS = [
         label: 'Custom reply address',
         from: 'Waraqah <support@mail.mywaraqah.com>',
         requiresReplyTo: true,
-        hint: 'Add a name to show “Haybah from Waraqah”. Replies go to the address you enter.',
+        hint: 'Add a name to show “Zahrah from Waraqah”. Replies go to the address you enter.',
     },
 ];
 
@@ -67,45 +67,45 @@ const FALLBACK_TEMPLATES = [
     {
         id: 'we-miss-you',
         label: 'We miss you',
-        subject: 'We miss you at Waraqah',
-        preview: 'Your workspace and records are still here whenever you are ready.',
-        body: "It's been a while since we last saw you on Waraqah, and we wanted to check in.\n\nYour clients, products, and records are still saved and ready whenever you are. If something was not working, just reply to this email. We would genuinely like to fix it.\n\nLooking forward to having you back.\n\nThe Waraqah Team",
+        subject: 'Your Waraqah workspace is waiting',
+        preview: 'Come back in and pick up right where you left off.',
+        body: 'Your workspace is still here, with your clients, products, and records ready to go.\n\nA few minutes today can get you back in flow. Open your dashboard, update a record, and send your next document.\n\nIf something held you back, reply to this email. We want you running smoothly again.',
         actionPreset: 'dashboard',
         actionLabel: 'Go to dashboard',
     },
     {
         id: 'finish-setup',
         label: 'Finish setup',
-        subject: 'Your Waraqah workspace is ready',
-        preview: 'Add your first client or product and start using your workspace.',
-        body: 'Your Waraqah workspace is ready, and you can pick up right where you left off.\n\nAdd a client or product, then create a document and send it. Most people are up and running in a few minutes.\n\nIf you get stuck, reply to this email and we will help.\n\nThe Waraqah Team',
+        subject: 'Finish setting up your Waraqah workspace',
+        preview: 'Your workspace is ready. Take the next step today.',
+        body: 'You are closer than you think. Your Waraqah workspace is ready, and the next step takes only a few minutes.\n\nAdd a client or product, create your first document, and send it. Once that is done, the rest of your work has a home.\n\nOpen your dashboard now and finish setup while it is fresh. If you get stuck, reply and we will help.',
         actionPreset: 'dashboard',
         actionLabel: 'Go to dashboard',
     },
     {
         id: 'try-premium',
         label: 'Try Premium',
-        subject: 'Ready when you are to grow on Waraqah',
-        preview: 'Premium removes the free-plan limits and keeps your records intact.',
-        body: 'If you want more room to grow, branding, or fewer free-plan limits, Premium is ready when you are.\n\nYou can upgrade in a minute and keep all of your existing records.\n\nReply if you have any questions about the plan.\n\nThe Waraqah Team',
+        subject: 'Give your business more room to grow',
+        preview: 'Premium unlocks branding and higher limits, and keeps your records intact.',
+        body: 'If you are ready to look more professional and work with fewer limits, Premium is the next step.\n\nYou keep every client, product, and record you already have. Upgrade takes about a minute, and you can start using the extra room right away.\n\nSee what Premium includes and upgrade when you are ready. Reply if you want help choosing a plan.',
         actionPreset: 'upgrade',
         actionLabel: 'Upgrade to Premium',
     },
     {
         id: 'billing-help',
         label: 'Billing help',
-        subject: 'A quick note about your Waraqah billing',
-        preview: 'Review your plan and payment method, or reply and we will help.',
-        body: 'We wanted to make sure everything is okay with your Waraqah billing.\n\nYou can review your plan, payment method, and billing history from Settings. If a charge failed or something looks off, reply to this email and we will sort it out.\n\nThe Waraqah Team',
+        subject: 'Keep your Waraqah plan running smoothly',
+        preview: 'Review billing in a minute, or reply and we will help.',
+        body: 'A quick check now can prevent a surprise later. Your plan, payment method, and billing history are all in Settings.\n\nIf a charge failed or something looks off, open billing and update it today. We can also sort it out if you reply to this email.',
         actionPreset: 'billing',
         actionLabel: 'Manage billing',
     },
     {
         id: 'need-a-hand',
         label: 'Need a hand?',
-        subject: 'Need any help with Waraqah?',
-        preview: 'Reply to this email if something is not working or you have a question.',
-        body: 'Just checking in to see if you need any help with Waraqah.\n\nIf something is not working, or you have a question about your workspace, clients, or account, reply to this email. We are happy to help.\n\nThe Waraqah Team',
+        subject: 'We can help you get more from Waraqah',
+        preview: 'Reply with what you need and we will jump in.',
+        body: 'You do not have to figure Waraqah out alone. If something is not working, or you want a faster way to manage clients, products, or your workspace, we are here.\n\nReply with what you need. We will help you get unblocked so you can get back to running your business.',
         actionPreset: 'none',
         actionLabel: '',
     },
@@ -153,7 +153,7 @@ function buildFieldErrors(form, selectedPreset, selectedAction) {
     };
 }
 
-export default function AdminEmailModal({ open, user, senderName = '', onClose, onSent }) {
+export default function AdminEmailModal({ open, user, onClose, onSent }) {
     const [form, setForm] = useState(EMPTY_FORM);
     const [presets, setPresets] = useState(FALLBACK_PRESETS);
     const [actions, setActions] = useState(FALLBACK_ACTIONS);
@@ -172,7 +172,7 @@ export default function AdminEmailModal({ open, user, senderName = '', onClose, 
 
     useEffect(() => {
         if (!open) return undefined;
-        setForm({ ...EMPTY_FORM, fromName: firstName(senderName) });
+        setForm({ ...EMPTY_FORM });
         setFieldErrors({});
         setPreviewHtml('');
         setPreviewMeta(null);
@@ -198,7 +198,7 @@ export default function AdminEmailModal({ open, user, senderName = '', onClose, 
         return () => {
             cancelled = true;
         };
-    }, [open, userId, senderName]);
+    }, [open, userId]);
 
     useEffect(() => {
         if (!open || !userId) return undefined;
@@ -414,7 +414,7 @@ export default function AdminEmailModal({ open, user, senderName = '', onClose, 
                                 value={form.fromName}
                                 onChange={(e) => handleChange('fromName', e.target.value)}
                                 className="input-field"
-                                placeholder="e.g. Haybah"
+                                placeholder="e.g. Zahrah"
                                 maxLength={80}
                                 disabled={sending}
                             />

@@ -162,6 +162,7 @@ export default function ActionMenu({
     disabled = false,
     ariaLabel = 'More actions',
     className = '',
+    variant = 'default',
 }) {
     const [open, setOpen] = useState(false);
     const isMobile = useIsMobile();
@@ -203,7 +204,11 @@ export default function ActionMenu({
             <div ref={anchorRef} className={`relative shrink-0 ${className}`}>
                 <button
                     type="button"
-                    className="btn-secondary h-full min-h-[40px] px-3 gap-1.5"
+                    className={
+                        variant === 'icon'
+                            ? 'inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground-muted transition-colors hover:bg-surface-muted disabled:opacity-50'
+                            : 'btn-secondary h-full min-h-[40px] px-3 gap-1.5'
+                    }
                     aria-haspopup="menu"
                     aria-expanded={open}
                     aria-controls={open ? menuId : undefined}
@@ -212,7 +217,11 @@ export default function ActionMenu({
                     onClick={() => setOpen((value) => !value)}
                 >
                     <MoreHorizontal size={18} aria-hidden />
-                    <span className="sr-only sm:not-sr-only sm:inline">More</span>
+                    {variant === 'icon' ? (
+                        <span className="sr-only">More</span>
+                    ) : (
+                        <span className="sr-only sm:not-sr-only sm:inline">More</span>
+                    )}
                 </button>
             </div>
 

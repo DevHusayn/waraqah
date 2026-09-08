@@ -1,22 +1,17 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
-import { Crown, Copy, Edit, ListFilter, Plus, Repeat, Search, Trash2, Wallet } from 'lucide-react';
+import { Crown, ListFilter, Plus, Repeat, Search, Wallet } from 'lucide-react';
 import {
     EXPENSE_CATEGORIES,
     getExpenseCategoryLabel,
     isPresetExpenseCategory,
-    recurringFieldsFromRecord,
 } from '@waraqah/shared';
 import CustomSelect from '../components/CustomSelect';
 import Toolbar, { ToolbarSearch, ToolbarActions } from '../components/Toolbar';
 import PageHeader from '../components/PageHeader';
 import AlertModal from '../components/AlertModal';
-import ConfirmModal from '../components/ConfirmModal';
-import ExpenseFormModal, {
-    EMPTY_EXPENSE,
-    buildDuplicateExpenseInitialData,
-} from '../components/ExpenseFormModal';
+import ExpenseFormModal, { EMPTY_EXPENSE } from '../components/ExpenseFormModal';
 import MonthPickerField from '../components/MonthPickerField';
 import MonthComparisonTrend from '../components/MonthComparisonTrend';
 import AdaptiveStatValue from '../components/AdaptiveStatValue';
@@ -48,11 +43,10 @@ const SORT_OPTIONS = [
 ];
 
 const COLUMNS = [
-    { key: 'date', label: 'Date', width: '16%' },
-    { key: 'category', label: 'Category', width: '16%' },
-    { key: 'details', label: 'Details', width: '38%' },
+    { key: 'date', label: 'Date', width: '22%' },
+    { key: 'category', label: 'Category', width: '24%' },
+    { key: 'details', label: 'Details', width: '36%' },
     { key: 'amount', label: 'Amount', className: 'text-right', width: '18%' },
-    { key: 'actions', label: '', className: 'text-right', width: '14%' },
 ];
 
 function formatDisplayDate(value) {
@@ -67,6 +61,7 @@ function formatDisplayDate(value) {
 const mapExpense = (entry) => ({ ...entry, id: entry._id || entry.id });
 
 export default function Expenses() {
+    const navigate = useNavigate();
     const { showToast } = useToast();
     const { user } = useAuth();
     const { businessInfo } = useSettings();
@@ -88,14 +83,10 @@ export default function Expenses() {
     } = usePeriodFilter();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingExpense, setEditingExpense] = useState(null);
     const [modalInitialData, setModalInitialData] = useState(EMPTY_EXPENSE);
-    const [confirmExpense, setConfirmExpense] = useState(null);
-    const [deleting, setDeleting] = useState(false);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [listFilter, setListFilter] = useState(FILTER_ALL);
     const [sortBy, setSortBy] = useState('newest');
-    const [stoppingId, setStoppingId] = useState(null);
 
     const listParams = useMemo(() => {
         const next = { ...queryParams, sort: sortBy };
@@ -172,62 +163,33 @@ export default function Expenses() {
         [summary]
     );
 
-    const openModal = (expense = null) => {
-        if (expense) {
-            setEditingExpense(expense);
-            setModalInitialData({
-                date: expense.date || EMPTY_EXPENSE.date,
-                amount: expense.amount ?? '',
-                category: expense.category || EMPTY_EXPENSE.category,
-                vendor: expense.vendor || '',
-                description: expense.description || '',
-                ...recurringFieldsFromRecord(expense),
-            });
-        } else {
-            setEditingExpense(null);
-            setModalInitialData({
-                ...EMPTY_EXPENSE,
-                date: format(new Date(), 'yyyy-MM-dd'),
-            });
-        }
-        setIsModalOpen(true);
-    };
-
-    const openDuplicateModal = (expense) => {
-        setEditingExpense(null);
-        setModalInitialData(
-            buildDuplicateExpenseInitialData(expense, {
-                isCurrentPeriod: true,
-                summaryYear: 1,
-                summaryMonth: 1,
-            })
-        );
+    const openModal = () => {
+        setModalInitialData({
+            ...EMPTY_EXPENSE,
+            date: format(new Date(), 'yyyy-MM-dd'),
+        });
         setIsModalOpen(true);
     };
 
     const closeModal = () => {
         setIsModalOpen(false);
-        setEditingExpense(null);
         setModalInitialData(EMPTY_EXPENSE);
     };
 
-    const handleSubmit = async (formData, editing) => {
+    const handleSubmit = async (formData) => {
         try {
-            if (editing) {
-                await apiFetch(`/expenses/${editing.id}`, {
-                    method: 'PUT',
-                    body: JSON.stringify(formData),
-                });
-                showToast('Expense updated successfully', 'success');
-            } else {
-                await apiFetch('/expenses', {
-                    method: 'POST',
-                    body: JSON.stringify(formData),
-                });
-                showToast('Expense added successfully', 'success');
-            }
+            const created = await apiFetch('/expenses', {
+                method: 'POST',
+                body: JSON.stringify(formData),
+            });
+            showToast('Expense added successfully', 'success');
             closeModal();
             invalidateExpenseQueries(user?.id);
+            const newId = created._id || created.id;
+            if (newId) {
+                navigate(`/expenses/${newId}`);
+                return;
+            }
             await refresh();
         } catch (err) {
             setAlert({
@@ -236,44 +198,6 @@ export default function Expenses() {
                 type: 'error',
             });
             throw err;
-        }
-    };
-
-    const handleStopRecurring = async (expense) => {
-        setStoppingId(expense.id);
-        try {
-            await apiFetch(`/expenses/${expense.id}/stop-recurring`, { method: 'POST' });
-            showToast('This expense will no longer repeat.', 'success');
-            invalidateExpenseQueries(user?.id);
-            await refresh();
-        } catch (err) {
-            setAlert({
-                open: true,
-                message: err.message || 'Could not stop repeating this expense.',
-                type: 'error',
-            });
-        } finally {
-            setStoppingId(null);
-        }
-    };
-
-    const handleDelete = async () => {
-        if (!confirmExpense) return;
-        setDeleting(true);
-        try {
-            await apiFetch(`/expenses/${confirmExpense.id}`, { method: 'DELETE' });
-            showToast('Expense deleted successfully', 'success');
-            invalidateExpenseQueries(user?.id);
-            await refresh();
-        } catch (err) {
-            setAlert({
-                open: true,
-                message: err.message || 'Failed to delete expense.',
-                type: 'error',
-            });
-        } finally {
-            setDeleting(false);
-            setConfirmExpense(null);
         }
     };
 
@@ -287,22 +211,11 @@ export default function Expenses() {
                 type={alert.type}
                 onClose={() => setAlert({ open: false, message: '', type: 'error' })}
             />
-            <ConfirmModal
-                open={Boolean(confirmExpense)}
-                title="Delete expense?"
-                description="This expense will be removed from your records."
-                confirmLabel="Delete expense"
-                cancelLabel="Keep expense"
-                variant="danger"
-                loading={deleting}
-                onConfirm={handleDelete}
-                onCancel={() => !deleting && setConfirmExpense(null)}
-            />
             <ExpenseFormModal
                 open={isModalOpen}
                 onClose={closeModal}
                 onSubmit={handleSubmit}
-                editingExpense={editingExpense}
+                editingExpense={null}
                 initialData={modalInitialData}
             />
 
@@ -428,7 +341,7 @@ export default function Expenses() {
             {showTableSkeleton ? (
                 <ListPageSkeleton
                     rows={8}
-                    columns={5}
+                    columns={4}
                     withHeader={false}
                     withToolbar={false}
                     withAction={false}
@@ -463,80 +376,93 @@ export default function Expenses() {
                 />
             ) : (
                 <>
-                    <DataTable
-                        columns={COLUMNS}
-                        fixedLayout
-                        minWidth={720}
-                        className={`scroll-x-touch transition-opacity ${summaryFetching ? 'opacity-80' : ''}`}
-                        loading={loading}
-                    >
+                    <div className={`md:hidden rounded-lg border border-border/60 bg-surface shadow-soft overflow-hidden divide-y divide-border/50 transition-opacity ${summaryFetching ? 'opacity-80' : ''}`}>
                         {expenses.map((expense) => {
                             const details = [expense.vendor, expense.description]
                                 .filter(Boolean)
                                 .join(' · ');
+                            const categoryLabel = getExpenseCategoryLabel(expense.category);
 
                             return (
-                                <DataTableRow key={expense.id}>
-                                    <DataTableCell>{formatDisplayDate(expense.date)}</DataTableCell>
-                                    <DataTableCell>
-                                        <span className="inline-flex items-center gap-1.5">
-                                            {getExpenseCategoryLabel(expense.category)}
-                                            {expense.isRecurring ? (
-                                                <Repeat size={12} className="text-brand" aria-label="Recurring" />
-                                            ) : null}
-                                        </span>
-                                    </DataTableCell>
-                                    <DataTableCell>
-                                        <span className="text-foreground-muted">{details || '—'}</span>
-                                    </DataTableCell>
-                                    <DataTableCell className="text-right tabular-nums font-medium">
-                                        {formatCurrency(expense.amount || 0)}
-                                    </DataTableCell>
-                                    <DataTableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-1">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center justify-center rounded-md p-1.5 text-foreground-muted hover:bg-surface-muted"
-                                                aria-label="Duplicate expense"
-                                                title="Duplicate expense"
-                                                onClick={() => openDuplicateModal(expense)}
-                                            >
-                                                <Copy size={16} aria-hidden />
-                                            </button>
-                                            {expense.isRecurring ? (
-                                                <button
-                                                    type="button"
-                                                    className="inline-flex items-center justify-center rounded-md p-1.5 text-foreground-muted hover:bg-surface-muted"
-                                                    aria-label="Stop repeating"
-                                                    title="Stop repeating"
-                                                    disabled={stoppingId === expense.id}
-                                                    onClick={() => handleStopRecurring(expense)}
-                                                >
-                                                    <Repeat size={16} aria-hidden />
-                                                </button>
-                                            ) : null}
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center justify-center rounded-md p-1.5 text-foreground-muted hover:bg-surface-muted"
-                                                aria-label="Edit expense"
-                                                onClick={() => openModal(expense)}
-                                            >
-                                                <Edit size={16} aria-hidden />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center justify-center rounded-md p-1.5 text-red-600 hover:bg-red-50"
-                                                aria-label="Delete expense"
-                                                onClick={() => setConfirmExpense(expense)}
-                                            >
-                                                <Trash2 size={16} aria-hidden />
-                                            </button>
+                                <Link
+                                    key={expense.id}
+                                    to={`/expenses/${expense.id}`}
+                                    className="flex items-start gap-2 px-4 py-3.5 hover:bg-surface-muted/70"
+                                >
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <p className="font-medium text-foreground break-words">
+                                                {details || categoryLabel}
+                                            </p>
+                                            <p className="shrink-0 tabular-nums font-semibold text-foreground">
+                                                {formatCurrency(expense.amount || 0)}
+                                            </p>
                                         </div>
-                                    </DataTableCell>
-                                </DataTableRow>
+                                        <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-foreground-muted">
+                                            <span>{formatDisplayDate(expense.date)}</span>
+                                            {details ? (
+                                                <>
+                                                    <span aria-hidden>·</span>
+                                                    <span className="inline-flex items-center gap-1">
+                                                        {categoryLabel}
+                                                        {expense.isRecurring ? (
+                                                            <Repeat size={11} className="text-brand" aria-label="Recurring" />
+                                                        ) : null}
+                                                    </span>
+                                                </>
+                                            ) : expense.isRecurring ? (
+                                                <>
+                                                    <span aria-hidden>·</span>
+                                                    <span className="inline-flex items-center gap-1">
+                                                        Recurring
+                                                        <Repeat size={11} className="text-brand" aria-hidden />
+                                                    </span>
+                                                </>
+                                            ) : null}
+                                        </p>
+                                    </div>
+                                </Link>
                             );
                         })}
-                    </DataTable>
+                    </div>
+
+                    <div className="hidden md:block">
+                        <DataTable
+                            columns={COLUMNS}
+                            fixedLayout
+                            className={`transition-opacity ${summaryFetching ? 'opacity-80' : ''}`}
+                        >
+                            {expenses.map((expense) => {
+                                const details = [expense.vendor, expense.description]
+                                    .filter(Boolean)
+                                    .join(' · ');
+
+                                return (
+                                    <DataTableRow
+                                        key={expense.id}
+                                        onClick={() => navigate(`/expenses/${expense.id}`)}
+                                        className="cursor-pointer"
+                                    >
+                                        <DataTableCell>{formatDisplayDate(expense.date)}</DataTableCell>
+                                        <DataTableCell>
+                                            <span className="inline-flex items-center gap-1.5">
+                                                {getExpenseCategoryLabel(expense.category)}
+                                                {expense.isRecurring ? (
+                                                    <Repeat size={12} className="text-brand" aria-label="Recurring" />
+                                                ) : null}
+                                            </span>
+                                        </DataTableCell>
+                                        <DataTableCell className="whitespace-normal">
+                                            <span className="text-foreground-muted">{details || '—'}</span>
+                                        </DataTableCell>
+                                        <DataTableCell className="text-right tabular-nums font-medium">
+                                            {formatCurrency(expense.amount || 0)}
+                                        </DataTableCell>
+                                    </DataTableRow>
+                                );
+                            })}
+                        </DataTable>
+                    </div>
                     <PaginationBar pagination={pagination} onPageChange={setPage} className="mt-4" />
                 </>
             )}

@@ -804,7 +804,6 @@ export default function AdminUserDetail() {
             <AdminEmailModal
                 open={emailModalOpen}
                 user={user}
-                senderName={currentUser?.name}
                 onClose={() => setEmailModalOpen(false)}
                 onSent={(message) => {
                     setAlert({ open: true, message, type: 'success' });
