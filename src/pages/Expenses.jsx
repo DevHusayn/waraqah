@@ -35,6 +35,11 @@ import ListSortSelect from '../components/ListSortSelect';
 const FILTER_ALL = 'all';
 const FILTER_RECURRING = 'recurring';
 
+const TYPE_FILTER_OPTIONS = [
+    { value: FILTER_ALL, label: 'All expenses' },
+    { value: FILTER_RECURRING, label: 'Recurring' },
+];
+
 const SORT_OPTIONS = [
     { value: 'newest', label: 'Newest first' },
     { value: 'oldest', label: 'Oldest first' },
@@ -85,15 +90,18 @@ export default function Expenses() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalInitialData, setModalInitialData] = useState(EMPTY_EXPENSE);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
-    const [listFilter, setListFilter] = useState(FILTER_ALL);
+    const [categoryFilter, setCategoryFilter] = useState(FILTER_ALL);
+    const [typeFilter, setTypeFilter] = useState(FILTER_ALL);
     const [sortBy, setSortBy] = useState('newest');
 
     const listParams = useMemo(() => {
         const next = { ...queryParams, sort: sortBy };
-        if (listFilter === FILTER_RECURRING) next.recurring = true;
-        else if (listFilter && listFilter !== FILTER_ALL) next.category = listFilter;
+        if (typeFilter === FILTER_RECURRING) next.recurring = true;
+        if (categoryFilter && categoryFilter !== FILTER_ALL) next.category = categoryFilter;
         return next;
-    }, [queryParams, listFilter, sortBy]);
+    }, [queryParams, categoryFilter, typeFilter, sortBy]);
+
+    const hasListFilters = categoryFilter !== FILTER_ALL || typeFilter !== FILTER_ALL;
 
     const fetcher = useCallback(
         ({ page, limit, search, sort, period, startDate, endDate, recurring, category }) =>
@@ -136,17 +144,15 @@ export default function Expenses() {
             .map((row) => row.category)
             .filter((category) => category && !isPresetExpenseCategory(category));
         if (
-            listFilter &&
-            listFilter !== FILTER_ALL &&
-            listFilter !== FILTER_RECURRING &&
-            !isPresetExpenseCategory(listFilter) &&
-            !customCategories.includes(listFilter)
+            categoryFilter &&
+            categoryFilter !== FILTER_ALL &&
+            !isPresetExpenseCategory(categoryFilter) &&
+            !customCategories.includes(categoryFilter)
         ) {
-            customCategories.push(listFilter);
+            customCategories.push(categoryFilter);
         }
         return [
-            { value: FILTER_ALL, label: 'All expenses' },
-            { value: FILTER_RECURRING, label: 'Recurring' },
+            { value: FILTER_ALL, label: 'All categories' },
             ...EXPENSE_CATEGORIES.map((category) => ({
                 value: category.id,
                 label: category.label,
@@ -156,7 +162,7 @@ export default function Expenses() {
                 label: getExpenseCategoryLabel(category),
             })),
         ];
-    }, [summary, listFilter]);
+    }, [summary, categoryFilter]);
 
     const topCategories = useMemo(
         () => (summary?.byCategory || []).slice(0, 4),
@@ -313,17 +319,30 @@ export default function Expenses() {
                     aria-label="Search expenses"
                 />
                 <ToolbarActions>
-                    <div className="min-w-0 flex-1 sm:w-52 sm:flex-none">
+                    <div className="min-w-0 flex-1 sm:w-48 sm:flex-none">
                         <CustomSelect
-                            value={listFilter}
+                            value={categoryFilter}
                             onChange={(next) => {
-                                setListFilter(next);
+                                setCategoryFilter(next);
                                 setPage(1);
                             }}
                             options={filterOptions}
-                            placeholder="Filter"
+                            placeholder="Category"
                             leadingIcon={<ListFilter size={14} />}
-                            aria-label="Filter expenses"
+                            aria-label="Filter expenses by category"
+                        />
+                    </div>
+                    <div className="min-w-0 flex-1 sm:w-44 sm:flex-none">
+                        <CustomSelect
+                            value={typeFilter}
+                            onChange={(next) => {
+                                setTypeFilter(next);
+                                setPage(1);
+                            }}
+                            options={TYPE_FILTER_OPTIONS}
+                            placeholder="Type"
+                            leadingIcon={<Repeat size={14} />}
+                            aria-label="Filter recurring expenses"
                         />
                     </div>
                     <ListSortSelect
@@ -352,7 +371,7 @@ export default function Expenses() {
                     title={
                         search
                             ? 'No expenses found'
-                            : listFilter !== FILTER_ALL
+                            : hasListFilters
                               ? 'No matching expenses'
                               : mode === 'month'
                                 ? 'No expenses this month'
@@ -361,7 +380,7 @@ export default function Expenses() {
                     description={
                         search
                             ? 'Try a different search term.'
-                            : listFilter !== FILTER_ALL
+                            : hasListFilters
                               ? 'Try a different filter or add an expense in this group.'
                             : 'Add rent, salaries, transport, and other running costs.'
                     }
