@@ -16,6 +16,7 @@ import {
 } from '../../utils/formFieldValidation';
 
 const EMPTY_FORM = {
+    templateId: 'blank',
     subject: '',
     preview: '',
     body: '',
@@ -61,6 +62,69 @@ const FALLBACK_PRESETS = [
     },
 ];
 
+const FALLBACK_TEMPLATES = [
+    { id: 'blank', label: 'Blank message', subject: '', preview: '', body: '', actionPreset: 'none', actionLabel: '' },
+    {
+        id: 'we-miss-you',
+        label: 'We miss you',
+        subject: 'We miss you at Waraqah',
+        preview: 'Your workspace and records are still here whenever you are ready.',
+        body: "It's been a while since we last saw you on Waraqah, and we wanted to check in.\n\nYour clients, products, and records are still saved and ready whenever you are. If something was not working, just reply to this email. We would genuinely like to fix it.\n\nLooking forward to having you back.\n\nThe Waraqah Team",
+        actionPreset: 'dashboard',
+        actionLabel: 'Go to dashboard',
+    },
+    {
+        id: 'finish-setup',
+        label: 'Finish setup',
+        subject: 'Your Waraqah workspace is ready',
+        preview: 'Add your first client or product and start using your workspace.',
+        body: 'Your Waraqah workspace is ready, and you can pick up right where you left off.\n\nAdd a client or product, then create a document and send it. Most people are up and running in a few minutes.\n\nIf you get stuck, reply to this email and we will help.\n\nThe Waraqah Team',
+        actionPreset: 'dashboard',
+        actionLabel: 'Go to dashboard',
+    },
+    {
+        id: 'try-premium',
+        label: 'Try Premium',
+        subject: 'Ready when you are to grow on Waraqah',
+        preview: 'Premium removes the free-plan limits and keeps your records intact.',
+        body: 'If you want more room to grow, branding, or fewer free-plan limits, Premium is ready when you are.\n\nYou can upgrade in a minute and keep all of your existing records.\n\nReply if you have any questions about the plan.\n\nThe Waraqah Team',
+        actionPreset: 'upgrade',
+        actionLabel: 'Upgrade to Premium',
+    },
+    {
+        id: 'billing-help',
+        label: 'Billing help',
+        subject: 'A quick note about your Waraqah billing',
+        preview: 'Review your plan and payment method, or reply and we will help.',
+        body: 'We wanted to make sure everything is okay with your Waraqah billing.\n\nYou can review your plan, payment method, and billing history from Settings. If a charge failed or something looks off, reply to this email and we will sort it out.\n\nThe Waraqah Team',
+        actionPreset: 'billing',
+        actionLabel: 'Manage billing',
+    },
+    {
+        id: 'need-a-hand',
+        label: 'Need a hand?',
+        subject: 'Need any help with Waraqah?',
+        preview: 'Reply to this email if something is not working or you have a question.',
+        body: 'Just checking in to see if you need any help with Waraqah.\n\nIf something is not working, or you have a question about your workspace, clients, or account, reply to this email. We are happy to help.\n\nThe Waraqah Team',
+        actionPreset: 'none',
+        actionLabel: '',
+    },
+];
+
+function applyTemplateFields(template, userName) {
+    const name = firstName(userName) || 'there';
+    const fill = (value) => String(value || '').replace(/\{\{\s*firstName\s*\}\}/g, name);
+    return {
+        templateId: template.id,
+        subject: fill(template.subject),
+        preview: fill(template.preview),
+        body: fill(template.body),
+        actionPreset: template.actionPreset || 'none',
+        actionPath: '',
+        actionLabel: template.actionLabel || '',
+    };
+}
+
 const FALLBACK_ACTIONS = [
     { id: 'none', label: 'No button', requiresPath: false, defaultLabel: '' },
     { id: 'dashboard', label: 'Go to dashboard', requiresPath: false, defaultLabel: 'Go to dashboard' },
@@ -93,6 +157,7 @@ export default function AdminEmailModal({ open, user, senderName = '', onClose, 
     const [form, setForm] = useState(EMPTY_FORM);
     const [presets, setPresets] = useState(FALLBACK_PRESETS);
     const [actions, setActions] = useState(FALLBACK_ACTIONS);
+    const [templates, setTemplates] = useState(FALLBACK_TEMPLATES);
     const [fieldErrors, setFieldErrors] = useState({});
     const [previewHtml, setPreviewHtml] = useState('');
     const [previewMeta, setPreviewMeta] = useState(null);
@@ -124,6 +189,9 @@ export default function AdminEmailModal({ open, user, senderName = '', onClose, 
                 }
                 if (Array.isArray(data?.actions) && data.actions.length) {
                     setActions(data.actions);
+                }
+                if (Array.isArray(data?.templates) && data.templates.length) {
+                    setTemplates(data.templates);
                 }
             })
             .catch(() => { });
@@ -214,9 +282,28 @@ export default function AdminEmailModal({ open, user, senderName = '', onClose, 
         [actions]
     );
 
+    const templateOptions = useMemo(
+        () =>
+            templates.map((template) => ({
+                value: template.id,
+                label: template.label,
+            })),
+        [templates]
+    );
+
     const handleChange = (name, value) => {
         setForm((prev) => ({ ...prev, [name]: value }));
         clearFieldError(setFieldErrors, name);
+        setSubmitError('');
+    };
+
+    const handleTemplateChange = (templateId) => {
+        const template = templates.find((item) => item.id === templateId) || templates[0];
+        setForm((prev) => ({
+            ...prev,
+            ...applyTemplateFields(template, user?.name),
+        }));
+        setFieldErrors({});
         setSubmitError('');
     };
 
@@ -284,6 +371,22 @@ export default function AdminEmailModal({ open, user, senderName = '', onClose, 
             <form onSubmit={handleSubmit} noValidate className="p-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-4 min-w-0">
+                        <div>
+                            <label htmlFor="admin-email-template" className="label">
+                                Message
+                            </label>
+                            <CustomSelect
+                                id="admin-email-template"
+                                value={form.templateId}
+                                onChange={handleTemplateChange}
+                                options={templateOptions}
+                                aria-label="Message"
+                            />
+                            <p className="mt-1.5 text-xs text-foreground-muted">
+                                Start from a draft, then edit anything before you send.
+                            </p>
+                        </div>
+
                         <div>
                             <label htmlFor="admin-email-from" className="label">
                                 Sender
