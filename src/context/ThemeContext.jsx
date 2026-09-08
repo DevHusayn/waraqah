@@ -20,8 +20,16 @@ function readStoredThemeMode() {
     }
 }
 
+function applyColorScheme(resolvedTheme) {
+    const scheme = resolvedTheme === 'dark' ? 'dark' : 'light';
+    document.documentElement.style.colorScheme = scheme;
+    const meta = document.querySelector('meta[name="color-scheme"]');
+    if (meta) meta.setAttribute('content', scheme);
+}
+
 function applyThemeClass(resolvedTheme) {
     document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
+    applyColorScheme(resolvedTheme);
 }
 
 const ThemeContext = createContext(null);

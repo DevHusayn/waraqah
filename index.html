@@ -3,13 +3,18 @@
 
 <head>
     <meta charset="UTF-8" />
+    <meta name="color-scheme" content="light" />
     <script>
         (function () {
             try {
                 var mode = localStorage.getItem('waraqah_theme_mode');
-                if (mode === 'dark') {
+                var isDark = mode === 'dark';
+                if (isDark) {
                     document.documentElement.classList.add('dark');
                 }
+                document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+                var schemeMeta = document.querySelector('meta[name="color-scheme"]');
+                if (schemeMeta) schemeMeta.setAttribute('content', isDark ? 'dark' : 'light');
                 if (localStorage.getItem('waraqah_sidebar_collapsed') === '1') {
                     document.documentElement.classList.add('sidebar-collapsed');
                 }
@@ -44,7 +49,6 @@
             } catch (_) { }
         })();
     </script>
-    <meta name="color-scheme" content="light dark" />
     <style id="pwa-cold-start-styles">
         html.pwa-cold-start,
         html.pwa-cold-start body,

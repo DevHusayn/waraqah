@@ -41,21 +41,21 @@ const FALLBACK_PRESETS = [
     {
         id: 'noreply',
         label: 'No-reply',
-        from: 'Waraqah <noreply@mywaraqah.com>',
+        from: 'Waraqah <noreply@mail.mywaraqah.com>',
         requiresReplyTo: false,
-        hint: 'Sent as Waraqah <noreply@mywaraqah.com>. The email tells recipients not to reply.',
+        hint: 'Sent as Waraqah <noreply@mail.mywaraqah.com>. The email tells recipients not to reply.',
     },
     {
         id: 'support',
         label: 'Support',
-        from: 'Waraqah <support@mywaraqah.com>',
+        from: 'Waraqah <support@mail.mywaraqah.com>',
         requiresReplyTo: false,
-        hint: 'Replies go to support@mywaraqah.com. Add a name to show “Haybah from Waraqah”.',
+        hint: 'Sent from support@mail.mywaraqah.com. Replies go to support@mywaraqah.com.',
     },
     {
         id: 'custom',
         label: 'Custom reply address',
-        from: 'Waraqah <support@mywaraqah.com>',
+        from: 'Waraqah <support@mail.mywaraqah.com>',
         requiresReplyTo: true,
         hint: 'Add a name to show “Haybah from Waraqah”. Replies go to the address you enter.',
     },
@@ -462,7 +462,7 @@ export default function AdminEmailModal({ open, user, senderName = '', onClose, 
                                     title="Email preview"
                                     sandbox=""
                                     srcDoc={previewHtml}
-                                    className="w-full h-[420px] bg-white"
+                                    className="w-full h-[420px] bg-white [color-scheme:light]"
                                 />
                             ) : (
                                 <p className="p-4 text-sm text-foreground-muted">
