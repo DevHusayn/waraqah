@@ -3,13 +3,12 @@ export function computeCatalogMargin(unitPrice, unitCost) {
     const cost = Number(unitCost) || 0;
 
     if (price <= 0 || cost <= 0) {
-        return { marginPercent: null, markupPercent: null };
+        return { marginPercent: null };
     }
 
     const marginPercent = Math.round(((price - cost) / price) * 1000) / 10;
-    const markupPercent = Math.round(((price - cost) / cost) * 1000) / 10;
 
-    return { marginPercent, markupPercent };
+    return { marginPercent };
 }
 
 export function formatMarginPercent(marginPercent) {

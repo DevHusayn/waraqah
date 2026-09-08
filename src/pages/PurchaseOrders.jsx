@@ -6,7 +6,8 @@ import PageHeader from '../components/PageHeader';
 import FilterTabs from '../components/FilterTabs';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
-import Toolbar, { ToolbarSearch } from '../components/Toolbar';
+import Toolbar, { ToolbarSearch, ToolbarActions } from '../components/Toolbar';
+import ListSortSelect from '../components/ListSortSelect';
 import PaginationBar from '../components/PaginationBar';
 import StatusBadge from '../components/StatusBadge';
 import { ListPageSkeleton } from '../components/Skeleton';
@@ -14,6 +15,14 @@ import { usePagedQuery } from '../hooks/usePagedQuery';
 import { formatCurrency } from '../utils/currency';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
+
+const SORT_OPTIONS = [
+    { value: 'newest', label: 'Newest first' },
+    { value: 'oldest', label: 'Oldest first' },
+    { value: 'amountHigh', label: 'Amount (high to low)' },
+    { value: 'amountLow', label: 'Amount (low to high)' },
+    { value: 'expectedDate', label: 'Expected date' },
+];
 
 const TABLE_COLUMNS = [
     { key: 'number', label: 'PO #' },
@@ -36,15 +45,17 @@ const mapOrder = (entry) => ({ ...entry, id: entry._id || entry.id });
 export default function PurchaseOrders() {
     const navigate = useNavigate();
     const [filter, setFilter] = useState('all');
+    const [sortBy, setSortBy] = useState('newest');
 
     const fetcher = useCallback(
-        ({ page, limit, search, status }) =>
+        ({ page, limit, search, status, sort }) =>
             apiFetch(
                 `/purchase-orders?${buildListQuery({
                     page,
                     limit,
                     search,
                     status: status === 'all' ? undefined : status,
+                    sort,
                 })}`
             ),
         []
@@ -62,7 +73,7 @@ export default function PurchaseOrders() {
     } = usePagedQuery({
         queryKeyBase: 'purchaseOrders',
         fetcher,
-        extraParams: { status: filter },
+        extraParams: { status: filter, sort: sortBy },
     });
 
     const orders = data.map(mapOrder);
@@ -109,6 +120,17 @@ export default function PurchaseOrders() {
                     placeholder="Search by PO number or supplier…"
                     icon={Search}
                 />
+                <ToolbarActions>
+                    <ListSortSelect
+                        value={sortBy}
+                        onChange={(next) => {
+                            setSortBy(next);
+                            setPage(1);
+                        }}
+                        options={SORT_OPTIONS}
+                        ariaLabel="Sort purchase orders"
+                    />
+                </ToolbarActions>
             </Toolbar>
 
             {orders.length === 0 && !loading ? (

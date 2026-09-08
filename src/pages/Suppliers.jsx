@@ -6,7 +6,8 @@ import AlertModal from '../components/AlertModal';
 import SupplierFormModal, { EMPTY_SUPPLIER } from '../components/SupplierFormModal';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
-import Toolbar, { ToolbarSearch } from '../components/Toolbar';
+import Toolbar, { ToolbarSearch, ToolbarActions } from '../components/Toolbar';
+import ListSortSelect from '../components/ListSortSelect';
 import PaginationBar from '../components/PaginationBar';
 import { ListPageSkeleton } from '../components/Skeleton';
 import { usePagedQuery } from '../hooks/usePagedQuery';
@@ -18,6 +19,13 @@ function safeReturnPath(path) {
     if (!path || !path.startsWith('/') || path.startsWith('//')) return null;
     return path;
 }
+
+const SORT_OPTIONS = [
+    { value: 'newest', label: 'Newest first' },
+    { value: 'oldest', label: 'Oldest first' },
+    { value: 'nameAsc', label: 'Name (A-Z)' },
+    { value: 'nameDesc', label: 'Name (Z-A)' },
+];
 
 const COLUMNS = [
     { key: 'name', label: 'Name' },
@@ -36,14 +44,15 @@ export default function Suppliers() {
     const shouldOpenAdd = searchParams.get('add') === '1';
     const openedAddModal = useRef(false);
 
+    const [sortBy, setSortBy] = useState('newest');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSupplier, setEditingSupplier] = useState(null);
     const [modalInitialData, setModalInitialData] = useState(EMPTY_SUPPLIER);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
 
     const fetcher = useCallback(
-        ({ page, limit, search }) =>
-            apiFetch(`/suppliers?${buildListQuery({ page, limit, search })}`),
+        ({ page, limit, search, sort }) =>
+            apiFetch(`/suppliers?${buildListQuery({ page, limit, search, sort })}`),
         []
     );
 
@@ -58,9 +67,14 @@ export default function Suppliers() {
     } = usePagedQuery({
         queryKeyBase: 'suppliers',
         fetcher,
+        extraParams: { sort: sortBy },
     });
 
     const suppliers = data.map(mapSupplier);
+
+    useEffect(() => {
+        setPage(1);
+    }, [sortBy, setPage]);
 
     useEffect(() => {
         if (shouldOpenAdd && !openedAddModal.current) {
@@ -172,6 +186,14 @@ export default function Suppliers() {
                     placeholder="Search suppliers…"
                     icon={Search}
                 />
+                <ToolbarActions>
+                    <ListSortSelect
+                        value={sortBy}
+                        onChange={setSortBy}
+                        options={SORT_OPTIONS}
+                        ariaLabel="Sort suppliers"
+                    />
+                </ToolbarActions>
             </Toolbar>
 
             {suppliers.length === 0 && !loading ? (

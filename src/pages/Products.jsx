@@ -18,6 +18,7 @@ import { useListSummaryQuery } from '../hooks/useListSummaryQuery';
 import { useListMonthFilter } from '../hooks/useListMonthFilter';
 import ListMonthToolbarFilter from '../components/ListMonthToolbarFilter';
 import ListExportButton from '../components/ListExportButton';
+import ListSortSelect from '../components/ListSortSelect';
 import { ListPageSkeleton, ListSummaryStatsSkeleton, ToolbarSkeleton } from '../components/Skeleton';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
@@ -29,6 +30,15 @@ const mapProduct = (p) => ({
     id: p._id || p.id,
     trackInventory: Boolean(p.trackInventory),
 });
+
+const SORT_OPTIONS = [
+    { value: 'newest', label: 'Newest first' },
+    { value: 'oldest', label: 'Oldest first' },
+    { value: 'nameAsc', label: 'Name (A-Z)' },
+    { value: 'nameDesc', label: 'Name (Z-A)' },
+    { value: 'priceHigh', label: 'Price (high to low)' },
+    { value: 'priceLow', label: 'Price (low to high)' },
+];
 
 const TABLE_COLUMNS = [
     { key: 'product', label: 'Product' },
@@ -43,6 +53,7 @@ export default function Products() {
     const { addProduct } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
+    const [sortBy, setSortBy] = useState('newest');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
 
@@ -66,12 +77,13 @@ export default function Products() {
     } = useListMonthFilter();
 
     const fetcher = useCallback(
-        ({ page, limit, search, period, startDate, endDate }) =>
+        ({ page, limit, search, sort, period, startDate, endDate }) =>
             apiFetch(
                 `/products?${buildListQuery({
                     page,
                     limit,
                     search,
+                    sort,
                     period,
                     startDate,
                     endDate,
@@ -98,14 +110,17 @@ export default function Products() {
     } = usePagedQuery({
         queryKeyBase: 'products',
         fetcher,
-        extraParams: listQueryParams,
+        extraParams: {
+            sort: sortBy,
+            ...listQueryParams,
+        },
     });
 
     const products = data.map(mapProduct);
 
     useEffect(() => {
         setPage(1);
-    }, [listQueryParams, setPage]);
+    }, [sortBy, listQueryParams, setPage]);
 
     const handleSubmit = async (formData) => {
         try {
@@ -206,6 +221,7 @@ export default function Products() {
                                     companyName={businessInfo?.name}
                                     filters={{
                                         search: debouncedSearch,
+                                        sort: sortBy,
                                         ...listQueryParams,
                                     }}
                                     disabled={pagination.total === 0}
@@ -224,6 +240,12 @@ export default function Products() {
                                 onCustomDraftRangeChange={setListCustomDraftRange}
                                 onCustomApply={applyListCustomRange}
                                 maxDate={listMaxDate}
+                            />
+                            <ListSortSelect
+                                value={sortBy}
+                                onChange={setSortBy}
+                                options={SORT_OPTIONS}
+                                ariaLabel="Sort products"
                             />
                         </ToolbarActions>
                     </Toolbar>

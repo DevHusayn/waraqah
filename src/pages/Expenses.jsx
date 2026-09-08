@@ -35,9 +35,17 @@ import { buildListQuery } from '../utils/pagination';
 import { formatCurrency } from '../utils/currency';
 import { isPremiumUser } from '../utils/premium';
 import { invalidateExpenseQueries } from '../lib/queryClient';
+import ListSortSelect from '../components/ListSortSelect';
 
 const FILTER_ALL = 'all';
 const FILTER_RECURRING = 'recurring';
+
+const SORT_OPTIONS = [
+    { value: 'newest', label: 'Newest first' },
+    { value: 'oldest', label: 'Oldest first' },
+    { value: 'amountHigh', label: 'Amount (high to low)' },
+    { value: 'amountLow', label: 'Amount (low to high)' },
+];
 
 const COLUMNS = [
     { key: 'date', label: 'Date', width: '16%' },
@@ -86,22 +94,24 @@ export default function Expenses() {
     const [deleting, setDeleting] = useState(false);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [listFilter, setListFilter] = useState(FILTER_ALL);
+    const [sortBy, setSortBy] = useState('newest');
     const [stoppingId, setStoppingId] = useState(null);
 
     const listParams = useMemo(() => {
-        const next = { ...queryParams };
+        const next = { ...queryParams, sort: sortBy };
         if (listFilter === FILTER_RECURRING) next.recurring = true;
         else if (listFilter && listFilter !== FILTER_ALL) next.category = listFilter;
         return next;
-    }, [queryParams, listFilter]);
+    }, [queryParams, listFilter, sortBy]);
 
     const fetcher = useCallback(
-        ({ page, limit, search, period, startDate, endDate, recurring, category }) =>
+        ({ page, limit, search, sort, period, startDate, endDate, recurring, category }) =>
             apiFetch(
                 `/expenses?${buildListQuery({
                     page,
                     limit,
                     search,
+                    sort,
                     period,
                     startDate,
                     endDate,
@@ -403,6 +413,15 @@ export default function Expenses() {
                             aria-label="Filter expenses"
                         />
                     </div>
+                    <ListSortSelect
+                        value={sortBy}
+                        onChange={(next) => {
+                            setSortBy(next);
+                            setPage(1);
+                        }}
+                        options={SORT_OPTIONS}
+                        ariaLabel="Sort expenses"
+                    />
                 </ToolbarActions>
             </Toolbar>
 

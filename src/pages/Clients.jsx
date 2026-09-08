@@ -17,6 +17,7 @@ import { useListSummaryQuery } from '../hooks/useListSummaryQuery';
 import { useListMonthFilter } from '../hooks/useListMonthFilter';
 import ListMonthToolbarFilter from '../components/ListMonthToolbarFilter';
 import ListExportButton from '../components/ListExportButton';
+import ListSortSelect from '../components/ListSortSelect';
 import { ListPageSkeleton, ListSummaryStatsSkeleton } from '../components/Skeleton';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
@@ -27,6 +28,13 @@ function safeReturnPath(path) {
     if (!path || !path.startsWith('/') || path.startsWith('//')) return null;
     return path;
 }
+
+const SORT_OPTIONS = [
+    { value: 'newest', label: 'Newest first' },
+    { value: 'oldest', label: 'Oldest first' },
+    { value: 'nameAsc', label: 'Name (A-Z)' },
+    { value: 'nameDesc', label: 'Name (Z-A)' },
+];
 
 const COLUMNS = [
     { key: 'name', label: 'Name' },
@@ -47,6 +55,7 @@ const Clients = () => {
     const shouldOpenAdd = searchParams.get('add') === '1';
     const openedAddModal = useRef(false);
 
+    const [sortBy, setSortBy] = useState('newest');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingClient, setEditingClient] = useState(null);
     const [modalInitialData, setModalInitialData] = useState(EMPTY_CLIENT);
@@ -70,12 +79,13 @@ const Clients = () => {
     } = useListMonthFilter();
 
     const fetcher = useCallback(
-        ({ page, limit, search, period, startDate, endDate }) =>
+        ({ page, limit, search, sort, period, startDate, endDate }) =>
             apiFetch(
                 `/clients?${buildListQuery({
                     page,
                     limit,
                     search,
+                    sort,
                     period,
                     startDate,
                     endDate,
@@ -98,14 +108,17 @@ const Clients = () => {
     } = usePagedQuery({
         queryKeyBase: 'clients',
         fetcher,
-        extraParams: listQueryParams,
+        extraParams: {
+            sort: sortBy,
+            ...listQueryParams,
+        },
     });
 
     const clients = data.map(mapClient);
 
     useEffect(() => {
         setPage(1);
-    }, [listQueryParams, setPage]);
+    }, [sortBy, listQueryParams, setPage]);
 
     useEffect(() => {
         if (shouldOpenAdd && !openedAddModal.current) {
@@ -248,6 +261,7 @@ const Clients = () => {
                                     companyName={businessInfo?.name}
                                     filters={{
                                         search: debouncedSearch,
+                                        sort: sortBy,
                                         ...listQueryParams,
                                     }}
                                     disabled={pagination.total === 0}
@@ -257,17 +271,23 @@ const Clients = () => {
                             }
                         />
                         <ToolbarActions>
-                        <ListMonthToolbarFilter
-                            periodMode={listPeriodMode}
-                            onPeriodModeChange={setListPeriodMode}
-                            periodLabel={listPeriodLabel}
-                            customDraftStartDate={listCustomDraftStartDate}
-                            customDraftEndDate={listCustomDraftEndDate}
-                            onCustomDraftRangeChange={setListCustomDraftRange}
-                            onCustomApply={applyListCustomRange}
-                            maxDate={listMaxDate}
-                        />
-                    </ToolbarActions>
+                            <ListMonthToolbarFilter
+                                periodMode={listPeriodMode}
+                                onPeriodModeChange={setListPeriodMode}
+                                periodLabel={listPeriodLabel}
+                                customDraftStartDate={listCustomDraftStartDate}
+                                customDraftEndDate={listCustomDraftEndDate}
+                                onCustomDraftRangeChange={setListCustomDraftRange}
+                                onCustomApply={applyListCustomRange}
+                                maxDate={listMaxDate}
+                            />
+                            <ListSortSelect
+                                value={sortBy}
+                                onChange={setSortBy}
+                                options={SORT_OPTIONS}
+                                ariaLabel="Sort clients"
+                            />
+                        </ToolbarActions>
                 </Toolbar>
 
                     {clients.length === 0 ? (

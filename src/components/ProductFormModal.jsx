@@ -198,8 +198,6 @@ export default function ProductFormModal({
                 {marginPreview.marginPercent != null ? (
                     <p className="text-xs text-foreground-muted -mt-1">
                         Margin {formatMarginPercent(marginPreview.marginPercent)}
-                        {' · '}
-                        Markup {formatMarginPercent(marginPreview.markupPercent)}
                     </p>
                 ) : null}
 

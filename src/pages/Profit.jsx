@@ -128,11 +128,26 @@ export default function Profit() {
 
                     <ReportStatGrid>
                         <ReportStatCell
+                            title="Revenue"
+                            value={formatCurrency(totals?.revenue ?? 0)}
+                            comparison={showComparison ? comparison?.revenue : null}
+                            comparisonLabel={comparisonLabel}
+                            detail="Paid sales in period"
+                            reserveTrendSpace={showComparison}
+                        />
+                        <ReportStatCell
                             title="Gross profit"
                             value={formatCurrency(grossProfit)}
                             comparison={showComparison ? comparison?.grossProfit : null}
                             comparisonLabel={comparisonLabel}
                             valueClassName={profitPositive ? '' : 'text-red-600'}
+                            reserveTrendSpace={showComparison}
+                        />
+                        <ReportStatCell
+                            title="Gross margin"
+                            value={formatMarginPercent(totals?.marginPercent ?? null)}
+                            comparison={showComparison ? comparison?.marginPercent : null}
+                            comparisonLabel={comparisonLabel}
                             reserveTrendSpace={showComparison}
                         />
                         <ReportStatCell
@@ -152,25 +167,10 @@ export default function Profit() {
                             reserveTrendSpace={showComparison}
                         />
                         <ReportStatCell
-                            title="Gross margin"
-                            value={formatMarginPercent(totals?.marginPercent ?? null)}
-                            comparison={showComparison ? comparison?.marginPercent : null}
-                            comparisonLabel={comparisonLabel}
-                            reserveTrendSpace={showComparison}
-                        />
-                        <ReportStatCell
                             title="Net margin"
                             value={formatMarginPercent(totals?.netMarginPercent ?? null)}
                             comparison={showComparison ? comparison?.netMarginPercent : null}
                             comparisonLabel={comparisonLabel}
-                            reserveTrendSpace={showComparison}
-                        />
-                        <ReportStatCell
-                            title="Revenue"
-                            value={formatCurrency(totals?.revenue ?? 0)}
-                            comparison={showComparison ? comparison?.revenue : null}
-                            comparisonLabel={comparisonLabel}
-                            detail="Paid sales in period"
                             reserveTrendSpace={showComparison}
                         />
                     </ReportStatGrid>
