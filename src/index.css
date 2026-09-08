@@ -157,6 +157,42 @@ html.sidebar-collapsed {
         @apply w-full px-3 py-2 text-[13px] border border-border/80 rounded-md bg-surface text-foreground placeholder:text-foreground-muted/70 outline-none transition-all duration-200 ease-smooth shadow-soft;
     }
 
+    .input-checkbox {
+        appearance: none;
+        width: 1rem;
+        height: 1rem;
+        flex-shrink: 0;
+        border-radius: 0.25rem;
+        border: 1.5px solid rgb(var(--foreground) / 0.35);
+        background-color: rgb(var(--surface));
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 0.7rem;
+        cursor: pointer;
+        color-scheme: light;
+    }
+
+    .dark .input-checkbox {
+        border-color: rgb(var(--foreground) / 0.5);
+        background-color: rgb(var(--surface-muted));
+    }
+
+    .input-checkbox:checked {
+        background-color: var(--brand);
+        border-color: var(--brand);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5 6.5 11.5 12.5 4.5'/%3E%3C/svg%3E");
+    }
+
+    .input-checkbox:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgb(var(--brand-ring) / 0.25);
+    }
+
+    .input-checkbox:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
     .input-field:focus {
         border-color: var(--brand);
         box-shadow: 0 0 0 3px rgb(var(--brand-ring) / 0.12);

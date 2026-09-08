@@ -149,7 +149,7 @@ export default function MarkAsPaidModal({
                             checked={paidFully}
                             disabled={saving || balanceDue <= 0}
                             onChange={(e) => handlePaidFullyChange(e.target.checked)}
-                            className="h-4 w-4 rounded border-zinc-300 accent-brand focus:ring-brand/30"
+                            className="input-checkbox"
                         />
                         <span className="text-sm text-foreground-muted">Paid fully</span>
                     </label>

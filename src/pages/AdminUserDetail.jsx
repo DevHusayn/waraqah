@@ -8,6 +8,7 @@ import {
     Crown,
     Mail,
     Shield,
+    Lock,
     Trash2,
     Unlock,
     RotateCcw,
@@ -32,6 +33,7 @@ import PaginationBar from '../components/PaginationBar';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import { usePagedList } from '../hooks/usePagedList';
 import { buildListQuery } from '../utils/pagination';
+import { adminDisplayName } from '../utils/adminDisplayName';
 import {
     StatusBadge,
     PlanBadge,
@@ -770,6 +772,7 @@ export default function AdminUserDetail() {
     if (!profile) return null;
 
     const { user, businessInfo, stats, invoiceUsage, billing } = profile;
+    const displayName = adminDisplayName(user, businessInfo);
     const busy = Boolean(actionLoading);
 
     return (
@@ -803,7 +806,7 @@ export default function AdminUserDetail() {
             />
             <AdminEmailModal
                 open={emailModalOpen}
-                user={user}
+                user={{ ...user, name: displayName || user.name }}
                 onClose={() => setEmailModalOpen(false)}
                 onSent={(message) => {
                     setAlert({ open: true, message, type: 'success' });
@@ -822,21 +825,30 @@ export default function AdminUserDetail() {
 
                 <div className="card mb-6">
                     <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                        <UserAvatar name={user.name} email={user.email} />
+                        <UserAvatar name={displayName} email={user.email} />
                         <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                                 <h1 className="text-xl font-semibold text-foreground truncate">
-                                    {user.name || 'Unnamed user'}
+                                    {displayName || 'Unnamed user'}
                                 </h1>
                                 {user.isAdmin ? (
                                     <Shield size={16} className="text-brand shrink-0" aria-label="Admin" />
+                                ) : null}
+                                {user.isProtected ? (
+                                    <Lock
+                                        size={16}
+                                        className="text-foreground-muted shrink-0"
+                                        aria-label="Protected account"
+                                    />
                                 ) : null}
                                 <StatusBadge status={user.status} />
                                 <PlanBadge plan={billing.plan} />
                             </div>
                             <p className="text-sm text-foreground-muted mt-1 truncate">{user.email}</p>
                             {businessInfo?.name ? (
-                                <p className="text-sm text-foreground-muted mt-0.5 font-medium">{businessInfo.name}</p>
+                                businessInfo.name !== displayName ? (
+                                    <p className="text-sm text-foreground-muted mt-0.5 font-medium">{businessInfo.name}</p>
+                                ) : null
                             ) : (
                                 <p className="text-xs text-red-600 mt-0.5 font-medium">Business info missing</p>
                             )}
@@ -845,7 +857,7 @@ export default function AdminUserDetail() {
                             <button
                                 type="button"
                                 className="btn-secondary text-sm"
-                                disabled={busy || isSelf}
+                                disabled={busy || isSelf || user.isProtected}
                                 onClick={() => setConfirmStatus(true)}
                             >
                                 {user.status === 'active' ? (
@@ -988,49 +1000,57 @@ export default function AdminUserDetail() {
                         <AdminEmailHistory userId={userId} refreshKey={emailHistoryKey} />
                         <AdminNotesSection userId={userId} />
 
-                        <SectionCard title="Danger zone" icon={AlertTriangle} className="border-red-100">
-                            <p className="text-sm text-foreground-muted mb-4">
-                                Destructive actions for this account. Use with care.
-                            </p>
-                            <div className="space-y-3">
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-xl border border-border/50 bg-surface-muted/50">
-                                    <div>
-                                        <p className="text-sm font-medium text-foreground">
-                                            {user.status === 'active' ? 'Suspend account' : 'Reactivate account'}
-                                        </p>
-                                        <p className="text-xs text-foreground-muted mt-0.5">
-                                            {user.status === 'active'
-                                                ? 'Block sign-in without deleting data.'
-                                                : 'Restore access for this user.'}
-                                        </p>
+                        <SectionCard title="Danger zone" icon={AlertTriangle} className="border-red-100 dark:border-red-900/50">
+                            {user.isProtected ? (
+                                <p className="text-sm text-foreground-muted">
+                                    This account is protected. It cannot be suspended, demoted, or deleted.
+                                </p>
+                            ) : (
+                                <>
+                                    <p className="text-sm text-foreground-muted mb-4">
+                                        Destructive actions for this account. Use with care.
+                                    </p>
+                                    <div className="space-y-3">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-xl border border-border/50 bg-surface-muted/50">
+                                            <div>
+                                                <p className="text-sm font-medium text-foreground">
+                                                    {user.status === 'active' ? 'Suspend account' : 'Reactivate account'}
+                                                </p>
+                                                <p className="text-xs text-foreground-muted mt-0.5">
+                                                    {user.status === 'active'
+                                                        ? 'Block sign-in without deleting data.'
+                                                        : 'Restore access for this user.'}
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className={user.status === 'active' ? 'btn-danger text-sm' : 'btn-primary text-sm'}
+                                                disabled={busy || isSelf}
+                                                onClick={() => setConfirmStatus(true)}
+                                            >
+                                                {user.status === 'active' ? 'Suspend' : 'Reactivate'}
+                                            </button>
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-xl border border-red-200/80 bg-red-50/60 dark:border-red-800/60 dark:bg-red-950/40">
+                                            <div>
+                                                <p className="text-sm font-medium text-red-900 dark:text-red-200">Delete account</p>
+                                                <p className="text-xs text-red-700/80 mt-0.5 dark:text-red-300/80">
+                                                    Permanently remove this user and all their data.
+                                                </p>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className="btn-danger text-sm"
+                                                disabled={busy || isSelf}
+                                                onClick={() => setConfirmDelete(true)}
+                                            >
+                                                <Trash2 size={14} aria-hidden />
+                                                Delete
+                                            </button>
+                                        </div>
                                     </div>
-                                    <button
-                                        type="button"
-                                        className={user.status === 'active' ? 'btn-danger text-sm' : 'btn-primary text-sm'}
-                                        disabled={busy || isSelf}
-                                        onClick={() => setConfirmStatus(true)}
-                                    >
-                                        {user.status === 'active' ? 'Suspend' : 'Reactivate'}
-                                    </button>
-                                </div>
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-xl border border-red-100 bg-red-50/30">
-                                    <div>
-                                        <p className="text-sm font-medium text-red-900">Delete account</p>
-                                        <p className="text-xs text-red-700/80 mt-0.5">
-                                            Permanently remove this user and all their data.
-                                        </p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        className="btn-danger text-sm"
-                                        disabled={busy || isSelf}
-                                        onClick={() => setConfirmDelete(true)}
-                                    >
-                                        <Trash2 size={14} aria-hidden />
-                                        Delete
-                                    </button>
-                                </div>
-                            </div>
+                                </>
+                            )}
                         </SectionCard>
                     </div>
                 </div>

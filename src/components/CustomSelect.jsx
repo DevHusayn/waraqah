@@ -16,7 +16,7 @@ export default function CustomSelect({
     const [open, setOpen] = useState(false);
     const rootRef = useRef(null);
 
-    const selected = options.find((opt) => opt.value === value);
+    const selected = options.find((opt) => !opt.header && opt.value === value);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -70,9 +70,20 @@ export default function CustomSelect({
                 <ul
                     role="listbox"
                     aria-labelledby={id}
-                    className="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-border bg-surface shadow-card-md animate-fade-in scroll-x-touch"
+                    className="absolute z-30 mt-1 max-h-80 w-full overflow-y-auto rounded-md border border-border bg-surface shadow-card-md animate-fade-in scroll-x-touch"
                 >
-                    {options.map((opt) => {
+                    {options.map((opt, index) => {
+                        if (opt.header) {
+                            return (
+                                <li
+                                    key={`header-${opt.label}-${index}`}
+                                    role="presentation"
+                                    className="px-3 pt-2.5 pb-1 text-[11px] font-semibold uppercase tracking-wide text-foreground-muted/70"
+                                >
+                                    {opt.label}
+                                </li>
+                            );
+                        }
                         const active = opt.value === value;
                         return (
                             <li key={opt.value} role="option" aria-selected={active}>

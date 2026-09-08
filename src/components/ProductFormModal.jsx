@@ -208,7 +208,7 @@ export default function ProductFormModal({
                             name="trackInventory"
                             checked={Boolean(formData.trackInventory)}
                             onChange={handleChange}
-                            className="mt-1 h-4 w-4 rounded border-zinc-300 text-brand focus:ring-brand"
+                            className="input-checkbox mt-1"
                         />
                         <span>
                             <span className="block text-sm font-medium text-foreground">Track inventory</span>

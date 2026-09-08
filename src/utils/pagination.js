@@ -136,11 +136,31 @@ export function buildAdminUsersExportQuery({ search, status, plan, activity } = 
     return params.toString();
 }
 
+const ACTIVITY_EXPORT_SLUGS = {
+    has_workspace: 'with-workspace',
+    empty_workspace: 'empty-workspace',
+    has_invoices: 'with-invoices',
+    no_invoices: 'no-invoices',
+    has_receipts: 'with-receipts',
+    no_receipts: 'no-receipts',
+    has_quotations: 'with-quotations',
+    no_quotations: 'no-quotations',
+    has_clients: 'with-clients',
+    no_clients: 'no-clients',
+    has_products: 'with-products',
+    no_products: 'no-products',
+    active_7d: 'active-7d',
+    inactive_30d: 'inactive-30d',
+    never_signed_in: 'never-signed-in',
+};
+
 export function buildAdminUsersExportFilename({ plan = 'all', status = 'all', activity = 'all', search = '' } = {}) {
     const parts = [];
     if (plan !== 'all') parts.push(plan);
     if (status !== 'all') parts.push(status);
-    if (activity !== 'all') parts.push(activity === 'has_invoices' ? 'with-invoices' : 'no-invoices');
+    if (activity !== 'all') {
+        parts.push(ACTIVITY_EXPORT_SLUGS[activity] || String(activity).replace(/_/g, '-'));
+    }
     if (search && String(search).trim()) parts.push('search');
     const slug = parts.length ? parts.join('-') : 'all';
     const date = new Date().toISOString().slice(0, 10);

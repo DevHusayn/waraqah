@@ -16,7 +16,7 @@ export default function LegalConsentCheckbox({
                     type="checkbox"
                     checked={checked}
                     onChange={(e) => onChange(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-zinc-300 accent-brand focus:ring-brand/30"
+                    className="input-checkbox mt-0.5"
                     aria-invalid={Boolean(error)}
                 />
                 <span className="text-[13px] text-foreground-muted leading-relaxed">

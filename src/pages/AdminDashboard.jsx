@@ -5,6 +5,7 @@ import {
     Search,
     Shield,
     ShieldOff,
+    Lock,
     Crown,
     Ban,
     CheckCircle,
@@ -30,6 +31,7 @@ import EmptyState from '../components/EmptyState';
 import PaginationBar from '../components/PaginationBar';
 import CustomSelect from '../components/CustomSelect';
 import { usePagedQuery } from '../hooks/usePagedQuery';
+import { adminDisplayName } from '../utils/adminDisplayName';
 import {
     buildListQuery,
     buildAdminUsersExportQuery,
@@ -47,12 +49,28 @@ const STATUS_FILTER_OPTIONS = [
     { value: 'all', label: 'All statuses' },
     { value: 'active', label: 'Active' },
     { value: 'suspended', label: 'Suspended' },
+    { value: 'admin', label: 'Admin' },
 ];
 
 const ACTIVITY_FILTER_OPTIONS = [
     { value: 'all', label: 'All activity' },
+    { header: true, label: 'Workspace' },
+    { value: 'has_workspace', label: 'Has workspace data' },
+    { value: 'empty_workspace', label: 'Empty workspace' },
     { value: 'has_invoices', label: 'Has invoices' },
     { value: 'no_invoices', label: 'No invoices yet' },
+    { value: 'has_receipts', label: 'Has receipts' },
+    { value: 'no_receipts', label: 'No receipts yet' },
+    { value: 'has_quotations', label: 'Has quotations' },
+    { value: 'no_quotations', label: 'No quotations yet' },
+    { value: 'has_clients', label: 'Has clients' },
+    { value: 'no_clients', label: 'No clients yet' },
+    { value: 'has_products', label: 'Has products' },
+    { value: 'no_products', label: 'No products yet' },
+    { header: true, label: 'Sign-in' },
+    { value: 'active_7d', label: 'Active this week' },
+    { value: 'inactive_30d', label: 'Inactive 30+ days' },
+    { value: 'never_signed_in', label: 'Never signed in' },
 ];
 
 function AdminActionItem({
@@ -98,6 +116,8 @@ function AdminActionsMenu({
     const buttonRef = useRef(null);
     const menuRef = useRef(null);
     const isSelf = user._id === currentUserId;
+    const isProtected = Boolean(user.isProtected);
+    const accountLocked = isSelf || isProtected;
     const isPremium = user.businessInfo?.plan === 'premium';
     const isLocked =
         user.lockUntil ||
@@ -210,13 +230,13 @@ function AdminActionsMenu({
                       <AdminActionItem
                           icon={user.status === 'active' ? Ban : CheckCircle}
                           label={user.status === 'active' ? 'Suspend user' : 'Activate user'}
-                          disabled={busy || isSelf}
+                          disabled={busy || accountLocked}
                           onClick={() => closeAnd(() => onStatus(user._id))}
                       />
                       <AdminActionItem
                           icon={user.isAdmin ? ShieldOff : Shield}
                           label={user.isAdmin ? 'Remove admin' : 'Make admin'}
-                          disabled={busy || isSelf}
+                          disabled={busy || accountLocked}
                           onClick={() => closeAnd(() => onAdmin(user._id))}
                       />
                       <AdminActionItem
@@ -232,7 +252,7 @@ function AdminActionsMenu({
                           icon={Trash2}
                           label="Delete user"
                           tone="danger"
-                          disabled={busy || isSelf}
+                          disabled={busy || accountLocked}
                           onClick={() => closeAnd(() => onDelete(user._id))}
                       />
                   </div>,
@@ -606,7 +626,7 @@ export default function AdminDashboard() {
                                 onChange={setActivityFilter}
                                 options={ACTIVITY_FILTER_OPTIONS}
                                 aria-label="Filter by activity"
-                                className="w-full sm:w-[160px]"
+                                className="w-full sm:w-[220px]"
                             />
                             {hasActiveFilters ? (
                                 <button
@@ -651,12 +671,19 @@ export default function AdminDashboard() {
                                         <td className="px-4 sm:px-6 py-4">
                                             <div className="min-w-[180px]">
                                                 <p className="font-semibold text-foreground flex items-center gap-2">
-                                                    {user.name || '—'}
+                                                    {adminDisplayName(user) || '—'}
                                                     {user.isAdmin ? (
                                                         <Shield
                                                             size={14}
                                                             className="text-brand shrink-0"
                                                             aria-label="Admin"
+                                                        />
+                                                    ) : null}
+                                                    {user.isProtected ? (
+                                                        <Lock
+                                                            size={14}
+                                                            className="text-foreground-muted shrink-0"
+                                                            aria-label="Protected account"
                                                         />
                                                     ) : null}
                                                 </p>

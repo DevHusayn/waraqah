@@ -724,7 +724,7 @@ const CreateReceipt = () => {
                                             checked={formData.paidInFull}
                                             disabled={totals.total <= 0}
                                             onChange={(e) => handlePaidInFullChange(e.target.checked)}
-                                            className="h-4 w-4 rounded border-zinc-300 accent-brand focus:ring-brand/30"
+                                            className="input-checkbox"
                                         />
                                         <span className="text-sm text-foreground-muted">Received in full</span>
                                     </label>
