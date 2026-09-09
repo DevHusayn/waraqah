@@ -37,7 +37,7 @@ import {
     buildAdminUsersExportQuery,
     buildAdminUsersExportFilename,
 } from '../utils/pagination';
-import { StatusBadge, PlanBadge, UsageBadge } from '../components/admin/AdminBadges';
+import { StatusBadge, PlanBadge, UsageBadge, AuthBadge } from '../components/admin/AdminBadges';
 
 const PLAN_FILTER_OPTIONS = [
     { value: 'all', label: 'All plans' },
@@ -50,6 +50,12 @@ const STATUS_FILTER_OPTIONS = [
     { value: 'active', label: 'Active' },
     { value: 'suspended', label: 'Suspended' },
     { value: 'admin', label: 'Admin' },
+];
+
+const AUTH_FILTER_OPTIONS = [
+    { value: 'all', label: 'All sign-in' },
+    { value: 'google', label: 'Google' },
+    { value: 'email', label: 'Email & password' },
 ];
 
 const ACTIVITY_FILTER_OPTIONS = [
@@ -290,6 +296,7 @@ export default function AdminDashboard() {
     const [planFilter, setPlanFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
     const [activityFilter, setActivityFilter] = useState('all');
+    const [authFilter, setAuthFilter] = useState('all');
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [confirm, setConfirm] = useState({ open: false, userId: null });
     const [forbidden, setForbidden] = useState(false);
@@ -298,7 +305,7 @@ export default function AdminDashboard() {
     const currentUserId = user?.id ? String(user.id) : '';
 
     const fetcher = useCallback(
-        async ({ page, limit, search, plan, status, activity }) => {
+        async ({ page, limit, search, plan, status, activity, auth }) => {
             try {
                 return await apiFetch(
                     `/auth/admin/users?${buildListQuery({
@@ -308,6 +315,7 @@ export default function AdminDashboard() {
                         plan,
                         status,
                         activity,
+                        auth,
                     })}`
                 );
             } catch (e) {
@@ -343,12 +351,13 @@ export default function AdminDashboard() {
             plan: planFilter,
             status: statusFilter,
             activity: activityFilter,
+            auth: authFilter,
         },
     });
 
     useEffect(() => {
         setPage(1);
-    }, [planFilter, statusFilter, activityFilter, setPage]);
+    }, [planFilter, statusFilter, activityFilter, authFilter, setPage]);
 
     const stats = summary ?? { total: 0, premium: 0, suspended: 0 };
     const tableLoading = loading && users.length === 0;
@@ -361,12 +370,14 @@ export default function AdminDashboard() {
                 plan: planFilter,
                 status: statusFilter,
                 activity: activityFilter,
+                auth: authFilter,
             });
             const filename = buildAdminUsersExportFilename({
                 search: debouncedSearch,
                 plan: planFilter,
                 status: statusFilter,
                 activity: activityFilter,
+                auth: authFilter,
             });
             await downloadExport(`/auth/admin/users/export?${query}`, { filename });
             setAlert({ open: true, message: 'Users exported successfully.', type: 'success' });
@@ -380,6 +391,7 @@ export default function AdminDashboard() {
         planFilter !== 'all' ||
         statusFilter !== 'all' ||
         activityFilter !== 'all' ||
+        authFilter !== 'all' ||
         Boolean(debouncedSearch.trim());
 
     const handleStatus = async (userId) => {
@@ -628,6 +640,13 @@ export default function AdminDashboard() {
                                 aria-label="Filter by activity"
                                 className="w-full sm:w-[220px]"
                             />
+                            <CustomSelect
+                                value={authFilter}
+                                onChange={setAuthFilter}
+                                options={AUTH_FILTER_OPTIONS}
+                                aria-label="Filter by sign-in method"
+                                className="w-full sm:w-[180px]"
+                            />
                             {hasActiveFilters ? (
                                 <button
                                     type="button"
@@ -636,6 +655,7 @@ export default function AdminDashboard() {
                                         setPlanFilter('all');
                                         setStatusFilter('all');
                                         setActivityFilter('all');
+                                        setAuthFilter('all');
                                         setSearch('');
                                     }}
                                 >
@@ -690,6 +710,9 @@ export default function AdminDashboard() {
                                                 <p className="text-foreground-muted text-xs mt-0.5 truncate max-w-[220px]">
                                                     {user.email}
                                                 </p>
+                                                <div className="mt-1.5">
+                                                    <AuthBadge authProvider={user.authProvider} />
+                                                </div>
                                             </div>
                                         </td>
                                         <td className="px-4 py-4">
@@ -766,6 +789,7 @@ export default function AdminDashboard() {
                                             setPlanFilter('all');
                                             setStatusFilter('all');
                                             setActivityFilter('all');
+                                            setAuthFilter('all');
                                             setSearch('');
                                         }}
                                         className="btn-secondary"

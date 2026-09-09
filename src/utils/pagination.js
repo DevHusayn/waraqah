@@ -38,6 +38,7 @@ export function buildListQuery({
     status,
     plan,
     activity,
+    auth,
     sort,
     year,
     month,
@@ -57,6 +58,7 @@ export function buildListQuery({
     if (status && status !== 'all') params.set('status', status);
     if (plan && plan !== 'all') params.set('plan', plan);
     if (activity && activity !== 'all') params.set('activity', activity);
+    if (auth && auth !== 'all') params.set('auth', auth);
     if (sort) params.set('sort', sort);
     if (period) params.set('period', String(period));
     if (startDate) params.set('startDate', String(startDate));
@@ -131,12 +133,13 @@ export function buildListExportFilename(companyName, resource, { status = 'all',
 }
 
 /** Build query string for admin user export (no pagination). */
-export function buildAdminUsersExportQuery({ search, status, plan, activity } = {}) {
+export function buildAdminUsersExportQuery({ search, status, plan, activity, auth } = {}) {
     const params = new URLSearchParams();
     if (search && String(search).trim()) params.set('search', String(search).trim());
     if (status && status !== 'all') params.set('status', status);
     if (plan && plan !== 'all') params.set('plan', plan);
     if (activity && activity !== 'all') params.set('activity', activity);
+    if (auth && auth !== 'all') params.set('auth', auth);
     return params.toString();
 }
 
@@ -158,10 +161,17 @@ const ACTIVITY_EXPORT_SLUGS = {
     never_signed_in: 'never-signed-in',
 };
 
-export function buildAdminUsersExportFilename({ plan = 'all', status = 'all', activity = 'all', search = '' } = {}) {
+export function buildAdminUsersExportFilename({
+    plan = 'all',
+    status = 'all',
+    activity = 'all',
+    auth = 'all',
+    search = '',
+} = {}) {
     const parts = [];
     if (plan !== 'all') parts.push(plan);
     if (status !== 'all') parts.push(status);
+    if (auth !== 'all') parts.push(auth);
     if (activity !== 'all') {
         parts.push(ACTIVITY_EXPORT_SLUGS[activity] || String(activity).replace(/_/g, '-'));
     }

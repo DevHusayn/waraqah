@@ -16,6 +16,21 @@ export function StatusBadge({ status }) {
     );
 }
 
+export function AuthBadge({ authProvider }) {
+    const google = authProvider === 'google';
+    return (
+        <span
+            className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${
+                google
+                    ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300'
+                    : 'bg-zinc-100 text-foreground-muted dark:bg-surface-muted'
+            }`}
+        >
+            {google ? 'Google' : 'Email'}
+        </span>
+    );
+}
+
 export function PlanBadge({ plan }) {
     const premium = plan === 'premium';
     return (

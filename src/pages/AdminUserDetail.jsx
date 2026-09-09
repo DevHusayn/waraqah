@@ -37,6 +37,7 @@ import { adminDisplayName } from '../utils/adminDisplayName';
 import {
     StatusBadge,
     PlanBadge,
+    AuthBadge,
     UsageBadge,
     PaymentStatusBadge,
     UserAvatar,
@@ -843,6 +844,7 @@ export default function AdminUserDetail() {
                                 ) : null}
                                 <StatusBadge status={user.status} />
                                 <PlanBadge plan={billing.plan} />
+                                <AuthBadge authProvider={user.authProvider} />
                             </div>
                             <p className="text-sm text-foreground-muted mt-1 truncate">{user.email}</p>
                             {businessInfo?.name ? (
@@ -919,7 +921,11 @@ export default function AdminUserDetail() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 space-y-6">
                         <SectionCard title="Account overview" icon={Users}>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                                <StatItem
+                                    label="Sign-in"
+                                    value={user.authProvider === 'google' ? 'Google' : 'Email & password'}
+                                />
                                 <StatItem label="Joined" value={formatDate(user.createdAt)} />
                                 <StatItem label="Last login" value={formatDateTime(user.lastLogin)} />
                                 <StatItem label="Last active" value={formatDateTime(user.lastActiveAt)} />
