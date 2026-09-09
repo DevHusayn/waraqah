@@ -113,6 +113,25 @@ export function getWeekBoundsInTimezone(timeZone, now = new Date()) {
     return { start, end };
 }
 
+export function getLastWeekBoundsInTimezone(timeZone, now = new Date()) {
+    const { start } = getWeekBoundsInTimezone(timeZone, now);
+    const prevStart = shiftDateByDays(start.year, start.month, start.day, -7);
+    const prevEnd = shiftDateByDays(prevStart.year, prevStart.month, prevStart.day, 6);
+    return { start: prevStart, end: prevEnd };
+}
+
+function weekPeriodFromBounds({ start, end }) {
+    return {
+        kind: 'week',
+        startYear: start.year,
+        startMonth: start.month,
+        startDay: start.day,
+        endYear: end.year,
+        endMonth: end.month,
+        endDay: end.day,
+    };
+}
+
 function formatDatePartsLabel({ year, month, day }, locale = 'en-US', options = {}) {
     const date = new Date(Date.UTC(year, month - 1, day));
     return new Intl.DateTimeFormat(locale, { timeZone: 'UTC', ...options }).format(date);
@@ -147,7 +166,9 @@ export function formatPeriodPresetLabel(mode, year, month, locale = 'en-US', opt
     const { timeZone, startDate, endDate } = options;
     if (mode === 'today') return 'Today';
     if (mode === 'week') return 'This week';
+    if (mode === 'last-week') return 'Last week';
     if (mode === 'month') return 'This month';
+    if (mode === 'last-month') return 'Last month';
     if (mode === 'year') return 'This year';
     if (mode === 'custom') {
         const start = parseDateInputValue(startDate);
@@ -162,7 +183,9 @@ export function formatPeriodPresetLabel(mode, year, month, locale = 'en-US', opt
 export function getPeriodComparisonLabel(mode, isCurrentPeriod = false) {
     if (mode === 'today') return 'vs yesterday';
     if (mode === 'week') return isCurrentPeriod ? 'vs last week' : 'vs previous week';
+    if (mode === 'last-week') return 'vs previous week';
     if (mode === 'month') return isCurrentPeriod ? 'vs last month' : 'vs previous month';
+    if (mode === 'last-month') return 'vs previous month';
     if (mode === 'year') return isCurrentPeriod ? 'vs last year' : 'vs previous year';
     if (mode === 'custom') return 'vs previous period';
     if (mode === 'all') return null;
@@ -191,19 +214,16 @@ export function resolveClientPeriodFromFilter(mode, timeZone, { startDate, endDa
         return { kind: 'day', ...getDatePartsInTimezone(timeZone, now) };
     }
     if (mode === 'week') {
-        const { start, end } = getWeekBoundsInTimezone(timeZone, now);
-        return {
-            kind: 'week',
-            startYear: start.year,
-            startMonth: start.month,
-            startDay: start.day,
-            endYear: end.year,
-            endMonth: end.month,
-            endDay: end.day,
-        };
+        return weekPeriodFromBounds(getWeekBoundsInTimezone(timeZone, now));
+    }
+    if (mode === 'last-week') {
+        return weekPeriodFromBounds(getLastWeekBoundsInTimezone(timeZone, now));
     }
     if (mode === 'month') {
         return { kind: 'month', ...getYearMonthInTimezone(timeZone, now) };
+    }
+    if (mode === 'last-month') {
+        return { kind: 'month', ...getLastYearMonthInTimezone(timeZone, now) };
     }
     if (mode === 'year') {
         const { year } = getDatePartsInTimezone(timeZone, now);
@@ -289,4 +309,9 @@ export function shiftSummaryPeriod(year, month, deltaMonths) {
         year: Math.floor(index / 12),
         month: (index % 12) + 1,
     };
+}
+
+export function getLastYearMonthInTimezone(timeZone, now = new Date()) {
+    const current = getYearMonthInTimezone(timeZone, now);
+    return shiftSummaryPeriod(current.year, current.month, -1);
 }

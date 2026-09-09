@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { uniqueVendorNames } from '@waraqah/shared';
 import { apiFetch } from '../api/client';
 
 export function useDashboardQuery() {
@@ -26,5 +27,16 @@ export function useInvoicesQuery() {
     return useQuery({
         queryKey: ['invoices'],
         queryFn: () => apiFetch('/invoices'),
+    });
+}
+
+export function useExpenseVendorsQuery({ enabled = true } = {}) {
+    return useQuery({
+        queryKey: ['expenseVendors'],
+        queryFn: async () => {
+            const payload = await apiFetch('/expenses/vendors');
+            return uniqueVendorNames(Array.isArray(payload) ? payload : []);
+        },
+        enabled,
     });
 }

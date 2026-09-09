@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
@@ -16,6 +17,8 @@ import {
 import { useToast } from '../context/ToastContext';
 import { ConfirmModal } from '../components/Modal';
 import { PaginationBar } from '../components/PaginationBar';
+import { VendorNameCombobox } from '../components/VendorNameCombobox';
+import { useExpenseVendorsQuery } from '../hooks/queries';
 import {
     BottomSheet,
     Button,
@@ -63,6 +66,8 @@ export function ExpensesScreen() {
     const { colors } = useTheme();
     const styles = useMemo(() => createStyles(colors), [colors]);
     const { showToast } = useToast();
+    const queryClient = useQueryClient();
+    const { data: vendors = [] } = useExpenseVendorsQuery();
     const [refreshing, setRefreshing] = useState(false);
     const [form, setForm] = useState(EMPTY);
     const [editing, setEditing] = useState(null);
@@ -165,6 +170,7 @@ export function ExpensesScreen() {
                 showToast('Expense added', 'success');
             }
             closeSheet();
+            await queryClient.invalidateQueries({ queryKey: ['expenseVendors'] });
             await refresh();
         } catch (err) {
             showToast(err.message || 'Could not save expense.', 'error');
@@ -180,6 +186,7 @@ export function ExpensesScreen() {
             await apiFetch(`/expenses/${deleteId}`, { method: 'DELETE' });
             setDeleteId(null);
             showToast('Expense deleted', 'success');
+            await queryClient.invalidateQueries({ queryKey: ['expenseVendors'] });
             await refresh();
         } catch (err) {
             showToast(err.message || 'Could not delete expense.', 'error');
@@ -315,9 +322,11 @@ export function ExpensesScreen() {
                 </Pressable>
                 <View style={styles.fieldGap} />
                 <Label>Paid to</Label>
-                <Input
+                <VendorNameCombobox
                     value={form.vendor}
+                    vendors={vendors}
                     onChangeText={(v) => setForm((f) => ({ ...f, vendor: v }))}
+                    onSelectVendor={(name) => setForm((f) => ({ ...f, vendor: name }))}
                     placeholder="Who was paid?"
                 />
                 <View style={styles.fieldGap} />

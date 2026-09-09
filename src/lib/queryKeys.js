@@ -38,6 +38,7 @@ export const queryKeys = {
         endDate ?? null,
     ],
     expenses: (userId, params) => ['expenses', userId, params],
+    expenseVendors: (userId) => ['expenseVendors', userId],
     expenseSummary: (userId, period, startDate, endDate) => [
         'expenseSummary',
         userId,

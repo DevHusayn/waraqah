@@ -45,7 +45,8 @@ export function usePeriodFilter(defaultMode = 'month') {
         [mode, timezone, activeStartDate, activeEndDate]
     );
 
-    const isCurrentPeriod = mode !== 'custom' && mode !== 'all';
+    const isCurrentPeriod =
+        mode !== 'custom' && mode !== 'all' && mode !== 'last-week' && mode !== 'last-month';
     const comparisonLabel = getPeriodComparisonLabel(mode, isCurrentPeriod);
 
     const setPeriodMode = useCallback((nextMode) => {

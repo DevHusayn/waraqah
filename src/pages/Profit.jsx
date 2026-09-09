@@ -217,7 +217,15 @@ export default function Profit() {
                             <div className="card">
                                 <EmptyState
                                     icon={Wallet}
-                                    title={mode === 'month' ? 'No expenses this month' : 'No expenses in this period'}
+                                    title={
+                                        mode === 'month'
+                                            ? 'No expenses this month'
+                                            : mode === 'last-month'
+                                              ? 'No expenses last month'
+                                              : mode === 'last-week'
+                                                ? 'No expenses last week'
+                                                : 'No expenses in this period'
+                                    }
                                     description="Record operating costs on the Expenses page to see net profit."
                                     action={
                                         <Link to="/expenses" className="btn-secondary text-sm py-2 px-4">
@@ -270,7 +278,15 @@ export default function Profit() {
                         ) : (
                             <div className="card">
                                 <EmptyState
-                                    title={mode === 'month' ? 'No product sales this month' : 'No product sales in this period'}
+                                    title={
+                                        mode === 'month'
+                                            ? 'No product sales this month'
+                                            : mode === 'last-month'
+                                              ? 'No product sales last month'
+                                              : mode === 'last-week'
+                                                ? 'No product sales last week'
+                                                : 'No product sales in this period'
+                                    }
                                     description="Paid invoices and receipts with catalog products will appear here."
                                 />
                             </div>

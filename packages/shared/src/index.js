@@ -36,4 +36,5 @@ export * from './analyticsEvents.js';
 export * from './replayMasking.js';
 export * from './timezone.js';
 export * from './expenseCategories.js';
+export * from './vendorHelpers.js';
 export * from './recurrence.js';

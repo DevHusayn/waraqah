@@ -108,6 +108,10 @@ export function buildListExportFilename(companyName, resource, { status = 'all',
     const filterParts = [];
     if (period === 'today') {
         filterParts.push('today');
+    } else if (period === 'last-week') {
+        filterParts.push('last-week');
+    } else if (period === 'last-month') {
+        filterParts.push('last-month');
     } else if (year != null && year !== '' && month != null && month !== '') {
         filterParts.push(`${year}-${String(month).padStart(2, '0')}`);
     }

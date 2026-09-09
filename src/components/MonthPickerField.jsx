@@ -24,6 +24,8 @@ const QUICK_PERIOD_PRESETS = [
     { id: 'week', label: 'This week' },
     { id: 'month', label: 'This month' },
     { id: 'year', label: 'This year' },
+    { id: 'last-week', label: 'Last week' },
+    { id: 'last-month', label: 'Last month' },
 ];
 
 function PeriodPresetButton({ label, selected, onClick, icon: Icon, className = '' }) {
@@ -452,15 +454,19 @@ export default function MonthPickerField({
             ? 'Today'
             : periodMode === 'week'
               ? 'This week'
-              : periodMode === 'month'
-                ? 'This month'
-                : periodMode === 'year'
-                  ? 'This year'
-                  : periodMode === 'all'
-                    ? 'All time'
-                    : periodMode === 'custom'
-                      ? 'Custom'
-                      : null;
+              : periodMode === 'last-week'
+                ? 'Last week'
+                : periodMode === 'month'
+                  ? 'This month'
+                  : periodMode === 'last-month'
+                    ? 'Last month'
+                    : periodMode === 'year'
+                      ? 'This year'
+                      : periodMode === 'all'
+                        ? 'All time'
+                        : periodMode === 'custom'
+                          ? 'Custom'
+                          : null;
     const triggerText =
         displayLabel ||
         presetLabel ||

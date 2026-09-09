@@ -16,6 +16,8 @@ import CustomSelect from './CustomSelect';
 import FieldValidationMessage from './FieldValidationMessage';
 import RequiredLabel from './RequiredLabel';
 import AmountInput from './AmountInput';
+import VendorNameCombobox from './VendorNameCombobox';
+import { useExpenseVendorsQuery } from '../hooks/useExpenseVendorsQuery';
 import { parseAmountInput } from '../utils/numberInput';
 import {
     validateRequired,
@@ -87,6 +89,7 @@ export default function ExpenseFormModal({
     const [customCategoryOpen, setCustomCategoryOpen] = useState(false);
     const [customCategoryInput, setCustomCategoryInput] = useState('');
     const [customCategoryError, setCustomCategoryError] = useState('');
+    const { data: vendors = [] } = useExpenseVendorsQuery({ enabled: open });
 
     const categoryOptions = useMemo(() => {
         const presets = EXPENSE_CATEGORIES.map((category) => ({
@@ -283,13 +286,14 @@ export default function ExpenseFormModal({
                         <label htmlFor="expense-vendor" className="label">
                             Paid to <span className="text-foreground-muted/70 font-normal">(optional)</span>
                         </label>
-                        <input
+                        <VendorNameCombobox
                             id="expense-vendor"
-                            name="vendor"
-                            type="text"
                             value={formData.vendor}
-                            onChange={handleChange}
-                            className={inputClass(false)}
+                            vendors={vendors}
+                            onNameChange={handleChange}
+                            onSelectVendor={(name) => {
+                                setFormData((prev) => ({ ...prev, vendor: name }));
+                            }}
                             placeholder="Who was paid?"
                         />
                     </div>

@@ -98,6 +98,7 @@ export function invalidateClientListQueries(userId) {
 export function invalidateExpenseQueries(userId) {
     if (!userId) return;
     queryClient.invalidateQueries({ queryKey: ['expenses', userId] });
+    queryClient.invalidateQueries({ queryKey: ['expenseVendors', userId] });
     queryClient.invalidateQueries({ queryKey: ['expenseSummary', userId] });
     queryClient.invalidateQueries({ queryKey: ['profit', userId] });
     invalidateDashboardQueries(userId);

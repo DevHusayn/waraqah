@@ -375,7 +375,11 @@ export default function Expenses() {
                               ? 'No matching expenses'
                               : mode === 'month'
                                 ? 'No expenses this month'
-                                : 'No expenses in this period'
+                                : mode === 'last-month'
+                                  ? 'No expenses last month'
+                                  : mode === 'last-week'
+                                    ? 'No expenses last week'
+                                    : 'No expenses in this period'
                     }
                     description={
                         search
