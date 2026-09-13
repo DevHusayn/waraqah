@@ -2,12 +2,6 @@ import { formatCurrency } from '../../utils/currency';
 import MonthComparisonTrend from '../MonthComparisonTrend';
 import AdaptiveStatValue from '../AdaptiveStatValue';
 
-function formatDocumentCounts(invoices, receipts) {
-    const invoiceLabel = invoices === 1 ? 'invoice' : 'invoices';
-    const receiptLabel = receipts === 1 ? 'receipt' : 'receipts';
-    return `${invoices} ${invoiceLabel} · ${receipts} ${receiptLabel}`;
-}
-
 function PeriodStatCard({
     title,
     value,
@@ -69,8 +63,8 @@ export default function DashboardPeriodStats({
 
     const current = summary?.current;
     const comparison = summary?.comparison;
-    const grossProfit = current?.grossProfit ?? 0;
-    const profitPositive = grossProfit >= 0;
+    const netProfit = current?.netProfit ?? 0;
+    const profitPositive = netProfit >= 0;
 
     return (
         <div className={`grid grid-cols-2 ${premium ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-3 mb-6`}>
@@ -88,22 +82,19 @@ export default function DashboardPeriodStats({
                 positiveDirection="down"
             />
             <PeriodStatCard
-                title="Fully received payment"
-                value={String(current?.paymentsReceived ?? 0)}
-                comparison={showComparison ? comparison?.paymentsReceived : null}
+                title="Expenses"
+                value={formatCurrency(current?.totalExpenses ?? 0)}
+                comparison={showComparison ? comparison?.totalExpenses : null}
                 comparisonLabel={comparisonLabel}
-                detail={formatDocumentCounts(
-                    current?.paidInvoices ?? 0,
-                    current?.receiptsIssued ?? 0
-                )}
+                positiveDirection="down"
                 className={premium ? '' : 'col-span-2 sm:col-span-1'}
             />
             {premium ? (
                 <PeriodStatCard
-                    title="Gross profit"
-                    value={formatCurrency(grossProfit)}
+                    title="Net profit"
+                    value={formatCurrency(netProfit)}
                     valueClassName={profitPositive ? '' : 'text-red-600'}
-                    comparison={showComparison ? comparison?.grossProfit : null}
+                    comparison={showComparison ? comparison?.netProfit : null}
                     comparisonLabel={comparisonLabel}
                 />
             ) : null}

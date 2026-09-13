@@ -24,7 +24,7 @@ function PaymentBreakdownSkeleton() {
                 <div className="h-3 w-48 max-w-full skeleton-bar" />
             </div>
             <div className="flex flex-col justify-center gap-4 py-1">
-                {Array.from({ length: 5 }).map((_, index) => (
+                {Array.from({ length: 4 }).map((_, index) => (
                     <div key={index} className="space-y-1.5">
                         <div className="flex justify-between gap-3">
                             <div className="h-4 w-24 skeleton-bar" />

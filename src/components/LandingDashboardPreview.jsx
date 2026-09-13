@@ -21,8 +21,8 @@ const BASE_TREND = [
 ];
 
 const SAMPLE_BREAKDOWN = {
-    partialInvoices: 2,
-    partialReceipts: 1,
+    fullyReceived: 14,
+    partiallyReceived: 3,
     pending: 5,
     overdue: 3,
     total: 25,
@@ -31,8 +31,8 @@ const SAMPLE_BREAKDOWN = {
 const SAMPLE_COMPARISONS = {
     totalRevenue: { kind: 'percent', direction: 'up', value: 18 },
     outstanding: { kind: 'percent', direction: 'down', value: 12 },
-    paymentsReceived: { kind: 'percent', direction: 'up', value: 27 },
-    grossProfit: { kind: 'percent', direction: 'up', value: 22 },
+    totalExpenses: { kind: 'percent', direction: 'down', value: 9 },
+    netProfit: { kind: 'percent', direction: 'up', value: 22 },
 };
 
 /** Y-axis headroom so the peak month is not clipped. */
@@ -41,10 +41,8 @@ const TREND_Y_MAX = Math.max(...BASE_TREND.map((point) => point.paid)) * 1.12;
 const SAMPLE_STATS = {
     totalRevenue: 1_245_000,
     outstanding: 875_000,
-    paymentsReceived: 14,
-    paidInvoices: 9,
-    paidReceipts: 5,
-    grossProfit: 412_000,
+    totalExpenses: 185_000,
+    netProfit: 412_000,
     monthLabel: 'Jul 2026',
 };
 
@@ -176,15 +174,15 @@ export default function LandingDashboardPreview() {
                         positiveDirection="down"
                     />
                     <MiniStat
-                        title="Fully received payment"
-                        value={String(SAMPLE_STATS.paymentsReceived)}
-                        comparison={SAMPLE_COMPARISONS.paymentsReceived}
-                        detail={`${SAMPLE_STATS.paidInvoices} invoices · ${SAMPLE_STATS.paidReceipts} receipts`}
+                        title="Expenses"
+                        value={formatCurrency(SAMPLE_STATS.totalExpenses)}
+                        comparison={SAMPLE_COMPARISONS.totalExpenses}
+                        positiveDirection="down"
                     />
                     <MiniStat
-                        title="Gross profit"
-                        value={formatCurrency(SAMPLE_STATS.grossProfit)}
-                        comparison={SAMPLE_COMPARISONS.grossProfit}
+                        title="Net profit"
+                        value={formatCurrency(SAMPLE_STATS.netProfit)}
+                        comparison={SAMPLE_COMPARISONS.netProfit}
                     />
                 </div>
 
@@ -246,7 +244,7 @@ export default function LandingDashboardPreview() {
                         <div className="mb-2">
                             <p className="text-[10px] font-semibold text-zinc-950">Payment breakdown</p>
                             <p className="text-[7px] text-zinc-500 mt-0.5 leading-snug">
-                                Issued in {SAMPLE_STATS.monthLabel}, {SAMPLE_BREAKDOWN.total} total · fully paid shown above
+                                Issued in {SAMPLE_STATS.monthLabel} · overdue by due date in period
                             </p>
                         </div>
                         <div className="flex flex-col justify-center gap-2.5 py-0.5">

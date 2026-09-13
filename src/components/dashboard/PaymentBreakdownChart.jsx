@@ -24,10 +24,18 @@ function BreakdownRow({ label, value, max, barClass, muted = false }) {
 export default function PaymentBreakdownChart({ breakdown, periodLabel }) {
     const rows = useMemo(
         () =>
-            PAYMENT_BREAKDOWN_ROWS.map((row) => ({
-                ...row,
-                value: breakdown?.[row.key] ?? 0,
-            })),
+            PAYMENT_BREAKDOWN_ROWS.map((row) => {
+                const fallback =
+                    row.key === 'fullyReceived'
+                        ? (breakdown?.fullyPaidInvoices ?? 0) + (breakdown?.fullyPaidReceipts ?? 0)
+                        : row.key === 'partiallyReceived'
+                          ? (breakdown?.partialInvoices ?? 0) + (breakdown?.partialReceipts ?? 0)
+                          : 0;
+                return {
+                    ...row,
+                    value: breakdown?.[row.key] ?? fallback,
+                };
+            }),
         [breakdown]
     );
 

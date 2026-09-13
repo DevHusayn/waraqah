@@ -14,10 +14,11 @@ import {
     Package,
     FileBarChart,
     Wallet,
+    TrendingUp,
+    Smartphone,
 } from 'lucide-react';
 import LandingNav from '../components/LandingNav';
 import LandingDashboardPreview from '../components/LandingDashboardPreview';
-import FeatureCarousel from '../components/FeatureCarousel';
 import WaraqahLogo from '../components/WaraqahLogo';
 import { APP_NAME, APP_SOCIAL_LINKS, APP_TAGLINE } from '../constants/brand';
 import { AUTH_LOGIN_PATH, AUTH_REGISTER_PATH } from '../constants/authRoutes';
@@ -60,52 +61,24 @@ function formatPrice(amount) {
 
 const WHY_ITEMS = [
     {
+        icon: TrendingUp,
         title: 'See profit, not just revenue',
         text: 'Track margins on products and operating costs. Premium shows gross and net profit with trends.',
-        stamp: 'Profit',
-    },
-    {
-        title: 'Inventory that stays in sync',
-        text: 'Stock updates when you bill or receipt. Low-stock alerts keep you ahead of empty shelves.',
-        stamp: 'In stock',
-    },
-    {
-        title: 'From quote to payment',
-        text: 'Quote, convert to invoice, collect partial payments, and email polished PDFs.',
-        stamp: 'Signed',
-    },
-    {
-        title: 'Work from anywhere',
-        text: 'Run your business from phone or laptop. Dashboard, documents, and records stay in sync.',
-        stamp: 'Synced',
-    },
-];
-
-const MANAGE_TODAY_ITEMS = [
-    {
-        icon: ClipboardList,
-        title: 'Sales',
-        text: 'Quotations, invoices, receipts, and client emails in one flow.',
-    },
-    {
-        icon: Users,
-        title: 'Clients',
-        text: 'Save contacts once, reuse on every document, export to CSV.',
     },
     {
         icon: Package,
-        title: 'Products',
-        text: 'Catalog with unit cost, margin, and optional stock tracking.',
+        title: 'Inventory that stays in sync',
+        text: 'Stock updates when you bill or receipt. Low-stock alerts keep you ahead of empty shelves.',
     },
     {
-        icon: Wallet,
-        title: 'Expenses',
-        text: 'Log running costs by category. Premium ties them to net profit.',
+        icon: FileText,
+        title: 'From quote to payment',
+        text: 'Quote, convert to invoice, collect partial payments, and email polished PDFs.',
     },
     {
-        icon: FileBarChart,
-        title: 'Reports & exports',
-        text: 'Dashboard stats, profit analytics, monthly statements, and CSV exports.',
+        icon: Smartphone,
+        title: 'Work from anywhere',
+        text: 'Run your business from phone or laptop. Dashboard, documents, and records stay in sync.',
     },
 ];
 
@@ -308,7 +281,7 @@ export default function Landing() {
             </section>
 
             {/* Why */}
-            <section className="py-20 sm:py-24 bg-surface">
+            <section className="py-20 sm:py-24 bg-surface-muted/80 border-y border-border/80">
                 <div className="mx-auto max-w-6xl px-4 sm:px-6">
                     <SectionReveal className="text-center max-w-2xl mx-auto">
                         <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
@@ -318,32 +291,12 @@ export default function Landing() {
                             Revenue is only half the picture. Here is what changes when sales, stock, costs, and profit live in one place.
                         </p>
                     </SectionReveal>
-                    <SectionReveal className="mt-14">
-                        <FeatureCarousel items={WHY_ITEMS} />
-                    </SectionReveal>
-                    <SectionReveal className="mt-12 text-center">
-                        <CtaButton className="inline-flex" />
-                    </SectionReveal>
-                </div>
-            </section>
-
-            {/* What you can manage today */}
-            <section className="py-20 sm:py-24 bg-surface-muted/80 border-y border-border/80">
-                <div className="mx-auto max-w-6xl px-4 sm:px-6">
-                    <SectionReveal className="text-center max-w-2xl mx-auto">
-                        <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
-                            What you can manage today
-                        </h2>
-                        <p className="mt-4 text-foreground-muted text-lg">
-                            Everything your business needs to sell, record, and report, in one workspace.
-                        </p>
-                    </SectionReveal>
-                    <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-                        {MANAGE_TODAY_ITEMS.map((item, i) => {
+                    <div className="mt-14 grid sm:grid-cols-2 gap-6">
+                        {WHY_ITEMS.map((item, i) => {
                             const Icon = item.icon;
                             return (
                                 <SectionReveal key={item.title} delay={i + 1}>
-                                    <article className="h-full rounded-xl border border-border/80 bg-surface p-6 shadow-sm">
+                                    <article className="h-full rounded-xl border border-border/80 bg-surface p-6 shadow-sm transition-shadow hover:shadow-md hover:border-border">
                                         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand/10 text-brand">
                                             <Icon className="h-5 w-5" aria-hidden />
                                         </div>
@@ -354,6 +307,9 @@ export default function Landing() {
                             );
                         })}
                     </div>
+                    <SectionReveal className="mt-12 text-center">
+                        <CtaButton className="inline-flex" />
+                    </SectionReveal>
                 </div>
             </section>
 
@@ -496,37 +452,82 @@ export default function Landing() {
                 </div>
             </section>
 
-            <footer className="py-10 border-t border-border bg-surface">
-                <div className="mx-auto max-w-6xl px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-foreground-muted">
-                    <WaraqahLogo size="sm" iconStyle="solid" />
-                    <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
-                        <nav className="flex items-center gap-4" aria-label="Social">
-                            {APP_SOCIAL_LINKS.map(({ id, label, url }) => {
-                                const Icon = SOCIAL_ICONS[id];
-                                return (
-                                    <a
-                                        key={id}
-                                        href={url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        aria-label={label}
-                                        className="inline-flex items-center hover:text-foreground transition-colors"
-                                    >
-                                        {Icon ? <Icon className="h-5 w-5" aria-hidden /> : null}
+            <footer className="bg-brand text-white">
+                <div className="mx-auto max-w-6xl px-4 sm:px-6 py-14">
+                    <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+                        <div>
+                            <WaraqahLogo size="sm" inverted iconStyle="solid" />
+                            <p className="mt-3 text-sm text-white/80 leading-relaxed">{APP_TAGLINE}</p>
+                        </div>
+                        <nav aria-label="Product">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-white/70">Product</p>
+                            <ul className="mt-3 space-y-2 text-sm">
+                                <li>
+                                    <a href="#top" className="text-white/85 hover:text-white transition-colors">
+                                        Home
                                     </a>
-                                );
-                            })}
+                                </li>
+                                <li>
+                                    <a href="#pricing" className="text-white/85 hover:text-white transition-colors">
+                                        Pricing
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#faq" className="text-white/85 hover:text-white transition-colors">
+                                        FAQ
+                                    </a>
+                                </li>
+                                <li>
+                                    <Link to={AUTH_REGISTER_PATH} className="text-white/85 hover:text-white transition-colors">
+                                        Get started
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to={AUTH_LOGIN_PATH} className="text-white/85 hover:text-white transition-colors">
+                                        Log in
+                                    </Link>
+                                </li>
+                            </ul>
                         </nav>
-                        <nav className="flex items-center gap-4" aria-label="Legal">
-                            <Link to={TERMS_PATH} className="hover:text-foreground transition-colors">
-                                Terms
-                            </Link>
-                            <Link to={PRIVACY_PATH} className="hover:text-foreground transition-colors">
-                                Privacy
-                            </Link>
+                        <nav aria-label="Legal">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-white/70">Legal</p>
+                            <ul className="mt-3 space-y-2 text-sm">
+                                <li>
+                                    <Link to={TERMS_PATH} className="text-white/85 hover:text-white transition-colors">
+                                        Terms
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link to={PRIVACY_PATH} className="text-white/85 hover:text-white transition-colors">
+                                        Privacy
+                                    </Link>
+                                </li>
+                            </ul>
                         </nav>
-                        <p>© {new Date().getFullYear()} {APP_NAME}. {APP_TAGLINE}</p>
+                        <nav aria-label="Social">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-white/70">Follow us</p>
+                            <div className="mt-3 flex flex-wrap items-center gap-3">
+                                {APP_SOCIAL_LINKS.map(({ id, label, url }) => {
+                                    const Icon = SOCIAL_ICONS[id];
+                                    return (
+                                        <a
+                                            key={id}
+                                            href={url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            aria-label={label}
+                                            className="inline-flex items-center text-white/85 hover:text-white transition-colors"
+                                        >
+                                            {Icon ? <Icon className="h-5 w-5" aria-hidden /> : null}
+                                        </a>
+                                    );
+                                })}
+                            </div>
+                        </nav>
                     </div>
+                    <p className="mt-10 pt-6 border-t border-white/20 text-sm text-white/70">
+                        © {new Date().getFullYear()} {APP_NAME}. {APP_TAGLINE}
+                    </p>
                 </div>
             </footer>
         </div>

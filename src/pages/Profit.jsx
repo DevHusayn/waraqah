@@ -294,8 +294,9 @@ export default function Profit() {
                     </section>
 
                     <p className="mt-6 text-xs text-foreground-muted">
-                        Gross profit is revenue minus cost of goods sold (COGS) on paid and partial sales only.
-                        Net profit subtracts operating expenses recorded on{' '}
+                        Gross profit is paid sales minus cost of goods sold. Service lines and untracked
+                        catalog products with no unit cost count as full margin. Net profit subtracts
+                        operating expenses recorded on{' '}
                         <Link to="/expenses" className="underline underline-offset-2">
                             Expenses
                         </Link>
