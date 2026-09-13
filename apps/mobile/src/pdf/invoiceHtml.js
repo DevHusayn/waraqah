@@ -14,6 +14,7 @@ import {
     getClientBusiness,
     formatDocumentAdditionalInfo,
     formatDocumentItemDescription,
+    formatWebsiteLabel,
 } from '@waraqah/shared';
 import { escapeHtml, formatMoney, wrapHtml } from './htmlUtils';
 
@@ -91,6 +92,7 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
         <p class="muted">${escapeHtml(businessInfo?.address)}</p>
         <p class="muted">${escapeHtml(businessInfo?.email)}</p>
         <p class="muted">${escapeHtml(businessInfo?.phone)}</p>
+        ${formatWebsiteLabel(businessInfo?.website) ? `<p class="muted">${escapeHtml(formatWebsiteLabel(businessInfo.website))}</p>` : ''}
       </div>
       <div>
         <h1 class="doc-title" style="color:${escapeHtml(brand)}">${isReceipt ? 'RECEIPT' : 'INVOICE'}</h1>

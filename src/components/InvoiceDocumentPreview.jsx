@@ -7,6 +7,8 @@ import {
     resolveQuantityColumnLabel,
     formatDocumentAdditionalInfo,
     formatDocumentItemDescription,
+    formatWebsiteLabel,
+    DEFAULT_BRAND_COLOR,
 } from '@waraqah/shared';
 import { APP_DOMAIN, APP_TAGLINE, APP_WEBSITE_URL } from '../constants/brand';
 import WaraqahLogo from './WaraqahLogo';
@@ -113,6 +115,7 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
         || businessInfo?.paymentAccountNumber?.trim()
         || businessInfo?.paymentInstructions?.trim()
     );
+    const websiteLabel = formatWebsiteLabel(businessInfo?.website);
     const showPaymentBox = !isReceipt && !isQuotation && hasPaymentDetails;
     const notesText = invoice?.notes?.trim() || '';
     const termsText = isQuotation ? invoice?.terms?.trim() || '' : '';
@@ -183,6 +186,9 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                         ) : null}
                         {businessInfo?.phone ? (
                             <p className="text-xs sm:text-sm text-zinc-500">{businessInfo.phone}</p>
+                        ) : null}
+                        {websiteLabel ? (
+                            <p className="text-xs sm:text-sm text-zinc-500">{websiteLabel}</p>
                         ) : null}
                     </div>
 
@@ -475,7 +481,7 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
                                 <a
                                     href={APP_WEBSITE_URL}
                                     className="underline hover:opacity-80"
-                                    style={{ color: brandColor }}
+                                    style={{ color: DEFAULT_BRAND_COLOR }}
                                 >
                                     {APP_DOMAIN}
                                 </a>

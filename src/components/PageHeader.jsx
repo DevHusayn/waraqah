@@ -1,4 +1,4 @@
-export default function PageHeader({ title, subtitle, breadcrumb, eyebrow, children, inlineActions = false }) {
+export default function PageHeader({ title, subtitle, breadcrumb, eyebrow, greeting, children, inlineActions = false }) {
     return (
         <div
             className={`mb-6 pb-5 border-b border-border/50 flex gap-3 min-w-0 ${
@@ -7,7 +7,7 @@ export default function PageHeader({ title, subtitle, breadcrumb, eyebrow, child
                     : 'flex-col sm:flex-row sm:items-end sm:justify-between'
             }`}
         >
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
                 {breadcrumb ? (
                     <div className="mb-1.5 text-[11px] font-medium text-foreground-muted/70 tracking-wide uppercase">
                         {breadcrumb}
@@ -18,7 +18,13 @@ export default function PageHeader({ title, subtitle, breadcrumb, eyebrow, child
                         {eyebrow}
                     </p>
                 ) : null}
-                <h1 className="page-title truncate" title={typeof title === 'string' ? title : undefined}>
+                {greeting ? (
+                    <p className="mb-0.5 text-[13px] font-medium text-foreground-muted leading-snug">
+                        {greeting}{' '}
+                        <span aria-hidden="true">👋</span>
+                    </p>
+                ) : null}
+                <h1 className="page-title line-clamp-2 break-words" title={typeof title === 'string' ? title : undefined}>
                     {title}
                 </h1>
                 {subtitle ? <p className="page-subtitle">{subtitle}</p> : null}

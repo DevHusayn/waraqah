@@ -276,13 +276,15 @@ export default function PremiumLogoSettings({
                         Logo, stamp, and signature on PDF invoices and receipts
                     </p>
                     {premium && manageAssets ? (
-                        <p className="text-sm text-amber-900/90 mt-3 rounded-lg bg-amber-50 border border-amber-200/80 px-3 py-2 leading-relaxed">
-                            Uploads and removals save immediately and apply to new PDFs.
-                        </p>
+                        <>
+                            <p className="text-sm text-amber-900/90 mt-3 rounded-lg bg-amber-50 border border-amber-200/80 px-3 py-2 leading-relaxed">
+                                Uploads and removals save immediately and apply to new PDFs.
+                            </p>
+                            <p className="text-xs text-foreground-muted/70 mt-1.5 leading-relaxed">
+                                PNG (transparent background recommended), JPG, or SVG · max 2 MB · images are auto-resized
+                            </p>
+                        </>
                     ) : null}
-                    <p className="text-xs text-foreground-muted/70 mt-1.5 leading-relaxed">
-                        PNG (transparent background recommended), JPG, or SVG · max 2 MB · images are auto-resized
-                    </p>
                 </div>
                 <PlanBadge premium={premium} />
             </div>

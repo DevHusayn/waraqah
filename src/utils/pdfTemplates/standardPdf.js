@@ -11,6 +11,8 @@ import {
     preparePdfAdditionalInfo,
     preparePdfItemDescription,
     toPdfSafeText,
+    formatWebsiteLabel,
+    DEFAULT_BRAND_COLOR,
 } from '@waraqah/shared';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
@@ -395,6 +397,11 @@ async function drawCompanyHeader(doc, businessInfo, premium, logoUrl, pngCache, 
         doc.text(toPdfSafeText(businessInfo.phone), leftX, detailY);
         detailY += 4.4;
     }
+    const website = formatWebsiteLabel(businessInfo.website);
+    if (website) {
+        doc.text(toPdfSafeText(website), leftX, detailY);
+        detailY += 4.4;
+    }
 
     return detailY;
 }
@@ -530,7 +537,7 @@ function drawBottomBoxes(
     return y;
 }
 
-function drawPageFooter(doc, footerText, premium, footerY, primaryColor, grayColor, waraqahLogoPng = '') {
+function drawPageFooter(doc, footerText, premium, footerY, grayColor, waraqahLogoPng = '') {
     doc.setDrawColor(229, 231, 235);
     doc.setLineWidth(0.5);
     doc.line(15, footerY - 4, 195, footerY - 4);
@@ -545,6 +552,7 @@ function drawPageFooter(doc, footerText, premium, footerY, primaryColor, grayCol
         return null;
     }
 
+    const waraqahColor = hexToRgb(DEFAULT_BRAND_COLOR);
     const lockupY = footerY + 1;
     const iconSize = 5.5;
     const poweredByLabel = 'Powered by';
@@ -558,7 +566,7 @@ function drawPageFooter(doc, footerText, premium, footerY, primaryColor, grayCol
 
     doc.setFontSize(8);
     doc.setFont(undefined, 'bold');
-    doc.setTextColor(...primaryColor);
+    doc.setTextColor(...waraqahColor);
     const nameWidth = doc.getTextWidth(APP_NAME);
 
     const lockupWidth = waraqahLogoPng
@@ -575,7 +583,7 @@ function drawPageFooter(doc, footerText, premium, footerY, primaryColor, grayCol
 
     doc.setFontSize(8);
     doc.setFont(undefined, 'bold');
-    doc.setTextColor(...primaryColor);
+    doc.setTextColor(...waraqahColor);
     if (waraqahLogoPng) {
         doc.addImage(waraqahLogoPng, 'PNG', x, lockupY - iconSize + 1.2, iconSize, iconSize);
         x += iconSize + gapAfterIcon;
@@ -592,7 +600,7 @@ function drawPageFooter(doc, footerText, premium, footerY, primaryColor, grayCol
         FREE_PDF_FOOTER_CTA_PREFIX,
         APP_DOMAIN,
         footerY + 11,
-        primaryColor,
+        waraqahColor,
         grayColor
     );
 }
@@ -1015,7 +1023,6 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         footerText,
         premium,
         footerLineY,
-        primaryColor,
         grayColor,
         waraqahLogoPng
     );

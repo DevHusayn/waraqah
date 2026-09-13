@@ -128,7 +128,7 @@ export default function BrandingSettings() {
                     <PremiumLogoSettings
                         formData={businessInfo}
                         setFormData={setFormData}
-                        canManage
+                        canManage={isEditing}
                         standalone
                     />
                 </div>

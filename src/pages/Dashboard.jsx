@@ -99,10 +99,7 @@ const Dashboard = () => {
     const dashboardLoading = isPending;
     const periodUpdating = Boolean(isPlaceholderData && isFetching);
 
-    const dashboardTitle = useMemo(
-        () => `${getTimeOfDayGreeting(timezone)}, ${displayBusinessName}`,
-        [timezone, displayBusinessName]
-    );
+    const dashboardGreeting = useMemo(() => getTimeOfDayGreeting(timezone), [timezone]);
     const dashboardSubtitle = useMemo(() => formatDashboardDate(timezone), [timezone]);
 
     const resolveDocumentStatusBadge = (doc) => {
@@ -141,7 +138,8 @@ const Dashboard = () => {
                 navigate={navigate}
             />
             <PageHeader
-                title={dashboardTitle}
+                greeting={dashboardGreeting}
+                title={displayBusinessName}
                 subtitle={dashboardSubtitle}
                 inlineActions
             >

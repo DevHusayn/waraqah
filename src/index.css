@@ -97,7 +97,7 @@ html.sidebar-collapsed {
     }
 
     .page-title {
-        @apply text-[1.375rem] font-semibold text-foreground tracking-[-0.02em] leading-tight;
+        @apply text-xl sm:text-[1.375rem] font-semibold text-foreground tracking-[-0.02em] leading-tight;
     }
 
     .page-subtitle {

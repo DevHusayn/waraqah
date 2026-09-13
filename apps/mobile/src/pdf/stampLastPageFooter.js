@@ -5,7 +5,7 @@ import {
     PDF_PRINT_BOTTOM_MARGIN,
     PDF_FOOTER_CTA_BOTTOM_OFFSET,
 } from '@waraqah/shared';
-import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../constants/brand';
+import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL, DEFAULT_BRAND_COLOR } from '../constants/brand';
 
 const PAGE_W_MM = 210;
 const PT_TO_MM = 25.4 / 72;
@@ -84,7 +84,7 @@ async function drawFooterOnLastPage(pdfDoc, footer) {
             ? pageHeightMm - 22 - PDF_PRINT_BOTTOM_MARGIN
             : pageHeightMm - PDF_PRINT_BOTTOM_MARGIN - PDF_FOOTER_CTA_BOTTOM_OFFSET;
     const gray = rgb(0.42, 0.45, 0.5);
-    const brand = hexToRgb(footer.brandColor);
+    const waraqah = hexToRgb(DEFAULT_BRAND_COLOR);
 
     page.drawLine({
         start: { x: mmX(15, width), y: mmYFromTop(footerLineY - 4, height) },
@@ -121,7 +121,7 @@ async function drawFooterOnLastPage(pdfDoc, footer) {
         return null;
     }
 
-    drawCenteredLine(page, fontBold, `Powered by ${APP_NAME}`, footerLineY + 1, 8, brand, width, height);
+    drawCenteredLine(page, fontBold, `Powered by ${APP_NAME}`, footerLineY + 1, 8, waraqah, width, height);
     drawCenteredLine(page, font, APP_TAGLINE, footerLineY + 5.5, 7, gray, width, height);
 
     const prefix = FREE_PDF_FOOTER_CTA_PREFIX;
@@ -143,7 +143,7 @@ async function drawFooterOnLastPage(pdfDoc, footer) {
         y: mmYFromTop(ctaY, height),
         size: 7,
         font: fontBold,
-        color: brand,
+        color: waraqah,
     });
 
     return footerDomainLinkRect(width, height, prefix, domain, footerLineY);

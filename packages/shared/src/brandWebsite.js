@@ -17,6 +17,13 @@ export function getAppDomain(url = APP_WEBSITE_URL) {
         .replace(/^https?:\/\//i, '');
 }
 
+/** Business website as shown on PDFs and document previews. */
+export function formatWebsiteLabel(url) {
+    const value = String(url || '').trim();
+    if (!value) return '';
+    return value.replace(/\/$/, '').replace(/^https?:\/\//i, '');
+}
+
 /** Footer CTA prefix shown on free-plan invoice PDFs only. */
 export const FREE_PDF_FOOTER_CTA_PREFIX = 'Try yours at ';
 
