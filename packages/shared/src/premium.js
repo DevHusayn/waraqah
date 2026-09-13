@@ -28,14 +28,27 @@ export function hasPaystackSubscription(businessInfo) {
     return Boolean(String(businessInfo?.paystackSubscriptionCode || '').trim());
 }
 
+function isAutoRenewalStopped(status) {
+    return status === 'cancelled' || status === 'non-renewing';
+}
+
 /** True when the user can cancel Paystack auto-renewal from the app. */
 export function canCancelPremiumAutoRenewal(businessInfo) {
-    if (!hasPaystackSubscription(businessInfo)) return false;
-    return businessInfo.subscriptionStatus !== 'cancelled';
+    if (!businessInfo) return false;
+    if (isAutoRenewalStopped(businessInfo.subscriptionStatus)) return false;
+    if (hasPaystackSubscription(businessInfo)) return true;
+    // Recurring checkout sets billingInterval before the SUB_ code is linked.
+    return isPremiumUser(businessInfo) && Boolean(businessInfo.billingInterval);
 }
 
 export function isPremiumAutoRenewing(businessInfo) {
-    return hasPaystackSubscription(businessInfo) && businessInfo.subscriptionStatus === 'active';
+    if (!isPremiumUser(businessInfo)) return false;
+    if (isAutoRenewalStopped(businessInfo.subscriptionStatus)) return false;
+    if (businessInfo.subscriptionStatus === 'attention') return false;
+    if (hasPaystackSubscription(businessInfo) && businessInfo.subscriptionStatus === 'active') {
+        return true;
+    }
+    return Boolean(businessInfo.billingInterval);
 }
 
 /** Max upload size for logo, stamp, and signature images. */

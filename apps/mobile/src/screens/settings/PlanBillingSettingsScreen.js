@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
     FREE_PLAN_FEATURES,
@@ -33,7 +33,6 @@ export function PlanBillingSettingsScreen({ navigation }) {
     const { showToast } = useToast();
     const [confirmCancel, setConfirmCancel] = useState(false);
     const [cancelling, setCancelling] = useState(false);
-    const syncAttemptedRef = useRef(false);
 
     const premium = isPremiumUser(businessInfo);
     const features = premium ? PREMIUM_PLAN_FEATURES : FREE_PLAN_FEATURES;
@@ -46,14 +45,29 @@ export function PlanBillingSettingsScreen({ navigation }) {
         : `Billed monthly · ${premiumPriceLabel()}/mo`;
 
     useEffect(() => {
-        if (!premium || hasPaystackSubscription(businessInfo) || syncAttemptedRef.current) return;
-        syncAttemptedRef.current = true;
+        if (!premium || hasPaystackSubscription(businessInfo)) return undefined;
 
-        apiFetch('/payments/subscription/sync', { method: 'POST' })
-            .then(() => refreshBusinessInfo())
-            .catch(() => {
-                syncAttemptedRef.current = false;
-            });
+        let cancelled = false;
+        const delays = [0, 2000, 5000];
+
+        (async () => {
+            for (const wait of delays) {
+                if (cancelled) return;
+                if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
+                if (cancelled) return;
+                try {
+                    await apiFetch('/payments/subscription/sync', { method: 'POST' });
+                    if (!cancelled) await refreshBusinessInfo();
+                    return;
+                } catch {
+                    /* Paystack may not have created the SUB_ yet */
+                }
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
     }, [businessInfo, premium, refreshBusinessInfo]);
 
     const handleCancel = async () => {
@@ -113,7 +127,7 @@ export function PlanBillingSettingsScreen({ navigation }) {
                     {canCancelAutoRenewal ? (
                         <View style={styles.cancelBlock}>
                             <Text style={styles.mutedText}>
-                                Auto-renewal is on. Cancel anytime — you keep Premium until the end of your billing period.
+                                Auto-renewal is on. Cancel anytime. You keep Premium until the end of your billing period.
                             </Text>
                             <Button
                                 title="Cancel auto-renewal"

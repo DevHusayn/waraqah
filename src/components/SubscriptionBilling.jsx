@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { usePaystackReturnSync } from '../hooks/usePaystackReturnSync';
 import { setPendingPaymentReference } from '../utils/pendingPayment';
 import { Link } from 'react-router-dom';
@@ -29,17 +29,31 @@ export default function SubscriptionBilling() {
     const renewsAt = businessInfo.premiumUntil || businessInfo.subscriptionRenews;
     const billingInterval = businessInfo.billingInterval || 'monthly';
     const isMonthly = billingInterval === 'monthly';
-    const syncAttemptedRef = useRef(false);
 
     useEffect(() => {
-        if (!premium || hasSubscription || syncAttemptedRef.current) return;
-        syncAttemptedRef.current = true;
+        if (!premium || hasSubscription) return undefined;
 
-        apiFetch('/payments/subscription/sync', { method: 'POST' })
-            .then(() => refreshBusinessInfo())
-            .catch(() => {
-                syncAttemptedRef.current = false;
-            });
+        let cancelled = false;
+        const delays = [0, 2000, 5000];
+
+        (async () => {
+            for (const wait of delays) {
+                if (cancelled) return;
+                if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
+                if (cancelled) return;
+                try {
+                    await apiFetch('/payments/subscription/sync', { method: 'POST' });
+                    if (!cancelled) await refreshBusinessInfo();
+                    return;
+                } catch {
+                    /* Paystack may not have created the SUB_ yet */
+                }
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
     }, [premium, hasSubscription, refreshBusinessInfo]);
 
     const handleCancel = async () => {
@@ -150,7 +164,7 @@ export default function SubscriptionBilling() {
             {canCancelAutoRenewal && (
                 <div className="pt-3 mt-1 border-t border-border space-y-2">
                     <p className="text-sm text-foreground-muted">
-                        Auto-renewal is on. Cancel anytime — you keep Premium until the end of your billing period.
+                        Auto-renewal is on. Cancel anytime. You keep Premium until the end of your billing period.
                     </p>
                     <button
                         type="button"

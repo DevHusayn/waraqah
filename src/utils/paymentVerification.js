@@ -1,8 +1,8 @@
 import { apiFetch } from './api';
 import { isPremiumUser } from './premium';
 
-/** Delays before retries 2–5: 1s, 2s, 4s, 8s */
-export const POLL_DELAYS_MS = [1000, 2000, 4000, 8000];
+/** Delays before retries 2–5 after a fast local-plan check */
+export const POLL_DELAYS_MS = [400, 800, 1600, 3200];
 export const MAX_POLL_ATTEMPTS = POLL_DELAYS_MS.length + 1;
 
 const PROCESSING_MESSAGE =
@@ -93,14 +93,14 @@ export async function pollSubscriptionStatus({
         }
 
         try {
+            if (await checkDbSubscriptionActive(refreshBusinessInfo)) {
+                return successResult();
+            }
             if (reference && (attempt === 1 || attempt === MAX_POLL_ATTEMPTS)) {
                 const verified = await tryVerifyWithPaystack(reference, setBusinessInfo, refreshBusinessInfo);
                 if (verified) {
                     return successResult();
                 }
-            }
-            if (await checkDbSubscriptionActive(refreshBusinessInfo)) {
-                return successResult();
             }
         } catch {
             /* transient errors — keep polling until ceiling */
@@ -122,14 +122,14 @@ export async function checkSubscriptionStatusManual({
     }
 
     try {
+        if (await checkDbSubscriptionActive(refreshBusinessInfo)) {
+            return successResult();
+        }
         if (reference) {
             const verified = await tryVerifyWithPaystack(reference, setBusinessInfo, refreshBusinessInfo);
             if (verified) {
                 return successResult();
             }
-        }
-        if (await checkDbSubscriptionActive(refreshBusinessInfo)) {
-            return successResult();
         }
     } catch {
         /* treat as still processing */
