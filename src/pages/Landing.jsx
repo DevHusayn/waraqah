@@ -452,82 +452,37 @@ export default function Landing() {
                 </div>
             </section>
 
-            <footer className="bg-brand text-white">
-                <div className="mx-auto max-w-6xl px-4 sm:px-6 py-14">
-                    <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-                        <div>
-                            <WaraqahLogo size="sm" inverted iconStyle="solid" />
-                            <p className="mt-3 text-sm text-white/80 leading-relaxed">{APP_TAGLINE}</p>
-                        </div>
-                        <nav aria-label="Product">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-white/70">Product</p>
-                            <ul className="mt-3 space-y-2 text-sm">
-                                <li>
-                                    <a href="#top" className="text-white/85 hover:text-white transition-colors">
-                                        Home
+            <footer className="py-10 border-t border-border bg-surface">
+                <div className="mx-auto max-w-6xl px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-foreground-muted">
+                    <WaraqahLogo size="sm" iconStyle="solid" />
+                    <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
+                        <nav className="flex items-center gap-4" aria-label="Social">
+                            {APP_SOCIAL_LINKS.map(({ id, label, url }) => {
+                                const Icon = SOCIAL_ICONS[id];
+                                return (
+                                    <a
+                                        key={id}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        aria-label={label}
+                                        className="inline-flex items-center hover:text-foreground transition-colors"
+                                    >
+                                        {Icon ? <Icon className="h-5 w-5" aria-hidden /> : null}
                                     </a>
-                                </li>
-                                <li>
-                                    <a href="#pricing" className="text-white/85 hover:text-white transition-colors">
-                                        Pricing
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="#faq" className="text-white/85 hover:text-white transition-colors">
-                                        FAQ
-                                    </a>
-                                </li>
-                                <li>
-                                    <Link to={AUTH_REGISTER_PATH} className="text-white/85 hover:text-white transition-colors">
-                                        Get started
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to={AUTH_LOGIN_PATH} className="text-white/85 hover:text-white transition-colors">
-                                        Log in
-                                    </Link>
-                                </li>
-                            </ul>
+                                );
+                            })}
                         </nav>
-                        <nav aria-label="Legal">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-white/70">Legal</p>
-                            <ul className="mt-3 space-y-2 text-sm">
-                                <li>
-                                    <Link to={TERMS_PATH} className="text-white/85 hover:text-white transition-colors">
-                                        Terms
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to={PRIVACY_PATH} className="text-white/85 hover:text-white transition-colors">
-                                        Privacy
-                                    </Link>
-                                </li>
-                            </ul>
+                        <nav className="flex items-center gap-4" aria-label="Legal">
+                            <Link to={TERMS_PATH} className="hover:text-foreground transition-colors">
+                                Terms
+                            </Link>
+                            <Link to={PRIVACY_PATH} className="hover:text-foreground transition-colors">
+                                Privacy
+                            </Link>
                         </nav>
-                        <nav aria-label="Social">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-white/70">Follow us</p>
-                            <div className="mt-3 flex flex-wrap items-center gap-3">
-                                {APP_SOCIAL_LINKS.map(({ id, label, url }) => {
-                                    const Icon = SOCIAL_ICONS[id];
-                                    return (
-                                        <a
-                                            key={id}
-                                            href={url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            aria-label={label}
-                                            className="inline-flex items-center text-white/85 hover:text-white transition-colors"
-                                        >
-                                            {Icon ? <Icon className="h-5 w-5" aria-hidden /> : null}
-                                        </a>
-                                    );
-                                })}
-                            </div>
-                        </nav>
+                        <p>© {new Date().getFullYear()} {APP_NAME}. {APP_TAGLINE}</p>
                     </div>
-                    <p className="mt-10 pt-6 border-t border-white/20 text-sm text-white/70">
-                        © {new Date().getFullYear()} {APP_NAME}. {APP_TAGLINE}
-                    </p>
                 </div>
             </footer>
         </div>
