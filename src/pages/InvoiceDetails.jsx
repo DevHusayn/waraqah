@@ -618,7 +618,10 @@ const InvoiceDetails = () => {
     const handlePrintPdf = async (mode) => {
         try {
             const cached = await getPdfForMode(mode);
-            await printPdfBlob(cached.blob);
+            const result = await printPdfBlob(cached.blob, cached.filename);
+            if (result?.method === 'download') {
+                showToast('PDF downloaded. Open it to print.', 'success');
+            }
         } catch (err) {
             setAlert({ open: true, message: err.message || 'Failed to print PDF.' });
         }

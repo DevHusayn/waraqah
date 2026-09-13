@@ -12,7 +12,7 @@ import {
     parseStatementMonth,
 } from '../utils/monthlyStatement';
 import { generateMonthlyStatementPdf, statusLabel } from '../utils/monthlyStatementPdf';
-import ReportStatGrid, { ReportStatCell, ReportStatFooter } from '../components/ReportStatGrid';
+import ReportStatGrid, { ReportStatCell } from '../components/ReportStatGrid';
 import MonthPickerField from '../components/MonthPickerField';
 import PaginationBar from '../components/PaginationBar';
 import { useClientPagedList } from '../hooks/useClientPagedList';
@@ -188,18 +188,7 @@ export default function MonthlyStatement() {
                 <StatementContentSkeleton variant="statement" />
             ) : (
                 <div>
-                    <ReportStatGrid
-                        columns="grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
-                        footer={
-                            <ReportStatFooter
-                                title="Total billed"
-                                value={formatCurrency(statement.totals.total)}
-                                titleClassName="text-amber-800 font-semibold"
-                                valueClassName="font-bold"
-                                className="bg-amber-50/80"
-                            />
-                        }
-                    >
+                    <ReportStatGrid columns="grid-cols-2 sm:grid-cols-3">
                         {STATUS_COLS.map((status) => (
                             <ReportStatCell
                                 key={status}
@@ -208,6 +197,13 @@ export default function MonthlyStatement() {
                                 titleClassName="uppercase tracking-wide"
                             />
                         ))}
+                        <ReportStatCell
+                            title="Total billed"
+                            value={formatCurrency(statement.totals.total)}
+                            titleClassName="uppercase tracking-wide text-amber-800 font-semibold"
+                            valueClassName="font-bold"
+                            className="bg-amber-50/80"
+                        />
                     </ReportStatGrid>
 
                     <div className="card overflow-hidden !p-0">

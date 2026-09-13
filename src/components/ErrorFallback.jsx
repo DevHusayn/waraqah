@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import AppErrorScreen from './AppErrorScreen';
-import { classifyError, isChunkLoadError } from '../errors/classifyError';
+import { classifyError } from '../errors/classifyError';
 import { ERROR_TYPES } from '../errors/errorStates';
 import { queryClient } from '../lib/queryClient';
 
@@ -23,13 +23,13 @@ export default function ErrorFallback({ error, onReset, errorType }) {
     const type = errorType || classifyError(error, { isOnline });
 
     const handleTryAgain = useCallback(() => {
-        if (isChunkLoadError(error)) {
-            window.location.reload();
+        if (type === ERROR_TYPES.OFFLINE) {
+            queryClient.resetQueries();
+            onReset?.();
             return;
         }
-        queryClient.resetQueries();
-        onReset?.();
-    }, [error, onReset]);
+        window.location.reload();
+    }, [type, onReset]);
 
     // Leave the offline screen automatically when connectivity returns.
     useEffect(() => {

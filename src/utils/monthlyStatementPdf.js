@@ -213,7 +213,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
     const blob = doc.output('blob');
 
     if (print) {
-        await printPdfBlob(blob);
+        await printPdfBlob(blob, fileName);
     } else {
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement('a');

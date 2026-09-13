@@ -873,4 +873,9 @@ html.pwa-cold-start #root {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
+
+    .invoice-document-preview {
+        overflow: visible !important;
+        box-shadow: none !important;
+    }
 }

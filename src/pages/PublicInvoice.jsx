@@ -3,10 +3,8 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Download, Printer } from 'lucide-react';
 import { publicFetch } from '../utils/publicApi';
 import { getDownloadLabel } from '../utils/receiptHelpers';
-import {
-    downloadPublicInvoicePdf,
-    printPublicInvoicePdf,
-} from '../utils/publicInvoicePdf';
+import { downloadPublicInvoicePdf } from '../utils/publicInvoicePdf';
+import { printCurrentDocument } from '../utils/shareInvoicePdf';
 import InvoiceDocumentPreview from '../components/InvoiceDocumentPreview';
 import WaraqahLogo from '../components/WaraqahLogo';
 import Spinner from '../components/Spinner';
@@ -69,18 +67,14 @@ export default function PublicInvoice() {
         }
     }, [invoice, client, business, showReceipt, downloadBusy]);
 
-    const handlePrintPdf = useCallback(async () => {
-        if (!invoice || !client || !business || downloadBusy) return;
-        setDownloadBusy(true);
+    const handlePrint = useCallback(() => {
         setPdfError('');
         try {
-            await printPublicInvoicePdf(invoice, client, business, showReceipt);
-        } catch (err) {
-            setPdfError(err.message || 'Failed to print PDF.');
-        } finally {
-            setDownloadBusy(false);
+            printCurrentDocument();
+        } catch {
+            setPdfError('Printing is not available in this browser. Download the PDF instead.');
         }
-    }, [invoice, client, business, showReceipt, downloadBusy]);
+    }, []);
 
     if (loading) {
         return (
@@ -114,7 +108,7 @@ export default function PublicInvoice() {
                     <h1 className="text-lg font-semibold text-foreground mt-1">{docTitle}</h1>
                 </div>
 
-                <div className="card !p-0 overflow-hidden shadow-card border border-border print:shadow-none print:border-0 print:rounded-none">
+                <div className="card !p-0 overflow-hidden shadow-card border border-border print:overflow-visible print:shadow-none print:border-0 print:rounded-none">
                     <InvoiceDocumentPreview
                         invoice={invoice}
                         client={client}
@@ -141,7 +135,7 @@ export default function PublicInvoice() {
                     </button>
                     <button
                         type="button"
-                        onClick={handlePrintPdf}
+                        onClick={handlePrint}
                         disabled={downloadBusy}
                         className="btn-secondary w-full text-sm py-2.5 px-4 gap-2 min-h-[44px]"
                     >

@@ -19,7 +19,12 @@ initMonitoring()
 initAnalytics()
 initPwaSessionLifecycle()
 
-registerSW({ immediate: true })
+registerSW({
+    immediate: true,
+    onNeedRefresh() {
+        window.location.reload()
+    },
+})
 
 const showSplash = shouldShowPwaSplash()
 

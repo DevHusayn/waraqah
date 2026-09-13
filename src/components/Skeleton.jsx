@@ -317,11 +317,7 @@ export function StatementContentSkeleton({ variant = 'profit' }) {
 
     return (
         <>
-            <ReportStatGridSkeleton
-                count={5}
-                columns="grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
-                footer
-            />
+            <ReportStatGridSkeleton count={6} columns="grid-cols-2 sm:grid-cols-3" />
             <div className="card overflow-hidden !p-0">
                 <div className="px-6 py-4 border-b border-border bg-surface-muted/80 space-y-2">
                     <Skeleton className="h-5 w-36" />

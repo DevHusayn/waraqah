@@ -49,13 +49,13 @@ export async function downloadPublicInvoicePdfBundle(bundle, { showReceipt = fal
 }
 
 export async function printPublicInvoicePdf(invoice, client, businessInfo, showReceipt) {
-    const { blob } = await generatePublicInvoicePdf(invoice, client, businessInfo, showReceipt);
-    await printPdfBlob(blob);
+    const { blob, filename } = await generatePublicInvoicePdf(invoice, client, businessInfo, showReceipt);
+    return printPdfBlob(blob, filename);
 }
 
 export async function printPublicInvoicePdfBundle(bundle) {
     if (!bundle?.blob) {
         throw new Error('PDF is not ready yet.');
     }
-    await printPdfBlob(bundle.blob);
+    return printPdfBlob(bundle.blob, bundle.filename);
 }

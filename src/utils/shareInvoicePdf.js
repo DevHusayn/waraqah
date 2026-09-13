@@ -59,38 +59,90 @@ export function downloadPdfBlob(blob, filename, { documentType } = {}) {
     }
 }
 
-/** Open PDF in a new tab and trigger the browser print dialog. */
-export function printPdfBlob(blob) {
-    const url = URL.createObjectURL(blob);
-    const printWindow = window.open(url, '_blank');
+function isMobileViewport() {
+    if (typeof window === 'undefined') return false;
+    const narrow = window.matchMedia('(max-width: 768px)').matches;
+    const mobileUa = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    return narrow || mobileUa;
+}
 
-    if (!printWindow) {
-        URL.revokeObjectURL(url);
-        return Promise.reject(new Error('Allow pop-ups to print this document.'));
+/** Print the current page (HTML preview). Reliable on mobile and email-link browsers. */
+export function printCurrentDocument() {
+    window.print();
+}
+
+/**
+ * Print a generated PDF.
+ * Desktop: hidden iframe, wait for load, then print.
+ * Mobile: download instead — blob tabs / auto-print are unreliable on phones.
+ */
+export function printPdfBlob(blob, filename = 'document.pdf') {
+    if (isMobileViewport()) {
+        downloadPdfBlob(blob, filename);
+        return Promise.resolve({ method: 'download' });
     }
 
-    let printed = false;
-    const cleanup = () => {
-        window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    };
+    return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(blob);
+        const iframe = document.createElement('iframe');
+        iframe.setAttribute('aria-hidden', 'true');
+        iframe.setAttribute('title', 'Print preview');
+        iframe.style.cssText = [
+            'position:fixed',
+            'top:0',
+            'left:0',
+            'width:100%',
+            'height:100%',
+            'border:0',
+            'opacity:0',
+            'pointer-events:none',
+            'z-index:-1',
+        ].join(';');
+        iframe.src = url;
 
-    const runPrint = () => {
-        if (printed) return;
-        printed = true;
-        try {
-            printWindow.focus();
-            printWindow.print();
-        } catch {
-            // PDF opened in a new tab — user can print from the browser viewer.
-        } finally {
+        let settled = false;
+        const cleanup = () => {
+            window.setTimeout(() => {
+                iframe.remove();
+                URL.revokeObjectURL(url);
+            }, 60_000);
+        };
+
+        const fail = (message) => {
+            if (settled) return;
+            settled = true;
             cleanup();
-        }
-    };
+            reject(new Error(message));
+        };
 
-    printWindow.addEventListener('load', runPrint, { once: true });
-    window.setTimeout(runPrint, 1000);
+        const runPrint = () => {
+            if (settled) return;
+            settled = true;
+            try {
+                const frameWindow = iframe.contentWindow;
+                if (!frameWindow) {
+                    throw new Error('Could not open the print preview.');
+                }
+                frameWindow.focus();
+                frameWindow.print();
+                resolve({ method: 'print' });
+            } catch {
+                fail('Failed to print PDF.');
+                return;
+            }
+            cleanup();
+        };
 
-    return Promise.resolve();
+        iframe.addEventListener('load', () => {
+            window.setTimeout(runPrint, 500);
+        }, { once: true });
+        iframe.addEventListener('error', () => {
+            fail('Failed to load the PDF for printing.');
+        }, { once: true });
+
+        document.body.appendChild(iframe);
+        window.setTimeout(runPrint, 2500);
+    });
 }
 
 export async function shareCachedPdfBlob({ blob, filename, message, docNumber, documentType }) {
