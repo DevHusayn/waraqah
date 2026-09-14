@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePaystackReturnSync } from '../hooks/usePaystackReturnSync';
 import { setPendingPaymentReference } from '../utils/pendingPayment';
 import { Link } from 'react-router-dom';
@@ -29,12 +29,14 @@ export default function SubscriptionBilling() {
     const renewsAt = businessInfo.premiumUntil || businessInfo.subscriptionRenews;
     const billingInterval = businessInfo.billingInterval || 'monthly';
     const isMonthly = billingInterval === 'monthly';
+    const syncAttemptedRef = useRef(false);
 
     useEffect(() => {
-        if (!premium || hasSubscription) return undefined;
+        if (!premium) return undefined;
+        if (hasSubscription && syncAttemptedRef.current) return undefined;
 
         let cancelled = false;
-        const delays = [0, 2000, 5000];
+        const delays = hasSubscription ? [0] : [0, 2000, 5000];
 
         (async () => {
             for (const wait of delays) {
@@ -43,10 +45,11 @@ export default function SubscriptionBilling() {
                 if (cancelled) return;
                 try {
                     await apiFetch('/payments/subscription/sync', { method: 'POST' });
+                    syncAttemptedRef.current = true;
                     if (!cancelled) await refreshBusinessInfo();
                     return;
                 } catch {
-                    /* Paystack may not have created the SUB_ yet */
+                    if (hasSubscription) syncAttemptedRef.current = true;
                 }
             }
         })();

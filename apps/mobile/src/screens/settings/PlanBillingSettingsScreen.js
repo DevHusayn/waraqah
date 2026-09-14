@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
     FREE_PLAN_FEATURES,
@@ -33,6 +33,7 @@ export function PlanBillingSettingsScreen({ navigation }) {
     const { showToast } = useToast();
     const [confirmCancel, setConfirmCancel] = useState(false);
     const [cancelling, setCancelling] = useState(false);
+    const syncAttemptedRef = useRef(false);
 
     const premium = isPremiumUser(businessInfo);
     const features = premium ? PREMIUM_PLAN_FEATURES : FREE_PLAN_FEATURES;
@@ -45,10 +46,12 @@ export function PlanBillingSettingsScreen({ navigation }) {
         : `Billed monthly · ${premiumPriceLabel()}/mo`;
 
     useEffect(() => {
-        if (!premium || hasPaystackSubscription(businessInfo)) return undefined;
+        const hasSubscription = hasPaystackSubscription(businessInfo);
+        if (!premium) return undefined;
+        if (hasSubscription && syncAttemptedRef.current) return undefined;
 
         let cancelled = false;
-        const delays = [0, 2000, 5000];
+        const delays = hasSubscription ? [0] : [0, 2000, 5000];
 
         (async () => {
             for (const wait of delays) {
@@ -57,10 +60,11 @@ export function PlanBillingSettingsScreen({ navigation }) {
                 if (cancelled) return;
                 try {
                     await apiFetch('/payments/subscription/sync', { method: 'POST' });
+                    syncAttemptedRef.current = true;
                     if (!cancelled) await refreshBusinessInfo();
                     return;
                 } catch {
-                    /* Paystack may not have created the SUB_ yet */
+                    if (hasSubscription) syncAttemptedRef.current = true;
                 }
             }
         })();

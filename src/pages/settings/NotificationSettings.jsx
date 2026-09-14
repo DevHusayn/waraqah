@@ -103,8 +103,8 @@ export default function NotificationSettings() {
             await updateBusinessInfo({ lowStockEmailAlerts: !lowStockEmailsEnabled });
             showToast(
                 !lowStockEmailsEnabled
-                    ? 'Daily low-stock email alerts are on.'
-                    : 'Low-stock email alerts turned off.',
+                    ? 'Daily stock email alerts are on.'
+                    : 'Stock email alerts turned off.',
                 'success',
             );
         } catch (err) {
@@ -179,16 +179,17 @@ export default function NotificationSettings() {
                 />
 
                 <NotificationToggle
-                    title="Email me when products are low on stock"
+                    title="Email me when products are low or out of stock"
                     description={
                         'When enabled, Waraqah sends you a daily summary of tracked products that have reached '
-                        + 'their low-stock threshold. Only products with inventory tracking and a threshold set are included. '
-                        + 'You can still see low-stock badges on the Products page anytime.'
+                        + 'their low-stock threshold or have no units on hand. Low-stock items need a threshold set; '
+                        + 'out-of-stock items are any tracked product at zero. '
+                        + 'You can still see stock badges on the Products page anytime.'
                     }
                     statusText={
                         lowStockEmailsEnabled
-                            ? `Daily low-stock alerts are on (at most once every ${LOW_STOCK_EMAIL_COOLDOWN_HOURS} hours).`
-                            : 'Daily low-stock alerts are off.'
+                            ? `Daily stock alerts are on (at most once every ${LOW_STOCK_EMAIL_COOLDOWN_HOURS} hours).`
+                            : 'Daily stock alerts are off.'
                     }
                     enabled={lowStockEmailsEnabled}
                     saving={savingLowStockEmails}
