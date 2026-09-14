@@ -7,6 +7,7 @@ import ClientFormModal, { EMPTY_CLIENT } from '../components/ClientFormModal';
 import PageHeader from '../components/PageHeader';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
@@ -15,9 +16,12 @@ import PaginationBar from '../components/PaginationBar';
 import { usePagedQuery } from '../hooks/usePagedQuery';
 import { useListSummaryQuery } from '../hooks/useListSummaryQuery';
 import { useListMonthFilter } from '../hooks/useListMonthFilter';
+import { usePeriodFilter } from '../hooks/usePeriodFilter';
+import { useClientsTopBuyersQuery } from '../hooks/useSalesRankingQuery';
 import ListMonthToolbarFilter from '../components/ListMonthToolbarFilter';
 import ListExportButton from '../components/ListExportButton';
 import ListSortSelect from '../components/ListSortSelect';
+import TopRankedTable from '../components/TopRankedTable';
 import { ListPageSkeleton, ListSummaryStatsSkeleton } from '../components/Skeleton';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
@@ -43,11 +47,20 @@ const COLUMNS = [
     { key: 'phone', label: 'Phone' },
 ];
 
+const TOP_BUYER_COLUMNS = [
+    { key: 'rank', label: '#' },
+    { key: 'name', label: 'Client' },
+    { key: 'revenue', label: 'Revenue', className: 'text-right' },
+    { key: 'documentCount', label: 'Paid docs', className: 'text-right' },
+];
+
 const mapClient = (c) => ({ ...c, id: c._id || c.id });
 
 const Clients = () => {
     const { addClient, updateClient } = useInvoice();
     const { businessInfo } = useSettings();
+    const { user } = useAuth();
+    const userId = user?.id;
     const { showToast } = useToast();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -78,6 +91,8 @@ const Clients = () => {
         listMaxDate,
     } = useListMonthFilter();
 
+    const rankingPeriod = usePeriodFilter('month');
+
     const fetcher = useCallback(
         ({ page, limit, search, sort, period, startDate, endDate }) =>
             apiFetch(
@@ -95,6 +110,12 @@ const Clients = () => {
     );
 
     const { summary, summaryLoading, refreshSummary } = useListSummaryQuery('clients', summaryYear, summaryMonth);
+
+    const {
+        data: topBuyersData,
+        isPending: topBuyersLoading,
+    } = useClientsTopBuyersQuery(userId, rankingPeriod.queryParams);
+    const topBuyers = topBuyersData?.items || [];
 
     const {
         setPage,
@@ -228,6 +249,33 @@ const Clients = () => {
                 <ListSummaryStatsSkeleton />
             ) : null}
 
+            {showClientStats ? (
+                <TopRankedTable
+                    title="Best buying clients"
+                    columns={TOP_BUYER_COLUMNS}
+                    items={topBuyers}
+                    loading={topBuyersLoading}
+                    emptyTitle="No paid client sales in this period"
+                    emptyDescription="Paid invoices and receipts with a client will appear here."
+                    onRowClick={(item) => navigate(`/clients/${item.id}`)}
+                    nameClassName={REPLAY_MASK.SENSITIVE}
+                    periodFilter={
+                        <ListMonthToolbarFilter
+                            id="clients-top-buyers-period"
+                            periodMode={rankingPeriod.mode}
+                            onPeriodModeChange={rankingPeriod.setPeriodMode}
+                            periodLabel={rankingPeriod.periodLabel}
+                            customDraftStartDate={rankingPeriod.customDraftStartDate}
+                            customDraftEndDate={rankingPeriod.customDraftEndDate}
+                            onCustomDraftRangeChange={rankingPeriod.setCustomDraftRange}
+                            onCustomApply={rankingPeriod.applyCustomRange}
+                            maxDate={rankingPeriod.maxDate}
+                            triggerAriaLabel="Filter best buying clients by period"
+                        />
+                    }
+                />
+            ) : null}
+
             {loading && clients.length === 0 && !search ? (
                 <ListPageSkeleton rows={8} columns={4} withHeader={false} />
             ) : hasNoClientsAtAll ? (
@@ -272,6 +320,7 @@ const Clients = () => {
                         />
                         <ToolbarActions>
                             <ListMonthToolbarFilter
+                                id="clients-list-period"
                                 periodMode={listPeriodMode}
                                 onPeriodModeChange={setListPeriodMode}
                                 periodLabel={listPeriodLabel}
@@ -280,6 +329,7 @@ const Clients = () => {
                                 onCustomDraftRangeChange={setListCustomDraftRange}
                                 onCustomApply={applyListCustomRange}
                                 maxDate={listMaxDate}
+                                triggerAriaLabel="Filter clients by created date"
                             />
                             <ListSortSelect
                                 value={sortBy}

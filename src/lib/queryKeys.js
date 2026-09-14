@@ -22,6 +22,20 @@ export const queryKeys = {
     inventoryStock: (userId, params) => ['inventoryStock', userId, params],
     inventoryMovements: (userId, params) => ['inventoryMovements', userId, params],
     inventorySummary: (userId) => ['inventorySummary', userId],
+    inventoryTopProducts: (userId, period, startDate, endDate) => [
+        'inventoryTopProducts',
+        userId,
+        period ?? null,
+        startDate ?? null,
+        endDate ?? null,
+    ],
+    clientsTopBuyers: (userId, period, startDate, endDate) => [
+        'clientsTopBuyers',
+        userId,
+        period ?? null,
+        startDate ?? null,
+        endDate ?? null,
+    ],
     listSummary: (userId, resource, summaryYear, summaryMonth) => [
         'listSummary',
         userId,
@@ -50,6 +64,7 @@ export const queryKeys = {
 
 export const STALE_TIMES = {
     dashboard: 30_000,
+    rankings: 30_000,
     lists: 2 * 60_000,
     listSummary: 5 * 60_000,
     businessInfo: 5 * 60_000,

@@ -13,8 +13,10 @@ import StockMovementTable from '../components/StockMovementTable';
 import ListMonthToolbarFilter from '../components/ListMonthToolbarFilter';
 import AdaptiveStatValue from '../components/AdaptiveStatValue';
 import { ListPageSkeleton } from '../components/Skeleton';
+import TopRankedTable from '../components/TopRankedTable';
 import { usePagedQuery } from '../hooks/usePagedQuery';
 import { useListMonthFilter } from '../hooks/useListMonthFilter';
+import { useInventoryTopProductsQuery } from '../hooks/useSalesRankingQuery';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
@@ -39,6 +41,13 @@ const STOCK_COLUMNS = [
     { key: 'reorderAt', label: 'Reorder at', className: 'text-right' },
     { key: 'status', label: 'Status' },
     { key: 'stockValue', label: 'Stock value', className: 'text-right' },
+];
+
+const TOP_PRODUCT_COLUMNS = [
+    { key: 'rank', label: '#' },
+    { key: 'name', label: 'Product' },
+    { key: 'qtySold', label: 'Qty sold', className: 'text-right' },
+    { key: 'revenue', label: 'Revenue', className: 'text-right' },
 ];
 
 const mapStockRow = (entry) => ({
@@ -170,6 +179,12 @@ export default function Inventory() {
         staleTime: STALE_TIMES.lists,
     });
 
+    const {
+        data: topProductsData,
+        isPending: topProductsLoading,
+    } = useInventoryTopProductsQuery(userId, listQueryParams, view === 'stock');
+    const topProducts = topProductsData?.items || [];
+
     const stockRows = stockData.map(mapStockRow);
     const movementRows = movementsData.map(mapMovementRow);
 
@@ -214,6 +229,30 @@ export default function Inventory() {
             {view === 'stock' ? (
                 <>
                     <InventorySummaryCards summary={summary} loading={summaryLoading} />
+
+                    <TopRankedTable
+                        title="Best selling products"
+                        columns={TOP_PRODUCT_COLUMNS}
+                        items={topProducts}
+                        loading={topProductsLoading}
+                        emptyTitle="No paid catalog sales in this period"
+                        emptyDescription="Paid invoices and receipts with catalog products will appear here."
+                        onRowClick={(item) => navigate(`/products/${item.id}`)}
+                        periodFilter={
+                            <ListMonthToolbarFilter
+                                id="inventory-top-products-period"
+                                periodMode={listPeriodMode}
+                                onPeriodModeChange={setListPeriodMode}
+                                periodLabel={listPeriodLabel}
+                                customDraftStartDate={listCustomDraftStartDate}
+                                customDraftEndDate={listCustomDraftEndDate}
+                                onCustomDraftRangeChange={setListCustomDraftRange}
+                                onCustomApply={applyListCustomRange}
+                                maxDate={listMaxDate}
+                                triggerAriaLabel="Filter best selling products by period"
+                            />
+                        }
+                    />
 
                     <FilterTabs
                         tabs={stockTabs}
@@ -322,6 +361,7 @@ export default function Inventory() {
                         />
                         <ToolbarActions>
                             <ListMonthToolbarFilter
+                                id="inventory-movements-period"
                                 periodMode={listPeriodMode}
                                 onPeriodModeChange={setListPeriodMode}
                                 periodLabel={listPeriodLabel}
@@ -330,6 +370,7 @@ export default function Inventory() {
                                 onCustomDraftRangeChange={setListCustomDraftRange}
                                 onCustomApply={applyListCustomRange}
                                 maxDate={listMaxDate}
+                                triggerAriaLabel="Filter stock movements by period"
                             />
                         </ToolbarActions>
                     </Toolbar>

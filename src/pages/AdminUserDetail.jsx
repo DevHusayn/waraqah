@@ -12,7 +12,6 @@ import {
     Trash2,
     Unlock,
     RotateCcw,
-    FileText,
     Users,
     Receipt,
     Activity,
@@ -86,8 +85,6 @@ const ACTIVITY_ICONS = {
     subscription_payment_failed: AlertTriangle,
     payment_success: Receipt,
     payment_failed: AlertTriangle,
-    invoice_created: FileText,
-    quotation_created: FileText,
     admin_email_sent: Mail,
 };
 
