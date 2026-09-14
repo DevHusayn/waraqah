@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { getCurrencySymbol } from './currency';
 import { drawPdfGeometricBackground } from './pdfBackground';
 import { PAGE_H } from './pdfLogo';
-import { printPdfBlob } from './shareInvoicePdf';
+import { closePdfPrintTab, preparePdfPrintTab, printPdfBlob } from './shareInvoicePdf';
 import { ANALYTICS_EVENTS, PDF_ACTIONS, PDF_DOCUMENT_TYPES } from '@waraqah/shared';
 import { captureEvent } from '../monitoring/posthog';
 
@@ -41,10 +41,12 @@ function applyColumnAlignment(data, alignments) {
 /**
  * @param {ReturnType<import('./monthlyStatement').buildMonthlyStatement>} statement
  * @param {object} businessInfo
- * @param {{ print?: boolean }} options
+ * @param {{ print?: boolean, printWindow?: Window | null }} options
  */
 export async function generateMonthlyStatementPdf(statement, businessInfo, options = {}) {
     const { print = false } = options;
+    const printWindow = print ? (options.printWindow ?? preparePdfPrintTab()) : null;
+    try {
     const doc = new jsPDF();
     const primaryColor = hexToRgb(businessInfo?.brandColor || '#16A34A');
     const textColor = [31, 41, 55];
@@ -213,7 +215,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
     const blob = doc.output('blob');
 
     if (print) {
-        await printPdfBlob(blob, fileName);
+        await printPdfBlob(blob, fileName, { printWindow });
     } else {
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement('a');
@@ -225,6 +227,10 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
             document_type: PDF_DOCUMENT_TYPES.STATEMENT,
             action: PDF_ACTIONS.DOWNLOAD,
         });
+    }
+    } catch (err) {
+        closePdfPrintTab(printWindow);
+        throw err;
     }
 }
 

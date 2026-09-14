@@ -32,7 +32,7 @@ import ClientFormModal, { EMPTY_CLIENT } from '../components/ClientFormModal';
 import FormSection from '../components/FormSection';
 import StatusBadge from '../components/StatusBadge';
 import ActionMenu from '../components/ActionMenu';
-import { shareInvoicePdf, getShareFallbackHint, downloadPdfBlob, printPdfBlob } from '../utils/shareInvoicePdf';
+import { shareInvoicePdf, getShareFallbackHint, downloadPdfBlob, printPdfFromSource } from '../utils/shareInvoicePdf';
 import { formatRecurringSummary, PDF_DOCUMENT_TYPES } from '@waraqah/shared';
 import { getCachedPdf, setCachedPdf, clearCachedPdf } from '../utils/pdfCache';
 import { formatCurrency } from '../utils/currency';
@@ -617,8 +617,7 @@ const InvoiceDetails = () => {
 
     const handlePrintPdf = async (mode) => {
         try {
-            const cached = await getPdfForMode(mode);
-            const result = await printPdfBlob(cached.blob, cached.filename);
+            const result = await printPdfFromSource(() => getPdfForMode(mode));
             if (result?.method === 'download') {
                 showToast('PDF downloaded. Open it to print.', 'success');
             }

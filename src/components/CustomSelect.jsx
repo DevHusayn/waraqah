@@ -48,7 +48,7 @@ export default function CustomSelect({
                 aria-expanded={open}
                 aria-label={ariaLabel}
                 aria-invalid={error}
-                className={`input-field relative flex w-full items-center justify-between gap-2 text-left ${
+                className={`input-field relative flex h-[38px] w-full items-center justify-between gap-2 py-0 text-left ${
                     leadingIcon ? 'pl-9' : ''
                 } ${!selected ? 'text-foreground-muted/70' : 'text-foreground'} ${
                     error ? 'input-field--error' : ''

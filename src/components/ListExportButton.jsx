@@ -37,7 +37,7 @@ export default function ListExportButton({
             disabled={disabled || loading}
             title="Export all rows matching your current filters"
             aria-label="Export filtered list as CSV"
-            className={`inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-md border border-border/80 bg-surface text-sm font-medium text-foreground-muted transition-colors hover:bg-surface-muted disabled:opacity-50 sm:h-auto sm:w-auto sm:min-w-[108px] sm:gap-1.5 sm:rounded-xl sm:border-border sm:px-3 sm:py-2 ${className}`.trim()}
+            className={`inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-md border border-border/80 bg-surface text-sm font-medium text-foreground-muted shadow-soft transition-colors hover:bg-surface-muted disabled:opacity-50 sm:h-[38px] sm:w-auto sm:min-w-[108px] sm:gap-1.5 sm:px-3 ${className}`.trim()}
         >
             {loading ? <Spinner size="sm" inline /> : <Download size={16} aria-hidden />}
             <span className="hidden sm:inline">Export</span>

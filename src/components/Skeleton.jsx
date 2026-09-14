@@ -29,9 +29,17 @@ export function PageHeaderSkeleton({ withAction = true, withEyebrow = false }) {
 
 export function ToolbarSkeleton({ withSort = false }) {
     return (
-        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <Skeleton className="h-9 w-full sm:max-w-xs rounded-lg" />
-            {withSort ? <Skeleton className="h-9 w-full sm:w-44 rounded-lg" /> : null}
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+                <Skeleton className="h-[38px] w-full rounded-md" />
+                <Skeleton className="h-[38px] w-[38px] shrink-0 rounded-md sm:w-[108px]" />
+            </div>
+            {withSort ? (
+                <div className="flex w-full gap-2 sm:w-auto">
+                    <Skeleton className="h-[38px] min-w-0 flex-1 rounded-md sm:w-36 sm:flex-none" />
+                    <Skeleton className="h-[38px] min-w-0 flex-1 rounded-md sm:w-44 sm:flex-none" />
+                </div>
+            ) : null}
         </div>
     );
 }
@@ -184,11 +192,11 @@ export function AdminTableSkeleton() {
     return (
         <div className="max-w-7xl mx-auto">
             <PageHeaderSkeleton withAction={false} />
-            <StatsCardsSkeleton count={3} />
+            <StatsCardsSkeleton count={6} className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6" />
             <div className="card !p-0 overflow-hidden">
-                <div className="px-4 sm:px-6 py-4 border-b border-border/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-9 w-full sm:w-72 rounded-lg" />
+                <div className="px-4 sm:px-6 py-4 border-b border-border/50 flex items-center gap-2">
+                    <Skeleton className="h-[38px] w-full sm:w-72 rounded-md" />
+                    <Skeleton className="h-[38px] w-[38px] shrink-0 rounded-md sm:w-[108px]" />
                 </div>
                 <TableSkeleton rows={8} columns={7} className="!border-0 !shadow-none !rounded-none" />
             </div>

@@ -1,7 +1,7 @@
 export default function FilterTabs({ tabs, value, onChange, className = '' }) {
     return (
         <div className={`border-b border-border/50 overflow-x-auto scroll-x-touch ${className}`.trim()}>
-            <div className="inline-flex min-w-min gap-5">
+            <div className="inline-flex min-w-min gap-4 sm:gap-5">
                 {tabs.map((tab) => {
                     const active = value === tab.value;
                     return (

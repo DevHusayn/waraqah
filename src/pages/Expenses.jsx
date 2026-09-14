@@ -33,18 +33,13 @@ import { invalidateExpenseQueries } from '../lib/queryClient';
 import ListSortSelect from '../components/ListSortSelect';
 
 const FILTER_ALL = 'all';
-const FILTER_RECURRING = 'recurring';
-
-const TYPE_FILTER_OPTIONS = [
-    { value: FILTER_ALL, label: 'All expenses' },
-    { value: FILTER_RECURRING, label: 'Recurring' },
-];
 
 const SORT_OPTIONS = [
     { value: 'newest', label: 'Newest first' },
     { value: 'oldest', label: 'Oldest first' },
     { value: 'amountHigh', label: 'Amount (high to low)' },
     { value: 'amountLow', label: 'Amount (low to high)' },
+    { value: 'recurring', label: 'Recurring' },
 ];
 
 const COLUMNS = [
@@ -91,17 +86,18 @@ export default function Expenses() {
     const [modalInitialData, setModalInitialData] = useState(EMPTY_EXPENSE);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [categoryFilter, setCategoryFilter] = useState(FILTER_ALL);
-    const [typeFilter, setTypeFilter] = useState(FILTER_ALL);
     const [sortBy, setSortBy] = useState('newest');
+    const recurringOnly = sortBy === 'recurring';
+    const sortParam = recurringOnly ? 'newest' : sortBy;
 
     const listParams = useMemo(() => {
-        const next = { ...queryParams, sort: sortBy };
-        if (typeFilter === FILTER_RECURRING) next.recurring = true;
+        const next = { ...queryParams, sort: sortParam };
+        if (recurringOnly) next.recurring = true;
         if (categoryFilter && categoryFilter !== FILTER_ALL) next.category = categoryFilter;
         return next;
-    }, [queryParams, categoryFilter, typeFilter, sortBy]);
+    }, [queryParams, categoryFilter, recurringOnly, sortParam]);
 
-    const hasListFilters = categoryFilter !== FILTER_ALL || typeFilter !== FILTER_ALL;
+    const hasListFilters = categoryFilter !== FILTER_ALL || recurringOnly;
 
     const fetcher = useCallback(
         ({ page, limit, search, sort, period, startDate, endDate, recurring, category }) =>
@@ -238,7 +234,7 @@ export default function Expenses() {
                 }`}
                 aria-label="Expense summary"
             >
-                <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6 sm:p-5">
+                <div className="flex items-start justify-between gap-3 p-4 sm:gap-6 sm:p-5">
                     <div className="min-w-0">
                         <p className="text-xs font-medium text-foreground-muted">Total expenses</p>
                         <AdaptiveStatValue
@@ -258,21 +254,23 @@ export default function Expenses() {
                             )}
                         </div>
                     </div>
-                    <MonthPickerField
-                        variant="compact"
-                        portal
-                        showPeriodPresets
-                        periodMode={mode}
-                        isThisMonth={isCurrentPeriod}
-                        onPeriodModeChange={setPeriodMode}
-                        displayLabel={periodLabel}
-                        maxDate={maxDate}
-                        customDraftStartDate={customDraftStartDate}
-                        customDraftEndDate={customDraftEndDate}
-                        onCustomDraftRangeChange={setCustomDraftRange}
-                        onCustomApply={applyCustomRange}
-                        triggerAriaLabel={`Change period from ${periodLabel}`}
-                    />
+                    <div className="shrink-0">
+                        <MonthPickerField
+                            variant="compact"
+                            portal
+                            showPeriodPresets
+                            periodMode={mode}
+                            isThisMonth={isCurrentPeriod}
+                            onPeriodModeChange={setPeriodMode}
+                            displayLabel={periodLabel}
+                            maxDate={maxDate}
+                            customDraftStartDate={customDraftStartDate}
+                            customDraftEndDate={customDraftEndDate}
+                            onCustomDraftRangeChange={setCustomDraftRange}
+                            onCustomApply={applyCustomRange}
+                            triggerAriaLabel={`Change period from ${periodLabel}`}
+                        />
+                    </div>
                 </div>
 
                 {topCategories.length ? (
@@ -319,7 +317,7 @@ export default function Expenses() {
                     aria-label="Search expenses"
                 />
                 <ToolbarActions>
-                    <div className="min-w-0 flex-1 sm:w-48 sm:flex-none">
+                    <div className="min-w-0 sm:w-48 sm:flex-none">
                         <CustomSelect
                             value={categoryFilter}
                             onChange={(next) => {
@@ -332,19 +330,6 @@ export default function Expenses() {
                             aria-label="Filter expenses by category"
                         />
                     </div>
-                    <div className="min-w-0 flex-1 sm:w-44 sm:flex-none">
-                        <CustomSelect
-                            value={typeFilter}
-                            onChange={(next) => {
-                                setTypeFilter(next);
-                                setPage(1);
-                            }}
-                            options={TYPE_FILTER_OPTIONS}
-                            placeholder="Type"
-                            leadingIcon={<Repeat size={14} />}
-                            aria-label="Filter recurring expenses"
-                        />
-                    </div>
                     <ListSortSelect
                         value={sortBy}
                         onChange={(next) => {
@@ -352,7 +337,7 @@ export default function Expenses() {
                             setPage(1);
                         }}
                         options={SORT_OPTIONS}
-                        ariaLabel="Sort expenses"
+                        ariaLabel="Sort or filter expenses"
                     />
                 </ToolbarActions>
             </Toolbar>
@@ -371,22 +356,26 @@ export default function Expenses() {
                     title={
                         search
                             ? 'No expenses found'
-                            : hasListFilters
-                              ? 'No matching expenses'
-                              : mode === 'month'
-                                ? 'No expenses this month'
-                                : mode === 'last-month'
-                                  ? 'No expenses last month'
-                                  : mode === 'last-week'
-                                    ? 'No expenses last week'
-                                    : 'No expenses in this period'
+                            : recurringOnly
+                              ? 'No recurring expenses'
+                              : hasListFilters
+                                ? 'No matching expenses'
+                                : mode === 'month'
+                                  ? 'No expenses this month'
+                                  : mode === 'last-month'
+                                    ? 'No expenses last month'
+                                    : mode === 'last-week'
+                                      ? 'No expenses last week'
+                                      : 'No expenses in this period'
                     }
                     description={
                         search
                             ? 'Try a different search term.'
-                            : hasListFilters
-                              ? 'Try a different filter or add an expense in this group.'
-                            : 'Add rent, salaries, transport, and other running costs.'
+                            : recurringOnly
+                              ? 'None of your expenses are set to repeat.'
+                              : hasListFilters
+                                ? 'Try a different filter or add an expense in this group.'
+                                : 'Add rent, salaries, transport, and other running costs.'
                     }
                     action={
                         !search ? (

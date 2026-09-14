@@ -2,7 +2,7 @@
  * Generate invoice/receipt PDFs on the public invoice page using the same template as the app.
  */
 
-import { downloadPdfBlob, printPdfBlob } from './shareInvoicePdf';
+import { downloadPdfBlob, printPdfBlob, printPdfFromSource } from './shareInvoicePdf';
 import { PDF_DOCUMENT_TYPES } from '@waraqah/shared';
 
 export { printPdfBlob };
@@ -49,13 +49,12 @@ export async function downloadPublicInvoicePdfBundle(bundle, { showReceipt = fal
 }
 
 export async function printPublicInvoicePdf(invoice, client, businessInfo, showReceipt) {
-    const { blob, filename } = await generatePublicInvoicePdf(invoice, client, businessInfo, showReceipt);
-    return printPdfBlob(blob, filename);
+    return printPdfFromSource(() => generatePublicInvoicePdf(invoice, client, businessInfo, showReceipt));
 }
 
 export async function printPublicInvoicePdfBundle(bundle) {
     if (!bundle?.blob) {
         throw new Error('PDF is not ready yet.');
     }
-    return printPdfBlob(bundle.blob, bundle.filename);
+    return printPdfFromSource(async () => bundle);
 }

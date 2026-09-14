@@ -66,6 +66,67 @@ function isMobileViewport() {
     return narrow || mobileUa;
 }
 
+function revokeObjectUrlLater(url, delayMs = 60_000) {
+    window.setTimeout(() => URL.revokeObjectURL(url), delayMs);
+}
+
+/**
+ * Open a blank tab during the click gesture so mobile browsers allow it after
+ * the PDF is generated. No-op on desktop (iframe print does not need a tab).
+ */
+export function preparePdfPrintTab() {
+    if (typeof window === 'undefined' || !isMobileViewport()) return null;
+    return window.open('about:blank', '_blank');
+}
+
+export function closePdfPrintTab(printWindow) {
+    if (!printWindow || printWindow.closed) return;
+    try {
+        printWindow.close();
+    } catch {
+        // Ignore — some browsers block script-initiated close.
+    }
+}
+
+function openPdfInTab(blob, filename, printWindow) {
+    const url = URL.createObjectURL(blob);
+
+    const showInWindow = (win) => {
+        if (!win || win.closed) return false;
+        try {
+            win.location.href = url;
+            win.focus();
+            return true;
+        } catch {
+            return false;
+        }
+    };
+
+    const tabUrlLifetimeMs = 10 * 60 * 1000;
+
+    if (showInWindow(printWindow)) {
+        revokeObjectUrlLater(url, tabUrlLifetimeMs);
+        return Promise.resolve({ method: 'tab' });
+    }
+
+    const opened = window.open(url, '_blank');
+    if (opened) {
+        closePdfPrintTab(printWindow);
+        try {
+            opened.focus();
+        } catch {
+            // Ignore focus failures in background tabs.
+        }
+        revokeObjectUrlLater(url, tabUrlLifetimeMs);
+        return Promise.resolve({ method: 'tab' });
+    }
+
+    closePdfPrintTab(printWindow);
+    URL.revokeObjectURL(url);
+    downloadPdfBlob(blob, filename);
+    return Promise.resolve({ method: 'download' });
+}
+
 /** Print the current page (HTML preview). Reliable on mobile and email-link browsers. */
 export function printCurrentDocument() {
     window.print();
@@ -74,12 +135,12 @@ export function printCurrentDocument() {
 /**
  * Print a generated PDF.
  * Desktop: hidden iframe, wait for load, then print.
- * Mobile: download instead — blob tabs / auto-print are unreliable on phones.
+ * Mobile: open the PDF in a new tab (preparePdfPrintTab during the tap so
+ * popup blockers do not turn this into a download).
  */
-export function printPdfBlob(blob, filename = 'document.pdf') {
+export function printPdfBlob(blob, filename = 'document.pdf', { printWindow } = {}) {
     if (isMobileViewport()) {
-        downloadPdfBlob(blob, filename);
-        return Promise.resolve({ method: 'download' });
+        return openPdfInTab(blob, filename, printWindow);
     }
 
     return new Promise((resolve, reject) => {
@@ -143,6 +204,21 @@ export function printPdfBlob(blob, filename = 'document.pdf') {
         document.body.appendChild(iframe);
         window.setTimeout(runPrint, 2500);
     });
+}
+
+/** Resolve the PDF, then print. Opens the mobile tab before any await. */
+export async function printPdfFromSource(getSource) {
+    const printWindow = preparePdfPrintTab();
+    try {
+        const source = await getSource();
+        if (!source?.blob) {
+            throw new Error('PDF is not ready yet.');
+        }
+        return await printPdfBlob(source.blob, source.filename || 'document.pdf', { printWindow });
+    } catch (err) {
+        closePdfPrintTab(printWindow);
+        throw err;
+    }
 }
 
 export async function shareCachedPdfBlob({ blob, filename, message, docNumber, documentType }) {

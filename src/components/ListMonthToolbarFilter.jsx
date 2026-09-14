@@ -14,7 +14,7 @@ export default function ListMonthToolbarFilter({
     className = '',
 }) {
     return (
-        <div className={`min-w-0 flex-1 sm:flex-none ${className}`.trim()}>
+        <div className={`min-w-0 sm:flex-none ${className}`.trim()}>
             <MonthPickerField
                 id={id}
                 variant="compact"
@@ -29,7 +29,7 @@ export default function ListMonthToolbarFilter({
                 onCustomDraftRangeChange={onCustomDraftRangeChange}
                 onCustomApply={onCustomApply}
                 triggerAriaLabel={triggerAriaLabel}
-                className="!block w-full sm:!inline"
+                className="block w-full sm:inline-flex sm:w-auto"
                 triggerClassName="w-full justify-between sm:w-auto sm:justify-start"
             />
         </div>

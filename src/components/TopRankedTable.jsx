@@ -25,7 +25,7 @@ export default function TopRankedTable({
         <section className="mb-6">
             <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-                {periodFilter}
+                {periodFilter ? <div className="min-w-0 self-start sm:self-auto">{periodFilter}</div> : null}
             </div>
 
             {showSkeleton ? (

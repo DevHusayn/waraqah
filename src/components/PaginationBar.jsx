@@ -24,11 +24,11 @@ export default function PaginationBar({
 
     return (
         <div
-            className={`flex flex-wrap items-center justify-between gap-3 pt-4 ${className}`.trim()}
+            className={`flex flex-wrap items-center justify-between gap-2 pt-4 sm:gap-3 ${className}`.trim()}
             role="navigation"
             aria-label="Pagination"
         >
-            <p className="text-sm text-foreground-muted">
+            <p className="min-w-0 text-[13px] text-foreground-muted">
                 Page {page} of {totalPages}
                 {total > 0 ? (
                     <span className="text-foreground-muted/70"> · {total} total</span>

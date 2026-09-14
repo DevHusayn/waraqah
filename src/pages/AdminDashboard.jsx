@@ -14,7 +14,6 @@ import {
     MoreHorizontal,
     RotateCcw,
     Users,
-    FileText,
     ExternalLink,
     Download,
 } from 'lucide-react';
@@ -359,7 +358,14 @@ export default function AdminDashboard() {
         setPage(1);
     }, [planFilter, statusFilter, activityFilter, authFilter, setPage]);
 
-    const stats = summary ?? { total: 0, premium: 0, suspended: 0 };
+    const stats = summary ?? {
+        total: 0,
+        active: 0,
+        premium: 0,
+        suspended: 0,
+        admin: 0,
+        deleted: 0,
+    };
     const tableLoading = loading && users.length === 0;
 
     const handleExport = async () => {
@@ -437,6 +443,8 @@ export default function AdminDashboard() {
             setUsers((prev) =>
                 prev.map((u) => (u._id === userId ? { ...u, isAdmin: !u.isAdmin } : u))
             );
+            await refresh();
+            invalidateList();
         } catch (e) {
             setAlert({ open: true, message: e.message });
         }
@@ -550,25 +558,22 @@ export default function AdminDashboard() {
                     subtitle="Manage users, plans, and account access"
                 />
 
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                    <div className="stat-card">
-                        <p className="text-xs text-foreground-muted font-medium leading-snug truncate">
-                            Total users
-                        </p>
-                        <AdaptiveStatValue value={stats.total} />
-                    </div>
-                    <div className="stat-card">
-                        <p className="text-xs text-foreground-muted font-medium leading-snug truncate">
-                            Premium
-                        </p>
-                        <AdaptiveStatValue value={stats.premium} />
-                    </div>
-                    <div className="stat-card">
-                        <p className="text-xs text-foreground-muted font-medium leading-snug truncate">
-                            Suspended
-                        </p>
-                        <AdaptiveStatValue value={stats.suspended} />
-                    </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                    {[
+                        { key: 'total', label: 'Total users' },
+                        { key: 'active', label: 'Active' },
+                        { key: 'suspended', label: 'Suspended' },
+                        { key: 'admin', label: 'Admin' },
+                        { key: 'premium', label: 'Premium' },
+                        { key: 'deleted', label: 'Deleted' },
+                    ].map((card) => (
+                        <div key={card.key} className="stat-card stat-card-compact">
+                            <p className="text-xs text-foreground-muted font-medium leading-snug truncate">
+                                {card.label}
+                            </p>
+                            <AdaptiveStatValue value={stats[card.key] ?? 0} variant="compact" />
+                        </div>
+                    ))}
                 </div>
 
                 {error ? (
@@ -579,78 +584,70 @@ export default function AdminDashboard() {
 
                 <div className="card !p-0 overflow-hidden">
                     <div className="px-4 sm:px-6 py-4 border-b border-border/50 space-y-3">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                            <div className="flex items-center gap-2 text-sm text-foreground-muted">
-                                <FileText size={16} aria-hidden />
-                                <span>
-                                    {pagination.total} user{pagination.total === 1 ? '' : 's'}
-                                    {hasActiveFilters ? (
-                                        <span className="text-foreground-muted/70"> (filtered)</span>
-                                    ) : null}
-                                </span>
+                        <div className="flex items-center gap-2">
+                            <div className="relative min-w-0 flex-1 sm:w-72 sm:flex-none">
+                                <Search
+                                    className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-muted/70"
+                                    aria-hidden
+                                />
+                                <input
+                                    type="search"
+                                    className="input-field h-[38px] pl-9"
+                                    placeholder="Search name, email, business…"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    aria-label="Search users"
+                                />
                             </div>
-                            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto sm:items-center">
-                                <div className="relative flex-1 sm:w-72">
-                                    <Search
-                                        className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted/70"
-                                        aria-hidden
-                                    />
-                                    <input
-                                        type="search"
-                                        className="input-field pl-9"
-                                        placeholder="Search name, email, business…"
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                    />
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={handleExport}
-                                    disabled={exportLoading || tableLoading || pagination.total === 0}
-                                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-border bg-surface text-sm font-medium text-foreground-muted hover:bg-surface-muted transition-colors disabled:opacity-50 min-w-[108px]"
-                                >
-                                    {exportLoading ? (
-                                        <Spinner size="sm" inline />
-                                    ) : (
-                                        <Download size={16} aria-hidden />
-                                    )}
-                                    Export
-                                </button>
-                            </div>
+                            <button
+                                type="button"
+                                onClick={handleExport}
+                                disabled={exportLoading || tableLoading || pagination.total === 0}
+                                title="Export all rows matching your current filters"
+                                aria-label="Export filtered users as CSV"
+                                className="inline-flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-md border border-border/80 bg-surface text-sm font-medium text-foreground-muted shadow-soft transition-colors hover:bg-surface-muted disabled:opacity-50 sm:w-auto sm:min-w-[108px] sm:gap-1.5 sm:px-3"
+                            >
+                                {exportLoading ? (
+                                    <Spinner size="sm" inline />
+                                ) : (
+                                    <Download size={16} aria-hidden />
+                                )}
+                                <span className="hidden sm:inline">Export</span>
+                            </button>
                         </div>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
                             <CustomSelect
                                 value={planFilter}
                                 onChange={setPlanFilter}
                                 options={PLAN_FILTER_OPTIONS}
                                 aria-label="Filter by plan"
-                                className="w-full sm:w-[140px]"
+                                className="min-w-0 w-full sm:w-[140px]"
                             />
                             <CustomSelect
                                 value={statusFilter}
                                 onChange={setStatusFilter}
                                 options={STATUS_FILTER_OPTIONS}
                                 aria-label="Filter by status"
-                                className="w-full sm:w-[150px]"
+                                className="min-w-0 w-full sm:w-[150px]"
                             />
                             <CustomSelect
                                 value={activityFilter}
                                 onChange={setActivityFilter}
                                 options={ACTIVITY_FILTER_OPTIONS}
                                 aria-label="Filter by activity"
-                                className="w-full sm:w-[220px]"
+                                className="min-w-0 w-full sm:w-[220px]"
                             />
                             <CustomSelect
                                 value={authFilter}
                                 onChange={setAuthFilter}
                                 options={AUTH_FILTER_OPTIONS}
                                 aria-label="Filter by sign-in method"
-                                className="w-full sm:w-[180px]"
+                                className="min-w-0 w-full sm:w-[180px]"
                             />
                             {hasActiveFilters ? (
                                 <button
                                     type="button"
-                                    className="inline-flex items-center px-3 py-2 rounded-xl border border-border bg-surface-muted text-sm font-medium text-foreground-muted hover:bg-surface-muted transition-colors"
+                                    className="col-span-2 inline-flex items-center justify-center px-3 py-2 rounded-xl border border-border bg-surface-muted text-sm font-medium text-foreground-muted hover:bg-surface-muted transition-colors sm:col-auto"
                                     onClick={() => {
                                         setPlanFilter('all');
                                         setStatusFilter('all');

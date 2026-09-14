@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { format, parseISO, startOfMonth } from 'date-fns';
-import { Calendar, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, Check, SlidersHorizontal } from 'lucide-react';
+import { Calendar, CalendarRange, ChevronDown, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import DatePickerField from './DatePickerField';
 
 const MONTHS = [
@@ -556,43 +556,28 @@ export default function MonthPickerField({
     ) : null;
 
     const toggleOpen = () => setOpen((prev) => !prev);
-    const compactUsesMobileFilterIcon = isCompact && showPeriodPresets;
-    const compactTriggerClassName = `inline-flex items-center gap-1.5 rounded-lg border border-border/80 bg-surface px-3 py-1.5 text-sm font-medium text-foreground shadow-soft transition-colors hover:bg-surface-muted/80 disabled:opacity-50 ${triggerClassName}`.trim();
-    const mobileFilterIconClassName =
-        'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-surface text-foreground-muted shadow-soft transition-colors hover:bg-surface-muted disabled:opacity-50 sm:hidden';
+    const compactTriggerClassName = `inline-flex h-[38px] min-w-0 items-center gap-1.5 rounded-md border border-border/80 bg-surface px-3 text-[13px] font-medium text-foreground shadow-soft transition-colors hover:bg-surface-muted/80 disabled:opacity-50 ${triggerClassName}`.trim();
 
     return (
-        <div ref={rootRef} className={`relative ${isInline || isCompact ? 'inline' : ''} ${className}`.trim()}>
+        <div ref={rootRef} className={`relative ${isInline || (isCompact && !className) ? 'inline' : ''} ${className}`.trim()}>
             {isCompact ? (
-                <div ref={triggerRef} className="inline-flex shrink-0">
-                    {compactUsesMobileFilterIcon ? (
-                        <button
-                            id={id}
-                            type="button"
-                            disabled={disabled}
-                            onClick={toggleOpen}
-                            aria-haspopup="dialog"
-                            aria-expanded={open}
-                            aria-label={triggerAriaLabel || `Filter period, currently ${triggerText}`}
-                            className={mobileFilterIconClassName}
-                        >
-                            <SlidersHorizontal size={18} aria-hidden />
-                        </button>
-                    ) : null}
+                <div ref={triggerRef} className="flex w-full min-w-0 sm:inline-flex sm:w-auto">
                     <button
-                        id={compactUsesMobileFilterIcon ? undefined : id}
+                        id={id}
                         type="button"
                         disabled={disabled}
                         onClick={toggleOpen}
                         aria-haspopup="dialog"
                         aria-expanded={open}
                         aria-label={triggerAriaLabel || `Select period, currently ${triggerText}`}
-                        className={`${compactTriggerClassName} ${compactUsesMobileFilterIcon ? 'hidden sm:inline-flex' : ''}`.trim()}
+                        className={compactTriggerClassName}
                     >
                         {showPeriodPresets ? (
                             <Calendar size={15} className="shrink-0 text-brand" strokeWidth={1.75} aria-hidden />
                         ) : null}
-                        <span className="tabular-nums max-w-[11rem] truncate">{triggerText}</span>
+                        <span className="min-w-0 flex-1 truncate text-left tabular-nums sm:max-w-[11rem] sm:flex-none">
+                            {triggerText}
+                        </span>
                         <ChevronDown
                             size={16}
                             className={`shrink-0 text-foreground-muted/70 transition-transform ${open ? 'rotate-180' : ''}`}

@@ -383,7 +383,7 @@ html.sidebar-collapsed {
     }
 
     .data-table th {
-        @apply px-4 py-2.5 text-left text-[11px] font-medium text-foreground-muted tracking-normal whitespace-nowrap first:pl-5 last:pr-5;
+        @apply px-3 py-2.5 text-left text-[11px] font-medium text-foreground-muted tracking-normal whitespace-nowrap first:pl-4 last:pr-4 sm:px-4 sm:first:pl-5 sm:last:pr-5;
     }
 
     .data-table th.text-right,
@@ -392,7 +392,7 @@ html.sidebar-collapsed {
     }
 
     .data-table td {
-        @apply px-4 py-3 text-foreground-muted whitespace-nowrap first:pl-5 last:pr-5;
+        @apply px-3 py-3 text-foreground-muted whitespace-nowrap first:pl-4 last:pr-4 sm:px-4 sm:first:pl-5 sm:last:pr-5;
     }
 
     .data-table tbody tr {

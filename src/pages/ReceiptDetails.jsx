@@ -23,7 +23,7 @@ import {
     shareInvoicePdf,
     getShareFallbackHint,
     downloadPdfBlob,
-    printPdfBlob,
+    printPdfFromSource,
 } from '../utils/shareInvoicePdf';
 import { PDF_DOCUMENT_TYPES } from '@waraqah/shared';
 import { getCachedPdf, setCachedPdf, clearCachedPdf } from '../utils/pdfCache';
@@ -419,8 +419,7 @@ const ReceiptDetails = () => {
 
     const handlePrint = async () => {
         try {
-            const cached = await getPdf();
-            const result = await printPdfBlob(cached.blob, cached.filename);
+            const result = await printPdfFromSource(() => getPdf());
             if (result?.method === 'download') {
                 showToast('PDF downloaded. Open it to print.', 'success');
             }

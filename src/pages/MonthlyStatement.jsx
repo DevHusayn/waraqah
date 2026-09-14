@@ -12,6 +12,7 @@ import {
     parseStatementMonth,
 } from '../utils/monthlyStatement';
 import { generateMonthlyStatementPdf, statusLabel } from '../utils/monthlyStatementPdf';
+import { closePdfPrintTab, preparePdfPrintTab } from '../utils/shareInvoicePdf';
 import ReportStatGrid, { ReportStatCell } from '../components/ReportStatGrid';
 import MonthPickerField from '../components/MonthPickerField';
 import PaginationBar from '../components/PaginationBar';
@@ -105,10 +106,12 @@ export default function MonthlyStatement() {
 
     const handlePdf = async (print = false) => {
         if (periodLoading || !statement) return;
+        const printWindow = print ? preparePdfPrintTab() : null;
         setExporting(true);
         try {
-            await generateMonthlyStatementPdf(statement, businessInfo, { print });
+            await generateMonthlyStatementPdf(statement, businessInfo, { print, printWindow });
         } catch (err) {
+            closePdfPrintTab(printWindow);
             console.error(err);
             window.alert('Could not create the statement. Please try again.');
         } finally {
