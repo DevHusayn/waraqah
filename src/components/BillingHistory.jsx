@@ -57,9 +57,10 @@ export default function BillingHistory() {
         []
     );
 
-    const { setPage, data: payments, pagination, loading, error } = usePagedList({
+    const { setPage, data: rawPayments, pagination, loading, error } = usePagedList({
         fetcher,
     });
+    const payments = rawPayments.filter((payment) => (payment.status || '').toLowerCase() === 'success');
 
     if (loading && payments.length === 0) {
         return <TableSkeleton rows={3} columns={4} />;
