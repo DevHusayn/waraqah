@@ -662,7 +662,7 @@ export default function AdminDashboard() {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto scroll-x-touch">
+                    <div className="overflow-x-auto">
                         <table className="w-full min-w-[960px] text-sm">
                             <thead>
                                 <tr className="bg-surface-muted text-left text-xs font-semibold uppercase tracking-wide text-foreground-muted">

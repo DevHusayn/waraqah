@@ -60,6 +60,54 @@ export default function AccountFormFields({ formData, errors, onChange, idPrefix
                     <FieldValidationMessage message={errors.paymentAccountNumber} />
                 </div>
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                    <label htmlFor={paymentFieldId('sort-code')} className="label">
+                        Sort code / routing number{' '}
+                        <span className="text-foreground-muted/70 font-normal">(optional)</span>
+                    </label>
+                    <input
+                        id={paymentFieldId('sort-code')}
+                        type="text"
+                        name="paymentSortCode"
+                        value={formData.paymentSortCode || ''}
+                        onChange={onChange}
+                        className={inputClass(false)}
+                        placeholder="e.g. 12-34-56"
+                        autoComplete="off"
+                    />
+                </div>
+                <div>
+                    <label htmlFor={paymentFieldId('iban')} className="label">
+                        IBAN <span className="text-foreground-muted/70 font-normal">(optional)</span>
+                    </label>
+                    <input
+                        id={paymentFieldId('iban')}
+                        type="text"
+                        name="paymentIban"
+                        value={formData.paymentIban || ''}
+                        onChange={onChange}
+                        className={inputClass(false)}
+                        placeholder="e.g. GB82 WEST 1234 5698 7654 32"
+                        autoComplete="off"
+                    />
+                </div>
+            </div>
+            <div>
+                <label htmlFor={paymentFieldId('swift')} className="label">
+                    SWIFT / BIC <span className="text-foreground-muted/70 font-normal">(optional)</span>
+                </label>
+                <input
+                    id={paymentFieldId('swift')}
+                    type="text"
+                    name="paymentSwift"
+                    value={formData.paymentSwift || ''}
+                    onChange={onChange}
+                    className={inputClass(false, 'sm:max-w-xs')}
+                    placeholder="e.g. NWBKGB2L"
+                    autoComplete="off"
+                />
+            </div>
             <div>
                 <label htmlFor={paymentFieldId('instructions')} className="label">
                     Payment instructions <span className="text-foreground-muted/70 font-normal">(optional)</span>

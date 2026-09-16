@@ -243,7 +243,7 @@ export default function Profit() {
                         <h2 className="text-sm font-semibold text-foreground mb-3">By product</h2>
                         {data?.byProduct?.length ? (
                             <>
-                            <DataTable columns={PRODUCT_COLUMNS} fixedLayout minWidth={720} className="scroll-x-touch">
+                            <DataTable columns={PRODUCT_COLUMNS} fixedLayout minWidth={720}>
                                 {productsPage.data.map((row) => (
                                     <DataTableRow key={row.productId}>
                                         <DataTableCell>

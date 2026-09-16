@@ -133,7 +133,7 @@ export default function StaffFormModal({
                         value={formData.name}
                         onChange={handleChange}
                         className={inputClass(Boolean(fieldErrors.name))}
-                        placeholder="e.g. Adaeze Okonkwo"
+                        placeholder="e.g. Ade Okunola "
                         autoComplete="off"
                         aria-invalid={Boolean(fieldErrors.name)}
                     />
@@ -182,14 +182,12 @@ export default function StaffFormModal({
                             onClick={() =>
                                 setFormData((prev) => ({ ...prev, isActive: prev.isActive === false }))
                             }
-                            className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${
-                                formData.isActive !== false ? 'bg-brand' : 'bg-zinc-200 dark:bg-zinc-600'
-                            }`}
+                            className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${formData.isActive !== false ? 'bg-brand' : 'bg-zinc-200 dark:bg-zinc-600'
+                                }`}
                         >
                             <span
-                                className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-surface shadow ring-0 transition ${
-                                    formData.isActive !== false ? 'translate-x-5' : 'translate-x-0'
-                                }`}
+                                className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-surface shadow ring-0 transition ${formData.isActive !== false ? 'translate-x-5' : 'translate-x-0'
+                                    }`}
                             />
                         </button>
                     </div>

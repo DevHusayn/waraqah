@@ -104,7 +104,7 @@ export default function CustomSelect({
                     <ul
                         role="listbox"
                         aria-labelledby={id}
-                        className="max-h-80 overflow-y-auto scroll-x-touch"
+                        className="max-h-80 overflow-y-auto"
                     >
                         {filtered.length === 0 ? (
                             <li className="px-3 py-2 text-sm text-foreground-muted">No matches</li>

@@ -62,7 +62,7 @@ export default function StockMovementTable({
 
     return (
         <>
-            <DataTable columns={columns} fixedLayout minWidth={640} className="scroll-x-touch">
+            <DataTable columns={columns} fixedLayout minWidth={640}>
                 {rows.map((row) => {
                     const href = getStockMovementLink(row);
                     const description = formatStockMovementDescription(row);

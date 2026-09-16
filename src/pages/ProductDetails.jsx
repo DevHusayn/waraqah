@@ -522,7 +522,6 @@ export default function ProductDetails() {
                         columns={CLIENT_COLUMNS}
                         fixedLayout
                         minWidth={640}
-                        className="scroll-x-touch"
                     >
                         {clientsPage.data.map((row) => (
                             <DataTableRow key={row.clientId}>
@@ -568,7 +567,6 @@ export default function ProductDetails() {
                         columns={ACTIVITY_COLUMNS}
                         fixedLayout
                         minWidth={840}
-                        className="scroll-x-touch"
                     >
                         {transactionsPage.data.map((row) => {
                             const lineAmount = formatActivityLineAmount(row, currency);

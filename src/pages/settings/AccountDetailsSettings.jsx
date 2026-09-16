@@ -30,6 +30,9 @@ export default function AccountDetailsSettings() {
             'paymentAccountName',
             'paymentBankName',
             'paymentAccountNumber',
+            'paymentSortCode',
+            'paymentIban',
+            'paymentSwift',
             'paymentInstructions',
         ],
         successMessage: 'Account details saved',
@@ -63,6 +66,9 @@ export default function AccountDetailsSettings() {
                         <ViewField label="Account name" value={businessInfo.paymentAccountName} />
                         <ViewField label="Bank name" value={businessInfo.paymentBankName} />
                         <ViewField label="Account number" value={businessInfo.paymentAccountNumber} />
+                        <ViewField label="Sort code / routing number" value={businessInfo.paymentSortCode} />
+                        <ViewField label="IBAN" value={businessInfo.paymentIban} />
+                        <ViewField label="SWIFT / BIC" value={businessInfo.paymentSwift} />
                         <div className="sm:col-span-2">
                             <ViewField
                                 label="Payment instructions"

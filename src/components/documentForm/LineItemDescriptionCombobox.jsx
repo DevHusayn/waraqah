@@ -161,7 +161,7 @@ export default function LineItemDescriptionCombobox({
                 <div
                     id={suggestionListId}
                     role="listbox"
-                    className="absolute z-50 mt-1.5 w-full overflow-hidden rounded-xl border border-border bg-surface shadow-lg"
+                    className="absolute z-50 mt-1.5 w-full max-h-72 overflow-y-auto rounded-xl border border-border bg-surface shadow-lg"
                 >
                     {suggestions.map((product, index) => {
                         const subtitle = getProductSubtitle(product, productPriceField, currency);

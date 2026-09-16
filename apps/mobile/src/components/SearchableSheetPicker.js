@@ -68,7 +68,7 @@ export function SearchablePickerSheet({
                 placeholder={searchPlaceholder}
                 style={styles.search}
             />
-            <ScrollView keyboardShouldPersistTaps="handled">
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator>
                 {filtered.length === 0 ? (
                     <Text style={styles.empty}>No matches</Text>
                 ) : (

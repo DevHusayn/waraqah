@@ -220,7 +220,6 @@ export default function ExpenseFormModal({
                 size="md"
                 showClose
                 scrollable
-                panelClassName="scroll-x-touch"
                 ariaLabelledby="expense-modal-title"
             >
                 <div className="px-6 pt-6 pb-4 border-b border-border/50">

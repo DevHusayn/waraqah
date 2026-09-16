@@ -10,6 +10,7 @@ import {
     formatWebsiteLabel,
     DEFAULT_BRAND_COLOR,
     hasInvoicePaymentAccount,
+    getInvoicePaymentLines,
 } from '@waraqah/shared';
 import { APP_DOMAIN, APP_TAGLINE, APP_WEBSITE_URL } from '../constants/brand';
 import WaraqahLogo from './WaraqahLogo';
@@ -141,21 +142,7 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
           : invoice.total;
     const amountPaidRowLabel = isReceipt ? 'Amount received' : 'Amount paid';
 
-    const paymentLines = [];
-    if (showPaymentBox) {
-        if (businessInfo.paymentBankName?.trim()) {
-            paymentLines.push(`Bank Name: ${businessInfo.paymentBankName.trim()}`);
-        }
-        if (businessInfo.paymentAccountName?.trim()) {
-            paymentLines.push(`Account Name: ${businessInfo.paymentAccountName.trim()}`);
-        }
-        if (businessInfo.paymentAccountNumber?.trim()) {
-            paymentLines.push(`Account Number: ${businessInfo.paymentAccountNumber.trim()}`);
-        }
-        if (businessInfo.paymentInstructions?.trim()) {
-            paymentLines.push(businessInfo.paymentInstructions.trim());
-        }
-    }
+    const paymentLines = showPaymentBox ? getInvoicePaymentLines(businessInfo) : [];
 
     return (
         <div className={`invoice-document-preview bg-white text-zinc-800 print-color-exact ${REPLAY_MASK.NO_CAPTURE}`}>

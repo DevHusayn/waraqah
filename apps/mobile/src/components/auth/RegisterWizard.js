@@ -74,6 +74,9 @@ export function RegisterWizard({ onComplete }) {
                 paymentAccountName: form.paymentAccountName,
                 paymentBankName: form.paymentBankName,
                 paymentAccountNumber: form.paymentAccountNumber,
+                paymentSortCode: form.paymentSortCode,
+                paymentIban: form.paymentIban,
+                paymentSwift: form.paymentSwift,
                 paymentInstructions: form.paymentInstructions,
             });
             captureEvent(ANALYTICS_EVENTS.USER_SIGNED_UP, { auth_method: 'local' });
@@ -170,6 +173,12 @@ export function RegisterWizard({ onComplete }) {
                     <Label>Account number</Label>
                     <Input value={form.paymentAccountNumber} onChangeText={(v) => setField('paymentAccountNumber', v)} keyboardType="number-pad" error={errors.paymentAccountNumber} />
                     <FieldError message={errors.paymentAccountNumber} />
+                    <Label>Sort code / routing number</Label>
+                    <Input value={form.paymentSortCode} onChangeText={(v) => setField('paymentSortCode', v)} autoCapitalize="characters" />
+                    <Label>IBAN</Label>
+                    <Input value={form.paymentIban} onChangeText={(v) => setField('paymentIban', v)} autoCapitalize="characters" />
+                    <Label>SWIFT / BIC</Label>
+                    <Input value={form.paymentSwift} onChangeText={(v) => setField('paymentSwift', v)} autoCapitalize="characters" />
                     <Label>Payment instructions</Label>
                     <Input
                         value={form.paymentInstructions}

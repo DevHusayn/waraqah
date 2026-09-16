@@ -9,6 +9,9 @@ export const ACCOUNT_FIELD_ORDER = [
     'paymentAccountName',
     'paymentBankName',
     'paymentAccountNumber',
+    'paymentSortCode',
+    'paymentIban',
+    'paymentSwift',
 ];
 export const BRANDING_FIELD_ORDER = ['brandColor'];
 
@@ -21,6 +24,9 @@ export const SETTINGS_FIELD_IDS = {
     paymentAccountName: 'settings-payment-account-name',
     paymentBankName: 'settings-payment-bank-name',
     paymentAccountNumber: 'settings-payment-account-number',
+    paymentSortCode: 'settings-payment-sort-code',
+    paymentIban: 'settings-payment-iban',
+    paymentSwift: 'settings-payment-swift',
 };
 
 export function buildProfileFieldErrors(formData) {
@@ -56,8 +62,8 @@ export function buildAccountFieldErrors(formData) {
         if (!formData.paymentBankName?.trim()) {
             errors.paymentBankName = 'Please enter the bank name.';
         }
-        if (!formData.paymentAccountNumber?.trim()) {
-            errors.paymentAccountNumber = 'Please enter the account number.';
+        if (!formData.paymentAccountNumber?.trim() && !formData.paymentIban?.trim()) {
+            errors.paymentAccountNumber = 'Please enter the account number or IBAN.';
         }
     }
 

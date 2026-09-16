@@ -230,7 +230,7 @@ export default function MonthlyStatement() {
                             </div>
                         ) : (
                             <>
-                            <div className="overflow-x-auto scroll-x-touch">
+                            <div className="overflow-x-auto">
                                 <table className="w-full min-w-[720px] text-sm">
                                     <thead>
                                         <tr className="border-b border-border bg-surface text-left">

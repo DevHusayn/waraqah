@@ -186,7 +186,7 @@ export default function SearchableSelect({
                     <ul
                         role="listbox"
                         aria-labelledby={id}
-                        className="max-h-60 overflow-y-auto scroll-x-touch"
+                        className="max-h-60 overflow-y-auto"
                     >
                         {filteredOptions.length > 0 ? (
                             filteredOptions.map((opt, index) => {

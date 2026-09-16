@@ -21,7 +21,7 @@ export const REGISTER_STEPS = [
 export const REGISTER_STEP_FIELD_ORDER = {
     1: ['email', 'password', 'confirmPassword'],
     2: ['name', 'businessEmail'],
-    3: ['paymentAccountName', 'paymentBankName', 'paymentAccountNumber'],
+    3: ['paymentAccountName', 'paymentBankName', 'paymentAccountNumber', 'paymentSortCode', 'paymentIban', 'paymentSwift'],
     4: ['brandColor', 'acceptedTerms'],
 };
 
@@ -39,6 +39,9 @@ export const REGISTER_INITIAL_FORM = {
     paymentAccountName: '',
     paymentBankName: '',
     paymentAccountNumber: '',
+    paymentSortCode: '',
+    paymentIban: '',
+    paymentSwift: '',
     paymentInstructions: DEFAULT_PAYMENT_INSTRUCTIONS,
 };
 
@@ -54,6 +57,9 @@ const REGISTER_FIELD_IDS = {
     paymentAccountName: 'reg-payment-account-name',
     paymentBankName: 'reg-payment-bank-name',
     paymentAccountNumber: 'reg-payment-account-number',
+    paymentSortCode: 'reg-payment-sort-code',
+    paymentIban: 'reg-payment-iban',
+    paymentSwift: 'reg-payment-swift',
     paymentInstructions: 'reg-payment-instructions',
     brandColor: 'reg-brand-color',
     acceptedTerms: 'reg-legal-consent',

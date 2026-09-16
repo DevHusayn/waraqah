@@ -45,6 +45,9 @@ export const REGISTER_INITIAL_FORM = {
     paymentAccountName: '',
     paymentBankName: '',
     paymentAccountNumber: '',
+    paymentSortCode: '',
+    paymentIban: '',
+    paymentSwift: '',
     paymentInstructions: DEFAULT_PAYMENT_INSTRUCTIONS,
 };
 
@@ -272,6 +275,9 @@ export default function RegisterWizard({
                     paymentAccountName: form.paymentAccountName,
                     paymentBankName: form.paymentBankName,
                     paymentAccountNumber: form.paymentAccountNumber,
+                    paymentSortCode: form.paymentSortCode,
+                    paymentIban: form.paymentIban,
+                    paymentSwift: form.paymentSwift,
                     paymentInstructions: form.paymentInstructions,
                 },
             };

@@ -412,6 +412,7 @@ html.sidebar-collapsed {
         box-shadow: inset 0 0 0 2px rgb(var(--brand-ring) / 0.12);
     }
 
+    /* Hide the bar only on decorative horizontal strips (filter tabs). Overflow lists keep the themed scrollbar. */
     .scroll-x-touch {
         -ms-overflow-style: none;
         scrollbar-width: none;

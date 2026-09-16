@@ -32,6 +32,28 @@ const PAYROLL_COLUMNS = [
     { key: 'action', label: '', className: 'text-right', width: '20%' },
 ];
 
+function ShowInactiveCheckbox({ id, checked, onChange, label }) {
+    return (
+        <label
+            htmlFor={id}
+            className={`inline-flex items-center gap-2 cursor-pointer select-none rounded-lg px-2.5 py-1.5 text-sm transition-colors ${
+                checked
+                    ? 'text-foreground bg-brand-subtle/80'
+                    : 'text-foreground-muted hover:bg-surface-muted hover:text-foreground'
+            }`}
+        >
+            <input
+                id={id}
+                type="checkbox"
+                checked={checked}
+                onChange={(event) => onChange(event.target.checked)}
+                className="input-checkbox"
+            />
+            {label}
+        </label>
+    );
+}
+
 function staffToFormData(staff) {
     if (!staff) return EMPTY_STAFF;
     return {
@@ -495,28 +517,22 @@ export default function StaffPayrollPanel({ openAddKey = 0 }) {
                         {' paid'}
                     </p>
                     {hasInactive ? (
-                        <label className="inline-flex items-center gap-2 text-xs text-foreground-muted">
-                            <input
-                                type="checkbox"
-                                checked={showInactive}
-                                onChange={(event) => setShowInactive(event.target.checked)}
-                                className="rounded border-border"
-                            />
-                            Show inactive
-                        </label>
+                        <ShowInactiveCheckbox
+                            id="payroll-show-inactive"
+                            checked={showInactive}
+                            onChange={setShowInactive}
+                            label="Show inactive"
+                        />
                     ) : null}
                 </div>
             ) : hasInactive ? (
                 <div className="mb-4 flex items-center justify-end">
-                    <label className="inline-flex items-center gap-2 text-sm text-foreground-muted">
-                        <input
-                            type="checkbox"
-                            checked={showInactive}
-                            onChange={(event) => setShowInactive(event.target.checked)}
-                            className="rounded border-border"
-                        />
-                        Show inactive staff
-                    </label>
+                    <ShowInactiveCheckbox
+                        id="payroll-show-inactive-empty"
+                        checked={showInactive}
+                        onChange={setShowInactive}
+                        label="Show inactive staff"
+                    />
                 </div>
             ) : null}
 

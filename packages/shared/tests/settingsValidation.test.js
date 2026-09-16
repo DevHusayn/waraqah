@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { needsBusinessSetup } from '../src/settingsValidation.js';
+import { needsBusinessSetup, buildAccountFieldErrors } from '../src/settingsValidation.js';
 
 describe('needsBusinessSetup', () => {
     it('returns true when required profile fields are missing', () => {
@@ -23,5 +23,24 @@ describe('needsBusinessSetup', () => {
             }),
             false
         );
+    });
+});
+
+describe('buildAccountFieldErrors', () => {
+    it('allows IBAN in place of account number', () => {
+        const errors = buildAccountFieldErrors({
+            paymentAccountName: 'Acme Ltd',
+            paymentBankName: 'Barclays',
+            paymentAccountNumber: '',
+            paymentIban: 'GB82WEST12345698765432',
+        });
+        assert.equal(errors.paymentAccountNumber, undefined);
+    });
+
+    it('does not require local account fields when only IBAN is set', () => {
+        const errors = buildAccountFieldErrors({
+            paymentIban: 'GB82WEST12345698765432',
+        });
+        assert.equal(Object.keys(errors).length, 0);
     });
 });

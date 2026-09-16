@@ -304,7 +304,7 @@ const Layout = ({ children }) => {
             <aside className="hidden md:fixed md:left-0 md:top-14 md:bottom-0 md:flex md:w-[var(--sidebar-width)] md:flex-col overflow-hidden border-r border-border/50 bg-surface-muted/80 transition-[width] duration-200 ease-smooth motion-reduce:transition-none">
                 <div
                     id="desktop-sidebar-nav"
-                    className={`flex flex-1 flex-col overflow-y-auto scroll-x-touch py-4 ${
+                    className={`flex flex-1 flex-col overflow-y-auto py-4 ${
                         sidebarCollapsed ? 'px-1.5' : 'px-2.5'
                     }`}
                 >
@@ -351,7 +351,7 @@ const Layout = ({ children }) => {
                     <div className="flex h-14 shrink-0 items-center px-4 min-w-0">
                         <WaraqahLogo size="sm" iconStyle="solid" showAccent={false} />
                     </div>
-                    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain scroll-x-touch px-4 pb-4 pt-2">
+                    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 pb-4 pt-2">
                         <NavLinks
                             sections={NAV_SECTIONS}
                             onNavigate={() => setSidebarOpen(false)}

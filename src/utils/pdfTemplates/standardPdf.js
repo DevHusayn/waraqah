@@ -14,6 +14,7 @@ import {
     formatWebsiteLabel,
     DEFAULT_BRAND_COLOR,
     hasInvoicePaymentAccount,
+    getInvoicePaymentLines,
 } from '@waraqah/shared';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
@@ -427,21 +428,7 @@ function drawBottomBoxes(
     let y = startY;
 
     if (hasPayment || hasNotes) {
-        const paymentLines = [];
-        if (hasPayment) {
-            if (businessInfo.paymentBankName?.trim()) {
-                paymentLines.push(`Bank Name: ${businessInfo.paymentBankName.trim()}`);
-            }
-            if (businessInfo.paymentAccountName?.trim()) {
-                paymentLines.push(`Account Name: ${businessInfo.paymentAccountName.trim()}`);
-            }
-            if (businessInfo.paymentAccountNumber?.trim()) {
-                paymentLines.push(`Account Number: ${businessInfo.paymentAccountNumber.trim()}`);
-            }
-            if (businessInfo.paymentInstructions?.trim()) {
-                paymentLines.push(businessInfo.paymentInstructions.trim());
-            }
-        }
+        const paymentLines = hasPayment ? getInvoicePaymentLines(businessInfo) : [];
 
         doc.setFontSize(7.5);
         setPdfBodyFont(doc);
