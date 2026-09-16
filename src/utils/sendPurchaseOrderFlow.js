@@ -15,6 +15,7 @@ export function buildPurchaseOrderPayload(formData, status) {
         notes: formData.notes || '',
         status,
         currency: formData.currency || 'NGN',
+        exchangeRate: formData.exchangeRate,
         subtotal: totals.subtotal,
         total: totals.subtotal,
     };

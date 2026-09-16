@@ -2,6 +2,7 @@ import DataTable, { DataTableRow, DataTableCell } from './DataTable';
 import EmptyState from './EmptyState';
 import { TableSkeleton } from './Skeleton';
 import { formatCurrency } from '../utils/currency';
+import useBusinessCurrency from '../hooks/useBusinessCurrency';
 
 function formatQtySold(value) {
     const n = Number(value) || 0;
@@ -19,6 +20,7 @@ export default function TopRankedTable({
     nameClassName = '',
     periodFilter = null,
 }) {
+    const currency = useBusinessCurrency();
     const showSkeleton = loading && items.length === 0;
 
     return (
@@ -88,7 +90,7 @@ export default function TopRankedTable({
                                                 key={column.key}
                                                 className="text-right tabular-nums"
                                             >
-                                                {formatCurrency(item.revenue ?? 0)}
+                                                {formatCurrency(item.revenue ?? 0, currency)}
                                             </DataTableCell>
                                         );
                                     }

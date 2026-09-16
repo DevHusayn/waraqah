@@ -9,6 +9,7 @@ import {
     formatDocumentItemDescription,
     formatWebsiteLabel,
     DEFAULT_BRAND_COLOR,
+    hasInvoicePaymentAccount,
 } from '@waraqah/shared';
 import { APP_DOMAIN, APP_TAGLINE, APP_WEBSITE_URL } from '../constants/brand';
 import WaraqahLogo from './WaraqahLogo';
@@ -109,12 +110,7 @@ export default function InvoiceDocumentPreview({ invoice, client, businessInfo, 
     const issueDate = invoice?.date ? format(new Date(invoice.date), 'MMM dd, yyyy') : 'N/A';
     const hasValidUntil = Boolean(invoice?.validUntil);
     const hasDueDate = Boolean(invoice?.dueDate);
-    const hasPaymentDetails = Boolean(
-        businessInfo?.paymentAccountName?.trim()
-        || businessInfo?.paymentBankName?.trim()
-        || businessInfo?.paymentAccountNumber?.trim()
-        || businessInfo?.paymentInstructions?.trim()
-    );
+    const hasPaymentDetails = hasInvoicePaymentAccount(businessInfo);
     const websiteLabel = formatWebsiteLabel(businessInfo?.website);
     const showPaymentBox = !isReceipt && !isQuotation && hasPaymentDetails;
     const notesText = invoice?.notes?.trim() || '';

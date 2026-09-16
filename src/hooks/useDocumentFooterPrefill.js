@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { getDefaultDocumentFooter } from '@waraqah/shared';
+import { resolvePrefillDocumentFooter } from '@waraqah/shared';
 import { isPremiumUser } from '../utils/premium';
 
 /** Prefill footer on new premium documents once business info is available. */
@@ -10,7 +10,7 @@ export function useDocumentFooterPrefill({ id, businessInfo, mode, setFormData }
             if (String(prev.documentFooter || '').trim()) return prev;
             return {
                 ...prev,
-                documentFooter: getDefaultDocumentFooter(businessInfo?.name, mode),
+                documentFooter: resolvePrefillDocumentFooter(businessInfo, mode),
             };
         });
     }, [id, businessInfo, mode, setFormData]);
@@ -19,5 +19,5 @@ export function useDocumentFooterPrefill({ id, businessInfo, mode, setFormData }
 export function resolveFormDocumentFooter(savedFooter, businessInfo, mode) {
     const trimmed = String(savedFooter || '').trim();
     if (trimmed) return trimmed;
-    return getDefaultDocumentFooter(businessInfo?.name, mode);
+    return resolvePrefillDocumentFooter(businessInfo, mode);
 }

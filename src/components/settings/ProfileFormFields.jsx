@@ -1,9 +1,20 @@
 import FieldValidationMessage from '../FieldValidationMessage';
 import RequiredLabel from '../RequiredLabel';
+import CustomSelect from '../CustomSelect';
 import { inputClass } from '../../utils/formFieldValidation';
-import { BUSINESS_TIMEZONE_OPTIONS, REPLAY_MASK } from '@waraqah/shared';
+import {
+    APP_CURRENCY,
+    BUSINESS_TIMEZONE_OPTIONS,
+    DEFAULT_COUNTRY,
+    REPLAY_MASK,
+    getCountrySelectOptions,
+    getCurrencyForCountry,
+    getCurrencySelectOptions,
+} from '@waraqah/shared';
 
 const DEFAULT_REQUIRED_FIELDS = ['name', 'address', 'email', 'phone'];
+const COUNTRY_OPTIONS = getCountrySelectOptions();
+const CURRENCY_OPTIONS = getCurrencySelectOptions();
 
 function ProfileFieldLabel({ htmlFor, required, children }) {
     if (required) {
@@ -138,6 +149,47 @@ export default function ProfileFormFields({
                     autoComplete={autoComplete('url')}
                     spellCheck={false}
                 />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                    <label htmlFor={fieldId('country')} className="label">
+                        Country
+                    </label>
+                    <CustomSelect
+                        id={fieldId('country')}
+                        value={formData.country || DEFAULT_COUNTRY}
+                        onChange={(value) => {
+                            onChange({ target: { name: 'country', value } });
+                            onChange({
+                                target: {
+                                    name: 'defaultCurrency',
+                                    value: getCurrencyForCountry(value),
+                                },
+                            });
+                        }}
+                        options={COUNTRY_OPTIONS}
+                        searchable
+                        searchPlaceholder="Search countries"
+                        aria-label="Country"
+                    />
+                </div>
+                <div>
+                    <label htmlFor={fieldId('defaultCurrency')} className="label">
+                        Currency
+                    </label>
+                    <CustomSelect
+                        id={fieldId('defaultCurrency')}
+                        value={formData.defaultCurrency || APP_CURRENCY}
+                        onChange={(value) =>
+                            onChange({ target: { name: 'defaultCurrency', value } })
+                        }
+                        options={CURRENCY_OPTIONS}
+                        searchable
+                        searchPlaceholder="Search currencies"
+                        aria-label="Currency"
+                    />
+                </div>
             </div>
 
             {showTimezone ? (

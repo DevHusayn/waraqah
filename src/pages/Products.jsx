@@ -23,6 +23,7 @@ import { ListPageSkeleton, ListSummaryStatsSkeleton, ToolbarSkeleton } from '../
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 import { formatCurrency } from '../utils/currency';
+import useBusinessCurrency from '../hooks/useBusinessCurrency';
 import { formatMarginPercent, computeCatalogMargin } from '../utils/margin';
 
 const mapProduct = (p) => ({
@@ -53,6 +54,7 @@ export default function Products() {
     const { addProduct } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
+    const currency = useBusinessCurrency();
     const [sortBy, setSortBy] = useState('newest');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
@@ -277,7 +279,7 @@ export default function Products() {
                                         </DataTableCell>
                                         <DataTableCell className="text-right">
                                             <span className="font-medium tabular-nums text-foreground">
-                                                {formatCurrency(product.unitPrice || 0)}
+                                                {formatCurrency(product.unitPrice || 0, currency)}
                                             </span>
                                         </DataTableCell>
                                         <DataTableCell className="text-right">

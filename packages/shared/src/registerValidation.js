@@ -9,6 +9,7 @@ import {
     buildAccountFieldErrors,
     buildBrandingFieldErrors,
 } from './settingsValidation.js';
+import { DEFAULT_PAYMENT_INSTRUCTIONS } from './businessDisplay.js';
 
 export const REGISTER_STEPS = [
     { id: 1, title: 'Your account', subtitle: 'Sign-in email and password' },
@@ -33,11 +34,12 @@ export const REGISTER_INITIAL_FORM = {
     phone: '',
     website: '',
     defaultCurrency: 'NGN',
+    country: 'NG',
     brandColor: '#16A34A',
     paymentAccountName: '',
     paymentBankName: '',
     paymentAccountNumber: '',
-    paymentInstructions: '',
+    paymentInstructions: DEFAULT_PAYMENT_INSTRUCTIONS,
 };
 
 const REGISTER_FIELD_IDS = {

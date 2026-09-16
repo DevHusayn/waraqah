@@ -1,4 +1,5 @@
 import { formatCurrency } from '../../utils/currency';
+import { computeBaseAmounts, needsExchangeRate } from '@waraqah/shared';
 import { getClientBusiness } from '../../utils/clientHelpers';
 
 const MONEY_EPS = 0.009;
@@ -10,9 +11,18 @@ export default function DocumentSummaryCard({
     discountLabel,
     totalLabel,
     amountReceived,
+    businessCurrency,
 }) {
     const received =
         amountReceived != null && Number.isFinite(amountReceived) ? amountReceived : null;
+    const booksTotal =
+        needsExchangeRate(formData.currency, businessCurrency) &&
+        Number(formData.exchangeRate) > 0
+            ? computeBaseAmounts({
+                  total: received != null && received > 0 ? received : totals.total,
+                  exchangeRate: formData.exchangeRate,
+              }).baseTotal
+            : null;
     const isPartial =
         received != null && totals.total > 0 && received + MONEY_EPS < totals.total;
     const balanceRemaining = isPartial
@@ -83,15 +93,25 @@ export default function DocumentSummaryCard({
                         </div>
                     </>
                 ) : (
-                    <div className="pt-3 border-t border-border grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 items-center">
-                        <dt className="font-semibold text-foreground">{totalLabel}</dt>
-                        <dd className="text-2xl font-bold text-brand text-right whitespace-nowrap tabular-nums shrink-0">
-                            {formatCurrency(
-                                received != null && received > 0 ? received : totals.total,
-                                formData.currency
-                            )}
-                        </dd>
-                    </div>
+                    <>
+                        <div className="pt-3 border-t border-border grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 items-center">
+                            <dt className="font-semibold text-foreground">{totalLabel}</dt>
+                            <dd className="text-2xl font-bold text-brand text-right whitespace-nowrap tabular-nums shrink-0">
+                                {formatCurrency(
+                                    received != null && received > 0 ? received : totals.total,
+                                    formData.currency
+                                )}
+                            </dd>
+                        </div>
+                        {booksTotal != null ? (
+                            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 items-baseline">
+                                <dt className="text-foreground-muted">In {businessCurrency}</dt>
+                                <dd className="text-sm font-medium text-foreground-muted text-right whitespace-nowrap tabular-nums shrink-0">
+                                    {formatCurrency(booksTotal, businessCurrency)}
+                                </dd>
+                            </div>
+                        ) : null}
+                    </>
                 )}
             </dl>
         </div>

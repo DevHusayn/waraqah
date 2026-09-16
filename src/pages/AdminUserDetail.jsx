@@ -42,6 +42,7 @@ import {
     UserAvatar,
 } from '../components/admin/AdminBadges';
 import AdminEmailModal from '../components/admin/AdminEmailModal';
+import AdminWhatsAppLink from '../components/admin/AdminWhatsAppLink';
 
 function formatDateTime(value) {
     if (!value) return '—';
@@ -208,7 +209,7 @@ function PaymentHistoryTable({ userId }) {
                         </DataTableCell>
                         <DataTableCell className="text-right">
                             <span className="font-medium text-foreground tabular-nums">
-                                {formatCurrency(payment.amount)}
+                                {formatCurrency(payment.amount, 'NGN')}
                             </span>
                         </DataTableCell>
                         <DataTableCell>
@@ -844,6 +845,13 @@ export default function AdminUserDetail() {
                                 <AuthBadge authProvider={user.authProvider} />
                             </div>
                             <p className="text-sm text-foreground-muted mt-1 truncate">{user.email}</p>
+                            <AdminWhatsAppLink
+                                phone={businessInfo?.phone}
+                                country={businessInfo?.country}
+                                name={displayName}
+                                businessName={businessInfo?.name || displayName}
+                                className="text-sm mt-0.5"
+                            />
                             {businessInfo?.name ? (
                                 businessInfo.name !== displayName ? (
                                     <p className="text-sm text-foreground-muted mt-0.5 font-medium">{businessInfo.name}</p>

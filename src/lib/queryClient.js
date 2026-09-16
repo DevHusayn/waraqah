@@ -94,14 +94,24 @@ export function invalidateClientListQueries(userId) {
     invalidateListSummaryQueries(userId, 'clients');
 }
 
-/** Invalidate expense list, summary, profit, and dashboard after expense mutations. */
+/** Invalidate expense list, summary, profit, payroll, and dashboard after expense mutations. */
 export function invalidateExpenseQueries(userId) {
     if (!userId) return;
     queryClient.invalidateQueries({ queryKey: ['expenses', userId] });
+    queryClient.invalidateQueries({ queryKey: ['expensePayees', userId] });
+    queryClient.invalidateQueries({ queryKey: ['expensePayee', userId] });
     queryClient.invalidateQueries({ queryKey: ['expenseVendors', userId] });
     queryClient.invalidateQueries({ queryKey: ['expenseSummary', userId] });
+    queryClient.invalidateQueries({ queryKey: ['staffPayroll', userId] });
     queryClient.invalidateQueries({ queryKey: ['profit', userId] });
     invalidateDashboardQueries(userId);
+}
+
+/** Invalidate staff roster and payroll after staff or pay mutations. */
+export function invalidateStaffQueries(userId) {
+    if (!userId) return;
+    queryClient.invalidateQueries({ queryKey: ['staff', userId] });
+    invalidateExpenseQueries(userId);
 }
 
 /** Wipe all cached server state — call on logout / account switch. */

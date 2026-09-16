@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
 import { Wallet } from 'lucide-react-native';
 import {
-    EXPENSE_CATEGORIES,
+    MANUAL_EXPENSE_CATEGORIES,
     formatCurrency,
     formatRecurringSummary,
     getExpenseCategoryLabel,
@@ -15,6 +15,7 @@ import {
     toRecurringApiFields,
 } from '@waraqah/shared';
 import { useToast } from '../context/ToastContext';
+import { useBusinessCurrency } from '../hooks/useBusinessCurrency';
 import { ConfirmModal } from '../components/Modal';
 import { PaginationBar } from '../components/PaginationBar';
 import { VendorNameCombobox } from '../components/VendorNameCombobox';
@@ -43,7 +44,7 @@ const FILTER_RECURRING = 'recurring';
 const LIST_FILTER_OPTIONS = [
     { value: FILTER_ALL, label: 'All' },
     { value: FILTER_RECURRING, label: 'Recurring' },
-    ...EXPENSE_CATEGORIES.map((category) => ({
+    ...MANUAL_EXPENSE_CATEGORIES.map((category) => ({
         value: category.id,
         label: category.label,
     })),
@@ -66,6 +67,7 @@ export function ExpensesScreen() {
     const { colors } = useTheme();
     const styles = useMemo(() => createStyles(colors), [colors]);
     const { showToast } = useToast();
+    const currency = useBusinessCurrency();
     const queryClient = useQueryClient();
     const { data: vendors = [] } = useExpenseVendorsQuery();
     const [refreshing, setRefreshing] = useState(false);
@@ -229,7 +231,7 @@ export function ExpensesScreen() {
                 }
                 ListHeaderComponent={
                     <View>
-                        <PageHeader title="Expenses" subtitle="Rent, salaries, and running costs" />
+                        <PageHeader title="Expenses" subtitle="Rent, transport, and running costs" />
                         <View style={styles.padX}>
                             <SearchBar
                                 value={search}
@@ -257,7 +259,7 @@ export function ExpensesScreen() {
                                 ? 'Try a different search term.'
                                 : listFilter !== FILTER_ALL
                                   ? 'Try a different filter or add an expense in this group.'
-                                  : 'Add rent, salaries, and other running costs.'
+                                  : 'Add rent, transport, and other running costs.'
                         }
                         actionLabel={search || listFilter !== FILTER_ALL ? undefined : 'Add expense'}
                         onAction={search || listFilter !== FILTER_ALL ? undefined : openAdd}
@@ -287,7 +289,7 @@ export function ExpensesScreen() {
                         onPress={() => openEdit(item)}
                         onLongPress={() => setDeleteId(item.id)}
                         right={
-                            <Text style={styles.amount}>{formatCurrency(item.amount || 0)}</Text>
+                            <Text style={styles.amount}>{formatCurrency(item.amount || 0, currency)}</Text>
                         }
                         last={index === expenses.length - 1}
                     />
@@ -398,7 +400,7 @@ export function ExpensesScreen() {
 
             <BottomSheet ref={categorySheetRef} snapPoints={['50%']}>
                 <Text style={styles.sheetTitle}>Category</Text>
-                {EXPENSE_CATEGORIES.map((category, i, arr) => (
+                {MANUAL_EXPENSE_CATEGORIES.map((category, i, arr) => (
                     <ListRow
                         key={category.id}
                         title={category.label}

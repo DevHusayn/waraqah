@@ -8,7 +8,8 @@ import {
     YAxis,
 } from 'recharts';
 import { format, subMonths } from 'date-fns';
-import { formatCurrency } from '../../utils/currency';
+import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
+import useBusinessCurrency from '../../hooks/useBusinessCurrency';
 import { useTheme } from '../../context/ThemeContext';
 import { getChartTheme } from '../../utils/chartTheme';
 import ChartCard from './ChartCard';
@@ -27,10 +28,10 @@ function buildPlaceholderTrend(count = 12) {
     });
 }
 
-function formatAxisCurrency(value) {
+function formatAxisCurrency(value, currency) {
     const amount = Number(value) || 0;
     const abs = Math.abs(amount);
-    const symbol = formatCurrency(0).replace(/[\d.,\s]/g, '').trim() || '₦';
+    const symbol = getCurrencySymbol(currency);
 
     if (abs >= 1_000_000) {
         return `${symbol}${(amount / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 1 })}M`;
@@ -38,10 +39,10 @@ function formatAxisCurrency(value) {
     if (abs >= 1_000) {
         return `${symbol}${(amount / 1_000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`;
     }
-    return formatCurrency(amount);
+    return formatCurrency(amount, currency);
 }
 
-function RevenueTooltip({ active, payload, theme }) {
+function RevenueTooltip({ active, payload, theme, currency }) {
     if (!active || !payload?.length) return null;
 
     const point = payload[0]?.payload;
@@ -51,11 +52,11 @@ function RevenueTooltip({ active, payload, theme }) {
         <div className={theme.tooltipPanel}>
             <p className={theme.tooltipTitle}>{point.label}</p>
             <p className={`mt-1 ${theme.tooltipMuted}`}>
-                Paid: <span className={theme.tooltipValue}>{formatCurrency(point.paid)}</span>
+                Paid: <span className={theme.tooltipValue}>{formatCurrency(point.paid, currency)}</span>
             </p>
             <p className={theme.tooltipMuted}>
                 Outstanding:{' '}
-                <span className={theme.tooltipValue}>{formatCurrency(point.outstanding)}</span>
+                <span className={theme.tooltipValue}>{formatCurrency(point.outstanding, currency)}</span>
             </p>
         </div>
     );
@@ -63,6 +64,7 @@ function RevenueTooltip({ active, payload, theme }) {
 
 export default function RevenueTrendChart({ trend = [] }) {
     const { isDark } = useTheme();
+    const currency = useBusinessCurrency();
     const chartTheme = getChartTheme(isDark);
     const chartData = trend.length ? trend : buildPlaceholderTrend();
     const hasData = trend.some((point) => point.paid > 0 || point.outstanding > 0);
@@ -95,11 +97,11 @@ export default function RevenueTrendChart({ trend = [] }) {
                             tick={{ fill: chartTheme.tick, fontSize: 11 }}
                             axisLine={false}
                             tickLine={false}
-                            tickFormatter={formatAxisCurrency}
+                            tickFormatter={(value) => formatAxisCurrency(value, currency)}
                             width={56}
                             domain={[0, 'auto']}
                         />
-                        <Tooltip content={<RevenueTooltip theme={chartTheme} />} cursor={{ stroke: '#16A34A', strokeOpacity: 0.2 }} />
+                        <Tooltip content={<RevenueTooltip theme={chartTheme} currency={currency} />} cursor={{ stroke: '#16A34A', strokeOpacity: 0.2 }} />
                         <Area
                             type="monotone"
                             dataKey="paid"

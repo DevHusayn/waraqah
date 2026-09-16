@@ -9,6 +9,7 @@ import {
 } from '@waraqah/shared';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
+import { useBusinessCurrency } from '../hooks/useBusinessCurrency';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../api/client';
 import { buildListQuery, unwrapListResponse } from '../utils/pagination';
@@ -20,6 +21,7 @@ export function MonthlyStatementScreen({ navigation }) {
     const styles = useMemo(() => createStyles(colors), [colors]);
     const { clients, fetchInvoices } = useInvoice();
     const { businessInfo } = useSettings();
+    const currency = useBusinessCurrency();
     const { showToast } = useToast();
     const [monthValue, setMonthValue] = useState(getDefaultStatementMonth());
     const [pdfLoading, setPdfLoading] = useState(false);
@@ -92,20 +94,20 @@ export function MonthlyStatementScreen({ navigation }) {
 
             <Card style={styles.block}>
                 <Text style={styles.section}>Totals</Text>
-                <Row label="Paid" value={formatCurrency(statement.totals.paid)} />
-                <Row label="Balance" value={formatCurrency(statement.totals.partial)} />
-                <Row label="Pending" value={formatCurrency(statement.totals.pending)} />
-                <Row label="Overdue" value={formatCurrency(statement.totals.overdue)} />
-                <Row label="Total billed" value={formatCurrency(statement.totals.total)} bold />
+                <Row label="Paid" value={formatCurrency(statement.totals.paid, currency)} />
+                <Row label="Balance" value={formatCurrency(statement.totals.partial, currency)} />
+                <Row label="Pending" value={formatCurrency(statement.totals.pending, currency)} />
+                <Row label="Overdue" value={formatCurrency(statement.totals.overdue, currency)} />
+                <Row label="Total billed" value={formatCurrency(statement.totals.total, currency)} bold />
             </Card>
 
             {statement.rows.map((row) => (
                 <Card key={row.clientId} style={styles.block}>
                     <Text style={styles.clientName}>{row.clientName}</Text>
-                    <Row label="Paid" value={formatCurrency(row.paid)} />
-                    <Row label="Balance" value={formatCurrency(row.partial)} />
-                    <Row label="Pending" value={formatCurrency(row.pending)} />
-                    <Row label="Total" value={formatCurrency(row.total)} bold />
+                    <Row label="Paid" value={formatCurrency(row.paid, currency)} />
+                    <Row label="Balance" value={formatCurrency(row.partial, currency)} />
+                    <Row label="Pending" value={formatCurrency(row.pending, currency)} />
+                    <Row label="Total" value={formatCurrency(row.total, currency)} bold />
                 </Card>
             ))}
 

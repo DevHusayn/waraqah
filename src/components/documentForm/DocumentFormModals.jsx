@@ -1,6 +1,7 @@
 import InvoiceLimitModal from '../InvoiceLimitModal';
 import ShareDocumentModal from '../ShareDocumentModal';
 import CustomUnitModal from '../CustomUnitModal';
+import ExchangeRateModal from '../ExchangeRateModal';
 import { getDisplayNumber } from '../../utils/receiptHelpers';
 
 export default function DocumentFormModals({
@@ -18,6 +19,13 @@ export default function DocumentFormModals({
     customUnitModalOpen,
     onCloseCustomUnitModal,
     onCustomUnitSave,
+    exchangeRateOpen = false,
+    exchangeDocumentCurrency,
+    exchangeBusinessCurrency,
+    exchangeSampleAmount = 1,
+    exchangeInitialRate = '',
+    onCancelExchangeRate,
+    onConfirmExchangeRate,
 }) {
     return (
         <>
@@ -45,6 +53,16 @@ export default function DocumentFormModals({
                 open={customUnitModalOpen}
                 onClose={onCloseCustomUnitModal}
                 onSave={onCustomUnitSave}
+            />
+
+            <ExchangeRateModal
+                open={exchangeRateOpen}
+                documentCurrency={exchangeDocumentCurrency}
+                businessCurrency={exchangeBusinessCurrency}
+                sampleAmount={exchangeSampleAmount}
+                initialRate={exchangeInitialRate}
+                onCancel={onCancelExchangeRate}
+                onConfirm={onConfirmExchangeRate}
             />
         </>
     );

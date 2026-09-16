@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { withDefaultPaymentInstructions, withDefaultDocumentFooter } from '@waraqah/shared';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { firstFieldError, focusFieldById, clearFieldError } from '../utils/formFieldValidation';
@@ -85,7 +86,7 @@ export default function useBusinessSettingsForm({
     };
 
     const handleEdit = () => {
-        setFormData(businessInfo);
+        setFormData(withDefaultDocumentFooter(withDefaultPaymentInstructions(businessInfo)));
         setIsEditing(true);
     };
 

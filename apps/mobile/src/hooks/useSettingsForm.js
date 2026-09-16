@@ -4,30 +4,35 @@ import {
     buildAccountFieldErrors,
     buildBrandingFieldErrors,
     buildSettingsFieldErrors,
+    withDefaultPaymentInstructions,
+    withDefaultDocumentFooter,
 } from '@waraqah/shared';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 
 const SECTION_PAYLOAD_KEYS = {
-    profile: ['name', 'address', 'email', 'phone', 'website'],
+    profile: ['name', 'address', 'email', 'phone', 'website', 'country', 'defaultCurrency'],
     account: [
         'paymentAccountName',
         'paymentBankName',
         'paymentAccountNumber',
         'paymentInstructions',
     ],
-    branding: ['brandColor'],
+    branding: ['brandColor', 'defaultDocumentFooter'],
     all: [
         'name',
         'address',
         'email',
         'phone',
         'website',
+        'country',
+        'defaultCurrency',
         'paymentAccountName',
         'paymentBankName',
         'paymentAccountNumber',
         'paymentInstructions',
         'brandColor',
+        'defaultDocumentFooter',
     ],
 };
 
@@ -38,12 +43,14 @@ function pickFormSlice(form, keys) {
 export function useSettingsForm(section = 'all') {
     const { businessInfo, updateBusinessInfo, loading } = useSettings();
     const { showToast } = useToast();
-    const [form, setForm] = useState({ ...businessInfo });
+    const [form, setForm] = useState(
+        withDefaultDocumentFooter(withDefaultPaymentInstructions({ ...businessInfo }))
+    );
     const [errors, setErrors] = useState({});
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        setForm({ ...businessInfo });
+        setForm(withDefaultDocumentFooter(withDefaultPaymentInstructions({ ...businessInfo })));
     }, [businessInfo]);
 
     const setField = (key, value) => {

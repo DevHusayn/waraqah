@@ -106,7 +106,7 @@ export default function BillingHistory() {
                         </DataTableCell>
                         <DataTableCell className="text-right">
                             <span className="font-medium text-foreground tabular-nums">
-                                {formatCurrency(payment.amount)}
+                                {formatCurrency(payment.amount, 'NGN')}
                             </span>
                         </DataTableCell>
                         <DataTableCell>

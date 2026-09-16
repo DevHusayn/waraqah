@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ShoppingCart } from 'lucide-react';
 import { format } from 'date-fns';
@@ -8,6 +8,9 @@ import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
 import { APP_CURRENCY, normalizeCurrency, formatCurrency } from '../utils/currency';
+import { useDefaultDocumentCurrency } from '../hooks/useBusinessCurrency';
+import { useDocumentExchangeRate } from '../hooks/useDocumentExchangeRate';
+import ExchangeRateModal from '../components/ExchangeRateModal';
 import { useDocumentFormHandlers } from '../hooks/useDocumentFormHandlers';
 import DocumentLineItemsSection from '../components/documentForm/DocumentLineItemsSection';
 import SupplierNameCombobox from '../components/documentForm/SupplierNameCombobox';
@@ -34,6 +37,7 @@ const EMPTY_FORM = {
     expectedDate: '',
     notes: '',
     currency: APP_CURRENCY,
+    exchangeRate: 1,
     items: [{ description: '', quantity: 1, rate: 0, unit: DEFAULT_INVOICE_UNIT }],
 };
 
@@ -48,6 +52,8 @@ export default function CreatePurchaseOrder() {
     const { showToast } = useToast();
 
     const [formData, setFormData] = useState(EMPTY_FORM);
+    const isDirtyRef = useRef(false);
+    const businessCurrency = useDefaultDocumentCurrency(id, setFormData, isDirtyRef);
     const [suppliers, setSuppliers] = useState([]);
     const [fieldErrors, setFieldErrors] = useState({});
     const [saving, setSaving] = useState(false);
@@ -63,13 +69,24 @@ export default function CreatePurchaseOrder() {
         }
     }, []);
 
+    const markDirty = useCallback(() => {
+        isDirtyRef.current = true;
+    }, []);
+
     const handlers = useDocumentFormHandlers({
         formData,
         setFormData,
         products,
         addProduct,
-        markDirty: () => {},
+        markDirty,
         productPriceField: 'unitCost',
+    });
+
+    const exchangeRate = useDocumentExchangeRate({
+        formData,
+        setFormData,
+        businessCurrency,
+        markDirty,
     });
 
     const totals = useMemo(
@@ -185,6 +202,7 @@ export default function CreatePurchaseOrder() {
     );
 
     const persist = async () => {
+        if (!exchangeRate.ensureExchangeRate()) return;
         if (!validate(true)) return;
 
         setSaving(true);
@@ -272,6 +290,15 @@ export default function CreatePurchaseOrder() {
                 onClose={() => setSupplierModalOpen(false)}
                 onSubmit={handleAddSupplier}
                 initialData={EMPTY_SUPPLIER}
+            />
+            <ExchangeRateModal
+                open={exchangeRate.exchangeRateOpen}
+                documentCurrency={exchangeRate.pendingCurrency}
+                businessCurrency={businessCurrency}
+                sampleAmount={totals.subtotal || 1}
+                initialRate={formData.exchangeRate}
+                onCancel={exchangeRate.cancelExchangeRate}
+                onConfirm={exchangeRate.confirmExchangeRate}
             />
             <div className="mb-6">
                 <Link
@@ -374,7 +401,7 @@ export default function CreatePurchaseOrder() {
                     businessInfo={businessInfo}
                     onItemChange={handlers.handleItemChange}
                     onUnitChange={handlers.handleUnitChange}
-                    onCurrencyChange={handlers.handleCurrencyChange}
+                    onCurrencyChange={exchangeRate.handleCurrencyChange}
                     onAddItem={handlers.addItem}
                     onRemoveItem={handlers.removeItem}
                     onApplyProductToLine={handlers.applyProductToLine}

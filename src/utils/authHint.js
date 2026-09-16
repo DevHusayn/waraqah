@@ -106,6 +106,7 @@ function serializeBusinessSummary(info, userId) {
         phone: String(info.phone || '').trim(),
         plan: info.plan || 'free',
         defaultCurrency: info.defaultCurrency || 'NGN',
+        country: info.country || 'NG',
         brandColor: String(info.brandColor || '').trim(),
         companyLogoAvatarUrl: cacheAvatar,
     });

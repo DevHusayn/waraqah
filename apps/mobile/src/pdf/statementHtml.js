@@ -3,7 +3,7 @@ import { getCurrencySymbol } from '@waraqah/shared';
 import { escapeHtml, formatMoney, wrapHtml } from './htmlUtils';
 
 export function buildStatementHtml(statement, businessInfo) {
-    const symbol = getCurrencySymbol(false);
+    const symbol = getCurrencySymbol(businessInfo?.defaultCurrency || 'NGN', false);
     const brand = businessInfo?.brandColor || '#16A34A';
 
     const summaryRows = [

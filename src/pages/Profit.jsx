@@ -13,6 +13,7 @@ import { useProfitSummaryQuery } from '../hooks/useProfitSummaryQuery';
 import PaginationBar from '../components/PaginationBar';
 import { useClientPagedList } from '../hooks/useClientPagedList';
 import { formatCurrency } from '../utils/currency';
+import useBusinessCurrency from '../hooks/useBusinessCurrency';
 import { formatMarginPercent } from '../utils/margin';
 import { isPremiumUser } from '../utils/premium';
 import { getExpenseCategoryLabel } from '@waraqah/shared';
@@ -37,6 +38,7 @@ const EXPENSE_COLUMNS = [
 export default function Profit() {
     const { businessInfo } = useSettings();
     const premium = isPremiumUser(businessInfo);
+    const currency = useBusinessCurrency();
     const {
         periodLabel,
         mode,
@@ -129,7 +131,7 @@ export default function Profit() {
                     <ReportStatGrid>
                         <ReportStatCell
                             title="Revenue"
-                            value={formatCurrency(totals?.revenue ?? 0)}
+                            value={formatCurrency(totals?.revenue ?? 0, currency)}
                             comparison={showComparison ? comparison?.revenue : null}
                             comparisonLabel={comparisonLabel}
                             detail="Paid sales in period"
@@ -137,7 +139,7 @@ export default function Profit() {
                         />
                         <ReportStatCell
                             title="Gross profit"
-                            value={formatCurrency(grossProfit)}
+                            value={formatCurrency(grossProfit, currency)}
                             comparison={showComparison ? comparison?.grossProfit : null}
                             comparisonLabel={comparisonLabel}
                             valueClassName={profitPositive ? '' : 'text-red-600'}
@@ -152,7 +154,7 @@ export default function Profit() {
                         />
                         <ReportStatCell
                             title="Total expenses"
-                            value={formatCurrency(totalExpenses)}
+                            value={formatCurrency(totalExpenses, currency)}
                             comparison={showComparison ? comparison?.totalExpenses : null}
                             comparisonLabel={comparisonLabel}
                             positiveDirection="down"
@@ -160,7 +162,7 @@ export default function Profit() {
                         />
                         <ReportStatCell
                             title="Net profit"
-                            value={formatCurrency(netProfit)}
+                            value={formatCurrency(netProfit, currency)}
                             comparison={showComparison ? comparison?.netProfit : null}
                             comparisonLabel={comparisonLabel}
                             valueClassName={netPositive ? '' : 'text-red-600'}
@@ -205,7 +207,7 @@ export default function Profit() {
                                             {getExpenseCategoryLabel(row.category)}
                                         </DataTableCell>
                                         <DataTableCell className="text-right tabular-nums">
-                                            {formatCurrency(row.amount ?? 0)}
+                                            {formatCurrency(row.amount ?? 0, currency)}
                                         </DataTableCell>
                                         <DataTableCell className="text-right tabular-nums">
                                             {row.sharePercent != null ? `${row.sharePercent}%` : '—'}
@@ -256,13 +258,13 @@ export default function Profit() {
                                             {Math.round((row.qtySold ?? 0) * 10) / 10}
                                         </DataTableCell>
                                         <DataTableCell className="text-right tabular-nums">
-                                            {formatCurrency(row.revenue ?? 0)}
+                                            {formatCurrency(row.revenue ?? 0, currency)}
                                         </DataTableCell>
                                         <DataTableCell className="text-right tabular-nums">
-                                            {formatCurrency(row.cogs ?? 0)}
+                                            {formatCurrency(row.cogs ?? 0, currency)}
                                         </DataTableCell>
                                         <DataTableCell className="text-right tabular-nums font-medium">
-                                            {formatCurrency(row.grossProfit ?? 0)}
+                                            {formatCurrency(row.grossProfit ?? 0, currency)}
                                         </DataTableCell>
                                         <DataTableCell className="text-right tabular-nums">
                                             {formatMarginPercent(row.marginPercent ?? null)}

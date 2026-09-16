@@ -50,7 +50,7 @@ export const BUSINESS_SETTINGS_INDEX = [
         title: 'Company Profile',
         to: '/settings/business/company-profile',
         icon: Building2,
-        description: 'Business name, contact details, and address',
+        description: 'Business name, country, currency, and address',
     },
     {
         title: 'Account Details',
@@ -62,6 +62,6 @@ export const BUSINESS_SETTINGS_INDEX = [
         title: 'Branding',
         to: '/settings/business/branding',
         icon: Palette,
-        description: 'Brand color, logo, and PDF appearance',
+        description: 'Brand color, logo, PDF footer, and appearance',
     },
 ];

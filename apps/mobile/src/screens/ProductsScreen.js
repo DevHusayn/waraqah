@@ -3,6 +3,7 @@ import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Package } from 'lucide-react-native';
 import { formatCurrency } from '@waraqah/shared';
+import { useBusinessCurrency } from '../hooks/useBusinessCurrency';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
 import { ConfirmModal } from '../components/Modal';
@@ -32,6 +33,7 @@ export function ProductsScreen() {
     const styles = useMemo(() => createStyles(colors), [colors]);
     const { addProduct, updateProduct, deleteProduct } = useInvoice();
     const { showToast } = useToast();
+    const currency = useBusinessCurrency();
     const [refreshing, setRefreshing] = useState(false);
     const [form, setForm] = useState(EMPTY);
     const [editing, setEditing] = useState(null);
@@ -179,7 +181,7 @@ export function ProductsScreen() {
                         onLongPress={() => setDeleteId(item.id)}
                         right={
                             <Text style={styles.price}>
-                                {formatCurrency(item.price ?? item.unitPrice ?? 0)}
+                                {formatCurrency(item.price ?? item.unitPrice ?? 0, currency)}
                             </Text>
                         }
                         last={index === products.length - 1}

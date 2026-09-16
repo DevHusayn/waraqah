@@ -51,7 +51,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
     const primaryColor = hexToRgb(businessInfo?.brandColor || '#16A34A');
     const textColor = [31, 41, 55];
     const grayColor = [107, 114, 128];
-    const currencySymbol = getCurrencySymbol(false);
+    const currencySymbol = getCurrencySymbol(businessInfo?.defaultCurrency || 'NGN', false);
 
     drawPdfGeometricBackground(doc);
 

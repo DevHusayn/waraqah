@@ -1,58 +1,62 @@
-# 💰 Currency Guide (Nigerian Naira)
+# Currency Guide
 
-Waraqah uses **Nigerian Naira (NGN)** only. All invoices, dashboard totals, and PDF exports display amounts in **₦**.
+Waraqah uses **one operating currency per business**. Client-facing invoices can use a different currency. Accounting always uses the business currency via a user-entered exchange rate. There is **no live FX feed**.
 
-## 🇳🇬 Currency
+## Defaults
 
-| Code | Symbol | Name           |
-|------|--------|----------------|
-| NGN  | ₦      | Nigerian Naira |
+| Setting | Default |
+|---------|---------|
+| Country | Nigeria (`NG`) |
+| Currency | Nigerian Naira (`NGN`) |
 
-Amounts are formatted with Nigerian locale grouping (e.g. **₦1,234,567.89**).
+Existing accounts stay on Naira until they change Country or Currency in Settings.
 
-## ⚙️ Where currency is set
+Choosing a country suggests that country’s currency. You can override it (for example a UAE business invoicing in USD).
 
-You do **not** choose a currency in Settings or when creating an invoice. The app always uses NGN.
+## Where currency is set
 
-- **Settings** shows currency as read-only: *₦ Nigerian Naira (NGN)*
-- **New invoices** are saved with `currency: NGN` automatically
-- **Business profile** stores `defaultCurrency: NGN` for API compatibility
+**Settings → Business Settings → Company Profile**
 
-## 💵 Creating invoices
+- **Country** — searchable list of countries
+- **Currency** — searchable list of ISO 4217 currencies
 
-When creating or editing an invoice:
+New invoices, quotations, receipts, and purchase orders inherit the business currency. You can still change currency on an individual document. If you do, Waraqah asks how many units of the business currency equal 1 unit of the document currency (for example, 1 USD = 1500 NGN).
+
+- PDFs, emails, and the public client view stay in the **document** currency
+- Dashboard, profit, statements, and rankings use the **converted business-currency** amounts
+- Payments are recorded in the document currency and converted with **that document’s stored rate**
+- Existing documents keep the currency they were saved with. Older foreign-currency documents without a rate are **left out** of business-currency totals
+
+Expenses, payroll, and product catalog prices stay in the business currency.
+
+## Creating invoices
 
 1. Fill in invoice details (client, dates, status)
-2. Set **Tax Rate** (percentage per invoice)
-3. Add line items — rates and totals appear in **₦**
-4. Save or download PDF — all amounts stay in naira
+2. Choose **Currency** next to Rate if it should differ from the business default, then enter the exchange rate
+3. Set tax rate and add line items — rates and totals on the PDF use that document’s currency
+4. Save or download PDF — amounts use the document currency (PDFs show the ISO code, e.g. `GHS 10,000.00`, because some symbols cannot print in Helvetica). Earnings use the converted business-currency total.
 
-There is no currency dropdown on the invoice form.
+## Features
 
-## 🎯 Features
+- Consistent formatting on dashboard, lists, forms, and PDFs
+- Custom tax rates per invoice
+- PDF exports use the ISO code label for print clarity
 
-✅ **Consistent formatting** — ₦ on dashboard, invoice list, create/edit form, and PDFs  
-✅ **Custom tax rates** — Set tax percentage per invoice  
-✅ **PDF exports** — Line items and totals use the **NGN** code label in PDFs (e.g. `NGN 10,000.00`) for clarity when printing  
+## Dashboard
 
-## 📊 Dashboard display
+Revenue, expenses, and profit totals use the **business** currency. Converted documents are included using the stored rate. Documents in another currency with **no** stored rate are omitted from those totals.
 
-- **Revenue (Paid)** and **Pending Revenue** sum invoice totals in naira
-- Each invoice row shows its total as **₦**
-- Older invoices that were stored with another currency code are still **displayed** using naira formatting
+## Tips
 
-## 💡 Tips
+- Enter rates in the currency shown on the document
+- When the document currency differs from Settings, enter 1 document unit in business currency (1 USD in NGN)
+- Waraqah subscription billing (Upgrade / Paystack) stays in Nigerian Naira
+- Changing currency does not rewrite historical documents
 
-- **Tax rate**: Common values are 0%, 5%, 7.5%, 10%, or 15% — set per invoice as needed
-- **Rates**: Enter item rates in naira (no conversion step)
-- **PDFs**: Share or print PDFs; clients see amounts in Nigerian Naira
+## For developers
 
-## 🔧 For developers
-
-- Currency logic lives in `src/utils/currency.js`
-- Constants: `APP_CURRENCY` (`NGN`), `CURRENCY_INFO`, `formatCurrency(amount)`
-- Do not reintroduce multi-currency UI without updating this guide and the Settings/invoice flows
-
----
-
-**Note:** Waraqah does not perform currency conversion. All amounts are treated as Nigerian Naira.
+- Catalog and formatters: `packages/shared/src/currency.js`, `packages/shared/src/documentCurrency.js`, and `packages/shared/src/country.js`
+- Business field: `defaultCurrency` (plus `country`) on the company profile
+- Document fields: `currency`, `exchangeRate`, `baseCurrency`, `baseTotal` (and related `base*` amounts)
+- UI hook: `useBusinessCurrency()` / `useDocumentExchangeRate()`
+- Fallback constant: `APP_CURRENCY` (`NGN`)

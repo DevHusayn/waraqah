@@ -1,13 +1,13 @@
 import FormSection from '../FormSection';
 import { AlignCenter } from 'lucide-react';
-import { getDefaultDocumentFooter } from '@waraqah/shared';
+import { resolvePrefillDocumentFooter } from '@waraqah/shared';
 import { inputClass } from '../../utils/formFieldValidation';
 import { isPremiumUser } from '../../utils/premium';
 
 export function DocumentFooterSection({ businessInfo, mode = 'invoice', formData, onChange }) {
     if (!isPremiumUser(businessInfo)) return null;
 
-    const placeholder = getDefaultDocumentFooter(businessInfo?.name, mode);
+    const placeholder = resolvePrefillDocumentFooter(businessInfo, mode);
 
     return (
         <FormSection

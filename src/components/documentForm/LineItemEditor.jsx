@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import RequiredLabel from '../RequiredLabel';
 import FieldValidationMessage from '../FieldValidationMessage';
@@ -30,13 +30,17 @@ export default function LineItemEditor({
     businessInfo,
     onItemChange,
     onUnitChange,
-    onCurrencyChange,
+    onCurrencyChange = () => {},
     onApplyProduct,
     showStockWarnings = true,
     productPriceField = 'unitPrice',
     rateLabel = 'Rate',
 }) {
     const normalizedCurrency = normalizeCurrency(currency || APP_CURRENCY);
+    const currencyOptions = useMemo(
+        () => getCurrencySelectOptions({ compact: true, pin: normalizedCurrency }),
+        [normalizedCurrency]
+    );
     const [shake, setShake] = useState(false);
     const productSuggestionsEnabled = products.length > 0 && Boolean(onApplyProduct);
 
@@ -150,9 +154,12 @@ export default function LineItemEditor({
                             id={`${idPrefix}-item-${index}-currency`}
                             value={normalizedCurrency}
                             onChange={onCurrencyChange}
-                            options={getCurrencySelectOptions()}
+                            options={currencyOptions}
+                            searchable
+                            searchPlaceholder="Search currencies"
                             aria-label={`Currency for rate on item ${index + 1}`}
                             className="w-[5.75rem] shrink-0"
+                            menuClassName="left-0 min-w-[18rem] w-max max-w-[min(24rem,calc(100vw-2rem))]"
                         />
                         <AmountInput
                             id={`${idPrefix}-item-${index}-rate`}

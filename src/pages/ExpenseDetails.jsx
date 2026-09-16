@@ -20,7 +20,9 @@ import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../utils/api';
 import { formatCurrency } from '../utils/currency';
+import useBusinessCurrency from '../hooks/useBusinessCurrency';
 import { invalidateExpenseQueries } from '../lib/queryClient';
+import { expensePayeePath } from '../utils/expensePayee';
 
 function formatDisplayDate(value) {
     if (!value) return '—';
@@ -49,6 +51,7 @@ export default function ExpenseDetails() {
     const navigate = useNavigate();
     const { showToast } = useToast();
     const { user } = useAuth();
+    const currency = useBusinessCurrency();
 
     const [expense, setExpense] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -64,7 +67,12 @@ export default function ExpenseDetails() {
         setLoading(true);
         try {
             const payload = await apiFetch(`/expenses/${id}`);
-            setExpense(mapExpense(payload));
+            const mapped = mapExpense(payload);
+            if (String(mapped.vendor || '').trim()) {
+                navigate(expensePayeePath(mapped.vendor), { replace: true });
+                return;
+            }
+            setExpense(mapped);
         } catch (err) {
             setAlert({
                 open: true,
@@ -75,7 +83,7 @@ export default function ExpenseDetails() {
         } finally {
             setLoading(false);
         }
-    }, [id]);
+    }, [id, navigate]);
 
     useEffect(() => {
         loadExpense();
@@ -83,6 +91,15 @@ export default function ExpenseDetails() {
 
     const categoryLabel = expense ? getExpenseCategoryLabel(expense.category) : '';
     const title = expense?.vendor || categoryLabel || 'Expense';
+    const payrollPeriodLabel = expense?.payrollPeriod
+        ? (() => {
+            try {
+                return format(parseISO(`${expense.payrollPeriod}-01`), 'MMMM yyyy');
+            } catch {
+                return expense.payrollPeriod;
+            }
+        })()
+        : '';
 
     const recurringSummary = expense?.isRecurring
         ? formatRecurringSummary({
@@ -147,6 +164,11 @@ export default function ExpenseDetails() {
                 const newId = created._id || created.id;
                 invalidateExpenseQueries(user?.id);
                 closeModal();
+                const vendor = String(formData.vendor || '').trim();
+                if (vendor) {
+                    navigate(expensePayeePath(vendor), { replace: true });
+                    return;
+                }
                 if (newId) {
                     navigate(`/expenses/${newId}`, { replace: true });
                     return;
@@ -192,7 +214,7 @@ export default function ExpenseDetails() {
             await apiFetch(`/expenses/${expense.id}`, { method: 'DELETE' });
             showToast('Expense deleted successfully', 'success');
             invalidateExpenseQueries(user?.id);
-            navigate('/expenses', { replace: true });
+            navigate(expense.vendor ? expensePayeePath(expense.vendor) : '/expenses', { replace: true });
         } catch (err) {
             setAlert({
                 open: true,
@@ -262,7 +284,11 @@ export default function ExpenseDetails() {
             <ConfirmModal
                 open={confirm}
                 title="Delete expense?"
-                description="This expense will be removed from your records."
+                description={
+                    payrollPeriodLabel
+                        ? `This salary payment for ${payrollPeriodLabel} will be removed, and that month will show as unpaid.`
+                        : 'This expense will be removed from your records.'
+                }
                 confirmLabel="Delete expense"
                 cancelLabel="Keep expense"
                 variant="danger"
@@ -279,11 +305,11 @@ export default function ExpenseDetails() {
             />
 
             <Link
-                to="/expenses"
+                to={expense.vendor ? expensePayeePath(expense.vendor) : '/expenses'}
                 className="inline-flex items-center gap-2 text-sm text-foreground-muted hover:text-foreground mb-4"
             >
                 <ArrowLeft size={16} aria-hidden />
-                Back to expenses
+                {expense.vendor ? `Back to ${expense.vendor}` : 'Back to expenses'}
             </Link>
 
             <header className="card mb-8 overflow-hidden !p-0">
@@ -301,6 +327,11 @@ export default function ExpenseDetails() {
                                     <span className="inline-flex items-center gap-1 rounded-full bg-brand-subtle px-2 py-0.5 text-xs font-medium text-brand">
                                         <Repeat size={12} aria-hidden />
                                         Recurring
+                                    </span>
+                                ) : null}
+                                {payrollPeriodLabel ? (
+                                    <span className="inline-flex items-center rounded-full bg-brand-subtle px-2 py-0.5 text-xs font-medium text-brand">
+                                        {payrollPeriodLabel} payroll
                                     </span>
                                 ) : null}
                             </div>
@@ -328,13 +359,24 @@ export default function ExpenseDetails() {
                 <div className="grid grid-cols-2 gap-3 px-5 pb-5 sm:grid-cols-4">
                     <DetailMetric
                         label="Amount"
-                        value={formatCurrency(expense.amount || 0)}
+                        value={formatCurrency(expense.amount || 0, currency)}
                     />
                     <DetailMetric label="Date" value={formatDisplayDate(expense.date)} />
                     <DetailMetric label="Category" value={categoryLabel} />
                     <DetailMetric
                         label="Paid to"
-                        value={expense.vendor || 'Not set'}
+                        value={
+                            expense.vendor ? (
+                                <Link
+                                    to={expensePayeePath(expense.vendor)}
+                                    className="hover:text-brand hover:underline underline-offset-2"
+                                >
+                                    {expense.vendor}
+                                </Link>
+                            ) : (
+                                'Not set'
+                            )
+                        }
                     />
                 </div>
 

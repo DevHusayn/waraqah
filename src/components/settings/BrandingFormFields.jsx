@@ -9,6 +9,7 @@ export default function BrandingFormFields({
     onChange,
     setFormData,
     setErrors,
+    premium = false,
 }) {
     return (
         <div>
@@ -73,6 +74,24 @@ export default function BrandingFormFields({
                     })}
                 </div>
             </div>
+            {premium ? (
+                <div className="mt-8 pt-8 border-t border-border/50">
+                    <label htmlFor="settings-document-footer" className="label">
+                        Footer message
+                    </label>
+                    <p className="text-sm text-foreground-muted mb-3">
+                        Saved once and used when you create invoices, quotations, and receipts.
+                    </p>
+                    <textarea
+                        id="settings-document-footer"
+                        name="defaultDocumentFooter"
+                        value={formData.defaultDocumentFooter || ''}
+                        onChange={onChange}
+                        className="input-field resize-none min-h-[88px]"
+                        rows={3}
+                    />
+                </div>
+            ) : null}
         </div>
     );
 }

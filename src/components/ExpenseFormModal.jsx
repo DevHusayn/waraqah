@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { Wallet, Pencil, Tag } from 'lucide-react';
 import {
-    EXPENSE_CATEGORIES,
+    MANUAL_EXPENSE_CATEGORIES,
     isPresetExpenseCategory,
     recurringFieldsFromRecord,
     toRecurringApiFields,
@@ -92,10 +92,13 @@ export default function ExpenseFormModal({
     const { data: vendors = [] } = useExpenseVendorsQuery({ enabled: open });
 
     const categoryOptions = useMemo(() => {
-        const presets = EXPENSE_CATEGORIES.map((category) => ({
+        const presets = MANUAL_EXPENSE_CATEGORIES.map((category) => ({
             value: category.id,
             label: category.label,
         }));
+        if (formData.category === 'salaries') {
+            presets.splice(1, 0, { value: 'salaries', label: 'Salaries' });
+        }
         const customLabel =
             formData.category && !isPresetExpenseCategory(formData.category)
                 ? formData.category
@@ -158,8 +161,8 @@ export default function ExpenseFormModal({
 
     const saveCustomCategory = () => {
         const text = customCategoryInput.trim();
-        if (!text) {
-            setCustomCategoryError('Please enter a category name.');
+        if (text.toLowerCase() === 'salaries') {
+            setCustomCategoryError('Record salaries in Staff payroll instead.');
             focusFieldById('expense-custom-category');
             return;
         }
@@ -234,7 +237,7 @@ export default function ExpenseFormModal({
                                 {isEdit ? 'Edit expense' : 'Add expense'}
                             </h2>
                             <p className="text-sm text-foreground-muted mt-0.5">
-                                Operating costs like rent, salaries, and utilities
+                                Operating costs like rent, transport, and utilities
                             </p>
                         </div>
                     </div>

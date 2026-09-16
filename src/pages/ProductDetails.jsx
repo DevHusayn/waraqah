@@ -29,6 +29,7 @@ import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
 import { formatCurrency } from '../utils/currency';
+import useBusinessCurrency from '../hooks/useBusinessCurrency';
 import { computeCatalogMargin, formatMarginPercent } from '../utils/margin';
 import { getPaymentMethodLabel } from '../utils/receiptHelpers';
 import { isPremiumUser } from '../utils/premium';
@@ -77,13 +78,13 @@ function documentHref(type, id) {
     return `/invoices/${id}`;
 }
 
-function formatActivityLineAmount(row) {
+function formatActivityLineAmount(row, currency) {
     if (row.countsAsSale && (row.saleLineTotal ?? 0) > 0) {
         return {
             amount: row.saleLineTotal,
             detail:
                 (row.pendingLineTotal ?? 0) > 0
-                    ? `${formatCurrency(row.pendingLineTotal)} unpaid on invoice`
+                    ? `${formatCurrency(row.pendingLineTotal, currency)} unpaid on invoice`
                     : null,
         };
     }
@@ -138,6 +139,7 @@ export default function ProductDetails() {
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
     const premium = isPremiumUser(businessInfo);
+    const currency = useBusinessCurrency();
 
     const [activity, setActivity] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -398,11 +400,11 @@ export default function ProductDetails() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 px-5 pb-5 sm:grid-cols-4">
-                    <CatalogMetric label="Selling price" value={formatCurrency(product.unitPrice || 0)} />
+                    <CatalogMetric label="Selling price" value={formatCurrency(product.unitPrice || 0, currency)} />
                     <CatalogMetric
                         label="Purchase cost"
                         value={
-                            product.unitCost > 0 ? formatCurrency(product.unitCost) : 'Not set'
+                            product.unitCost > 0 ? formatCurrency(product.unitCost, currency) : 'Not set'
                         }
                     />
                     <CatalogMetric
@@ -454,12 +456,12 @@ export default function ProductDetails() {
                         />
                         <PeriodStatCard
                             title="Revenue"
-                            value={formatCurrency(soldInPeriod.revenue || 0)}
+                            value={formatCurrency(soldInPeriod.revenue || 0, currency)}
                         />
                         {premium ? (
                             <PeriodStatCard
                                 title="Gross profit"
-                                value={formatCurrency(grossProfit)}
+                                value={formatCurrency(grossProfit, currency)}
                                 valueClassName={profitPositive ? '' : 'text-red-600'}
                                 className="col-span-2 sm:col-span-1"
                             />
@@ -473,7 +475,7 @@ export default function ProductDetails() {
                     <span className="tabular-nums">{summary?.totalQuantitySold ?? 0}</span> sold
                     <span className="mx-2 text-zinc-300">·</span>
                     <span className="font-medium tabular-nums text-foreground">
-                        {formatCurrency(summary?.totalRevenue || 0)}
+                        {formatCurrency(summary?.totalRevenue || 0, currency)}
                     </span>{' '}
                     revenue
                     <span className="mx-2 text-zinc-300">·</span>
@@ -490,7 +492,7 @@ export default function ProductDetails() {
                         <p className="font-medium text-amber-950">Awaiting payment</p>
                         <p className="text-amber-900/90">
                             {pendingQuantity} unit{pendingQuantity === 1 ? '' : 's'} ·{' '}
-                            {formatCurrency(summary?.pendingRevenue || 0)} on unpaid and partial
+                            {formatCurrency(summary?.pendingRevenue || 0, currency)} on unpaid and partial
                             invoices
                         </p>
                     </div>
@@ -531,7 +533,7 @@ export default function ProductDetails() {
                                     {row.quantitySold}
                                 </DataTableCell>
                                 <DataTableCell className="text-right tabular-nums font-medium">
-                                    {formatCurrency(row.revenue || 0)}
+                                    {formatCurrency(row.revenue || 0, currency)}
                                 </DataTableCell>
                                 <DataTableCell>{formatDisplayDate(row.lastPurchaseDate)}</DataTableCell>
                                 <DataTableCell>
@@ -569,7 +571,7 @@ export default function ProductDetails() {
                         className="scroll-x-touch"
                     >
                         {transactionsPage.data.map((row) => {
-                            const lineAmount = formatActivityLineAmount(row);
+                            const lineAmount = formatActivityLineAmount(row, currency);
                             return (
                             <DataTableRow key={`${row.documentType}-${row.id}`}>
                                 <DataTableCell>{formatDisplayDate(row.date)}</DataTableCell>
@@ -586,7 +588,7 @@ export default function ProductDetails() {
                                     {row.quantity}
                                 </DataTableCell>
                                 <DataTableCell className="text-right tabular-nums font-medium">
-                                    <span>{formatCurrency(lineAmount.amount || 0)}</span>
+                                    <span>{formatCurrency(lineAmount.amount || 0, currency)}</span>
                                     {lineAmount.detail ? (
                                         <p className="text-[11px] font-normal text-foreground-muted mt-0.5">
                                             {lineAmount.detail}

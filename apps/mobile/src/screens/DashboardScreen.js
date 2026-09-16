@@ -34,6 +34,7 @@ import {
 import { apiFetch } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
+import { useBusinessCurrency } from '../hooks/useBusinessCurrency';
 import { InvoiceLimitModal } from '../components/InvoiceLimitModal';
 import { CreateActionSheet } from '../components/CreateActionSheet';
 import { Sparkline } from '../components/Sparkline';
@@ -72,6 +73,7 @@ export function DashboardScreen({ navigation }) {
     const styles = useMemo(() => createStyles(colors), [colors]);
     const { user, logout } = useAuth();
     const { businessInfo } = useSettings();
+    const currency = useBusinessCurrency();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -175,13 +177,13 @@ export function DashboardScreen({ navigation }) {
         {
             key: 'revenue',
             label: 'Total revenue',
-            amount: formatCurrency(revenue),
+            amount: formatCurrency(revenue, currency),
             trend: null,
         },
         {
             key: 'outstanding',
             label: 'Outstanding',
-            amount: formatCurrency(stats?.pendingRevenue ?? 0),
+            amount: formatCurrency(stats?.pendingRevenue ?? 0, currency),
             trend: null,
         },
     ];
@@ -276,7 +278,7 @@ export function DashboardScreen({ navigation }) {
                                 <StatCell
                                     icon={Banknote}
                                     label="Revenue"
-                                    value={formatCurrency(stats?.paidRevenue ?? 0)}
+                                    value={formatCurrency(stats?.paidRevenue ?? 0, currency)}
                                     iconBg={colors.brandLight}
                                     iconColor={colors.brand}
                                     valueColor={colors.brand}
@@ -284,7 +286,7 @@ export function DashboardScreen({ navigation }) {
                                 <StatCell
                                     icon={Clock}
                                     label="Outstanding"
-                                    value={formatCurrency(stats?.pendingRevenue ?? 0)}
+                                    value={formatCurrency(stats?.pendingRevenue ?? 0, currency)}
                                     iconBg="#FFEDD5"
                                     iconColor="#EA580C"
                                     valueColor="#EA580C"

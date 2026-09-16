@@ -72,6 +72,7 @@ const UpgradeCallback = lazy(() => import('./pages/UpgradeCallback'));
 const MonthlyStatement = lazy(() => import('./pages/MonthlyStatement'));
 const Profit = lazy(() => import('./pages/Profit'));
 const Expenses = lazy(() => import('./pages/Expenses'));
+const ExpensePayeeDetails = lazy(() => import('./pages/ExpensePayeeDetails'));
 const ExpenseDetails = lazy(() => import('./pages/ExpenseDetails'));
 
 const AppLayout = memo(function AppLayout({ children }) {
@@ -190,6 +191,7 @@ function App() {
                                             <Route path="/statements" element={<PrivateRoute><RouteSuspense fallback={<StatementPageSkeleton />}><MonthlyStatement /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/profit" element={<PrivateRoute><RouteSuspense fallback={<ProfitPageSkeleton />}><Profit /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/expenses" element={<PrivateRoute><ListRoute><Expenses /></ListRoute></PrivateRoute>} />
+                                            <Route path="/expenses/payee/:payeeName" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><ExpensePayeeDetails /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/expenses/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><ExpenseDetails /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/upgrade" element={<PrivateRoute><RouteSuspense fallback={<UpgradePageSkeleton />}><Upgrade /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/admin" element={<PrivateRoute><AdminRoute><RouteSuspense fallback={<AdminPageSkeleton />}><AdminDashboard /></RouteSuspense></AdminRoute></PrivateRoute>} />

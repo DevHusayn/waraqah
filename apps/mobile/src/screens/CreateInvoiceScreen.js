@@ -26,13 +26,16 @@ import {
     DEFAULT_INVOICE_UNIT,
     DRAFT_STATUS,
     formatCurrency,
+    getCurrencySelectOptions,
+    resolvePrefillDocumentFooter,
     isDraft,
-    normalizeCurrency,
-    normalizeInvoiceUnit,
-    SUPPORTED_CURRENCIES,
-    getDefaultDocumentFooter,
     isAiDraftsEnabled,
     isPremiumUser,
+    normalizeCurrency,
+    normalizeInvoiceUnit,
+    needsExchangeRate,
+    isValidExchangeRate,
+    computeBaseAmounts,
     RECURRING_FREQUENCY_OPTIONS,
     getRecurringFrequencyLabel,
     recurringFieldsFromRecord,
@@ -41,6 +44,8 @@ import {
 } from '@waraqah/shared';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
+import { useBusinessCurrency } from '../hooks/useBusinessCurrency';
+import { SearchablePickerSheet } from '../components/SearchableSheetPicker';
 import { useToast } from '../context/ToastContext';
 import { InvoiceLimitModal } from '../components/InvoiceLimitModal';
 import { AiDraftComposer, applyMobileAiDraft } from '../components/AiDraftComposer';
@@ -101,6 +106,7 @@ function buildPayload(form, status) {
         clientAdditionalInfo: form.clientAdditionalInfo || '',
         status,
         currency: normalizeCurrency(form.currency || APP_CURRENCY),
+        exchangeRate: form.exchangeRate,
         taxRate: Number(form.taxRate) || 0,
         discountType: 'percent',
         discountValue: Number(form.discountValue) || 0,
@@ -132,6 +138,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
         fetchProducts,
     } = useInvoice();
     const { businessInfo } = useSettings();
+    const businessCurrency = useBusinessCurrency();
     const premium = isPremiumUser(businessInfo);
     const { showToast } = useToast();
     const limitModalRef = useRef(null);
@@ -142,6 +149,9 @@ export function CreateInvoiceScreen({ route, navigation }) {
     const [unitSheetIndex, setUnitSheetIndex] = useState(null);
     const [customUnitIndex, setCustomUnitIndex] = useState(null);
     const [customUnitName, setCustomUnitName] = useState('');
+    const [rateModalOpen, setRateModalOpen] = useState(false);
+    const [pendingCurrency, setPendingCurrency] = useState(null);
+    const [exchangeRateInput, setExchangeRateInput] = useState('');
     const [clientDetailsOpen, setClientDetailsOpen] = useState(false);
     const { invoiceUsage, tryCreate, goUpgrade } = useInvoiceCreateGuard(limitModalRef, navigation);
 
@@ -175,6 +185,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
         notes: '',
         documentFooter: '',
         currency: APP_CURRENCY,
+        exchangeRate: 1,
         taxRate: '10',
         discountValue: '',
         isRecurring: false,
@@ -187,15 +198,24 @@ export function CreateInvoiceScreen({ route, navigation }) {
     }, [fetchProducts]);
 
     useEffect(() => {
+        if (editId) return;
+        setForm((prev) =>
+            prev.currency === businessCurrency
+                ? prev
+                : { ...prev, currency: businessCurrency, exchangeRate: 1 }
+        );
+    }, [businessCurrency, editId]);
+
+    useEffect(() => {
         if (editId || !premium) return;
         setForm((prev) => {
             if (String(prev.documentFooter || '').trim()) return prev;
             return {
                 ...prev,
-                documentFooter: getDefaultDocumentFooter(businessInfo?.name, 'invoice'),
+                documentFooter: resolvePrefillDocumentFooter(businessInfo, 'invoice'),
             };
         });
-    }, [editId, premium, businessInfo?.name]);
+    }, [editId, premium, businessInfo]);
 
     useEffect(() => {
         if (!editId || !existing) return;
@@ -233,8 +253,9 @@ export function CreateInvoiceScreen({ route, navigation }) {
             notes: existing.notes || '',
             documentFooter:
                 existing.documentFooter?.trim() ||
-                getDefaultDocumentFooter(businessInfo?.name, 'invoice'),
+                resolvePrefillDocumentFooter(businessInfo, 'invoice'),
             currency: normalizeCurrency(existing.currency || APP_CURRENCY),
+            exchangeRate: existing.exchangeRate || 1,
             taxRate: String(existing.taxRate ?? 10),
             discountValue:
                 existing.discountValue != null && existing.discountValue !== ''
@@ -242,7 +263,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
                     : '',
             ...recurringFieldsFromRecord(existing),
         });
-    }, [editId, existing, clients, navigation, businessInfo?.name]);
+    }, [editId, existing, clients, navigation, businessInfo]);
 
     const clearError = (key) => {
         setFieldErrors((prev) => {
@@ -347,6 +368,14 @@ export function CreateInvoiceScreen({ route, navigation }) {
     });
 
     const persist = async (asDraft = false) => {
+        if (
+            needsExchangeRate(form.currency, businessCurrency) &&
+            !isValidExchangeRate(form.exchangeRate)
+        ) {
+            setPendingCurrency(form.currency);
+            setRateModalOpen(true);
+            return;
+        }
         if (!asDraft && !editId && !tryCreate(() => {})) return;
 
         const shape = validationShape();
@@ -430,8 +459,15 @@ export function CreateInvoiceScreen({ route, navigation }) {
     };
 
     const handleCurrencySelect = (code) => {
-        setField('currency', normalizeCurrency(code));
+        const next = normalizeCurrency(code);
         currencySheetRef.current?.close();
+        if (!needsExchangeRate(next, businessCurrency)) {
+            setForm((prev) => ({ ...prev, currency: next, exchangeRate: 1 }));
+            return;
+        }
+        setPendingCurrency(next);
+        setExchangeRateInput(form.exchangeRate && next === form.currency ? String(form.exchangeRate) : '');
+        setRateModalOpen(true);
     };
 
     const handleUnitOptionSelect = (value) => {
@@ -781,7 +817,7 @@ export function CreateInvoiceScreen({ route, navigation }) {
                                 value={form.documentFooter}
                                 onChangeText={(v) => setField('documentFooter', v)}
                                 multiline
-                                placeholder={getDefaultDocumentFooter(businessInfo?.name, 'invoice')}
+                                placeholder={resolvePrefillDocumentFooter(businessInfo, 'invoice')}
                                 style={{ minHeight: 80, textAlignVertical: 'top' }}
                             />
                         </View>
@@ -881,21 +917,76 @@ export function CreateInvoiceScreen({ route, navigation }) {
                 </ScrollView>
             </BottomSheet>
 
-            <BottomSheet ref={currencySheetRef} snapPoints={['45%']}>
-                <Text style={styles.sheetTitle}>Select currency</Text>
-                <ScrollView>
-                    {SUPPORTED_CURRENCIES.map((c, i, arr) => (
-                        <ListRow
-                            key={c.code}
-                            title={`${c.code} (${c.symbol})`}
-                            subtitle={c.name}
-                            onPress={() => handleCurrencySelect(c.code)}
-                            last={i === arr.length - 1}
-                            dense
+            <SearchablePickerSheet
+                sheetRef={currencySheetRef}
+                title="Currency"
+                options={getCurrencySelectOptions()}
+                searchPlaceholder="Search currencies"
+                onChange={handleCurrencySelect}
+            />
+
+            <Modal
+                visible={rateModalOpen}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setRateModalOpen(false)}
+            >
+                <View style={styles.customUnitOverlay}>
+                    <View style={styles.customUnitBox}>
+                        <Text style={styles.customUnitTitle}>Exchange rate</Text>
+                        <Text style={{ color: colors.slate500, marginBottom: spacing.sm }}>
+                            How many {businessCurrency} equal 1 {pendingCurrency || form.currency}?
+                        </Text>
+                        <TextInput
+                            value={exchangeRateInput}
+                            onChangeText={setExchangeRateInput}
+                            placeholder="0.00"
+                            placeholderTextColor={colors.slate400}
+                            style={styles.customUnitInput}
+                            keyboardType="decimal-pad"
+                            autoFocus
                         />
-                    ))}
-                </ScrollView>
-            </BottomSheet>
+                        {isValidExchangeRate(exchangeRateInput) ? (
+                            <Text style={{ color: colors.slate500, marginTop: spacing.sm }}>
+                                {formatCurrency(1, pendingCurrency || form.currency)} ={' '}
+                                {formatCurrency(
+                                    computeBaseAmounts({
+                                        total: 1,
+                                        exchangeRate: exchangeRateInput,
+                                    }).baseTotal,
+                                    businessCurrency
+                                )}
+                            </Text>
+                        ) : null}
+                        <View style={styles.customUnitActions}>
+                            <Button
+                                title="Cancel"
+                                variant="secondary"
+                                onPress={() => {
+                                    setRateModalOpen(false);
+                                    setPendingCurrency(null);
+                                }}
+                                style={{ flex: 1 }}
+                            />
+                            <Button
+                                title="Save rate"
+                                onPress={() => {
+                                    if (!isValidExchangeRate(exchangeRateInput)) return;
+                                    setForm((prev) => ({
+                                        ...prev,
+                                        currency: normalizeCurrency(pendingCurrency || prev.currency),
+                                        exchangeRate: Number(exchangeRateInput),
+                                    }));
+                                    setRateModalOpen(false);
+                                    setPendingCurrency(null);
+                                }}
+                                disabled={!isValidExchangeRate(exchangeRateInput)}
+                                style={{ flex: 1 }}
+                            />
+                        </View>
+                    </View>
+                </View>
+            </Modal>
 
             <Modal
                 visible={customUnitIndex != null}

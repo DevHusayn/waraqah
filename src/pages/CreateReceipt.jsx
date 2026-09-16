@@ -9,6 +9,8 @@ import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
 import { APP_CURRENCY, normalizeCurrency, formatCurrency } from '../utils/currency';
+import { useDefaultDocumentCurrency } from '../hooks/useBusinessCurrency';
+import { useDocumentExchangeRate } from '../hooks/useDocumentExchangeRate';
 import InvoiceUsageBanner from '../components/InvoiceUsageBanner';
 import { useReceiptCreateGuard } from '../hooks/useReceiptCreateGuard';
 import { useDocumentFormHandlers } from '../hooks/useDocumentFormHandlers';
@@ -129,12 +131,14 @@ const CreateReceipt = () => {
         documentFooter: '',
         status: 'draft',
         currency: APP_CURRENCY,
+        exchangeRate: 1,
         taxRate: 0,
         discountType: 'percent',
         discountValue: '',
     });
 
     formDataRef.current = formData;
+    const businessCurrency = useDefaultDocumentCurrency(id, setFormData, isDirtyRef);
 
     useDocumentFooterPrefill({ id, businessInfo, mode: 'receipt', setFormData });
 
@@ -153,6 +157,13 @@ const CreateReceipt = () => {
         addProduct,
         setCustomUnitModal,
         customUnitModal,
+        markDirty,
+    });
+
+    const exchangeRate = useDocumentExchangeRate({
+        formData,
+        setFormData,
+        businessCurrency,
         markDirty,
     });
 
@@ -329,6 +340,7 @@ const CreateReceipt = () => {
     });
 
     const handleSaveDraft = async () => {
+        if (!exchangeRate.ensureExchangeRate()) return;
         try {
             await persistDraft({ silent: false, redirectAfterCreate: true });
         } catch {
@@ -337,6 +349,7 @@ const CreateReceipt = () => {
     };
 
     const handleIssueReceipt = async () => {
+        if (!exchangeRate.ensureExchangeRate()) return;
         const errors = buildReceiptFieldErrors(formData);
         const order = getReceiptFieldFocusOrder(formData.items.length, formData);
         const firstInvalid = firstFieldError(errors, order);
@@ -603,6 +616,13 @@ const CreateReceipt = () => {
                 customUnitModalOpen={customUnitModal != null}
                 onCloseCustomUnitModal={() => setCustomUnitModal(null)}
                 onCustomUnitSave={handlers.handleCustomUnitSave}
+                exchangeRateOpen={exchangeRate.exchangeRateOpen}
+                exchangeDocumentCurrency={exchangeRate.pendingCurrency}
+                exchangeBusinessCurrency={businessCurrency}
+                exchangeSampleAmount={totals.total || 1}
+                exchangeInitialRate={formData.exchangeRate}
+                onCancelExchangeRate={exchangeRate.cancelExchangeRate}
+                onConfirmExchangeRate={exchangeRate.confirmExchangeRate}
             />
 
             <DocumentPreviewOverlay
@@ -684,7 +704,7 @@ const CreateReceipt = () => {
                             businessInfo={businessInfo}
                             onItemChange={handlers.handleItemChange}
                             onUnitChange={handlers.handleUnitChange}
-                            onCurrencyChange={handlers.handleCurrencyChange}
+                            onCurrencyChange={exchangeRate.handleCurrencyChange}
                             onAddItem={handlers.addItem}
                             onRemoveItem={handlers.removeItem}
                             onApplyProductToLine={handlers.applyProductToLine}
@@ -794,6 +814,7 @@ const CreateReceipt = () => {
                             totals={totals}
                             discountLabel={discountLabel}
                             totalLabel="Total paid"
+                            businessCurrency={businessCurrency}
                             amountReceived={
                                 Number.isFinite(paymentAmountNumber) && paymentAmountNumber > 0
                                     ? paymentAmountNumber

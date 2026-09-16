@@ -119,7 +119,6 @@ export function AuthProvider({ children }) {
             businessInfo: {
                 ...businessInfo,
                 email: businessInfo.email?.trim().toLowerCase(),
-                defaultCurrency: 'NGN',
             },
         });
         // Backend requires email verification before login — do not store a token

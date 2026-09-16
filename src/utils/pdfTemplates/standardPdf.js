@@ -13,6 +13,7 @@ import {
     toPdfSafeText,
     formatWebsiteLabel,
     DEFAULT_BRAND_COLOR,
+    hasInvoicePaymentAccount,
 } from '@waraqah/shared';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
@@ -57,12 +58,7 @@ function lightenColor(rgb, percent) {
 }
 
 function hasPaymentDetails(businessInfo) {
-    return Boolean(
-        businessInfo?.paymentAccountName?.trim() ||
-        businessInfo?.paymentBankName?.trim() ||
-        businessInfo?.paymentAccountNumber?.trim() ||
-        businessInfo?.paymentInstructions?.trim()
-    );
+    return hasInvoicePaymentAccount(businessInfo);
 }
 
 /** Built-in Helvetica looks thin at 8pt; keep labels bold, body regular so wraps stay readable. */

@@ -31,7 +31,7 @@ function buildInitialRows(prompts) {
     });
 }
 
-function CostStep({ label, value, emphasize = false }) {
+function CostStep({ label, value, emphasize = false, currency }) {
     return (
         <div className="min-w-0 flex-1">
             <p className="text-[11px] font-medium uppercase tracking-wide text-foreground-muted mb-1">
@@ -42,7 +42,7 @@ function CostStep({ label, value, emphasize = false }) {
                     emphasize ? 'font-semibold text-foreground' : 'text-foreground-muted'
                 }`}
             >
-                {formatCurrency(value)}
+                {formatCurrency(value, currency)}
             </p>
         </div>
     );
@@ -130,7 +130,7 @@ function ProductPriceRow({ row, currency, saving, onRowChange }) {
                 <div className="rounded-lg border border-border/60 bg-surface/80 p-3 sm:p-4">
                     <p className="text-xs font-medium text-foreground-muted mb-3">Unit cost</p>
                     <div className="flex items-center gap-2 sm:gap-3">
-                        <CostStep label="Before" value={row.previousUnitCost} />
+                        <CostStep label="Before" value={row.previousUnitCost} currency={currency} />
                         <ArrowRight
                             size={16}
                             className="shrink-0 text-foreground-muted/60 mt-4"
@@ -140,6 +140,7 @@ function ProductPriceRow({ row, currency, saving, onRowChange }) {
                             label="After receive"
                             value={row.newUnitCost}
                             emphasize={row.catalogCostChanged}
+                            currency={currency}
                         />
                     </div>
                     {row.poRateDiffersFromSavedCost ? (

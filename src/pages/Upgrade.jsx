@@ -140,7 +140,7 @@ export default function Upgrade() {
                     ))}
                     <li className="flex items-start gap-3 text-xs text-foreground-muted pt-2">
                         <span className="h-5 w-5 shrink-0 flex items-center justify-center text-foreground-muted/70">·</span>
-                        Auto-renews {isYearly ? 'yearly' : 'monthly'} via Paystack ({formatCurrency(amount)})
+                        Auto-renews {isYearly ? 'yearly' : 'monthly'} via Paystack ({formatCurrency(amount, 'NGN')})
                     </li>
                     <li className="flex items-start gap-3 text-xs text-foreground-muted">
                         <span className="h-5 w-5 shrink-0 flex items-center justify-center text-foreground-muted/70">·</span>
@@ -185,8 +185,8 @@ export default function Upgrade() {
 
             <p className="mt-6 text-center text-xs text-foreground-muted leading-relaxed">
                 {isYearly
-                    ? `You will be charged ${formatCurrency(amount)} now and each year until you cancel. Paystack secures your card for renewals.`
-                    : `You will be charged ${formatCurrency(amount)} now and each month until you cancel. Paystack secures your card for renewals.`}
+                    ? `You will be charged ${formatCurrency(amount, 'NGN')} now and each year until you cancel. Paystack secures your card for renewals.`
+                    : `You will be charged ${formatCurrency(amount, 'NGN')} now and each month until you cancel. Paystack secures your card for renewals.`}
             </p>
         </div>
     );

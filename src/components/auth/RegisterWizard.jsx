@@ -12,7 +12,7 @@ import { APP_CURRENCY } from '../../utils/currency';
 import { getNetworkErrorMessage } from '../../utils/apiConfig';
 import { authFetch } from '../../utils/api';
 import { captureEvent } from '../../monitoring/posthog';
-import { ANALYTICS_EVENTS, REPLAY_MASK } from '@waraqah/shared';
+import { ANALYTICS_EVENTS, DEFAULT_PAYMENT_INSTRUCTIONS, REPLAY_MASK, withDefaultPaymentInstructions } from '@waraqah/shared';
 import {
     inputClass,
     focusFieldById,
@@ -39,12 +39,13 @@ export const REGISTER_INITIAL_FORM = {
     businessEmail: '',
     phone: '',
     website: '',
+    country: 'NG',
     defaultCurrency: APP_CURRENCY,
     brandColor: '#16A34A',
     paymentAccountName: '',
     paymentBankName: '',
     paymentAccountNumber: '',
-    paymentInstructions: '',
+    paymentInstructions: DEFAULT_PAYMENT_INSTRUCTIONS,
 };
 
 function PasswordToggle({ visible, onToggle, label }) {
@@ -66,7 +67,7 @@ function loadDraft() {
         if (!raw) return null;
         const parsed = JSON.parse(raw);
         if (!parsed || typeof parsed !== 'object') return null;
-        return { ...REGISTER_INITIAL_FORM, ...parsed.form };
+        return withDefaultPaymentInstructions({ ...REGISTER_INITIAL_FORM, ...parsed.form });
     } catch {
         return null;
     }
@@ -265,7 +266,8 @@ export default function RegisterWizard({
                     email: form.businessEmail.trim().toLowerCase(),
                     phone: form.phone,
                     website: form.website,
-                    defaultCurrency: APP_CURRENCY,
+                    country: form.country || 'NG',
+                    defaultCurrency: form.defaultCurrency || APP_CURRENCY,
                     brandColor: form.brandColor,
                     paymentAccountName: form.paymentAccountName,
                     paymentBankName: form.paymentBankName,
@@ -303,6 +305,8 @@ export default function RegisterWizard({
         email: form.businessEmail,
         phone: form.phone,
         website: form.website,
+        country: form.country,
+        defaultCurrency: form.defaultCurrency,
     };
 
     const profileErrors = {

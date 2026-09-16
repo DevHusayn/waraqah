@@ -9,7 +9,7 @@ import { colors, fontFamily, fontSize, spacing , useTheme } from '../../theme';
 const MENU = [
     { screen: 'CompanyProfile', title: 'Company profile', subtitle: 'Business name, address, contact', icon: Building2 },
     { screen: 'AccountDetails', title: 'Account details', subtitle: 'Bank details for payments', icon: CreditCard },
-    { screen: 'Branding', title: 'Branding', subtitle: 'Logo, color, stamp', icon: Palette },
+    { screen: 'Branding', title: 'Branding', subtitle: 'Logo, color, PDF footer', icon: Palette },
     { screen: 'PlanBilling', title: 'Plan & billing', subtitle: 'Subscription and usage', icon: Crown },
     { screen: 'About', title: 'About', subtitle: 'App info and support', icon: Info },
     { screen: 'Privacy', title: 'Privacy', subtitle: 'How we use your data', icon: Shield },

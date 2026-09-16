@@ -21,6 +21,7 @@ import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 import { formatCurrency } from '../utils/currency';
+import useBusinessCurrency from '../hooks/useBusinessCurrency';
 import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
 
 const VIEW_TABS = [
@@ -62,16 +63,17 @@ const mapMovementRow = (entry) => ({
 });
 
 function InventorySummaryCards({ summary, loading }) {
+    const currency = useBusinessCurrency();
     const cards = [
         { label: 'Tracked products', value: summary?.trackedProducts },
         { label: 'Units on hand', value: summary?.totalUnitsOnHand },
         {
             label: 'Stock value',
-            value: summary ? formatCurrency(summary.totalStockValue || 0) : '—',
+            value: summary ? formatCurrency(summary.totalStockValue || 0, currency) : '—',
         },
         {
             label: 'Potential sales value',
-            value: summary ? formatCurrency(summary.totalPotentialSalesValue || 0) : '—',
+            value: summary ? formatCurrency(summary.totalPotentialSalesValue || 0, currency) : '—',
         },
         { label: 'Low stock', value: summary?.lowStockCount },
         { label: 'Out of stock', value: summary?.outOfStockCount },
@@ -97,6 +99,7 @@ export default function Inventory() {
     const navigate = useNavigate();
     const { user } = useAuth();
     const userId = user?.id;
+    const currency = useBusinessCurrency();
     const [view, setView] = useState('stock');
     const [stockStatus, setStockStatus] = useState('all');
 
@@ -335,7 +338,8 @@ export default function Inventory() {
                                         <DataTableCell className="text-right tabular-nums text-foreground">
                                             {formatCurrency(
                                                 (Number(product.quantityOnHand) || 0) *
-                                                    (Number(product.unitCost) || 0)
+                                                    (Number(product.unitCost) || 0),
+                                                currency
                                             )}
                                         </DataTableCell>
                                     </DataTableRow>

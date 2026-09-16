@@ -75,6 +75,18 @@ export function BrandingSettingsScreen({ navigation }) {
                     ))}
                 </View>
             </Card>
+            {premium ? (
+                <Card style={styles.block} elevated>
+                    <Label>Footer message</Label>
+                    <Text style={styles.hint}>Saved once and used when you create invoices, quotations, and receipts.</Text>
+                    <Input
+                        value={form.defaultDocumentFooter || ''}
+                        onChangeText={(v) => setField('defaultDocumentFooter', v)}
+                        multiline
+                        style={{ minHeight: 88, textAlignVertical: 'top', marginTop: spacing.sm }}
+                    />
+                </Card>
+            ) : null}
             <Card style={styles.block} elevated>
                 <Text style={styles.section}>Premium assets</Text>
                 {!premium ? (

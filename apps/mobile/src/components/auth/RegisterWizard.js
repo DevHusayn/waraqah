@@ -1,11 +1,15 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
     APP_CURRENCY,
     BRAND_PRESETS,
+    DEFAULT_COUNTRY,
     REGISTER_INITIAL_FORM,
     REGISTER_STEPS,
     ANALYTICS_EVENTS,
+    getCountrySelectOptions,
+    getCurrencyForCountry,
+    getCurrencySelectOptions,
     getPasswordStrength,
     validateRegisterStep,
 } from '@waraqah/shared';
@@ -14,8 +18,12 @@ import { captureEvent } from '../../monitoring/posthog';
 import { useToast } from '../../context/ToastContext';
 import { Button, FieldError, Input, Label, Subtitle, Title } from '../ui';
 import { ReplayMask } from '../ReplayMask';
-import { colors, fontFamily, fontSize, radii, spacing , useTheme } from '../../theme';
+import { SearchablePickerField, SearchablePickerSheet } from '../SearchableSheetPicker';
+import { fontFamily, fontSize, radii, spacing, useTheme } from '../../theme';
 import { hapticSuccess } from '../../utils/haptics';
+
+const COUNTRY_OPTIONS = getCountrySelectOptions();
+const CURRENCY_OPTIONS = getCurrencySelectOptions();
 
 export function RegisterWizard({ onComplete }) {
     const { colors } = useTheme();
@@ -25,8 +33,14 @@ export function RegisterWizard({ onComplete }) {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [form, setForm] = useState({ ...REGISTER_INITIAL_FORM, defaultCurrency: APP_CURRENCY });
+    const [form, setForm] = useState({
+        ...REGISTER_INITIAL_FORM,
+        country: DEFAULT_COUNTRY,
+        defaultCurrency: APP_CURRENCY,
+    });
     const [errors, setErrors] = useState({});
+    const countrySheetRef = useRef(null);
+    const currencySheetRef = useRef(null);
 
     const current = REGISTER_STEPS[step - 1];
     const strength = getPasswordStrength(form.password);
@@ -54,7 +68,8 @@ export function RegisterWizard({ onComplete }) {
                 email: form.businessEmail,
                 phone: form.phone,
                 website: form.website,
-                defaultCurrency: APP_CURRENCY,
+                country: form.country || DEFAULT_COUNTRY,
+                defaultCurrency: form.defaultCurrency || APP_CURRENCY,
                 brandColor: form.brandColor,
                 paymentAccountName: form.paymentAccountName,
                 paymentBankName: form.paymentBankName,
@@ -77,6 +92,7 @@ export function RegisterWizard({ onComplete }) {
     };
 
     return (
+        <View>
         <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <View style={styles.progress}>
                 {REGISTER_STEPS.map((s) => (
@@ -125,6 +141,20 @@ export function RegisterWizard({ onComplete }) {
                     <FieldError message={errors.phone} />
                     <Label>Website</Label>
                     <Input value={form.website} onChangeText={(v) => setField('website', v)} autoCapitalize="none" />
+                    <SearchablePickerField
+                        label="Country"
+                        value={form.country || DEFAULT_COUNTRY}
+                        options={COUNTRY_OPTIONS}
+                        helperText="Suggests a currency. You can still pick a different one."
+                        onPress={() => countrySheetRef.current?.expand?.()}
+                    />
+                    <SearchablePickerField
+                        label="Currency"
+                        value={form.defaultCurrency || APP_CURRENCY}
+                        options={CURRENCY_OPTIONS}
+                        helperText="Used on invoices and reports."
+                        onPress={() => currencySheetRef.current?.expand?.()}
+                    />
                 </View>
             ) : null}
 
@@ -140,6 +170,13 @@ export function RegisterWizard({ onComplete }) {
                     <Label>Account number</Label>
                     <Input value={form.paymentAccountNumber} onChangeText={(v) => setField('paymentAccountNumber', v)} keyboardType="number-pad" error={errors.paymentAccountNumber} />
                     <FieldError message={errors.paymentAccountNumber} />
+                    <Label>Payment instructions</Label>
+                    <Input
+                        value={form.paymentInstructions}
+                        onChangeText={(v) => setField('paymentInstructions', v)}
+                        multiline
+                        style={{ minHeight: 80, textAlignVertical: 'top' }}
+                    />
                 </View>
             ) : null}
 
@@ -171,6 +208,24 @@ export function RegisterWizard({ onComplete }) {
                 />
             </View>
         </ScrollView>
+            <SearchablePickerSheet
+                sheetRef={countrySheetRef}
+                title="Country"
+                options={COUNTRY_OPTIONS}
+                searchPlaceholder="Search countries"
+                onChange={(value) => {
+                    setField('country', value);
+                    setField('defaultCurrency', getCurrencyForCountry(value));
+                }}
+            />
+            <SearchablePickerSheet
+                sheetRef={currencySheetRef}
+                title="Currency"
+                options={CURRENCY_OPTIONS}
+                searchPlaceholder="Search currencies"
+                onChange={(value) => setField('defaultCurrency', value)}
+            />
+        </View>
     );
 }
 

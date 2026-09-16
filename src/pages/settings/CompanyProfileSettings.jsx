@@ -1,5 +1,11 @@
-import { Globe, Mail, MapPin, Phone, Clock3 } from 'lucide-react';
-import { BUSINESS_TIMEZONE_OPTIONS } from '@waraqah/shared';
+import { Globe, Mail, MapPin, Phone, Clock3, Banknote } from 'lucide-react';
+import {
+    APP_CURRENCY,
+    BUSINESS_TIMEZONE_OPTIONS,
+    DEFAULT_COUNTRY,
+    getCountryName,
+    getCurrencyInfo,
+} from '@waraqah/shared';
 import FieldValidationMessage from '../../components/FieldValidationMessage';
 import ProfileFormFields from '../../components/settings/ProfileFormFields';
 import SettingsPageShell from '../../components/settings/SettingsPageShell';
@@ -28,7 +34,7 @@ export default function CompanyProfileSettings() {
     } = useBusinessSettingsForm({
         validate: buildProfileFieldErrors,
         fieldOrder: PROFILE_FIELD_ORDER,
-        payloadKeys: ['name', 'address', 'email', 'phone', 'website', 'timezone'],
+        payloadKeys: ['name', 'address', 'email', 'phone', 'website', 'timezone', 'country', 'defaultCurrency'],
         autoEditIfEmpty: true,
         successMessage: 'Company profile saved',
     });
@@ -65,6 +71,19 @@ export default function CompanyProfileSettings() {
                         <div className="sm:col-span-2">
                             <ViewField label="Address" value={businessInfo.address} icon={MapPin} />
                         </div>
+                        <ViewField
+                            label="Country"
+                            value={getCountryName(businessInfo.country || DEFAULT_COUNTRY)}
+                            icon={MapPin}
+                        />
+                        <ViewField
+                            label="Currency"
+                            value={(() => {
+                                const info = getCurrencyInfo(businessInfo.defaultCurrency || APP_CURRENCY);
+                                return `${info.symbol} ${info.name} (${info.code})`;
+                            })()}
+                            icon={Banknote}
+                        />
                         <ViewField
                             label="Business timezone"
                             value={

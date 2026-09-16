@@ -1,4 +1,5 @@
 import { formatCurrency } from '../../utils/currency';
+import useBusinessCurrency from '../../hooks/useBusinessCurrency';
 import MonthComparisonTrend from '../MonthComparisonTrend';
 import AdaptiveStatValue from '../AdaptiveStatValue';
 
@@ -39,6 +40,7 @@ export default function DashboardPeriodStats({
     showComparison = true,
     comparisonLabel,
 }) {
+    const currency = useBusinessCurrency();
     if (loading) {
         return (
             <div className={`grid grid-cols-2 ${premium ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-3 mb-6`}>
@@ -70,20 +72,20 @@ export default function DashboardPeriodStats({
         <div className={`grid grid-cols-2 ${premium ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-3 mb-6`}>
             <PeriodStatCard
                 title="Total Revenue"
-                value={formatCurrency(current?.totalRevenue ?? 0)}
+                value={formatCurrency(current?.totalRevenue ?? 0, currency)}
                 comparison={showComparison ? comparison?.totalRevenue : null}
                 comparisonLabel={comparisonLabel}
             />
             <PeriodStatCard
                 title="Outstanding"
-                value={formatCurrency(current?.outstanding ?? 0)}
+                value={formatCurrency(current?.outstanding ?? 0, currency)}
                 comparison={showComparison ? comparison?.outstanding : null}
                 comparisonLabel={comparisonLabel}
                 positiveDirection="down"
             />
             <PeriodStatCard
                 title="Expenses"
-                value={formatCurrency(current?.totalExpenses ?? 0)}
+                value={formatCurrency(current?.totalExpenses ?? 0, currency)}
                 comparison={showComparison ? comparison?.totalExpenses : null}
                 comparisonLabel={comparisonLabel}
                 positiveDirection="down"
@@ -92,7 +94,7 @@ export default function DashboardPeriodStats({
             {premium ? (
                 <PeriodStatCard
                     title="Net profit"
-                    value={formatCurrency(netProfit)}
+                    value={formatCurrency(netProfit, currency)}
                     valueClassName={profitPositive ? '' : 'text-red-600'}
                     comparison={showComparison ? comparison?.netProfit : null}
                     comparisonLabel={comparisonLabel}

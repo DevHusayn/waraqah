@@ -52,6 +52,8 @@ export const queryKeys = {
         endDate ?? null,
     ],
     expenses: (userId, params) => ['expenses', userId, params],
+    expensePayees: (userId, params) => ['expensePayees', userId, params],
+    expensePayee: (userId, name) => ['expensePayee', userId, name ?? null],
     expenseVendors: (userId) => ['expenseVendors', userId],
     expenseSummary: (userId, period, startDate, endDate) => [
         'expenseSummary',
@@ -60,6 +62,8 @@ export const queryKeys = {
         startDate ?? null,
         endDate ?? null,
     ],
+    staff: (userId) => ['staff', userId],
+    staffPayroll: (userId, year, month) => ['staffPayroll', userId, year ?? null, month ?? null],
 };
 
 export const STALE_TIMES = {

@@ -3,15 +3,16 @@ import { Link, useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { Crown, ListFilter, Plus, Repeat, Search, Wallet } from 'lucide-react';
 import {
-    EXPENSE_CATEGORIES,
+    MANUAL_EXPENSE_CATEGORIES,
     getExpenseCategoryLabel,
-    isPresetExpenseCategory,
 } from '@waraqah/shared';
 import CustomSelect from '../components/CustomSelect';
+import FilterTabs from '../components/FilterTabs';
 import Toolbar, { ToolbarSearch, ToolbarActions } from '../components/Toolbar';
 import PageHeader from '../components/PageHeader';
 import AlertModal from '../components/AlertModal';
 import ExpenseFormModal, { EMPTY_EXPENSE } from '../components/ExpenseFormModal';
+import StaffPayrollPanel from '../components/StaffPayrollPanel';
 import MonthPickerField from '../components/MonthPickerField';
 import MonthComparisonTrend from '../components/MonthComparisonTrend';
 import AdaptiveStatValue from '../components/AdaptiveStatValue';
@@ -28,11 +29,24 @@ import { useSettings } from '../context/SettingsContext';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 import { formatCurrency } from '../utils/currency';
+import useBusinessCurrency from '../hooks/useBusinessCurrency';
 import { isPremiumUser } from '../utils/premium';
 import { invalidateExpenseQueries } from '../lib/queryClient';
+import {
+    expensePayeePath,
+    formatPayeeCategorySummary,
+    formatPayeePaymentCount,
+} from '../utils/expensePayee';
 import ListSortSelect from '../components/ListSortSelect';
 
 const FILTER_ALL = 'all';
+const VIEW_EXPENSES = 'expenses';
+const VIEW_PAYROLL = 'payroll';
+
+const VIEW_TABS = [
+    { value: VIEW_EXPENSES, label: 'Expenses' },
+    { value: VIEW_PAYROLL, label: 'Staff payroll' },
+];
 
 const SORT_OPTIONS = [
     { value: 'newest', label: 'Newest first' },
@@ -43,10 +57,10 @@ const SORT_OPTIONS = [
 ];
 
 const COLUMNS = [
-    { key: 'date', label: 'Date', width: '22%' },
-    { key: 'category', label: 'Category', width: '24%' },
-    { key: 'details', label: 'Details', width: '36%' },
-    { key: 'amount', label: 'Amount', className: 'text-right', width: '18%' },
+    { key: 'name', label: 'Paid to', width: '28%' },
+    { key: 'categories', label: 'Categories', width: '32%' },
+    { key: 'payments', label: 'Payments', width: '16%' },
+    { key: 'amount', label: 'Amount', className: 'text-right', width: '24%' },
 ];
 
 function formatDisplayDate(value) {
@@ -58,7 +72,12 @@ function formatDisplayDate(value) {
     }
 }
 
-const mapExpense = (entry) => ({ ...entry, id: entry._id || entry.id });
+const mapListRow = (entry) => ({ ...entry, id: entry._id || entry.id });
+
+function payeeRowHref(row) {
+    if (row.kind === 'expense') return `/expenses/${row.id}`;
+    return expensePayeePath(row.name);
+}
 
 export default function Expenses() {
     const navigate = useNavigate();
@@ -66,6 +85,7 @@ export default function Expenses() {
     const { user } = useAuth();
     const { businessInfo } = useSettings();
     const premium = isPremiumUser(businessInfo);
+    const currency = useBusinessCurrency();
 
     const {
         periodLabel,
@@ -82,6 +102,8 @@ export default function Expenses() {
         maxDate,
     } = usePeriodFilter();
 
+    const [view, setView] = useState(VIEW_EXPENSES);
+    const [addStaffKey, setAddStaffKey] = useState(0);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalInitialData, setModalInitialData] = useState(EMPTY_EXPENSE);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
@@ -102,7 +124,7 @@ export default function Expenses() {
     const fetcher = useCallback(
         ({ page, limit, search, sort, period, startDate, endDate, recurring, category }) =>
             apiFetch(
-                `/expenses?${buildListQuery({
+                `/expenses/payees?${buildListQuery({
                     page,
                     limit,
                     search,
@@ -126,34 +148,35 @@ export default function Expenses() {
         loading,
         refresh,
     } = usePagedQuery({
-        queryKeyBase: 'expenses',
+        queryKeyBase: 'expensePayees',
         fetcher,
         extraParams: listParams,
     });
 
     const { data: summary, isFetching: summaryFetching } = useExpenseSummaryQuery(queryParams);
 
-    const expenses = data.map(mapExpense);
+    const rows = data.map(mapListRow);
 
     const filterOptions = useMemo(() => {
-        const customCategories = (summary?.byCategory || [])
+        const selectableIds = new Set(MANUAL_EXPENSE_CATEGORIES.map((category) => category.id));
+        const extraCategories = (summary?.byCategory || [])
             .map((row) => row.category)
-            .filter((category) => category && !isPresetExpenseCategory(category));
+            .filter((category) => category && !selectableIds.has(category));
         if (
             categoryFilter &&
             categoryFilter !== FILTER_ALL &&
-            !isPresetExpenseCategory(categoryFilter) &&
-            !customCategories.includes(categoryFilter)
+            !selectableIds.has(categoryFilter) &&
+            !extraCategories.includes(categoryFilter)
         ) {
-            customCategories.push(categoryFilter);
+            extraCategories.push(categoryFilter);
         }
         return [
             { value: FILTER_ALL, label: 'All categories' },
-            ...EXPENSE_CATEGORIES.map((category) => ({
+            ...MANUAL_EXPENSE_CATEGORIES.map((category) => ({
                 value: category.id,
                 label: category.label,
             })),
-            ...customCategories.map((category) => ({
+            ...extraCategories.map((category) => ({
                 value: category,
                 label: getExpenseCategoryLabel(category),
             })),
@@ -187,11 +210,12 @@ export default function Expenses() {
             showToast('Expense added successfully', 'success');
             closeModal();
             invalidateExpenseQueries(user?.id);
-            const newId = created._id || created.id;
-            if (newId) {
-                navigate(`/expenses/${newId}`);
+            const vendor = String(formData.vendor || '').trim();
+            if (vendor) {
+                navigate(expensePayeePath(vendor));
                 return;
             }
+            await refresh();
             await refresh();
         } catch (err) {
             setAlert({
@@ -203,7 +227,7 @@ export default function Expenses() {
         }
     };
 
-    const showTableSkeleton = loading && expenses.length === 0;
+    const showTableSkeleton = loading && rows.length === 0;
 
     return (
         <>
@@ -221,12 +245,45 @@ export default function Expenses() {
                 initialData={modalInitialData}
             />
 
-            <PageHeader title="Expenses" subtitle="Track running costs for your business">
-                <button type="button" onClick={() => openModal()} className="btn-primary">
-                    <Plus size={16} aria-hidden />
-                    Add expense
-                </button>
+            <PageHeader
+                title="Expenses"
+                subtitle={
+                    view === VIEW_PAYROLL
+                        ? 'Record your team and mark salaries paid each month'
+                        : 'Track running costs for your business'
+                }
+            >
+                {view === VIEW_PAYROLL ? (
+                    <button
+                        type="button"
+                        onClick={() => setAddStaffKey((key) => key + 1)}
+                        className="btn-primary"
+                    >
+                        <Plus size={16} aria-hidden />
+                        Add staff
+                    </button>
+                ) : (
+                    <button type="button" onClick={() => openModal()} className="btn-primary">
+                        <Plus size={16} aria-hidden />
+                        Add expense
+                    </button>
+                )}
             </PageHeader>
+
+            <FilterTabs
+                tabs={VIEW_TABS}
+                value={view}
+                onChange={(next) => {
+                    setView(next);
+                    setAddStaffKey(0);
+                }}
+                className="mb-4"
+            />
+
+            {view === VIEW_PAYROLL ? <StaffPayrollPanel openAddKey={addStaffKey} /> : null}
+
+            {view === VIEW_EXPENSES ? (
+            <>
 
             <section
                 className={`mb-6 overflow-hidden rounded-xl border border-border/80 bg-surface shadow-soft transition-opacity ${
@@ -238,7 +295,7 @@ export default function Expenses() {
                     <div className="min-w-0">
                         <p className="text-xs font-medium text-foreground-muted">Total expenses</p>
                         <AdaptiveStatValue
-                            value={formatCurrency(summary?.totals?.totalExpenses ?? 0)}
+                            value={formatCurrency(summary?.totals?.totalExpenses ?? 0, currency)}
                             variant="card"
                             className="mt-1"
                         />
@@ -283,7 +340,7 @@ export default function Expenses() {
                                 >
                                     <span>{row.label}</span>
                                     <span className="font-medium tabular-nums text-foreground">
-                                        {formatCurrency(row.amount)}
+                                        {formatCurrency(row.amount, currency)}
                                     </span>
                                 </span>
                             ))}
@@ -312,7 +369,7 @@ export default function Expenses() {
                         setSearch(e.target.value);
                         setPage(1);
                     }}
-                    placeholder="Search paid to or description…"
+                    placeholder="Search name or description…"
                     icon={Search}
                     aria-label="Search expenses"
                 />
@@ -350,7 +407,7 @@ export default function Expenses() {
                     withToolbar={false}
                     withAction={false}
                 />
-            ) : expenses.length === 0 ? (
+            ) : rows.length === 0 ? (
                 <EmptyState
                     icon={Wallet}
                     title={
@@ -375,7 +432,7 @@ export default function Expenses() {
                               ? 'None of your expenses are set to repeat.'
                               : hasListFilters
                                 ? 'Try a different filter or add an expense in this group.'
-                                : 'Add rent, salaries, transport, and other running costs.'
+                                : 'Add rent, transport, and other running costs.'
                     }
                     action={
                         !search ? (
@@ -389,47 +446,35 @@ export default function Expenses() {
             ) : (
                 <>
                     <div className={`md:hidden rounded-lg border border-border/60 bg-surface shadow-soft overflow-hidden divide-y divide-border/50 transition-opacity ${summaryFetching ? 'opacity-80' : ''}`}>
-                        {expenses.map((expense) => {
-                            const details = [expense.vendor, expense.description]
-                                .filter(Boolean)
-                                .join(' · ');
-                            const categoryLabel = getExpenseCategoryLabel(expense.category);
+                        {rows.map((row) => {
+                            const isPayee = row.kind !== 'expense';
+                            const title = isPayee
+                                ? row.name
+                                : getExpenseCategoryLabel(row.category);
+                            const amount = isPayee ? row.total : row.amount;
+                            const subtitle = isPayee
+                                ? `${formatPayeePaymentCount(row.count)} · ${formatPayeeCategorySummary(row.categories, getExpenseCategoryLabel)}`
+                                : [formatDisplayDate(row.date), row.description].filter(Boolean).join(' · ');
 
                             return (
                                 <Link
-                                    key={expense.id}
-                                    to={`/expenses/${expense.id}`}
+                                    key={row.id}
+                                    to={payeeRowHref(row)}
                                     className="flex items-start gap-2 px-4 py-3.5 hover:bg-surface-muted/70"
                                 >
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-start justify-between gap-3">
                                             <p className="font-medium text-foreground break-words">
-                                                {details || categoryLabel}
+                                                {title}
                                             </p>
                                             <p className="shrink-0 tabular-nums font-semibold text-foreground">
-                                                {formatCurrency(expense.amount || 0)}
+                                                {formatCurrency(amount || 0, currency)}
                                             </p>
                                         </div>
                                         <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-foreground-muted">
-                                            <span>{formatDisplayDate(expense.date)}</span>
-                                            {details ? (
-                                                <>
-                                                    <span aria-hidden>·</span>
-                                                    <span className="inline-flex items-center gap-1">
-                                                        {categoryLabel}
-                                                        {expense.isRecurring ? (
-                                                            <Repeat size={11} className="text-brand" aria-label="Recurring" />
-                                                        ) : null}
-                                                    </span>
-                                                </>
-                                            ) : expense.isRecurring ? (
-                                                <>
-                                                    <span aria-hidden>·</span>
-                                                    <span className="inline-flex items-center gap-1">
-                                                        Recurring
-                                                        <Repeat size={11} className="text-brand" aria-hidden />
-                                                    </span>
-                                                </>
+                                            <span>{subtitle}</span>
+                                            {row.isRecurring ? (
+                                                <Repeat size={11} className="text-brand" aria-label="Recurring" />
                                             ) : null}
                                         </p>
                                     </div>
@@ -444,31 +489,41 @@ export default function Expenses() {
                             fixedLayout
                             className={`transition-opacity ${summaryFetching ? 'opacity-80' : ''}`}
                         >
-                            {expenses.map((expense) => {
-                                const details = [expense.vendor, expense.description]
-                                    .filter(Boolean)
-                                    .join(' · ');
+                            {rows.map((row) => {
+                                const isPayee = row.kind !== 'expense';
+                                const title = isPayee
+                                    ? row.name
+                                    : getExpenseCategoryLabel(row.category) || 'Expense';
+                                const amount = isPayee ? row.total : row.amount;
+                                const categories = isPayee
+                                    ? formatPayeeCategorySummary(row.categories, getExpenseCategoryLabel)
+                                    : (row.description || '—');
+                                const payments = isPayee
+                                    ? formatPayeePaymentCount(row.count)
+                                    : formatDisplayDate(row.date);
 
                                 return (
                                     <DataTableRow
-                                        key={expense.id}
-                                        onClick={() => navigate(`/expenses/${expense.id}`)}
+                                        key={row.id}
+                                        onClick={() => navigate(payeeRowHref(row))}
                                         className="cursor-pointer"
                                     >
-                                        <DataTableCell>{formatDisplayDate(expense.date)}</DataTableCell>
                                         <DataTableCell>
-                                            <span className="inline-flex items-center gap-1.5">
-                                                {getExpenseCategoryLabel(expense.category)}
-                                                {expense.isRecurring ? (
+                                            <span className="inline-flex items-center gap-1.5 font-medium">
+                                                {title}
+                                                {row.isRecurring ? (
                                                     <Repeat size={12} className="text-brand" aria-label="Recurring" />
                                                 ) : null}
                                             </span>
                                         </DataTableCell>
                                         <DataTableCell className="whitespace-normal">
-                                            <span className="text-foreground-muted">{details || '—'}</span>
+                                            <span className="text-foreground-muted">{categories}</span>
+                                        </DataTableCell>
+                                        <DataTableCell className="text-foreground-muted">
+                                            {payments}
                                         </DataTableCell>
                                         <DataTableCell className="text-right tabular-nums font-medium">
-                                            {formatCurrency(expense.amount || 0)}
+                                            {formatCurrency(amount || 0, currency)}
                                         </DataTableCell>
                                     </DataTableRow>
                                 );
@@ -478,6 +533,8 @@ export default function Expenses() {
                     <PaginationBar pagination={pagination} onPageChange={setPage} className="mt-4" />
                 </>
             )}
+            </>
+            ) : null}
         </>
     );
 }

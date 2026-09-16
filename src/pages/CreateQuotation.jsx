@@ -9,6 +9,8 @@ import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
 import { APP_CURRENCY, normalizeCurrency } from '../utils/currency';
+import { useDefaultDocumentCurrency } from '../hooks/useBusinessCurrency';
+import { useDocumentExchangeRate } from '../hooks/useDocumentExchangeRate';
 import InvoiceUsageBanner from '../components/InvoiceUsageBanner';
 import { useQuotationCreateGuard } from '../hooks/useQuotationCreateGuard';
 import { useDocumentFormHandlers } from '../hooks/useDocumentFormHandlers';
@@ -120,12 +122,14 @@ const CreateQuotation = () => {
         terms: DEFAULT_QUOTATION_TERMS,
         status: 'draft',
         currency: APP_CURRENCY,
+        exchangeRate: 1,
         taxRate: 0,
         discountType: 'percent',
         discountValue: '',
     });
 
     formDataRef.current = formData;
+    const businessCurrency = useDefaultDocumentCurrency(id, setFormData, isDirtyRef);
 
     useDocumentFooterPrefill({ id, businessInfo, mode: 'quotation', setFormData });
 
@@ -151,6 +155,13 @@ const CreateQuotation = () => {
         addProduct,
         setCustomUnitModal,
         customUnitModal,
+        markDirty,
+    });
+
+    const exchangeRate = useDocumentExchangeRate({
+        formData,
+        setFormData,
+        businessCurrency,
         markDirty,
     });
 
@@ -336,6 +347,7 @@ const CreateQuotation = () => {
     });
 
     const handleSaveDraft = async () => {
+        if (!exchangeRate.ensureExchangeRate()) return;
         try {
             await persistDraft({ silent: false, redirectAfterCreate: true });
         } catch {
@@ -344,6 +356,7 @@ const CreateQuotation = () => {
     };
 
     const handleSendQuotation = async () => {
+        if (!exchangeRate.ensureExchangeRate()) return;
         const errors = buildQuotationFieldErrors(formData);
         const order = getQuotationFieldFocusOrder(formData.items.length, formData);
         const firstInvalid = firstFieldError(errors, order);
@@ -490,6 +503,7 @@ const CreateQuotation = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (isDraftFlow) return;
+        if (!exchangeRate.ensureExchangeRate()) return;
 
         const errors = buildQuotationFieldErrors(formData);
         const order = getQuotationFieldFocusOrder(formData.items.length, formData);
@@ -610,6 +624,13 @@ const CreateQuotation = () => {
                 customUnitModalOpen={customUnitModal != null}
                 onCloseCustomUnitModal={() => setCustomUnitModal(null)}
                 onCustomUnitSave={handlers.handleCustomUnitSave}
+                exchangeRateOpen={exchangeRate.exchangeRateOpen}
+                exchangeDocumentCurrency={exchangeRate.pendingCurrency}
+                exchangeBusinessCurrency={businessCurrency}
+                exchangeSampleAmount={totals.total || 1}
+                exchangeInitialRate={formData.exchangeRate}
+                onCancelExchangeRate={exchangeRate.cancelExchangeRate}
+                onConfirmExchangeRate={exchangeRate.confirmExchangeRate}
             />
 
             <DocumentPreviewOverlay
@@ -709,7 +730,7 @@ const CreateQuotation = () => {
                             businessInfo={businessInfo}
                             onItemChange={handlers.handleItemChange}
                             onUnitChange={handlers.handleUnitChange}
-                            onCurrencyChange={handlers.handleCurrencyChange}
+                            onCurrencyChange={exchangeRate.handleCurrencyChange}
                             onAddItem={handlers.addItem}
                             onRemoveItem={handlers.removeItem}
                             onApplyProductToLine={handlers.applyProductToLine}
@@ -739,6 +760,7 @@ const CreateQuotation = () => {
                             totals={totals}
                             discountLabel={discountLabel}
                             totalLabel="Estimated total"
+                            businessCurrency={businessCurrency}
                         />
 
                         <div className="hidden xl:block card p-4">{actionButtons('desktop')}</div>

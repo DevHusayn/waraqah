@@ -8,7 +8,9 @@ const SCALAR_FIELDS = [
     'website',
     'taxRate',
     'brandColor',
+    'defaultDocumentFooter',
     'defaultCurrency',
+    'country',
     'timezone',
     'invoiceTemplateId',
     'paymentAccountName',
@@ -49,6 +51,9 @@ export function buildBusinessInfoPayload(formData, businessInfo = {}) {
 
     if (hasOwn(formData, 'defaultCurrency') && payload.defaultCurrency == null) {
         payload.defaultCurrency = 'NGN';
+    }
+    if (hasOwn(formData, 'country') && payload.country == null) {
+        payload.country = 'NG';
     }
 
     const hasAssetUpdate = ASSET_FIELDS.some((key) => hasOwn(formData, key));

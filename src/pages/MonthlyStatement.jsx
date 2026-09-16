@@ -5,6 +5,7 @@ import { useSettings } from '../context/SettingsContext';
 import PageHeader from '../components/PageHeader';
 import { StatementContentSkeleton } from '../components/Skeleton';
 import { formatCurrency } from '../utils/currency';
+import useBusinessCurrency from '../hooks/useBusinessCurrency';
 import { isPremiumUser } from '../utils/premium';
 import {
     buildMonthlyStatement,
@@ -30,6 +31,7 @@ const mapClient = (client) => ({ ...client, id: client._id || client.id });
 export default function MonthlyStatement() {
     const { businessInfo } = useSettings();
     const premium = isPremiumUser(businessInfo);
+    const currency = useBusinessCurrency();
     const [monthValue, setMonthValue] = useState(getDefaultStatementMonth);
     const [exporting, setExporting] = useState(false);
     const [invoices, setInvoices] = useState([]);
@@ -196,13 +198,13 @@ export default function MonthlyStatement() {
                             <ReportStatCell
                                 key={status}
                                 title={statusLabel(status)}
-                                value={formatCurrency(statement.totals[status])}
+                                value={formatCurrency(statement.totals[status], currency)}
                                 titleClassName="uppercase tracking-wide"
                             />
                         ))}
                         <ReportStatCell
                             title="Total billed"
-                            value={formatCurrency(statement.totals.total)}
+                            value={formatCurrency(statement.totals.total, currency)}
                             titleClassName="uppercase tracking-wide text-amber-800 font-semibold"
                             valueClassName="font-bold"
                             className="bg-amber-50/80"
@@ -270,12 +272,12 @@ export default function MonthlyStatement() {
                                                         className="px-4 py-3 text-center text-foreground-muted tabular-nums"
                                                     >
                                                         {row[status] > 0
-                                                            ? formatCurrency(row[status])
+                                                            ? formatCurrency(row[status], currency)
                                                             : '—'}
                                                     </td>
                                                 ))}
                                                 <td className="px-6 py-3 text-center font-semibold text-foreground tabular-nums">
-                                                    {formatCurrency(row.total)}
+                                                    {formatCurrency(row.total, currency)}
                                                 </td>
                                             </tr>
                                         ))}
@@ -288,11 +290,11 @@ export default function MonthlyStatement() {
                                                     key={status}
                                                     className="px-4 py-3 text-center tabular-nums"
                                                 >
-                                                    {formatCurrency(statement.totals[status])}
+                                                    {formatCurrency(statement.totals[status], currency)}
                                                 </td>
                                             ))}
                                             <td className="px-6 py-3 text-center tabular-nums text-brand">
-                                                {formatCurrency(statement.totals.total)}
+                                                {formatCurrency(statement.totals.total, currency)}
                                             </td>
                                         </tr>
                                     </tfoot>
