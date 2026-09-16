@@ -6,6 +6,7 @@ import RequiredLabel from '../RequiredLabel';
 import FieldValidationMessage from '../FieldValidationMessage';
 import CustomSelect from '../CustomSelect';
 import { apiFetch } from '../../utils/api';
+import { FREE_MONTHLY_INVOICE_LIMIT } from '../../utils/invoiceLimits';
 import {
     validateRequired,
     validateEmail,
@@ -88,6 +89,15 @@ const FALLBACK_TEMPLATES = [
         subject: 'Give your business more room to grow',
         preview: 'Premium unlocks branding and higher limits, and keeps your records intact.',
         body: 'If you are ready to look more professional and work with fewer limits, Premium is the next step.\n\nYou keep every client, product, and record you already have. Upgrade takes about a minute, and you can start using the extra room right away.\n\nSee what Premium includes and upgrade when you are ready. Reply if you want help choosing a plan.',
+        actionPreset: 'upgrade',
+        actionLabel: 'Upgrade to Premium',
+    },
+    {
+        id: 'quota-reached',
+        label: 'Quota reached',
+        subject: "You've used this month's free invoices and quotations",
+        preview: 'Upgrade to Premium to keep sending without waiting for next month.',
+        body: `You have used all ${FREE_MONTHLY_INVOICE_LIMIT} free invoices and quotations for this month, so new sales documents are paused until the next cycle.\n\nYour clients, products, and existing records are still there. Upgrade to Premium and you can keep creating invoices and quotations right away, with your logo on PDFs and the other Premium extras.\n\nUpgrade takes about a minute. If you want help choosing a plan, reply to this email.`,
         actionPreset: 'upgrade',
         actionLabel: 'Upgrade to Premium',
     },
