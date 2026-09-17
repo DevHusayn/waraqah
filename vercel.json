@@ -1,11 +1,20 @@
 {
     "rewrites": [
         {
-            "source": "/(.*)",
+            "source": "/((?!sitemap\\.xml$|robots\\.txt$).*)",
             "destination": "/index.html"
         }
     ],
     "headers": [
+        {
+            "source": "/(sitemap.xml|robots.txt)",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=0, must-revalidate"
+                }
+            ]
+        },
         {
             "source": "/(sw.js|workbox-.*\\.js)",
             "headers": [

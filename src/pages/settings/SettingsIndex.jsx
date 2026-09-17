@@ -3,11 +3,15 @@ import SettingsListItem from '../../components/settings/SettingsListItem';
 import SettingsPageShell from '../../components/settings/SettingsPageShell';
 import AppearanceSettings from '../../components/settings/AppearanceSettings';
 import BusinessSummaryCard from '../../components/settings/BusinessSummaryCard';
+import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../context/SettingsContext';
 import { SETTINGS_INDEX } from '../../constants/settingsNav';
 
 export default function SettingsIndex() {
+    const { user } = useAuth();
     const { businessInfo } = useSettings();
+    const usesGoogle = (user?.authProvider || 'local') === 'google';
+    const items = SETTINGS_INDEX.filter((item) => !(item.hideForGoogle && usesGoogle));
 
     return (
         <SettingsPageShell
@@ -21,7 +25,7 @@ export default function SettingsIndex() {
             </SettingsListGroup>
 
             <SettingsListGroup label="Account">
-                {SETTINGS_INDEX.map((item) => (
+                {items.map((item) => (
                     <SettingsListItem
                         key={item.to}
                         to={item.to}

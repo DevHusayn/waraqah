@@ -11,7 +11,7 @@ import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 
 const SECTION_PAYLOAD_KEYS = {
-    profile: ['name', 'address', 'email', 'phone', 'website', 'country', 'defaultCurrency'],
+    profile: ['name', 'address', 'email', 'phone', 'website', 'country', 'defaultCurrency', 'timezone'],
     account: [
         'paymentAccountName',
         'paymentBankName',
@@ -30,6 +30,7 @@ const SECTION_PAYLOAD_KEYS = {
         'website',
         'country',
         'defaultCurrency',
+        'timezone',
         'paymentAccountName',
         'paymentBankName',
         'paymentAccountNumber',

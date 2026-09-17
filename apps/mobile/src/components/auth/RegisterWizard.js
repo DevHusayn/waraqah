@@ -11,6 +11,7 @@ import {
     getCurrencyForCountry,
     getCurrencySelectOptions,
     getPasswordStrength,
+    getTimezoneForCountry,
     validateRegisterStep,
 } from '@waraqah/shared';
 import { useAuth } from '../../context/AuthContext';
@@ -70,6 +71,7 @@ export function RegisterWizard({ onComplete }) {
                 website: form.website,
                 country: form.country || DEFAULT_COUNTRY,
                 defaultCurrency: form.defaultCurrency || APP_CURRENCY,
+                timezone: form.timezone || getTimezoneForCountry(form.country),
                 brandColor: form.brandColor,
                 paymentAccountName: form.paymentAccountName,
                 paymentBankName: form.paymentBankName,
@@ -225,6 +227,7 @@ export function RegisterWizard({ onComplete }) {
                 onChange={(value) => {
                     setField('country', value);
                     setField('defaultCurrency', getCurrencyForCountry(value));
+                    setField('timezone', getTimezoneForCountry(value));
                 }}
             />
             <SearchablePickerSheet

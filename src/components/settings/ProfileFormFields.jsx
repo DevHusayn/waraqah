@@ -4,17 +4,20 @@ import CustomSelect from '../CustomSelect';
 import { inputClass } from '../../utils/formFieldValidation';
 import {
     APP_CURRENCY,
-    BUSINESS_TIMEZONE_OPTIONS,
+    DEFAULT_BUSINESS_TIMEZONE,
     DEFAULT_COUNTRY,
     REPLAY_MASK,
     getCountrySelectOptions,
     getCurrencyForCountry,
     getCurrencySelectOptions,
+    getTimezoneForCountry,
+    getTimezoneSelectOptions,
 } from '@waraqah/shared';
 
 const DEFAULT_REQUIRED_FIELDS = ['name', 'address', 'email', 'phone'];
 const COUNTRY_OPTIONS = getCountrySelectOptions();
 const CURRENCY_OPTIONS = getCurrencySelectOptions();
+const TIMEZONE_OPTIONS = getTimezoneSelectOptions();
 
 function ProfileFieldLabel({ htmlFor, required, children }) {
     if (required) {
@@ -167,6 +170,12 @@ export default function ProfileFormFields({
                                     value: getCurrencyForCountry(value),
                                 },
                             });
+                            onChange({
+                                target: {
+                                    name: 'timezone',
+                                    value: getTimezoneForCountry(value),
+                                },
+                            });
                         }}
                         options={COUNTRY_OPTIONS}
                         searchable
@@ -197,22 +206,18 @@ export default function ProfileFormFields({
                     <label htmlFor={fieldId('timezone')} className="label">
                         Business timezone
                     </label>
-                    <select
+                    <CustomSelect
                         id={fieldId('timezone')}
-                        name="timezone"
-                        value={formData.timezone || 'Africa/Lagos'}
-                        onChange={onChange}
-                        className={inputClass(Boolean(errors.timezone))}
-                        aria-invalid={Boolean(errors.timezone)}
-                    >
-                        {BUSINESS_TIMEZONE_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </select>
+                        value={formData.timezone || DEFAULT_BUSINESS_TIMEZONE}
+                        onChange={(value) => onChange({ target: { name: 'timezone', value } })}
+                        options={TIMEZONE_OPTIONS}
+                        searchable
+                        searchPlaceholder="Search timezones"
+                        error={Boolean(errors.timezone)}
+                        aria-label="Business timezone"
+                    />
                     <p className="text-xs text-foreground-muted mt-1.5">
-                        Used for monthly stats and reporting boundaries.
+                        Used for monthly stats and reporting boundaries. Changing country selects a matching timezone.
                     </p>
                     <FieldValidationMessage message={errors.timezone} />
                 </div>

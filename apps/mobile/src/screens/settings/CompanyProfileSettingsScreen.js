@@ -2,10 +2,13 @@ import { useMemo, useRef } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import {
     APP_CURRENCY,
+    DEFAULT_BUSINESS_TIMEZONE,
     DEFAULT_COUNTRY,
     getCountrySelectOptions,
     getCurrencyForCountry,
     getCurrencySelectOptions,
+    getTimezoneForCountry,
+    getTimezoneSelectOptions,
 } from '@waraqah/shared';
 import { Button, Card, FieldError, Input, Label } from '../../components/ui';
 import { ReplayMask } from '../../components/ReplayMask';
@@ -15,6 +18,7 @@ import { spacing, useTheme } from '../../theme';
 
 const COUNTRY_OPTIONS = getCountrySelectOptions();
 const CURRENCY_OPTIONS = getCurrencySelectOptions();
+const TIMEZONE_OPTIONS = getTimezoneSelectOptions({ grouped: false });
 
 export function CompanyProfileSettingsScreen() {
     const { colors } = useTheme();
@@ -22,6 +26,7 @@ export function CompanyProfileSettingsScreen() {
     const { form, setField, errors, saving, save, loading } = useSettingsForm('profile');
     const countrySheetRef = useRef(null);
     const currencySheetRef = useRef(null);
+    const timezoneSheetRef = useRef(null);
 
     if (loading) return null;
 
@@ -56,6 +61,13 @@ export function CompanyProfileSettingsScreen() {
                         options={CURRENCY_OPTIONS}
                         onPress={() => currencySheetRef.current?.expand?.()}
                     />
+                    <SearchablePickerField
+                        label="Business timezone"
+                        value={form.timezone || DEFAULT_BUSINESS_TIMEZONE}
+                        options={TIMEZONE_OPTIONS}
+                        helperText="Used for monthly stats. Updates when you change country."
+                        onPress={() => timezoneSheetRef.current?.expand?.()}
+                    />
                 </Card>
                 </ReplayMask>
                 <Button title="Save" onPress={save} loading={saving} />
@@ -68,6 +80,7 @@ export function CompanyProfileSettingsScreen() {
                 onChange={(value) => {
                     setField('country', value);
                     setField('defaultCurrency', getCurrencyForCountry(value));
+                    setField('timezone', getTimezoneForCountry(value));
                 }}
             />
             <SearchablePickerSheet
@@ -76,6 +89,13 @@ export function CompanyProfileSettingsScreen() {
                 options={CURRENCY_OPTIONS}
                 searchPlaceholder="Search currencies"
                 onChange={(value) => setField('defaultCurrency', value)}
+            />
+            <SearchablePickerSheet
+                sheetRef={timezoneSheetRef}
+                title="Business timezone"
+                options={TIMEZONE_OPTIONS}
+                searchPlaceholder="Search timezones"
+                onChange={(value) => setField('timezone', value)}
             />
         </View>
     );

@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Building2, CreditCard, Palette, Crown, Info, FileText, Shield } from 'lucide-react-native';
+import { Building2, CreditCard, Palette, Crown, Info, FileText, Shield, Lock } from 'lucide-react-native';
 import { getBusinessInitials, isPremiumUser } from '@waraqah/shared';
+import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../context/SettingsContext';
 import { AvatarInitials, ListRow } from '../../components/ui';
 import { colors, fontFamily, fontSize, spacing , useTheme } from '../../theme';
@@ -11,17 +12,21 @@ const MENU = [
     { screen: 'AccountDetails', title: 'Account details', subtitle: 'Bank details for payments', icon: CreditCard },
     { screen: 'Branding', title: 'Branding', subtitle: 'Logo, color, PDF footer', icon: Palette },
     { screen: 'PlanBilling', title: 'Plan & billing', subtitle: 'Subscription and usage', icon: Crown },
-    { screen: 'About', title: 'About', subtitle: 'App info and support', icon: Info },
-    { screen: 'Privacy', title: 'Privacy', subtitle: 'How we use your data', icon: Shield },
+    { screen: 'Password', title: 'Password', subtitle: 'Change your sign-in password', icon: Lock, hideForGoogle: true },
     { screen: 'Terms', title: 'Terms', subtitle: 'Terms of service', icon: FileText },
+    { screen: 'Privacy', title: 'Privacy', subtitle: 'How we use your data', icon: Shield },
+    { screen: 'About', title: 'About', subtitle: 'App info and support', icon: Info },
 ];
 
 export function SettingsIndexScreen({ navigation }) {
     const { colors } = useTheme();
     const styles = useMemo(() => createStyles(colors), [colors]);
+    const { user } = useAuth();
     const { businessInfo } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const initials = getBusinessInitials(businessInfo?.name || 'W');
+    const usesGoogle = (user?.authProvider || 'local') === 'google';
+    const items = MENU.filter((item) => !(item.hideForGoogle && usesGoogle));
 
     return (
         <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -34,7 +39,7 @@ export function SettingsIndexScreen({ navigation }) {
             </View>
 
             <View style={styles.group}>
-                {MENU.map((item, index) => {
+                {items.map((item, index) => {
                     const Icon = item.icon;
                     return (
                         <ListRow
@@ -43,7 +48,7 @@ export function SettingsIndexScreen({ navigation }) {
                             subtitle={item.subtitle}
                             onPress={() => navigation.navigate(item.screen)}
                             left={<Icon size={20} color={colors.slate600} strokeWidth={2} />}
-                            last={index === MENU.length - 1}
+                            last={index === items.length - 1}
                             dense
                         />
                     );

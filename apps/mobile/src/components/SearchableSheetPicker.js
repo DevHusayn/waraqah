@@ -75,7 +75,7 @@ export function SearchablePickerSheet({
                     filtered.map((option, index) => (
                         <ListRow
                             key={option.value}
-                            title={option.label}
+                            title={option.listLabel || option.label}
                             onPress={() => {
                                 onChange(option.value);
                                 setQuery('');

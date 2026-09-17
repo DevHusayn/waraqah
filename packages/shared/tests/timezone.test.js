@@ -1,11 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+    COUNTRY_TIMEZONE,
     formatPeriodPresetLabel,
     formatSummaryPeriodLabel,
     formatDateRangeLabel,
     getDatePartsInTimezone,
     getPeriodComparisonLabel,
+    getTimezoneForCountry,
+    getTimezoneLabel,
+    getTimezoneSelectOptions,
     getYearMonthInTimezone,
     getWeekBoundsInTimezone,
     getLastWeekBoundsInTimezone,
@@ -21,6 +25,7 @@ import {
     toDateInputValue,
     toMonthInputValue,
 } from '../src/timezone.js';
+import { ISO_COUNTRY_CODES } from '../src/country.js';
 
 test('month input helpers round-trip', () => {
     assert.equal(toMonthInputValue(2026, 8), '2026-08');
@@ -146,3 +151,38 @@ test('getWeekBoundsInTimezone returns Sunday-start week', () => {
     });
     assert.deepEqual(getLastYearMonthInTimezone('Africa/Lagos', now), { year: 2026, month: 7 });
 });
+
+test('getTimezoneForCountry maps country to primary IANA zone', () => {
+    assert.equal(getTimezoneForCountry('NG'), 'Africa/Lagos');
+    assert.equal(getTimezoneForCountry('gh'), 'Africa/Accra');
+    assert.equal(getTimezoneForCountry('KE'), 'Africa/Nairobi');
+    assert.equal(getTimezoneForCountry('GB'), 'Europe/London');
+    assert.equal(getTimezoneForCountry('US'), 'America/New_York');
+    assert.equal(getTimezoneForCountry('AE'), 'Asia/Dubai');
+    assert.equal(getTimezoneForCountry('unknown'), 'Africa/Lagos');
+});
+
+test('country timezone map covers ISO countries with valid IANA zones', () => {
+    for (const code of ISO_COUNTRY_CODES) {
+        assert.equal(Boolean(COUNTRY_TIMEZONE[code]), true, `missing timezone for ${code}`);
+        Intl.DateTimeFormat(undefined, { timeZone: COUNTRY_TIMEZONE[code] });
+    }
+});
+
+test('getTimezoneSelectOptions pins Lagos and stays searchable', () => {
+    const options = getTimezoneSelectOptions({ grouped: false });
+    assert.equal(options[0].value, 'Africa/Lagos');
+    assert.match(options[0].label, /Lagos/i);
+    const values = new Set(options.map((option) => option.value));
+    assert.equal(values.has('Africa/Accra'), true);
+    assert.equal(values.has('Europe/London'), true);
+    assert.equal(values.has('America/Los_Angeles'), true);
+    assert.equal(values.has('UTC'), true);
+
+    const grouped = getTimezoneSelectOptions();
+    assert.equal(grouped[0].header, true);
+    assert.match(grouped[0].label, /Africa/i);
+    assert.equal(getTimezoneLabel('Africa/Lagos'), 'West Africa (Lagos)');
+    assert.equal(getTimezoneLabel('America/Chicago'), 'US Central');
+});
+

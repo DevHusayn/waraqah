@@ -65,6 +65,7 @@ const PrivacySettings = lazy(() => import('./pages/settings/PrivacySettings'));
 const AboutSettings = lazy(() => import('./pages/settings/AboutSettings'));
 const NotificationSettings = lazy(() => import('./pages/settings/NotificationSettings'));
 const InventorySettings = lazy(() => import('./pages/settings/InventorySettings'));
+const PasswordSettings = lazy(() => import('./pages/settings/PasswordSettings'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'));
 const Upgrade = lazy(() => import('./pages/Upgrade'));
@@ -183,6 +184,7 @@ function App() {
                                                 <Route path="plan-billing" element={<PlanBillingSettings />} />
                                                 <Route path="notifications" element={<NotificationSettings />} />
                                                 <Route path="inventory" element={<InventorySettings />} />
+                                                <Route path="password" element={<PasswordSettings />} />
                                                 <Route path="terms" element={<TermsSettings />} />
                                                 <Route path="privacy" element={<PrivacySettings />} />
                                                 <Route path="about" element={<AboutSettings />} />

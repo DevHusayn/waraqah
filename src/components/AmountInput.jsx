@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { formatAmountInput, parseAmountInput } from '../utils/numberInput';
 import { inputClass } from '../utils/formFieldValidation';
 
@@ -17,19 +18,36 @@ export default function AmountInput({
     placeholder = '0.00',
     disabled = false,
     autoComplete = 'off',
+    onFocus,
+    onBlur,
     ...rest
 }) {
-    const displayValue =
+    const formattedValue =
         value === '' || value == null ? '' : formatAmountInput(String(value));
+    // Keep in-progress text (e.g. "10.") so numeric mode does not swallow the decimal point.
+    const [draft, setDraft] = useState(null);
+    const displayValue = draft != null ? draft : formattedValue;
 
     const handleChange = (e) => {
         const raw = e.target.value;
         if (raw === '') {
+            setDraft('');
             onChange('');
             return;
         }
         const formatted = formatAmountInput(raw);
+        setDraft(formatted);
         onChange(numeric ? parseAmountInput(formatted) : formatted);
+    };
+
+    const handleFocus = (e) => {
+        setDraft(formattedValue);
+        onFocus?.(e);
+    };
+
+    const handleBlur = (e) => {
+        setDraft(null);
+        onBlur?.(e);
     };
 
     return (
@@ -40,6 +58,8 @@ export default function AmountInput({
             inputMode="decimal"
             value={displayValue}
             onChange={handleChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             disabled={disabled}
             className={inputClass(error, `${className} tabular-nums`.trim(), { shake: error && shake })}
             placeholder={placeholder}

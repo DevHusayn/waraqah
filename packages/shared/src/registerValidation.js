@@ -35,6 +35,7 @@ export const REGISTER_INITIAL_FORM = {
     website: '',
     defaultCurrency: 'NGN',
     country: 'NG',
+    timezone: 'Africa/Lagos',
     brandColor: '#16A34A',
     paymentAccountName: '',
     paymentBankName: '',

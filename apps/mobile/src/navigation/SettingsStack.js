@@ -7,6 +7,7 @@ import { PlanBillingSettingsScreen } from '../screens/settings/PlanBillingSettin
 import { AboutSettingsScreen } from '../screens/settings/AboutSettingsScreen';
 import { PrivacySettingsScreen } from '../screens/settings/PrivacySettingsScreen';
 import { TermsSettingsScreen } from '../screens/settings/TermsSettingsScreen';
+import { ChangePasswordScreen } from '../screens/settings/ChangePasswordScreen';
 import { getStackScreenOptions } from './headerOptions';
 import { useTheme } from '../theme';
 
@@ -22,6 +23,7 @@ export function SettingsStack() {
             <Stack.Screen name="AccountDetails" component={AccountDetailsSettingsScreen} options={{ title: 'Account details' }} />
             <Stack.Screen name="Branding" component={BrandingSettingsScreen} options={{ title: 'Branding' }} />
             <Stack.Screen name="PlanBilling" component={PlanBillingSettingsScreen} options={{ title: 'Plan & billing' }} />
+            <Stack.Screen name="Password" component={ChangePasswordScreen} options={{ title: 'Password' }} />
             <Stack.Screen name="About" component={AboutSettingsScreen} options={{ title: 'About' }} />
             <Stack.Screen name="Privacy" component={PrivacySettingsScreen} options={{ title: 'Privacy' }} />
             <Stack.Screen name="Terms" component={TermsSettingsScreen} options={{ title: 'Terms' }} />

@@ -1,4 +1,4 @@
-import { Building2, Bell, Crown, FileText, Info, Landmark, Package, Palette, Shield } from 'lucide-react';
+import { Building2, Bell, Crown, FileText, Info, KeyRound, Landmark, Package, Palette, Shield } from 'lucide-react';
 
 export const SETTINGS_INDEX = [
     {
@@ -24,6 +24,13 @@ export const SETTINGS_INDEX = [
         to: '/settings/plan-billing',
         icon: Crown,
         description: 'Subscription, sales document limits, and billing history',
+    },
+    {
+        title: 'Password',
+        to: '/settings/password',
+        icon: KeyRound,
+        description: 'Change the password you use to sign in',
+        hideForGoogle: true,
     },
     {
         title: 'Terms and Conditions',

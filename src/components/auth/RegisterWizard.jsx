@@ -12,7 +12,7 @@ import { APP_CURRENCY } from '../../utils/currency';
 import { getNetworkErrorMessage } from '../../utils/apiConfig';
 import { authFetch } from '../../utils/api';
 import { captureEvent } from '../../monitoring/posthog';
-import { ANALYTICS_EVENTS, DEFAULT_PAYMENT_INSTRUCTIONS, REPLAY_MASK, withDefaultPaymentInstructions } from '@waraqah/shared';
+import { ANALYTICS_EVENTS, DEFAULT_PAYMENT_INSTRUCTIONS, DEFAULT_BUSINESS_TIMEZONE, REPLAY_MASK, getTimezoneForCountry, withDefaultPaymentInstructions } from '@waraqah/shared';
 import {
     inputClass,
     focusFieldById,
@@ -41,6 +41,7 @@ export const REGISTER_INITIAL_FORM = {
     website: '',
     country: 'NG',
     defaultCurrency: APP_CURRENCY,
+    timezone: DEFAULT_BUSINESS_TIMEZONE,
     brandColor: '#16A34A',
     paymentAccountName: '',
     paymentBankName: '',
@@ -271,6 +272,7 @@ export default function RegisterWizard({
                     website: form.website,
                     country: form.country || 'NG',
                     defaultCurrency: form.defaultCurrency || APP_CURRENCY,
+                    timezone: form.timezone || getTimezoneForCountry(form.country),
                     brandColor: form.brandColor,
                     paymentAccountName: form.paymentAccountName,
                     paymentBankName: form.paymentBankName,
@@ -313,6 +315,7 @@ export default function RegisterWizard({
         website: form.website,
         country: form.country,
         defaultCurrency: form.defaultCurrency,
+        timezone: form.timezone,
     };
 
     const profileErrors = {

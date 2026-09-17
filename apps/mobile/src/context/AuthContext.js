@@ -148,6 +148,13 @@ export function AuthProvider({ children }) {
         });
     }, []);
 
+    const changePassword = useCallback(async (currentPassword, newPassword) => {
+        return apiFetch(`${AUTH_URL}/change-password`, {
+            method: 'POST',
+            body: JSON.stringify({ currentPassword, newPassword }),
+        });
+    }, []);
+
     const verifyEmail = useCallback(async (tokenValue) => {
         return apiFetch(`${AUTH_URL}/verify-email/${tokenValue}`, { method: 'POST' });
     }, []);
@@ -172,6 +179,7 @@ export function AuthProvider({ children }) {
             logout,
             forgotPassword,
             resetPassword,
+            changePassword,
             verifyEmail,
             resendVerificationEmail,
             refreshSession,
@@ -187,6 +195,7 @@ export function AuthProvider({ children }) {
             logout,
             forgotPassword,
             resetPassword,
+            changePassword,
             verifyEmail,
             resendVerificationEmail,
             refreshSession,

@@ -9,11 +9,11 @@ export default function SettingsLayout() {
     );
 }
 
-export function SettingsEditButton({ onClick }) {
+export function SettingsEditButton({ onClick, children = 'Edit' }) {
     return (
         <button type="button" onClick={onClick} className="btn-primary text-sm py-2">
             <Edit size={16} aria-hidden />
-            Edit
+            {children}
         </button>
     );
 }

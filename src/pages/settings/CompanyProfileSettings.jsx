@@ -1,10 +1,10 @@
 import { Globe, Mail, MapPin, Phone, Clock3, Banknote } from 'lucide-react';
 import {
     APP_CURRENCY,
-    BUSINESS_TIMEZONE_OPTIONS,
     DEFAULT_COUNTRY,
     getCountryName,
     getCurrencyInfo,
+    getTimezoneLabel,
 } from '@waraqah/shared';
 import FieldValidationMessage from '../../components/FieldValidationMessage';
 import ProfileFormFields from '../../components/settings/ProfileFormFields';
@@ -86,11 +86,7 @@ export default function CompanyProfileSettings() {
                         />
                         <ViewField
                             label="Business timezone"
-                            value={
-                                BUSINESS_TIMEZONE_OPTIONS.find(
-                                    (option) => option.value === businessInfo.timezone
-                                )?.label || businessInfo.timezone
-                            }
+                            value={getTimezoneLabel(businessInfo.timezone)}
                             icon={Clock3}
                         />
                     </dl>
