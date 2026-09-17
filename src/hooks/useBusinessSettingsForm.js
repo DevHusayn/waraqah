@@ -28,6 +28,8 @@ export default function useBusinessSettingsForm({
     payloadKeys,
     autoEditIfEmpty = false,
     successMessage = 'Settings saved successfully',
+    interceptSubmit,
+    onSaveError,
 }) {
     const { businessInfo, updateBusinessInfo } = useSettings();
     const { showToast } = useToast();
@@ -55,34 +57,54 @@ export default function useBusinessSettingsForm({
         clearFieldError(setErrors, name);
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (savingRef.current) return;
-
+    const validateForm = () => {
         const newErrors = validate(formData);
         const firstInvalid = firstFieldError(newErrors, fieldOrder);
         if (firstInvalid) {
             setErrors(newErrors);
             focusFieldById(SETTINGS_FIELD_IDS[firstInvalid]);
-            return;
+            return false;
         }
-
         setErrors({});
+        return true;
+    };
+
+    const saveForm = async (extraPayload = {}, { keepEditing = false, skipValidation = false, successMessage: toastMessage } = {}) => {
+        if (savingRef.current) return false;
+        if (!skipValidation && !validateForm()) return false;
+
         savingRef.current = true;
         setSaving(true);
         try {
-            const update = payloadKeys ? pickFormSlice(formData, payloadKeys) : formData;
+            const update = skipValidation
+                ? extraPayload
+                : {
+                    ...(payloadKeys ? pickFormSlice(formData, payloadKeys) : formData),
+                    ...extraPayload,
+                };
             await updateBusinessInfo(update);
-            setIsEditing(false);
-            showToast(successMessage, 'success');
+            if (!keepEditing) setIsEditing(false);
+            showToast(toastMessage || successMessage, 'success');
+            return true;
         } catch (err) {
             const message = getSaveErrorMessage(err);
+            if (onSaveError?.(message, err) === true) {
+                return false;
+            }
             setErrors({ submit: message });
             showToast(message, 'error');
+            return false;
         } finally {
             savingRef.current = false;
             setSaving(false);
         }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!validateForm()) return;
+        if (interceptSubmit?.(formData, businessInfo) === false) return;
+        await saveForm();
     };
 
     const handleEdit = () => {
@@ -92,6 +114,11 @@ export default function useBusinessSettingsForm({
 
     const handleCancel = () => {
         setFormData(businessInfo);
+        setIsEditing(false);
+        setErrors({});
+    };
+
+    const finishEditing = () => {
         setIsEditing(false);
         setErrors({});
     };
@@ -114,5 +141,7 @@ export default function useBusinessSettingsForm({
         handleEdit,
         handleCancel,
         updateField,
+        saveForm,
+        finishEditing,
     };
 }

@@ -6,9 +6,9 @@ import { shouldPrefetchUserData, getCachedBusinessSummary, cacheBusinessSummary 
 import { buildBusinessInfoPayload } from '../utils/businessPayload';
 import { mergeBusinessInfoSummary, getCompanyLogoAvatarUrl } from '../utils/brandAssets';
 import { isPremiumUser } from '../utils/premium';
-import { DEFAULT_BRAND_COLOR } from '@waraqah/shared';
+import { DEFAULT_BRAND_COLOR, isValidExchangeRate, normalizeCurrency } from '@waraqah/shared';
 import { queryKeys, STALE_TIMES } from '../lib/queryKeys';
-import { invalidateDashboardQueries } from '../lib/queryClient';
+import { invalidateAccountingQueries, invalidateDashboardQueries } from '../lib/queryClient';
 import { SettingsContext } from './settingsStore';
 
 const EMPTY_BUSINESS = {
@@ -42,6 +42,11 @@ const EMPTY_BUSINESS = {
     lowStockEmailAlerts: false,
     allowOverselling: false,
     autoEmailMonthlyStatements: true,
+    hasBooksAmounts: false,
+    booksRebasedAt: null,
+    booksRebaseFrom: null,
+    booksRebaseTo: null,
+    booksRebaseRate: null,
 };
 
 const noop = () => {};
@@ -219,16 +224,30 @@ export const SettingsProvider = ({ children }) => {
     }, [shouldFetch, userId, isLoading, isFetched, businessInfo, fetchBusinessAssets]);
 
     const persistBusinessInfo = useCallback(async (payload) => {
+        const previousCurrency = normalizeCurrency(businessInfo?.defaultCurrency);
         const updated = await apiFetch('/business-info', {
             method: 'PUT',
             body: JSON.stringify(payload),
         });
         assetsLoadedRef.current = true;
         setAssetsReady(true);
-        setBusinessInfo(updated);
-        invalidateDashboardQueries(userId);
+        setBusinessInfo((prev) => {
+            if (!updated || typeof updated !== 'object') return prev;
+            return mergeBusinessInfoSummary(prev, updated);
+        });
+        const nextCurrency = normalizeCurrency(
+            updated?.defaultCurrency || businessInfo?.defaultCurrency
+        );
+        const booksRateChanged =
+            isValidExchangeRate(updated?.booksRebaseRate) &&
+            Number(updated.booksRebaseRate) !== Number(businessInfo?.booksRebaseRate);
+        if (nextCurrency !== previousCurrency || booksRateChanged) {
+            invalidateAccountingQueries(userId);
+        } else {
+            invalidateDashboardQueries(userId);
+        }
         return updated;
-    }, [setBusinessInfo, userId]);
+    }, [businessInfo?.defaultCurrency, businessInfo?.booksRebaseRate, setBusinessInfo, userId]);
 
     const updateBusinessInfo = useCallback(async (info) => {
         const payload = buildBusinessInfoPayload(info, businessInfo);

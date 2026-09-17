@@ -18,6 +18,11 @@ export {
     isValidCountryCode,
     normalizeCountry,
     needsExchangeRate,
+    needsBooksCurrencyRebase,
+    isBooksRebaseRateError,
     isValidExchangeRate,
     computeBaseAmounts,
+    formatExchangeRateValue,
+    sanitizeExchangeRateInput,
+    parseExchangeRateInput,
 } from '@waraqah/shared';

@@ -57,3 +57,36 @@ test('mergeBusinessInfoSummary uses incoming assets when provided', () => {
 test('mergeBusinessInfoSummary returns incoming when prev is missing', () => {
     assert.deepEqual(mergeBusinessInfoSummary(null, premiumSummary), premiumSummary);
 });
+
+test('mergeBusinessInfoSummary keeps filled profile fields when incoming is empty', () => {
+    const prev = {
+        name: 'Acme Ltd',
+        email: 'hello@acme.test',
+        phone: '0800',
+        address: '1 Market St',
+        website: 'https://acme.test',
+        timezone: 'Africa/Lagos',
+        country: 'NG',
+        defaultCurrency: 'NGN',
+        plan: 'free',
+    };
+    const incoming = {
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        website: '',
+        timezone: 'Africa/Lagos',
+        country: 'NG',
+        defaultCurrency: 'NGN',
+        plan: 'free',
+    };
+
+    const merged = mergeBusinessInfoSummary(prev, incoming);
+
+    assert.equal(merged.name, prev.name);
+    assert.equal(merged.email, prev.email);
+    assert.equal(merged.phone, prev.phone);
+    assert.equal(merged.address, prev.address);
+    assert.equal(merged.website, prev.website);
+});

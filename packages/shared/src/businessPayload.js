@@ -58,6 +58,9 @@ export function buildBusinessInfoPayload(formData, businessInfo = {}) {
     if (hasOwn(formData, 'country') && payload.country == null) {
         payload.country = 'NG';
     }
+    if (hasOwn(formData, 'currencyExchangeRate') && formData.currencyExchangeRate != null && formData.currencyExchangeRate !== '') {
+        payload.currencyExchangeRate = Number(formData.currencyExchangeRate);
+    }
 
     const hasAssetUpdate = ASSET_FIELDS.some((key) => hasOwn(formData, key));
     if (!hasAssetUpdate) {

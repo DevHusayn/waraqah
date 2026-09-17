@@ -23,12 +23,13 @@ export function seedDashboardCache(userId, period, startDate, endDate, data) {
     queryClient.setQueryData(queryKeys.dashboard(userId, period, startDate, endDate), data);
 
     if (data.businessInfo) {
-        if (!needsBusinessSetup(data.businessInfo)) {
-            cacheBusinessSummary(data.businessInfo, userId);
-        }
-        queryClient.setQueryData(queryKeys.businessInfo(userId), (prev) =>
-            mergeBusinessInfoSummary(prev, data.businessInfo)
-        );
+        queryClient.setQueryData(queryKeys.businessInfo(userId), (prev) => {
+            const merged = mergeBusinessInfoSummary(prev, data.businessInfo);
+            if (!needsBusinessSetup(merged)) {
+                cacheBusinessSummary(merged, userId);
+            }
+            return merged;
+        });
     }
     if (data.invoiceUsage) {
         queryClient.setQueryData(queryKeys.invoiceUsage(userId), data.invoiceUsage);
@@ -112,6 +113,23 @@ export function invalidateStaffQueries(userId) {
     if (!userId) return;
     queryClient.invalidateQueries({ queryKey: ['staff', userId] });
     invalidateExpenseQueries(userId);
+}
+
+/** After a books currency conversion, refresh every money-labelled cache. */
+export function invalidateAccountingQueries(userId) {
+    if (!userId) return;
+    invalidateInvoiceListQueries(userId);
+    invalidateQuotationListQueries(userId);
+    invalidateReceiptListQueries(userId);
+    invalidateProductListQueries(userId);
+    invalidateExpenseQueries(userId);
+    invalidateStaffQueries(userId);
+    queryClient.invalidateQueries({ queryKey: ['purchaseOrders', userId] });
+    queryClient.invalidateQueries({ queryKey: ['inventoryStock', userId] });
+    queryClient.invalidateQueries({ queryKey: ['inventorySummary', userId] });
+    queryClient.invalidateQueries({ queryKey: ['inventoryTopProducts', userId] });
+    queryClient.invalidateQueries({ queryKey: ['clientsTopBuyers', userId] });
+    invalidateListSummaryQueries(userId);
 }
 
 /** Wipe all cached server state — call on logout / account switch. */

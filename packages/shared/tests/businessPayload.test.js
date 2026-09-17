@@ -80,3 +80,12 @@ test('buildBusinessInfoPayload includes only updated logo assets', () => {
         companyLogoAvatarUrl: 'data:image/jpeg;base64,avatar',
     });
 });
+
+test('buildBusinessInfoPayload includes a one-shot books exchange rate', () => {
+    const payload = buildBusinessInfoPayload({
+        defaultCurrency: 'USD',
+        currencyExchangeRate: 0.00067,
+    });
+    assert.equal(payload.defaultCurrency, 'USD');
+    assert.equal(payload.currencyExchangeRate, 0.00067);
+});

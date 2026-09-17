@@ -127,7 +127,9 @@ export default function CustomSelect({
                     <div className={`shrink-0 p-2 ${openUp ? 'border-t' : 'border-b'} border-border`}>
                         <input
                             ref={searchRef}
-                            type="search"
+                            type="text"
+                            inputMode="search"
+                            autoComplete="off"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder={searchPlaceholder}
@@ -162,8 +164,8 @@ export default function CustomSelect({
                                     <button
                                         type="button"
                                         onClick={() => {
-                                            onChange(opt.value);
                                             setOpen(false);
+                                            onChange(opt.value);
                                         }}
                                         className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                                             active

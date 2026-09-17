@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { lockBodyScroll } from '../utils/bodyScrollLock';
 
@@ -35,7 +36,7 @@ export default function ModalShell({
         return () => document.removeEventListener('keydown', onKeyDown);
     }, [open, onClose]);
 
-    if (!open) return null;
+    if (!open || typeof document === 'undefined') return null;
 
     const sizes = {
         sm: 'max-w-sm',
@@ -45,7 +46,7 @@ export default function ModalShell({
         '2xl': 'max-w-5xl',
     };
 
-    return (
+    return createPortal(
         <div
             className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 ${className}`}
             role="presentation"
@@ -77,6 +78,7 @@ export default function ModalShell({
                 )}
                 {children}
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

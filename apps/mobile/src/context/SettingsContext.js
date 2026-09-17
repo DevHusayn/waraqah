@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { buildBusinessInfoPayload, isPremiumUser } from '@waraqah/shared';
+import { buildBusinessInfoPayload, mergeBusinessInfoSummary } from '@waraqah/shared';
 import { apiFetch } from '../api/client';
 import { getToken } from '../api/storage';
 import { useAuth } from './AuthContext';
@@ -24,30 +24,12 @@ const EMPTY_BUSINESS = {
     companyLogoAvatarUrl: '',
     companyStampUrl: '',
     authorizedSignatureUrl: '',
+    hasBooksAmounts: false,
+    booksRebasedAt: null,
+    booksRebaseFrom: null,
+    booksRebaseTo: null,
+    booksRebaseRate: null,
 };
-
-const SUMMARY_ASSET_FIELDS = [
-    'businessLogo',
-    'companyLogoUrl',
-    'companyLogoAvatarUrl',
-    'companyStampUrl',
-    'authorizedSignatureUrl',
-];
-
-function mergeSummaryBusinessInfo(prev, info) {
-    if (!isPremiumUser(info)) {
-        return info;
-    }
-    const next = { ...info };
-    for (const field of SUMMARY_ASSET_FIELDS) {
-        const incoming = (info[field] || '').trim();
-        const existing = (prev[field] || '').trim();
-        if (!incoming && existing) {
-            next[field] = prev[field];
-        }
-    }
-    return next;
-}
 
 export function SettingsProvider({ children }) {
     const { sessionVersion, isAuthenticated } = useAuth();
@@ -70,7 +52,7 @@ export function SettingsProvider({ children }) {
         }
         try {
             const info = await apiFetch('/business-info?summary=1');
-            setBusinessInfo((prev) => mergeSummaryBusinessInfo(prev, info));
+            setBusinessInfo((prev) => mergeBusinessInfoSummary(prev, info));
             hasHydratedRef.current = true;
         } catch {
             setBusinessInfo(EMPTY_BUSINESS);
@@ -113,7 +95,10 @@ export function SettingsProvider({ children }) {
             body: JSON.stringify(payload),
         });
         assetsLoadedRef.current = true;
-        setBusinessInfo(updated);
+        setBusinessInfo((prev) => {
+            if (!updated || typeof updated !== 'object') return prev;
+            return mergeBusinessInfoSummary(prev, updated);
+        });
         return updated;
     };
 
@@ -124,7 +109,10 @@ export function SettingsProvider({ children }) {
             body: JSON.stringify(payload),
         });
         assetsLoadedRef.current = true;
-        setBusinessInfo(updated);
+        setBusinessInfo((prev) => {
+            if (!updated || typeof updated !== 'object') return prev;
+            return mergeBusinessInfoSummary(prev, updated);
+        });
         return updated;
     };
 

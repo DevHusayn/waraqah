@@ -47,7 +47,7 @@ function pickFormSlice(form, keys) {
     return Object.fromEntries(keys.map((key) => [key, form[key]]));
 }
 
-export function useSettingsForm(section = 'all') {
+export function useSettingsForm(section = 'all', { onSaveError } = {}) {
     const { businessInfo, updateBusinessInfo, loading } = useSettings();
     const { showToast } = useToast();
     const [form, setForm] = useState(
@@ -75,15 +75,21 @@ export function useSettingsForm(section = 'all') {
         return !Object.values(next).some(Boolean);
     };
 
-    const save = async () => {
-        if (!validate()) return false;
+    const save = async (extra = {}, { skipValidation = false, successMessage } = {}) => {
+        if (!skipValidation && !validate()) return false;
         setSaving(true);
         try {
             const keys = SECTION_PAYLOAD_KEYS[section] || SECTION_PAYLOAD_KEYS.all;
-            await updateBusinessInfo(pickFormSlice(form, keys));
-            showToast('Settings saved', 'success');
+            const payload = skipValidation
+                ? extra
+                : { ...pickFormSlice(form, keys), ...extra };
+            await updateBusinessInfo(payload);
+            showToast(successMessage || 'Settings saved', 'success');
             return true;
         } catch (err) {
+            if (onSaveError?.(err.message, err) === true) {
+                return false;
+            }
             showToast(err.message, 'error');
             return false;
         } finally {
@@ -91,5 +97,5 @@ export function useSettingsForm(section = 'all') {
         }
     };
 
-    return { form, setField, errors, saving, save, loading, validate };
+    return { form, setField, errors, saving, save, loading, validate, businessInfo };
 }

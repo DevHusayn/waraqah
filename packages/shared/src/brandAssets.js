@@ -30,21 +30,42 @@ export const BRAND_ASSET_FIELDS = [
 ];
 
 const SUMMARY_ASSET_FIELDS = ['businessLogo', ...BRAND_ASSET_FIELDS];
+const PROFILE_FIELDS = ['name', 'address', 'email', 'phone', 'website'];
+
+function isSparseProfile(info) {
+    return !String(info?.name || '').trim() && !String(info?.email || '').trim();
+}
+
+function keepFilled(next, prev, incoming, fields) {
+    for (const field of fields) {
+        const incomingVal = String(incoming[field] || '').trim();
+        const existingVal = String(prev[field] || '').trim();
+        if (!incomingVal && existingVal) {
+            next[field] = prev[field];
+        }
+    }
+}
 
 /** Keep cached brand assets when a summary payload omits heavy fields. */
 export function mergeBusinessInfoSummary(prev, incoming) {
     if (!incoming) return prev ?? {};
     if (!prev) return incoming;
-    if (!isPremiumUser(incoming)) {
-        return incoming;
-    }
+
     const next = { ...incoming };
-    for (const field of SUMMARY_ASSET_FIELDS) {
-        const incomingVal = (incoming[field] || '').trim();
-        const existingVal = (prev[field] || '').trim();
-        if (!incomingVal && existingVal) {
-            next[field] = prev[field];
-        }
+
+    if (isSparseProfile(incoming) && !isSparseProfile(prev)) {
+        keepFilled(next, prev, incoming, [
+            ...PROFILE_FIELDS,
+            'timezone',
+            'country',
+            'defaultCurrency',
+        ]);
     }
+
+    if (!isPremiumUser(incoming)) {
+        return next;
+    }
+
+    keepFilled(next, prev, incoming, SUMMARY_ASSET_FIELDS);
     return next;
 }
