@@ -20,7 +20,7 @@ import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
 import { APP_DOMAIN, APP_NAME, APP_TAGLINE, APP_WEBSITE_URL } from '../../constants/brand';
-import { getCurrencySymbol } from '../currency';
+import { formatPdfMoney } from '../currency';
 import { getClientBusiness } from '../clientHelpers';
 import { isPremiumUser } from '../premium';
 import {
@@ -696,13 +696,7 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
     const textColor = [31, 41, 55];
     const grayColor = [107, 114, 128];
     const lightGray = [229, 231, 235];
-    const currencySymbol = getCurrencySymbol(invoice.currency || 'NGN', false);
-
-    const formatMoney = (value) =>
-        Number(value || 0).toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
+    const money = (amount) => formatPdfMoney(amount, invoice.currency);
 
     const docNumber =
         getDocumentNumber(invoice, mode) ||
@@ -770,8 +764,8 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         String(index + 1),
         preparePdfItemDescription(item.description || ''),
         (item.quantity || 0).toString(),
-        `${currencySymbol}${formatMoney(item.rate)}`,
-        `${currencySymbol}${formatMoney(Number(item.quantity || 0) * Number(item.rate || 0))}`,
+        money(item.rate),
+        money(Number(item.quantity || 0) * Number(item.rate || 0)),
     ]);
 
     const tableColumnWidths = {
@@ -835,8 +829,6 @@ export async function generateStandardPdf(invoice, client, businessInfo, options
         invoice.status !== 'paid';
     let currentY = ensureSpace(doc.lastAutoTable.finalY + 10, mayShowPartialPayment ? 72 : 48);
     const totalsX = PDF_TOTALS_LABEL_X;
-    const money = (amount) => `${currencySymbol}${formatMoney(amount)}`;
-
     let rowY = currentY;
     rowY = drawPdfTotalsRow(doc, 'Subtotal', money(invoice.subtotal), rowY, {
         labelColor: grayColor,

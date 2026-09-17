@@ -1,6 +1,5 @@
 import { format } from 'date-fns';
 import {
-    getCurrencySymbol,
     getDocumentNumber,
     getInvoiceAmountPaid,
     getInvoiceBalanceDue,
@@ -23,7 +22,7 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
     const isReceipt = resolvedMode === 'receipt';
     const premium = isPremiumUser(businessInfo);
     const brand = businessInfo?.brandColor || '#16A34A';
-    const symbol = getCurrencySymbol(invoice?.currency || 'NGN', false);
+    const currency = invoice?.currency || 'NGN';
     const docNumber = getDocumentNumber(invoice, resolvedMode);
     const signatureUrl = premium ? getAuthorizedSignatureUrl(businessInfo) : '';
     const stampUrl = premium && isReceipt ? getCompanyStampUrl(businessInfo) : '';
@@ -39,8 +38,8 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
       <tr>
         <td class="desc">${escapeHtml(formatDocumentItemDescription(item.description))}</td>
         <td class="num">${escapeHtml(item.quantity)}</td>
-        <td class="num">${escapeHtml(formatMoney(item.rate, symbol))}</td>
-        <td class="num"><strong>${escapeHtml(formatMoney(Number(item.quantity) * Number(item.rate), symbol))}</strong></td>
+        <td class="num">${escapeHtml(formatMoney(item.rate, currency))}</td>
+        <td class="num"><strong>${escapeHtml(formatMoney(Number(item.quantity) * Number(item.rate), currency))}</strong></td>
       </tr>`
         )
         .join('');
@@ -68,20 +67,20 @@ export function buildInvoiceHtml(invoice, client, businessInfo, mode = 'auto') {
     const amountPaidValue = getInvoiceAmountPaid(invoice);
     const balanceDueValue = getInvoiceBalanceDue(invoice);
     const totalsHtml = showPartialPayment
-        ? `<div class="total-row"><span>Subtotal</span><span>${escapeHtml(formatMoney(invoice.subtotal, symbol))}</span></div>
-      <div class="total-row"><span>Tax (${escapeHtml(invoice.taxRate ?? 0)}%)</span><span>${escapeHtml(formatMoney(invoice.tax, symbol))}</span></div>
-      <div class="total-row"><span>Total</span><span>${escapeHtml(formatMoney(invoice.total, symbol))}</span></div>
-      <div class="total-row"><span>Amount paid</span><span>${escapeHtml(formatMoney(amountPaidValue, symbol))}</span></div>
+        ? `<div class="total-row"><span>Subtotal</span><span>${escapeHtml(formatMoney(invoice.subtotal, currency))}</span></div>
+      <div class="total-row"><span>Tax (${escapeHtml(invoice.taxRate ?? 0)}%)</span><span>${escapeHtml(formatMoney(invoice.tax, currency))}</span></div>
+      <div class="total-row"><span>Total</span><span>${escapeHtml(formatMoney(invoice.total, currency))}</span></div>
+      <div class="total-row"><span>Amount paid</span><span>${escapeHtml(formatMoney(amountPaidValue, currency))}</span></div>
       <div class="total-row total-bold" style="color:${escapeHtml(brand)}">
         <span>BALANCE DUE</span>
-        <span>${escapeHtml(formatMoney(balanceDueValue, symbol))}</span>
+        <span>${escapeHtml(formatMoney(balanceDueValue, currency))}</span>
       </div>`
-        : `<div class="total-row"><span>Subtotal</span><span>${escapeHtml(formatMoney(invoice.subtotal, symbol))}</span></div>
-      <div class="total-row"><span>Tax (${escapeHtml(invoice.taxRate ?? 0)}%)</span><span>${escapeHtml(formatMoney(invoice.tax, symbol))}</span></div>
-      <div class="total-row total-bold"><span>Total</span><span>${escapeHtml(formatMoney(invoice.total, symbol))}</span></div>
+        : `<div class="total-row"><span>Subtotal</span><span>${escapeHtml(formatMoney(invoice.subtotal, currency))}</span></div>
+      <div class="total-row"><span>Tax (${escapeHtml(invoice.taxRate ?? 0)}%)</span><span>${escapeHtml(formatMoney(invoice.tax, currency))}</span></div>
+      <div class="total-row total-bold"><span>Total</span><span>${escapeHtml(formatMoney(invoice.total, currency))}</span></div>
       <div class="total-row total-bold" style="color:${escapeHtml(brand)}">
         <span>${isReceipt ? 'TOTAL PAID' : 'TOTAL DUE'}</span>
-        <span>${escapeHtml(formatMoney(invoice.total, symbol))}</span>
+        <span>${escapeHtml(formatMoney(invoice.total, currency))}</span>
       </div>`;
 
     const body = `

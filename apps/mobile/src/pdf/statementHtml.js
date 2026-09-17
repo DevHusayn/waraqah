@@ -1,9 +1,8 @@
 import { format } from 'date-fns';
-import { getCurrencySymbol } from '@waraqah/shared';
 import { escapeHtml, formatMoney, wrapHtml } from './htmlUtils';
 
 export function buildStatementHtml(statement, businessInfo) {
-    const symbol = getCurrencySymbol(businessInfo?.defaultCurrency || 'NGN', false);
+    const currency = businessInfo?.defaultCurrency || 'NGN';
     const brand = businessInfo?.brandColor || '#16A34A';
 
     const summaryRows = [
@@ -18,7 +17,7 @@ export function buildStatementHtml(statement, businessInfo) {
             ([label, val]) => `
       <tr>
         <td>${escapeHtml(label)}</td>
-        <td style="text-align:right">${escapeHtml(formatMoney(val, symbol))}</td>
+        <td style="text-align:right">${escapeHtml(formatMoney(val, currency))}</td>
       </tr>`
         )
         .join('');
@@ -28,10 +27,10 @@ export function buildStatementHtml(statement, businessInfo) {
             (row) => `
       <tr>
         <td>${escapeHtml(row.clientName)}</td>
-        <td class="num">${escapeHtml(formatMoney(row.paid, symbol))}</td>
-        <td class="num">${escapeHtml(formatMoney(row.partial, symbol))}</td>
-        <td class="num">${escapeHtml(formatMoney(row.pending, symbol))}</td>
-        <td class="num">${escapeHtml(formatMoney(row.total, symbol))}</td>
+        <td class="num">${escapeHtml(formatMoney(row.paid, currency))}</td>
+        <td class="num">${escapeHtml(formatMoney(row.partial, currency))}</td>
+        <td class="num">${escapeHtml(formatMoney(row.pending, currency))}</td>
+        <td class="num">${escapeHtml(formatMoney(row.total, currency))}</td>
       </tr>`
         )
         .join('');

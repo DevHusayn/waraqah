@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import { autoTable } from 'jspdf-autotable';
 import { format } from 'date-fns';
-import { getCurrencySymbol } from './currency';
+import { formatPdfMoney } from './currency';
 import { drawPdfGeometricBackground } from './pdfBackground';
 import { PAGE_H } from './pdfLogo';
 import { closePdfPrintTab, preparePdfPrintTab, printPdfBlob } from './shareInvoicePdf';
@@ -17,11 +17,8 @@ function hexToRgb(hex) {
         : [2, 132, 199];
 }
 
-function formatMoney(value, currencySymbol) {
-    return `${currencySymbol} ${Number(value || 0).toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    })}`;
+function formatMoney(value, currency) {
+    return formatPdfMoney(value, currency);
 }
 
 function statusLabel(status) {
@@ -51,7 +48,7 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
     const primaryColor = hexToRgb(businessInfo?.brandColor || '#16A34A');
     const textColor = [31, 41, 55];
     const grayColor = [107, 114, 128];
-    const currencySymbol = getCurrencySymbol(businessInfo?.defaultCurrency || 'NGN', false);
+    const currency = businessInfo?.defaultCurrency || 'NGN';
 
     drawPdfGeometricBackground(doc);
 
@@ -76,12 +73,12 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
     doc.text('Statement summary', 15, 52);
 
     const summaryBody = [
-        ['Paid', formatMoney(statement.totals.paid, currencySymbol)],
-        ['Balance', formatMoney(statement.totals.partial, currencySymbol)],
-        ['Pending', formatMoney(statement.totals.pending, currencySymbol)],
-        ['Overdue', formatMoney(statement.totals.overdue, currencySymbol)],
-        ['Cancelled', formatMoney(statement.totals.cancelled, currencySymbol)],
-        ['Total billed', formatMoney(statement.totals.total, currencySymbol)],
+        ['Paid', formatMoney(statement.totals.paid, currency)],
+        ['Balance', formatMoney(statement.totals.partial, currency)],
+        ['Pending', formatMoney(statement.totals.pending, currency)],
+        ['Overdue', formatMoney(statement.totals.overdue, currency)],
+        ['Cancelled', formatMoney(statement.totals.cancelled, currency)],
+        ['Total billed', formatMoney(statement.totals.total, currency)],
         ['Documents in period', String(statement.totals.documentCount)],
     ];
 
@@ -132,22 +129,22 @@ export async function generateMonthlyStatementPdf(statement, businessInfo, optio
             row.clientSubtitle
                 ? `${row.clientName}\n${row.clientSubtitle}`
                 : row.clientName,
-            formatMoney(row.paid, currencySymbol),
-            formatMoney(row.partial, currencySymbol),
-            formatMoney(row.pending, currencySymbol),
-            formatMoney(row.overdue, currencySymbol),
-            formatMoney(row.cancelled, currencySymbol),
-            formatMoney(row.total, currencySymbol),
+            formatMoney(row.paid, currency),
+            formatMoney(row.partial, currency),
+            formatMoney(row.pending, currency),
+            formatMoney(row.overdue, currency),
+            formatMoney(row.cancelled, currency),
+            formatMoney(row.total, currency),
         ]);
 
         const footRow = [
             'Total',
-            formatMoney(statement.totals.paid, currencySymbol),
-            formatMoney(statement.totals.partial, currencySymbol),
-            formatMoney(statement.totals.pending, currencySymbol),
-            formatMoney(statement.totals.overdue, currencySymbol),
-            formatMoney(statement.totals.cancelled, currencySymbol),
-            formatMoney(statement.totals.total, currencySymbol),
+            formatMoney(statement.totals.paid, currency),
+            formatMoney(statement.totals.partial, currency),
+            formatMoney(statement.totals.pending, currency),
+            formatMoney(statement.totals.overdue, currency),
+            formatMoney(statement.totals.cancelled, currency),
+            formatMoney(statement.totals.total, currency),
         ];
 
         const clientAlign = ['left', 'center', 'center', 'center', 'center', 'center', 'center'];

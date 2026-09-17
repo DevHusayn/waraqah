@@ -3,9 +3,12 @@ import assert from 'node:assert/strict';
 import {
     APP_CURRENCY,
     formatCurrency,
+    formatPdfMoney,
     getCurrencyInfo,
     getCurrencySelectOptions,
     getCurrencySymbol,
+    getPdfCurrencyPrefix,
+    isPdfSafeCurrencySymbol,
     isValidCurrencyCode,
     normalizeCurrency,
 } from '../src/currency.js';
@@ -64,6 +67,34 @@ test('getCurrencySymbol returns symbol or ISO code', () => {
     assert.equal(getCurrencySymbol('USD', false), 'USD');
     assert.equal(getCurrencySymbol(false), 'NGN');
     assert.match(getCurrencySymbol('USD'), /\$/);
+});
+
+test('isPdfSafeCurrencySymbol allows Helvetica glyphs only', () => {
+    assert.equal(isPdfSafeCurrencySymbol('£'), true);
+    assert.equal(isPdfSafeCurrencySymbol('$'), true);
+    assert.equal(isPdfSafeCurrencySymbol('€'), true);
+    assert.equal(isPdfSafeCurrencySymbol('NGN'), true);
+    assert.equal(isPdfSafeCurrencySymbol('₦'), false);
+    assert.equal(isPdfSafeCurrencySymbol('₹'), false);
+});
+
+test('getPdfCurrencyPrefix uses printable symbols and falls back to ISO codes', () => {
+    assert.equal(getPdfCurrencyPrefix('GBP'), '£');
+    assert.equal(getPdfCurrencyPrefix('USD'), '$');
+    assert.equal(getPdfCurrencyPrefix('EUR'), '€');
+    assert.equal(getPdfCurrencyPrefix('NGN'), 'NGN');
+    assert.equal(getPdfCurrencyPrefix('GHS'), 'GHS');
+    assert.equal(getPdfCurrencyPrefix('NGN', { winAnsi: false }), getCurrencyInfo('NGN').symbol);
+});
+
+test('formatPdfMoney spaces letter prefixes and keeps glyphs flush', () => {
+    assert.equal(formatPdfMoney(8, 'GBP'), '£8.00');
+    assert.equal(formatPdfMoney(8, 'NGN'), 'NGN 8.00');
+    assert.equal(formatPdfMoney(1234.5, 'USD'), '$1,234.50');
+    const ngnSymbol = getCurrencyInfo('NGN').symbol;
+    const ngnHtml = formatPdfMoney(8, 'NGN', { winAnsi: false });
+    assert.ok(ngnHtml.startsWith(ngnSymbol));
+    assert.match(ngnHtml, /8\.00$/);
 });
 
 test('getCurrencySelectOptions pins NGN and includes major currencies', () => {

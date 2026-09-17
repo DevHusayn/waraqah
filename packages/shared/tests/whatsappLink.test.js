@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    buildAdminWhatsAppOnboardingMessage,
+    formatAdminWhatsAppMessage,
     getCallingCode,
     toWhatsAppUrl,
 } from '../src/whatsappLink.js';
@@ -37,15 +37,14 @@ test('toWhatsAppUrl defaults unknown country calling code to Nigeria', () => {
     assert.equal(toWhatsAppUrl('08031234567', 'XX'), 'https://wa.me/2348031234567');
 });
 
-test('buildAdminWhatsAppOnboardingMessage greets the business name', () => {
-    const message = buildAdminWhatsAppOnboardingMessage('Pure Radiance Glow');
-    assert.match(message, /^Hi Pure Radiance Glow,/);
-    assert.match(message, /Team Waraqah$/);
-    assert.match(message, /recently registered on Waraqah/);
+test('formatAdminWhatsAppMessage wraps body with greeting and sign-off', () => {
+    const message = formatAdminWhatsAppMessage('Pure Radiance Glow', 'Welcome aboard.');
+    assert.equal(message, 'Hi Pure Radiance Glow,\n\nWelcome aboard.\n\nTeam Waraqah');
+    assert.equal(formatAdminWhatsAppMessage('SAMIF', '  '), '');
 });
 
-test('toWhatsAppUrl appends encoded onboarding message', () => {
-    const message = buildAdminWhatsAppOnboardingMessage('SAMIF');
+test('toWhatsAppUrl appends encoded message text', () => {
+    const message = formatAdminWhatsAppMessage('SAMIF', 'Welcome aboard.');
     const url = toWhatsAppUrl('08031234567', 'NG', message);
     assert.ok(url.startsWith('https://wa.me/2348031234567?text='));
     assert.equal(decodeURIComponent(url.split('?text=')[1]), message);

@@ -6,7 +6,7 @@ import RequiredLabel from '../RequiredLabel';
 import FieldValidationMessage from '../FieldValidationMessage';
 import CustomSelect from '../CustomSelect';
 import { apiFetch } from '../../utils/api';
-import { FREE_MONTHLY_INVOICE_LIMIT } from '../../utils/invoiceLimits';
+import { FALLBACK_TEMPLATES } from './adminMessageTemplates';
 import {
     validateRequired,
     validateEmail,
@@ -60,64 +60,6 @@ const FALLBACK_PRESETS = [
         from: 'Waraqah <support@mail.mywaraqah.com>',
         requiresReplyTo: true,
         hint: 'Add a name to show “Zahrah from Waraqah”. Replies go to the address you enter.',
-    },
-];
-
-const FALLBACK_TEMPLATES = [
-    { id: 'blank', label: 'Blank message', subject: '', preview: '', body: '', actionPreset: 'none', actionLabel: '' },
-    {
-        id: 'we-miss-you',
-        label: 'We miss you',
-        subject: 'Your Waraqah workspace is waiting',
-        preview: 'Come back in and pick up right where you left off.',
-        body: 'Your workspace is still here, with your clients, products, and records ready to go.\n\nA few minutes today can get you back in flow. Open your dashboard, update a record, and send your next document.\n\nIf something held you back, reply to this email. We want you running smoothly again.',
-        actionPreset: 'dashboard',
-        actionLabel: 'Go to dashboard',
-    },
-    {
-        id: 'finish-setup',
-        label: 'Finish setup',
-        subject: 'Finish setting up your Waraqah workspace',
-        preview: 'Your workspace is ready. Take the next step today.',
-        body: 'You are closer than you think. Your Waraqah workspace is ready, and the next step takes only a few minutes.\n\nAdd a client or product, create your first document, and send it. Once that is done, the rest of your work has a home.\n\nOpen your dashboard now and finish setup while it is fresh. If you get stuck, reply and we will help.',
-        actionPreset: 'dashboard',
-        actionLabel: 'Go to dashboard',
-    },
-    {
-        id: 'try-premium',
-        label: 'Try Premium',
-        subject: 'Give your business more room to grow',
-        preview: 'Premium unlocks branding and higher limits, and keeps your records intact.',
-        body: 'If you are ready to look more professional and work with fewer limits, Premium is the next step.\n\nYou keep every client, product, and record you already have. Upgrade takes about a minute, and you can start using the extra room right away.\n\nSee what Premium includes and upgrade when you are ready. Reply if you want help choosing a plan.',
-        actionPreset: 'upgrade',
-        actionLabel: 'Upgrade to Premium',
-    },
-    {
-        id: 'quota-reached',
-        label: 'Quota reached',
-        subject: "You've used this month's free invoices and quotations",
-        preview: 'Upgrade to Premium to keep sending without waiting for next month.',
-        body: `You have used all ${FREE_MONTHLY_INVOICE_LIMIT} free invoices and quotations for this month, so new sales documents are paused until the next cycle.\n\nYour clients, products, and existing records are still there. Upgrade to Premium and you can keep creating invoices and quotations right away, with your logo on PDFs and the other Premium extras.\n\nUpgrade takes about a minute. If you want help choosing a plan, reply to this email.`,
-        actionPreset: 'upgrade',
-        actionLabel: 'Upgrade to Premium',
-    },
-    {
-        id: 'billing-help',
-        label: 'Billing help',
-        subject: 'Keep your Waraqah plan running smoothly',
-        preview: 'Review billing in a minute, or reply and we will help.',
-        body: 'A quick check now can prevent a surprise later. Your plan, payment method, and billing history are all in Settings.\n\nIf a charge failed or something looks off, open billing and update it today. We can also sort it out if you reply to this email.',
-        actionPreset: 'billing',
-        actionLabel: 'Manage billing',
-    },
-    {
-        id: 'need-a-hand',
-        label: 'Need a hand?',
-        subject: 'We can help you get more from Waraqah',
-        preview: 'Reply with what you need and we will jump in.',
-        body: 'You do not have to figure Waraqah out alone. If something is not working, or you want a faster way to manage clients, products, or your workspace, we are here.\n\nReply with what you need. We will help you get unblocked so you can get back to running your business.',
-        actionPreset: 'none',
-        actionLabel: '',
     },
 ];
 

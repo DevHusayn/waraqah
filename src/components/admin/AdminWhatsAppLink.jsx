@@ -1,4 +1,6 @@
-import { buildAdminWhatsAppOnboardingMessage, toWhatsAppUrl } from '@waraqah/shared';
+import { useState } from 'react';
+import { toWhatsAppUrl } from '@waraqah/shared';
+import AdminWhatsAppModal from './AdminWhatsAppModal';
 
 function WhatsAppIcon({ size = 16 }) {
     return (
@@ -16,25 +18,31 @@ function WhatsAppIcon({ size = 16 }) {
 }
 
 export default function AdminWhatsAppLink({ phone, country, name, businessName, className = '' }) {
+    const [open, setOpen] = useState(false);
     const label = String(name || '').trim() || 'WhatsApp';
-    const url = toWhatsAppUrl(
-        phone,
-        country,
-        buildAdminWhatsAppOnboardingMessage(businessName || label),
-    );
+    const url = toWhatsAppUrl(phone, country);
     if (!url) return null;
 
     return (
-        <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={`Chat on WhatsApp: ${label}`}
-            aria-label={`Chat on WhatsApp with ${label}`}
-            className={`inline-flex items-center gap-1.5 min-w-0 max-w-full text-[#25D366] hover:underline ${className}`.trim()}
-        >
-            <WhatsAppIcon />
-            <span className="truncate font-medium">{label}</span>
-        </a>
+        <>
+            <button
+                type="button"
+                onClick={() => setOpen(true)}
+                title={`Chat on WhatsApp: ${label}`}
+                aria-label={`Chat on WhatsApp with ${label}`}
+                className={`inline-flex items-center gap-1.5 min-w-0 max-w-full text-[#25D366] hover:underline ${className}`.trim()}
+            >
+                <WhatsAppIcon />
+                <span className="truncate font-medium">{label}</span>
+            </button>
+            <AdminWhatsAppModal
+                open={open}
+                onClose={() => setOpen(false)}
+                phone={phone}
+                country={country}
+                businessName={businessName}
+                displayName={label}
+            />
+        </>
     );
 }

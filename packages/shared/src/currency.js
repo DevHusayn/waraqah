@@ -189,3 +189,57 @@ export const getCurrencySymbol = (currencyOrShowSymbol = true, showSymbol = true
     const { currency, useSymbol } = parseCurrencyArgs(currencyOrShowSymbol, showSymbol, true);
     return useSymbol ? getCurrencyInfo(currency).symbol : currency;
 };
+
+/**
+ * jsPDF Helvetica is WinAnsi. Glyphs outside that set (₦, ₹, ₵, …) print blank.
+ * Latin-1 symbols (£, $, ¥) and the euro (U+20AC → WinAnsi 0x80) are safe.
+ */
+const PDF_SAFE_EXTRA_CODE_POINTS = new Set([0x20ac]);
+
+export function isPdfSafeCurrencySymbol(symbol) {
+    const text = String(symbol || '');
+    if (!text) return false;
+    for (const char of text) {
+        const codePoint = char.codePointAt(0);
+        if (codePoint >= 0x20 && codePoint <= 0x7e) continue;
+        if (codePoint >= 0xa0 && codePoint <= 0xff) continue;
+        if (PDF_SAFE_EXTRA_CODE_POINTS.has(codePoint)) continue;
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Prefix for PDF amounts: native symbol when it will print, otherwise the ISO code.
+ * @param {string} [code]
+ * @param {{ winAnsi?: boolean }} [options] `winAnsi` defaults true for jsPDF Helvetica.
+ *   Pass false for HTML documents that can render full Unicode.
+ */
+export function getPdfCurrencyPrefix(code = APP_CURRENCY, { winAnsi = true } = {}) {
+    const info = getCurrencyInfo(code);
+    const symbol = String(info.symbol || '').trim();
+    const useSymbol =
+        Boolean(symbol) &&
+        symbol !== info.code &&
+        (!winAnsi || isPdfSafeCurrencySymbol(symbol));
+    return useSymbol ? symbol : info.code;
+}
+
+/**
+ * Format an amount for invoice/receipt/statement PDFs.
+ * Glyph prefixes sit flush (£8.00); letter prefixes get a space (NGN 8.00).
+ */
+export function formatPdfMoney(amount, currency = APP_CURRENCY, options = {}) {
+    const {
+        winAnsi = true,
+        minimumFractionDigits = 2,
+        maximumFractionDigits = 2,
+    } = options;
+    const prefix = getPdfCurrencyPrefix(currency, { winAnsi });
+    const value = formatNumber(amount).toLocaleString('en-US', {
+        minimumFractionDigits,
+        maximumFractionDigits,
+    });
+    const gap = /[A-Za-z]/.test(prefix) ? ' ' : '';
+    return `${prefix}${gap}${value}`;
+}

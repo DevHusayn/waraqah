@@ -15,16 +15,18 @@ export function getCallingCode(country) {
     return COUNTRY_CALLING_CODES[code] || DEFAULT_CALLING_CODE;
 }
 
-export function buildAdminWhatsAppOnboardingMessage(businessName) {
+/**
+ * Wrap a shared admin message body for WhatsApp (greeting + sign-off).
+ * Email already adds “Hi {name},” in the HTML template.
+ */
+export function formatAdminWhatsAppMessage(businessName, body) {
     const name = String(businessName || '').trim();
+    const text = String(body || '').trim();
+    if (!text) return '';
     const greeting = name ? `Hi ${name},` : 'Hi,';
     return `${greeting}
 
-We noticed that you recently registered on Waraqah. We'd love to help you set up your business properly and show you how to get the best out of Waraqah.
-
-If you don't mind sparing a few minutes, we'd be happy to guide you through the setup so you can start using Waraqah for your business today.
-
-Looking forward to helping you get started.
+${text}
 
 Team Waraqah`;
 }

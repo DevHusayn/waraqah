@@ -30,7 +30,7 @@ export default function LineItemEditor({
     businessInfo,
     onItemChange,
     onUnitChange,
-    onCurrencyChange = () => {},
+    onCurrencyChange = () => { },
     onApplyProduct,
     showStockWarnings = true,
     productPriceField = 'unitPrice',
@@ -160,6 +160,7 @@ export default function LineItemEditor({
                             aria-label={`Currency for rate on item ${index + 1}`}
                             className="w-[5.75rem] shrink-0"
                             menuClassName="left-0 min-w-[18rem] w-max max-w-[min(24rem,calc(100vw-2rem))]"
+                            listClassName="scroll-x-touch"
                         />
                         <AmountInput
                             id={`${idPrefix}-item-${index}-rate`}

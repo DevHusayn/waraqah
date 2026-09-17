@@ -42,6 +42,7 @@ export default function CustomSelect({
     searchable = false,
     searchPlaceholder = 'Search…',
     menuClassName = '',
+    listClassName = '',
     'aria-label': ariaLabel,
 }) {
     const [open, setOpen] = useState(false);
@@ -138,7 +139,7 @@ export default function CustomSelect({
                 <ul
                     role="listbox"
                     aria-labelledby={id}
-                    className="min-h-0 flex-1 overflow-y-auto"
+                    className={`min-h-0 flex-1 overflow-y-auto ${listClassName}`.trim()}
                 >
                     {filtered.length === 0 ? (
                         <li className="px-3 py-2 text-sm text-foreground-muted">No matches</li>

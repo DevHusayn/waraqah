@@ -197,6 +197,7 @@ export default function ProfileFormFields({
                         searchable
                         searchPlaceholder="Search currencies"
                         aria-label="Currency"
+                        listClassName="scroll-x-touch"
                     />
                 </div>
             </div>

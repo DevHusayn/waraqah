@@ -1,6 +1,5 @@
 import { format } from 'date-fns';
 import {
-    getCurrencySymbol,
     getDocumentNumber,
     isPremiumUser,
     getAuthorizedSignatureUrl,
@@ -16,7 +15,7 @@ import { escapeHtml, formatMoney, wrapHtml } from './htmlUtils';
 export function buildQuotationHtml(quotation, client, businessInfo) {
     const premium = isPremiumUser(businessInfo);
     const brand = businessInfo?.brandColor || '#16A34A';
-    const symbol = getCurrencySymbol(quotation?.currency || 'NGN', false);
+    const currency = quotation?.currency || 'NGN';
     const docNumber = getDocumentNumber(quotation, 'quotation');
     const signatureUrl = premium ? getAuthorizedSignatureUrl(businessInfo) : '';
     const ownerName = String(businessInfo?.name || '').trim();
@@ -32,8 +31,8 @@ export function buildQuotationHtml(quotation, client, businessInfo) {
       <tr>
         <td class="desc">${escapeHtml(formatDocumentItemDescription(item.description))}</td>
         <td class="num">${escapeHtml(item.quantity)}</td>
-        <td class="num">${escapeHtml(formatMoney(item.rate, symbol))}</td>
-        <td class="num"><strong>${escapeHtml(formatMoney(Number(item.quantity) * Number(item.rate), symbol))}</strong></td>
+        <td class="num">${escapeHtml(formatMoney(item.rate, currency))}</td>
+        <td class="num"><strong>${escapeHtml(formatMoney(Number(item.quantity) * Number(item.rate), currency))}</strong></td>
       </tr>`
         )
         .join('');
@@ -98,12 +97,12 @@ export function buildQuotationHtml(quotation, client, businessInfo) {
       <tbody>${itemRows}</tbody>
     </table>
     <div class="totals">
-      <div class="total-row"><span>Subtotal</span><span>${escapeHtml(formatMoney(quotation.subtotal, symbol))}</span></div>
-      <div class="total-row"><span>Tax (${escapeHtml(quotation.taxRate ?? 0)}%)</span><span>${escapeHtml(formatMoney(quotation.tax, symbol))}</span></div>
-      <div class="total-row total-bold"><span>Total</span><span>${escapeHtml(formatMoney(quotation.total, symbol))}</span></div>
+      <div class="total-row"><span>Subtotal</span><span>${escapeHtml(formatMoney(quotation.subtotal, currency))}</span></div>
+      <div class="total-row"><span>Tax (${escapeHtml(quotation.taxRate ?? 0)}%)</span><span>${escapeHtml(formatMoney(quotation.tax, currency))}</span></div>
+      <div class="total-row total-bold"><span>Total</span><span>${escapeHtml(formatMoney(quotation.total, currency))}</span></div>
       <div class="total-row total-bold" style="color:${escapeHtml(brand)}">
         <span>ESTIMATED TOTAL</span>
-        <span>${escapeHtml(formatMoney(quotation.total, symbol))}</span>
+        <span>${escapeHtml(formatMoney(quotation.total, currency))}</span>
       </div>
     </div>
     ${
