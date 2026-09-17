@@ -38,6 +38,8 @@ import {
     getShareFallbackHint,
     downloadPdfBlob,
     printPdfFromSource,
+    isShareAbortError,
+    getPdfActionErrorMessage,
 } from '../utils/shareInvoicePdf';
 import { PDF_DOCUMENT_TYPES } from '@waraqah/shared';
 import { getCachedPdf, setCachedPdf, clearCachedPdf } from '../utils/pdfCache';
@@ -332,22 +334,14 @@ const QuotationDetails = () => {
     useEffect(() => {
         if (!quotation || !client || !quotationHasLineItems(quotation)) return undefined;
 
-        clearCachedPdf(id);
         let cancelledEffect = false;
 
         (async () => {
-            const existing = getCachedPdf(id, 'quotation');
-            if (existing) return;
             try {
                 const generated = await generateQuotationPdf(quotation, client, businessInfo);
                 if (!cancelledEffect) setCachedPdf(id, 'quotation', generated);
-            } catch (err) {
-                if (!cancelledEffect) {
-                    setAlert({
-                        open: true,
-                        message: err.message || 'Failed to prepare quotation PDF.',
-                    });
-                }
+            } catch {
+                // Keep any existing cache. Share/download will retry on demand.
             }
         })();
 
@@ -378,12 +372,17 @@ const QuotationDetails = () => {
                 cached,
             });
             if (result.method !== 'share') {
-                const hint = getShareFallbackHint();
-                if (hint) showToast(hint, 'info');
+                showToast(getShareFallbackHint(), 'info');
             }
         } catch (err) {
-            if (err?.name === 'AbortError') return;
-            setAlert({ open: true, message: err.message || 'Failed to share PDF.' });
+            if (isShareAbortError(err)) return;
+            setAlert({
+                open: true,
+                message: getPdfActionErrorMessage(
+                    err,
+                    'Could not share the PDF. Try downloading it from the menu instead.'
+                ),
+            });
         }
     };
 
@@ -393,7 +392,7 @@ const QuotationDetails = () => {
             downloadPdfBlob(cached.blob, cached.filename, { documentType: PDF_DOCUMENT_TYPES.QUOTATION });
             showToast('PDF downloaded', 'success');
         } catch (err) {
-            setAlert({ open: true, message: err.message || 'Failed to download PDF.' });
+            setAlert({ open: true, message: getPdfActionErrorMessage(err, 'Failed to download PDF.') });
         }
     };
 
@@ -404,7 +403,7 @@ const QuotationDetails = () => {
                 showToast('PDF downloaded. Open it to print.', 'success');
             }
         } catch (err) {
-            setAlert({ open: true, message: err.message || 'Failed to print PDF.' });
+            setAlert({ open: true, message: getPdfActionErrorMessage(err, 'Failed to print PDF.') });
         }
     };
 

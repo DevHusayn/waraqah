@@ -26,7 +26,12 @@ import { buildInvoicePayload, prepareInvoicePdf } from '../utils/sendInvoiceFlow
 import { notifyStockWarnings, validateDocumentStock, aggregateCatalogQuantities } from '../utils/stockWarnings';
 import { clientDetailsFromRecord } from '../utils/ensureInvoiceClient';
 import ClientDetailsModal from '../components/ClientDetailsModal';
-import { shareInvoicePdf, getShareFallbackHint } from '../utils/shareInvoicePdf';
+import {
+    shareInvoicePdf,
+    getShareFallbackHint,
+    isShareAbortError,
+    isShareNotAllowedError,
+} from '../utils/shareInvoicePdf';
 import DocumentFormModals from '../components/documentForm/DocumentFormModals';
 import DocumentDetailsSection from '../components/documentForm/DocumentDetailsSection';
 import DocumentClientSection from '../components/documentForm/DocumentClientSection';
@@ -518,13 +523,17 @@ const CreateInvoice = () => {
                 { mode: 'invoice', cached: sharePdfRef.current }
             );
             if (shareResult?.method !== 'share') {
-                const hint = getShareFallbackHint();
-                if (hint) showToast(hint, 'info');
+                showToast(getShareFallbackHint(), 'info');
             }
             finishAfterShare();
         } catch (shareErr) {
-            if (shareErr?.name === 'AbortError') return;
-            showToast(shareErr.message || 'Could not share PDF', 'error');
+            if (isShareAbortError(shareErr)) return;
+            showToast(
+                isShareNotAllowedError(shareErr)
+                    ? getShareFallbackHint()
+                    : shareErr.message || 'Could not share PDF',
+                isShareNotAllowedError(shareErr) ? 'info' : 'error'
+            );
         }
     };
 

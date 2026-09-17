@@ -32,7 +32,14 @@ import ClientFormModal, { EMPTY_CLIENT } from '../components/ClientFormModal';
 import FormSection from '../components/FormSection';
 import StatusBadge from '../components/StatusBadge';
 import ActionMenu from '../components/ActionMenu';
-import { shareInvoicePdf, getShareFallbackHint, downloadPdfBlob, printPdfFromSource } from '../utils/shareInvoicePdf';
+import {
+    shareInvoicePdf,
+    getShareFallbackHint,
+    downloadPdfBlob,
+    printPdfFromSource,
+    isShareAbortError,
+    getPdfActionErrorMessage,
+} from '../utils/shareInvoicePdf';
 import { formatRecurringSummary, PDF_DOCUMENT_TYPES } from '@waraqah/shared';
 import { getCachedPdf, setCachedPdf, clearCachedPdf } from '../utils/pdfCache';
 import { formatCurrency } from '../utils/currency';
@@ -224,14 +231,6 @@ function InvoiceActionsPanel({
             ]
           : [
                 {
-                    id: 'share-invoice',
-                    label: 'Share Invoice',
-                    icon: Share2,
-                    onClick: () => onShare('invoice'),
-                    hidden: !canMarkPaid,
-                    disabled: saving,
-                },
-                {
                     id: 'email-invoice',
                     label: emailing ? 'Sending…' : 'Email Invoice',
                     icon: Send,
@@ -335,6 +334,17 @@ function InvoiceActionsPanel({
                             {PrimaryIcon ? <PrimaryIcon size={18} aria-hidden /> : null}
                             {primaryAction.label}
                         </button>
+                        {!isReceiptView && canMarkPaid ? (
+                            <button
+                                type="button"
+                                onClick={() => onShare('invoice')}
+                                className="btn-secondary h-full min-h-[40px] px-3"
+                                disabled={saving}
+                                aria-label="Share Invoice"
+                            >
+                                <Share2 size={18} aria-hidden />
+                            </button>
+                        ) : null}
                         <ActionMenu
                             items={menuItems}
                             disabled={saving}
@@ -533,8 +543,6 @@ const InvoiceDetails = () => {
     useEffect(() => {
         if (!invoice || !client || cancelled || !invoiceHasLineItems(invoice)) return undefined;
 
-        clearCachedPdf(id);
-
         const modes = paid ? ['receipt', 'invoice'] : ['invoice'];
         let cancelledEffect = false;
 
@@ -542,20 +550,12 @@ const InvoiceDetails = () => {
             for (const mode of modes) {
                 if (cancelledEffect) return;
 
-                const existing = getCachedPdf(id, mode);
-                if (existing) continue;
-
                 try {
                     const generated = await generateInvoicePdf(invoice, client, businessInfo, { mode });
                     if (cancelledEffect) return;
                     setCachedPdf(id, mode, generated);
-                } catch (err) {
-                    if (!cancelledEffect) {
-                        setAlert({
-                            open: true,
-                            message: err.message || `Failed to prepare ${mode} PDF.`,
-                        });
-                    }
+                } catch {
+                    // Keep any existing cache. Share/download will retry on demand.
                 }
             }
         })();
@@ -580,12 +580,17 @@ const InvoiceDetails = () => {
 
             const result = await shareInvoicePdf(invoice, client, businessInfo, { mode, cached });
             if (result.method !== 'share') {
-                const hint = getShareFallbackHint();
-                if (hint) showToast(hint, 'info');
+                showToast(getShareFallbackHint(), 'info');
             }
         } catch (err) {
-            if (err?.name === 'AbortError') return;
-            setAlert({ open: true, message: err.message || 'Failed to share PDF.' });
+            if (isShareAbortError(err)) return;
+            setAlert({
+                open: true,
+                message: getPdfActionErrorMessage(
+                    err,
+                    'Could not share the PDF. Try downloading it from the menu instead.'
+                ),
+            });
         }
     };
 
@@ -611,7 +616,7 @@ const InvoiceDetails = () => {
             });
             showToast('PDF downloaded', 'success');
         } catch (err) {
-            setAlert({ open: true, message: err.message || 'Failed to download PDF.' });
+            setAlert({ open: true, message: getPdfActionErrorMessage(err, 'Failed to download PDF.') });
         }
     };
 
@@ -622,7 +627,7 @@ const InvoiceDetails = () => {
                 showToast('PDF downloaded. Open it to print.', 'success');
             }
         } catch (err) {
-            setAlert({ open: true, message: err.message || 'Failed to print PDF.' });
+            setAlert({ open: true, message: getPdfActionErrorMessage(err, 'Failed to print PDF.') });
         }
     };
 

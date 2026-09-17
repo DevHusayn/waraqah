@@ -47,6 +47,24 @@ export function canSharePdfFiles() {
     }
 }
 
+export function isShareAbortError(err) {
+    return err?.name === 'AbortError';
+}
+
+/** Browser blocked Web Share (lost tap gesture, files permission, etc.). */
+export function isShareNotAllowedError(err) {
+    if (!err) return false;
+    if (err.name === 'NotAllowedError' || err.name === 'SecurityError') return true;
+    return /permission denied|not allowed|user gesture/i.test(String(err.message || ''));
+}
+
+export function getPdfActionErrorMessage(err, fallback) {
+    if (isShareNotAllowedError(err)) {
+        return 'Could not prepare the PDF in this browser. Try downloading it, or share the public link instead.';
+    }
+    return err?.message || fallback;
+}
+
 export function downloadPdfBlob(blob, filename, { documentType } = {}) {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
@@ -222,15 +240,29 @@ export async function printPdfFromSource(getSource) {
 }
 
 export async function shareCachedPdfBlob({ blob, filename, message, docNumber, documentType }) {
-    const file = new File([blob], filename, { type: 'application/pdf' });
-    const shareData = { text: message, title: docNumber, files: [file] };
+    try {
+        const file = new File([blob], filename, { type: 'application/pdf' });
+        const payloads = [
+            { text: message, title: docNumber, files: [file] },
+            { files: [file], title: docNumber },
+        ];
 
-    if (navigator.share && navigator.canShare?.(shareData)) {
-        await navigator.share(shareData);
-        if (documentType) {
-            capturePdfDownloaded(documentType, PDF_ACTIONS.SHARE);
+        if (navigator.share) {
+            for (const payload of payloads) {
+                try {
+                    if (!navigator.canShare?.(payload)) continue;
+                    await navigator.share(payload);
+                    if (documentType) {
+                        capturePdfDownloaded(documentType, PDF_ACTIONS.SHARE);
+                    }
+                    return { method: 'share' };
+                } catch (err) {
+                    if (isShareAbortError(err)) throw err;
+                }
+            }
         }
-        return { method: 'share' };
+    } catch (err) {
+        if (isShareAbortError(err)) throw err;
     }
 
     downloadPdfBlob(blob, filename, { documentType });
@@ -260,7 +292,5 @@ export async function shareInvoicePdf(invoice, client, businessInfo, options = {
 }
 
 export function getShareFallbackHint() {
-    return canSharePdfFiles()
-        ? null
-        : 'Your browser opened a download instead. Attach the PDF in WhatsApp or your email app.';
+    return 'Your browser opened a download instead. Attach the PDF in WhatsApp or your email app.';
 }
