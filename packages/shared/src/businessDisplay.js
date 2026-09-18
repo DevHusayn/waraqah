@@ -1,7 +1,7 @@
 export const DEFAULT_BUSINESS_DISPLAY_NAME = 'Your business';
 export const DASHBOARD_SUBTITLE = 'Your business at a glance';
 export const DEFAULT_PAYMENT_INSTRUCTIONS =
-    'Kindly use the invoice number as your payment reference. Send proof of payment to my DM.';
+    'Kindly Send proof of payment to my DM.';
 
 const PAYMENT_ACCOUNT_FIELDS = [
     'paymentAccountName',
