@@ -26,7 +26,6 @@ export default function useBusinessSettingsForm({
     validate,
     fieldOrder,
     payloadKeys,
-    autoEditIfEmpty = false,
     successMessage = 'Settings saved successfully',
     interceptSubmit,
     onSaveError,
@@ -44,12 +43,6 @@ export default function useBusinessSettingsForm({
             setFormData(businessInfo);
         }
     }, [businessInfo, isEditing]);
-
-    useEffect(() => {
-        if (autoEditIfEmpty && !businessInfo.name?.trim() && !businessInfo.email?.trim()) {
-            setIsEditing(true);
-        }
-    }, [autoEditIfEmpty, businessInfo.name, businessInfo.email]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;

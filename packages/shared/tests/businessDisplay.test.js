@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-    DEFAULT_PAYMENT_INSTRUCTIONS,
     hasInvoicePaymentAccount,
     getInvoicePaymentLines,
     withDefaultPaymentInstructions,
@@ -10,7 +9,7 @@ import {
 test('hasInvoicePaymentAccount is false when only payment instructions are set', () => {
     assert.equal(
         hasInvoicePaymentAccount({
-            paymentInstructions: DEFAULT_PAYMENT_INSTRUCTIONS,
+            paymentInstructions: 'Pay via transfer',
         }),
         false
     );
@@ -46,10 +45,10 @@ test('getInvoicePaymentLines includes filled international fields', () => {
     );
 });
 
-test('withDefaultPaymentInstructions fills empty instructions and keeps custom text', () => {
+test('withDefaultPaymentInstructions leaves empty instructions empty and keeps custom text', () => {
     assert.equal(
         withDefaultPaymentInstructions({ paymentAccountName: 'Acme' }).paymentInstructions,
-        DEFAULT_PAYMENT_INSTRUCTIONS
+        ''
     );
     assert.equal(
         withDefaultPaymentInstructions({ paymentInstructions: 'Pay via transfer' }).paymentInstructions,

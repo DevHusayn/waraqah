@@ -1,7 +1,7 @@
 export const DEFAULT_BUSINESS_DISPLAY_NAME = 'Your business';
 export const DASHBOARD_SUBTITLE = 'Your business at a glance';
-export const DEFAULT_PAYMENT_INSTRUCTIONS =
-    'Kindly Send proof of payment to my DM.';
+/** Empty by default — users opt in via Account details. */
+export const DEFAULT_PAYMENT_INSTRUCTIONS = '';
 
 const PAYMENT_ACCOUNT_FIELDS = [
     'paymentAccountName',

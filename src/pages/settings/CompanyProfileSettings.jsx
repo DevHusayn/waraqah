@@ -56,7 +56,6 @@ export default function CompanyProfileSettings() {
         validate: buildProfileFieldErrors,
         fieldOrder: PROFILE_FIELD_ORDER,
         payloadKeys: ['name', 'address', 'email', 'phone', 'website', 'timezone', 'country', 'defaultCurrency'],
-        autoEditIfEmpty: true,
         successMessage: 'Company profile saved',
         interceptSubmit: (form, saved) => {
             if (needsBooksCurrencyRebase(form.defaultCurrency, saved.defaultCurrency, saved.hasBooksAmounts)) {

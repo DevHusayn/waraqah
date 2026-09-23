@@ -456,6 +456,9 @@ function drawBottomBoxes(
             doc.setTextColor(...primaryColor);
             doc.text('PAYMENT INFORMATION', 19, y + 7);
 
+            // Match wrap measurement: body at 7.5pt normal (header left font bold/8pt).
+            doc.setFontSize(7.5);
+            setPdfBodyFont(doc);
             doc.setTextColor(...grayColor);
             let py = y + 12;
             const paymentLh = pdfLineHeightMm(7.5);

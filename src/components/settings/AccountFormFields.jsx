@@ -1,6 +1,6 @@
 import FieldValidationMessage from '../FieldValidationMessage';
 import { inputClass } from '../../utils/formFieldValidation';
-import { DEFAULT_PAYMENT_INSTRUCTIONS, REPLAY_MASK } from '@waraqah/shared';
+import { REPLAY_MASK } from '@waraqah/shared';
 
 export default function AccountFormFields({ formData, errors, onChange, idPrefix = 'settings-' }) {
     const paymentFieldId = (suffix) => `${idPrefix}payment-${suffix}`;
@@ -119,7 +119,7 @@ export default function AccountFormFields({ formData, errors, onChange, idPrefix
                     onChange={onChange}
                     className="input-field resize-none min-h-[88px]"
                     rows={3}
-                    placeholder={DEFAULT_PAYMENT_INSTRUCTIONS}
+                    placeholder="e.g. Use the invoice number as your payment reference"
                 />
             </div>
         </div>

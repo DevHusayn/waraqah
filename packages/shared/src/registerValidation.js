@@ -9,7 +9,6 @@ import {
     buildAccountFieldErrors,
     buildBrandingFieldErrors,
 } from './settingsValidation.js';
-import { DEFAULT_PAYMENT_INSTRUCTIONS } from './businessDisplay.js';
 
 export const REGISTER_STEPS = [
     { id: 1, title: 'Your account', subtitle: 'Sign-in email and password' },
@@ -43,7 +42,7 @@ export const REGISTER_INITIAL_FORM = {
     paymentSortCode: '',
     paymentIban: '',
     paymentSwift: '',
-    paymentInstructions: DEFAULT_PAYMENT_INSTRUCTIONS,
+    paymentInstructions: '',
 };
 
 const REGISTER_FIELD_IDS = {

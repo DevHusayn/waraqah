@@ -12,7 +12,7 @@ import { APP_CURRENCY } from '../../utils/currency';
 import { getNetworkErrorMessage } from '../../utils/apiConfig';
 import { authFetch } from '../../utils/api';
 import { captureEvent } from '../../monitoring/posthog';
-import { ANALYTICS_EVENTS, DEFAULT_PAYMENT_INSTRUCTIONS, DEFAULT_BUSINESS_TIMEZONE, REPLAY_MASK, getTimezoneForCountry, withDefaultPaymentInstructions } from '@waraqah/shared';
+import { ANALYTICS_EVENTS, DEFAULT_BUSINESS_TIMEZONE, REPLAY_MASK, getTimezoneForCountry } from '@waraqah/shared';
 import {
     inputClass,
     focusFieldById,
@@ -49,7 +49,7 @@ export const REGISTER_INITIAL_FORM = {
     paymentSortCode: '',
     paymentIban: '',
     paymentSwift: '',
-    paymentInstructions: DEFAULT_PAYMENT_INSTRUCTIONS,
+    paymentInstructions: '',
 };
 
 function PasswordToggle({ visible, onToggle, label }) {
@@ -71,7 +71,7 @@ function loadDraft() {
         if (!raw) return null;
         const parsed = JSON.parse(raw);
         if (!parsed || typeof parsed !== 'object') return null;
-        return withDefaultPaymentInstructions({ ...REGISTER_INITIAL_FORM, ...parsed.form });
+        return { ...REGISTER_INITIAL_FORM, ...parsed.form };
     } catch {
         return null;
     }
