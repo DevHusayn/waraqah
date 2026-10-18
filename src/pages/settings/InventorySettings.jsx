@@ -7,7 +7,6 @@ import { isOversellingAllowed } from '@waraqah/shared';
 function InventoryToggle({
     title,
     description,
-    statusText,
     enabled,
     saving,
     onToggle,
@@ -36,7 +35,6 @@ function InventoryToggle({
                     />
                 </button>
             </div>
-            <p className="mt-4 text-xs text-foreground-muted">{statusText}</p>
         </div>
     );
 }
@@ -97,31 +95,14 @@ export default function InventorySettings() {
             <div className="space-y-6">
                 <InventoryToggle
                     title="Allow overselling"
-                    description={
-                        'When enabled, you can issue invoices and receipts even when a catalog product '
-                        + 'does not have enough stock on hand. Stock can go negative and you will see a warning. '
-                        + 'When off, Waraqah blocks the save and asks you to reduce quantities or add stock first.'
-                    }
-                    statusText={
-                        oversellingEnabled
-                            ? 'Overselling is allowed. Stock can go below zero.'
-                            : 'Overselling is blocked. Available stock is enforced on issue.'
-                    }
+                    description="Issue invoices and receipts even when stock is not enough."
                     enabled={oversellingEnabled}
                     saving={savingKey === 'overselling'}
                     onToggle={handleOversellingToggle}
                 />
                 <InventoryToggle
                     title="Update cost from purchase orders"
-                    description={
-                        'When enabled, receiving stock on a purchase order updates each linked product\'s unit cost '
-                        + 'using a weighted average of existing stock and the PO line rate.'
-                    }
-                    statusText={
-                        autoUpdateCostEnabled
-                            ? 'Unit costs auto-update when PO stock is received.'
-                            : 'Unit costs stay manual unless you edit them on each product.'
-                    }
+                    description="Update product cost when purchase order stock is received."
                     enabled={autoUpdateCostEnabled}
                     saving={savingKey === 'autoCost'}
                     onToggle={handleAutoCostToggle}

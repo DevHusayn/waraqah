@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SettingsPageShell from '../../components/settings/SettingsPageShell';
 import { useSettings } from '../../context/SettingsContext';
 import { useToast } from '../../context/ToastContext';
@@ -7,15 +7,19 @@ import {
     isAutoPaymentRemindersEnabled,
     isAutoMonthlyStatementsEnabled,
     isLowStockEmailAlertsEnabled,
-    LOW_STOCK_EMAIL_COOLDOWN_HOURS,
-    PAYMENT_REMINDER_DUE_WINDOW_DAYS,
-    PAYMENT_REMINDER_MIN_DAYS_BETWEEN,
 } from '@waraqah/shared';
+import {
+    enableDevicePush,
+    syncDeviceSubscription,
+    isIosDevice,
+    isPushSupported,
+    isStandalonePwa,
+    unsubscribeThisDevice,
+} from '../../utils/pushNotifications';
 
 function NotificationToggle({
     title,
     description,
-    statusText,
     enabled,
     saving,
     onToggle,
@@ -44,7 +48,6 @@ function NotificationToggle({
                     />
                 </button>
             </div>
-            <p className="mt-4 text-xs text-foreground-muted">{statusText}</p>
         </div>
     );
 }
@@ -56,6 +59,22 @@ export default function NotificationSettings() {
     const [savingReminderEmails, setSavingReminderEmails] = useState(false);
     const [savingLowStockEmails, setSavingLowStockEmails] = useState(false);
     const [savingMonthlyStatements, setSavingMonthlyStatements] = useState(false);
+    const [devicePushOn, setDevicePushOn] = useState(false);
+    const [savingDevicePush, setSavingDevicePush] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        syncDeviceSubscription()
+            .then((subscribed) => {
+                if (!cancelled) setDevicePushOn(subscribed);
+            })
+            .catch(() => {
+                if (!cancelled) setDevicePushOn(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const premium = isPremiumUser(businessInfo);
     const invoiceEmailsEnabled = businessInfo.autoEmailInvoices !== false;
@@ -131,10 +150,38 @@ export default function NotificationSettings() {
         }
     };
 
+    const handleDevicePushToggle = async () => {
+        setSavingDevicePush(true);
+        try {
+            if (devicePushOn) {
+                await unsubscribeThisDevice();
+                setDevicePushOn(false);
+                showToast('This device will no longer get briefings.', 'success');
+            } else {
+                await enableDevicePush();
+                setDevicePushOn(true);
+                showToast('This device will get a morning briefing.', 'success');
+            }
+        } catch (err) {
+            showToast(err.message || 'Could not update notifications for this device.', 'error');
+        } finally {
+            setSavingDevicePush(false);
+        }
+    };
+
+    let deviceDescription = 'Briefings, payment alerts, and occasional product updates on this device.';
+    if (!isPushSupported()) {
+        deviceDescription = 'This browser cannot receive push notifications.';
+    } else if (isIosDevice() && !isStandalonePwa()) {
+        deviceDescription = 'Install Waraqah to your Home Screen, then turn this on.';
+    } else if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+        deviceDescription = 'Notifications are blocked in the browser settings.';
+    }
+
     return (
         <SettingsPageShell
             title="Notifications"
-            subtitle="Control when Waraqah sends emails to you and your clients"
+            subtitle="Emails for you and your clients, plus a morning briefing on this device"
             backTo="/settings"
             backLabel="Settings"
             breadcrumbs={[
@@ -144,17 +191,16 @@ export default function NotificationSettings() {
         >
             <div className="space-y-6">
                 <NotificationToggle
+                    title="Notify this device"
+                    description={deviceDescription}
+                    enabled={devicePushOn}
+                    saving={savingDevicePush || !isPushSupported()}
+                    onToggle={handleDevicePushToggle}
+                />
+
+                <NotificationToggle
                     title="Email invoices to clients automatically"
-                    description={
-                        'When enabled, finalized invoices are emailed to the client as soon as they are created '
-                        + 'or when a draft is finalized. You will still receive an owner notification for each send. '
-                        + 'Manual "Email to client" always works regardless of this setting.'
-                    }
-                    statusText={
-                        invoiceEmailsEnabled
-                            ? 'Automatic client emails are on.'
-                            : 'Automatic client emails are off.'
-                    }
+                    description="Email the client when an invoice is finalized."
                     enabled={invoiceEmailsEnabled}
                     saving={savingInvoiceEmails}
                     onToggle={handleInvoiceEmailToggle}
@@ -162,17 +208,7 @@ export default function NotificationSettings() {
 
                 <NotificationToggle
                     title="Send payment reminders automatically"
-                    description={
-                        `When enabled, Waraqah emails your client a payment reminder when an invoice is due within `
-                        + `${PAYMENT_REMINDER_DUE_WINDOW_DAYS} days or already overdue. Reminders are sent at most once `
-                        + `every ${PAYMENT_REMINDER_MIN_DAYS_BETWEEN} days per invoice. You receive a copy in your inbox, `
-                        + 'and you can always send a reminder manually from the invoice page.'
-                    }
-                    statusText={
-                        reminderEmailsEnabled
-                            ? 'Automatic payment reminders are on.'
-                            : 'Automatic payment reminders are off.'
-                    }
+                    description="Email the client when an invoice is due or overdue."
                     enabled={reminderEmailsEnabled}
                     saving={savingReminderEmails}
                     onToggle={handleReminderEmailToggle}
@@ -180,17 +216,7 @@ export default function NotificationSettings() {
 
                 <NotificationToggle
                     title="Email me when products are low or out of stock"
-                    description={
-                        'When enabled, Waraqah sends you a daily summary of tracked products that have reached '
-                        + 'their low-stock threshold or have no units on hand. Low-stock items need a threshold set; '
-                        + 'out-of-stock items are any tracked product at zero. '
-                        + 'You can still see stock badges on the Products page anytime.'
-                    }
-                    statusText={
-                        lowStockEmailsEnabled
-                            ? `Daily stock alerts are on (at most once every ${LOW_STOCK_EMAIL_COOLDOWN_HOURS} hours).`
-                            : 'Daily stock alerts are off.'
-                    }
+                    description="A daily email when tracked products are low or out of stock."
                     enabled={lowStockEmailsEnabled}
                     saving={savingLowStockEmails}
                     onToggle={handleLowStockEmailToggle}
@@ -199,15 +225,7 @@ export default function NotificationSettings() {
                 {premium ? (
                     <NotificationToggle
                         title="Email me my monthly billing statement"
-                        description={
-                            'When enabled, Waraqah emails you a PDF summary of the previous month on the 1st of each month. '
-                            + 'Only months with issued invoices or receipts are included. You can also download statements anytime from the Statements page.'
-                        }
-                        statusText={
-                            monthlyStatementsEnabled
-                                ? 'Monthly statement emails are on (sent on the 1st for the previous month).'
-                                : 'Monthly statement emails are off.'
-                        }
+                        description="A PDF of last month, emailed on the 1st."
                         enabled={monthlyStatementsEnabled}
                         saving={savingMonthlyStatements}
                         onToggle={handleMonthlyStatementToggle}

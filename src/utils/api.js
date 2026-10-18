@@ -70,6 +70,12 @@ export function clearClientAuthState() {
 
 /** End any server session and clear local auth state before a new login. */
 export async function prepareForLogin() {
+    try {
+        const { unsubscribeThisDevice } = await import('./pushNotifications.js');
+        await unsubscribeThisDevice();
+    } catch {
+        /* best effort before the next account signs in */
+    }
     clearClientAuthState();
     try {
         const { signal, cancelTimeout } = createFetchSignal({ timeoutMs: DEFAULT_TIMEOUT_MS });

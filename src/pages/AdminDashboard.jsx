@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import {
     Search,
     Shield,
@@ -39,6 +39,17 @@ import {
     buildAdminUsersExportFilename,
 } from '../utils/pagination';
 import { StatusBadge, PlanBadge, UsageBadge, AuthBadge } from '../components/admin/AdminBadges';
+import FilterTabs from '../components/FilterTabs';
+import { AdminPageSkeleton } from '../components/Skeleton';
+
+const AdminFollowUps = lazy(() => import('./AdminFollowUps'));
+const AdminPush = lazy(() => import('./AdminPush'));
+
+const ADMIN_SECTIONS = [
+    { value: 'users', label: 'Users' },
+    { value: 'follow-ups', label: 'Follow-ups' },
+    { value: 'updates', label: 'Updates' },
+];
 
 const PLAN_FILTER_OPTIONS = [
     { value: 'all', label: 'All plans' },
@@ -300,6 +311,17 @@ const LIST_URL_DEFAULTS = {
 };
 
 export default function AdminDashboard() {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const sectionParam = searchParams.get('section');
+    const section = ADMIN_SECTIONS.some((tab) => tab.value === sectionParam) ? sectionParam : 'users';
+    const setSection = (next) => {
+        setSearchParams((prev) => {
+            const params = new URLSearchParams(prev);
+            if (next === 'users') params.delete('section');
+            else params.set('section', next);
+            return params;
+        }, { replace: true });
+    };
     const openItem = useOpenListItem();
     const listUrl = useListUrlState(LIST_URL_DEFAULTS);
     const [actionLoading, setActionLoading] = useState('');
@@ -571,13 +593,36 @@ export default function AdminDashboard() {
             <div className="max-w-7xl mx-auto">
                 <PageHeader
                     title="Admin"
-                    subtitle="Manage users, plans, and account access"
-                >
-                    <Link to="/admin/follow-ups" className="btn-secondary text-sm">
-                        Follow-ups
-                    </Link>
-                </PageHeader>
+                    subtitle={
+                        section === 'follow-ups'
+                            ? 'Review queued emails before they go out'
+                            : section === 'updates'
+                                ? 'Send a product note to people who allowed notifications'
+                                : 'Manage users, plans, and account access'
+                    }
+                />
 
+                <FilterTabs
+                    className="mb-6"
+                    tabs={ADMIN_SECTIONS}
+                    value={section}
+                    onChange={setSection}
+                />
+
+                {section === 'follow-ups' ? (
+                    <Suspense fallback={<AdminPageSkeleton />}>
+                        <AdminFollowUps embedded />
+                    </Suspense>
+                ) : null}
+
+                {section === 'updates' ? (
+                    <Suspense fallback={<AdminPageSkeleton />}>
+                        <AdminPush embedded />
+                    </Suspense>
+                ) : null}
+
+                {section === 'users' ? (
+                <>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
                     {[
                         { key: 'total', label: 'Total users' },
@@ -827,6 +872,8 @@ export default function AdminDashboard() {
                         />
                     </div>
                 </div>
+                </>
+                ) : null}
             </div>
         </>
     );

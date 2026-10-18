@@ -121,6 +121,12 @@ export function AuthProvider({ children }) {
 
     const logout = useCallback(async () => {
         try {
+            const { unsubscribeThisDevice } = await import('../utils/pushNotifications.js');
+            await unsubscribeThisDevice();
+        } catch {
+            /* still end the session */
+        }
+        try {
             await apiFetch('/auth/logout', { method: 'POST' });
         } catch {
             /* cookie cleared server-side when possible */

@@ -16,7 +16,7 @@
             ]
         },
         {
-            "source": "/(sw.js|workbox-.*\\.js)",
+            "source": "/(sw.js|workbox-.*\\.js|push-handlers.js)",
             "headers": [
                 {
                     "key": "Cache-Control",

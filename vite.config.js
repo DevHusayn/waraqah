@@ -50,7 +50,11 @@ export default defineConfig({
                     },
                 ],
             },
+            devOptions: {
+                enabled: true,
+            },
             workbox: {
+                importScripts: ['push-handlers.js'],
                 globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
                 navigateFallback: '/index.html',
                 navigateFallbackDenylist: [/^\/api/, /^\/sitemap\.xml$/, /^\/robots\.txt$/],

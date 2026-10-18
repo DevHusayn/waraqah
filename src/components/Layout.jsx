@@ -19,7 +19,6 @@ import {
     Wallet,
     Settings,
     PanelLeft,
-    Mail,
 } from 'lucide-react';
 import { useState, useEffect, useLayoutEffect, memo } from 'react';
 import { useSettings } from '../context/SettingsContext';
@@ -175,7 +174,6 @@ const Layout = ({ children }) => {
     const adminItem = isAdmin
         ? [
             { name: 'Admin', href: '/admin', icon: LayoutDashboard },
-            { name: 'Follow-ups', href: '/admin/follow-ups', icon: Mail },
         ]
         : [];
 

@@ -193,7 +193,7 @@ function FollowUpRowActions({ busy, onPreview, onSend, onSnooze, onSkip, onMute 
     );
 }
 
-export default function AdminFollowUps() {
+export default function AdminFollowUps({ embedded = false }) {
     const [template, setTemplate] = useState('all');
     const [stats, setStats] = useState({ pending: 0, snoozed: 0, templates: {} });
     const [forbidden, setForbidden] = useState(false);
@@ -487,21 +487,38 @@ export default function AdminFollowUps() {
                 </div>
             </ModalShell>
 
-            <div className="max-w-7xl mx-auto">
-                <PageHeader
-                    title="Follow-ups"
-                    subtitle="Review queued emails before anything is sent. WhatsApp stays manual."
-                >
-                    <button
-                        type="button"
-                        className="btn-secondary text-sm"
-                        disabled={busy}
-                        onClick={handleRefreshQueue}
+            <div className={embedded ? '' : 'max-w-7xl mx-auto'}>
+                {embedded ? (
+                    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-sm text-foreground-muted">
+                            Review queued emails before anything is sent. WhatsApp stays manual.
+                        </p>
+                        <button
+                            type="button"
+                            className="btn-secondary text-sm shrink-0"
+                            disabled={busy}
+                            onClick={handleRefreshQueue}
+                        >
+                            {refreshing ? <Spinner size="sm" inline /> : <RefreshCw size={14} aria-hidden />}
+                            Refresh queue
+                        </button>
+                    </div>
+                ) : (
+                    <PageHeader
+                        title="Follow-ups"
+                        subtitle="Review queued emails before anything is sent. WhatsApp stays manual."
                     >
-                        {refreshing ? <Spinner size="sm" inline /> : <RefreshCw size={14} aria-hidden />}
-                        Refresh queue
-                    </button>
-                </PageHeader>
+                        <button
+                            type="button"
+                            className="btn-secondary text-sm"
+                            disabled={busy}
+                            onClick={handleRefreshQueue}
+                        >
+                            {refreshing ? <Spinner size="sm" inline /> : <RefreshCw size={14} aria-hidden />}
+                            Refresh queue
+                        </button>
+                    </PageHeader>
+                )}
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                     {[

@@ -67,7 +67,6 @@ const NotificationSettings = lazy(() => import('./pages/settings/NotificationSet
 const InventorySettings = lazy(() => import('./pages/settings/InventorySettings'));
 const PasswordSettings = lazy(() => import('./pages/settings/PasswordSettings'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
-const AdminFollowUps = lazy(() => import('./pages/AdminFollowUps'));
 const AdminUserDetail = lazy(() => import('./pages/AdminUserDetail'));
 const Upgrade = lazy(() => import('./pages/Upgrade'));
 const UpgradeCallback = lazy(() => import('./pages/UpgradeCallback'));
@@ -198,7 +197,8 @@ function App() {
                                             <Route path="/expenses/:id" element={<PrivateRoute><RouteSuspense fallback={<DetailPageSkeleton />}><ExpenseDetails /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/upgrade" element={<PrivateRoute><RouteSuspense fallback={<UpgradePageSkeleton />}><Upgrade /></RouteSuspense></PrivateRoute>} />
                                             <Route path="/admin" element={<PrivateRoute><AdminRoute><RouteSuspense fallback={<AdminPageSkeleton />}><AdminDashboard /></RouteSuspense></AdminRoute></PrivateRoute>} />
-                                            <Route path="/admin/follow-ups" element={<PrivateRoute><AdminRoute><RouteSuspense fallback={<AdminPageSkeleton />}><AdminFollowUps /></RouteSuspense></AdminRoute></PrivateRoute>} />
+                                            <Route path="/admin/follow-ups" element={<Navigate to="/admin?section=follow-ups" replace />} />
+                                            <Route path="/admin/push" element={<Navigate to="/admin?section=updates" replace />} />
                                             <Route path="/admin/users/:userId" element={<PrivateRoute><AdminRoute><RouteSuspense fallback={<AdminPageSkeleton />}><AdminUserDetail /></RouteSuspense></AdminRoute></PrivateRoute>} />
                                         </Routes>
                                     </AppLayout>
