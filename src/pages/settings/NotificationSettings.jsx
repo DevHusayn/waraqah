@@ -58,7 +58,7 @@ export default function NotificationSettings() {
     const [savingMonthlyStatements, setSavingMonthlyStatements] = useState(false);
 
     const premium = isPremiumUser(businessInfo);
-    const invoiceEmailsEnabled = Boolean(businessInfo.autoEmailInvoices);
+    const invoiceEmailsEnabled = businessInfo.autoEmailInvoices !== false;
     const reminderEmailsEnabled = isAutoPaymentRemindersEnabled(businessInfo);
     const lowStockEmailsEnabled = isLowStockEmailAlertsEnabled(businessInfo);
     const monthlyStatementsEnabled = isAutoMonthlyStatementsEnabled(businessInfo);

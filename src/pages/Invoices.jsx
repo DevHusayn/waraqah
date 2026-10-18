@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useInvoice } from '../context/InvoiceContext';
+import { useCallback, useMemo } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { Plus, FileText, Search, ArrowUpDown, Repeat } from 'lucide-react';
 import { format } from 'date-fns';
@@ -26,6 +24,8 @@ import ListSummaryStats from '../components/ListSummaryStats';
 import { usePagedQuery } from '../hooks/usePagedQuery';
 import { useListSummaryQuery } from '../hooks/useListSummaryQuery';
 import { useListMonthFilter } from '../hooks/useListMonthFilter';
+import { useListUrlState } from '../hooks/useListUrlState';
+import { useOpenListItem } from '../hooks/useOpenListItem';
 import ListMonthToolbarFilter from '../components/ListMonthToolbarFilter';
 import ListExportButton from '../components/ListExportButton';
 import { useToast } from '../context/ToastContext';
@@ -52,13 +52,24 @@ const TABLE_COLUMNS = [
 
 const mapInvoice = (i) => ({ ...i, id: i._id || i.id });
 
+const LIST_URL_DEFAULTS = {
+    status: 'all',
+    sort: 'newest',
+    page: 1,
+    q: '',
+    period: 'all',
+    startDate: '',
+    endDate: '',
+};
+
 const Invoices = () => {
-    const navigate = useNavigate();
+    const openItem = useOpenListItem();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen, tryNavigateToCreate } = useInvoiceCreateGuard();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
-    const [filter, setFilter] = useState('all');
-    const [sortBy, setSortBy] = useState('newest');
+    const listUrl = useListUrlState(LIST_URL_DEFAULTS);
+    const filter = listUrl.status;
+    const sortBy = listUrl.sort;
     const recurringOnly = sortBy === 'recurring';
     const sortParam = recurringOnly ? 'newest' : sortBy;
     const {
@@ -77,7 +88,7 @@ const Invoices = () => {
         setListCustomDraftRange,
         applyListCustomRange,
         listMaxDate,
-    } = useListMonthFilter();
+    } = useListMonthFilter(listUrl);
 
     const fetcher = useCallback(
         ({ page, limit, search, status, sort, period, startDate, endDate, recurring }) =>
@@ -112,6 +123,10 @@ const Invoices = () => {
     } = usePagedQuery({
         queryKeyBase: 'invoices',
         fetcher,
+        page: listUrl.page,
+        onPageChange: listUrl.setPage,
+        searchQuery: listUrl.q,
+        onSearchQueryChange: listUrl.setSearch,
         extraParams: {
             status: filter,
             sort: sortParam,
@@ -122,16 +137,11 @@ const Invoices = () => {
 
     const invoices = useMemo(() => data.map(mapInvoice), [data]);
 
-    useEffect(() => {
-        setPage(1);
-    }, [filter, sortBy, listQueryParams, setPage]);
-
     const handleFilterChange = useCallback(
         (next) => {
-            setFilter(next);
-            setPage(1);
+            listUrl.setStatus(next);
         },
-        [setPage]
+        [listUrl]
     );
 
     const filterTabs = useMemo(() => {
@@ -225,7 +235,7 @@ const Invoices = () => {
                         <div className="min-w-0 flex-1 sm:w-44 sm:flex-none">
                             <CustomSelect
                                 value={sortBy}
-                                onChange={setSortBy}
+                                onChange={listUrl.setSort}
                                 options={SORT_OPTIONS}
                                 placeholder="Sort by"
                                 leadingIcon={<ArrowUpDown size={14} />}
@@ -290,13 +300,13 @@ const Invoices = () => {
                                 return (
                                     <DataTableRow
                                         key={invoice.id}
-                                        onClick={() => navigate(`/invoices/${invoice.id}`)}
+                                        onClick={() => openItem(`/invoices/${invoice.id}`)}
                                     >
                                         <DataTableCell>
                                             <span className="font-medium text-foreground">
                                                 {getDisplayNumber(invoice) || '—'}
                                             </span>
-                                            {invoice.isRecurring ? (
+                                            {invoice.isRecurring || invoice.seriesRecurring ? (
                                                 <span className="ml-2 inline-flex align-middle text-brand" title="Recurring">
                                                     <Repeat size={12} aria-hidden />
                                                 </span>

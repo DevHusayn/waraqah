@@ -44,6 +44,7 @@ export const queryKeys = {
         summaryMonth,
     ],
     adminUsers: (userId, params) => ['adminUsers', userId, params],
+    adminFollowUps: (userId, params) => ['adminFollowUps', userId, params],
     profit: (userId, period, startDate, endDate) => [
         'profit',
         userId,

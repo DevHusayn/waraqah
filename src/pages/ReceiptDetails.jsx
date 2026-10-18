@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
     ArrowLeft,
@@ -14,6 +14,8 @@ import { useReceipt } from '../context/ReceiptContext';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
+import ListBackLink from '../components/ListBackLink';
+import { useListBackTo } from '../hooks/useOpenListItem';
 import { PageSpinner } from '../components/Spinner';
 import AlertModal from '../components/AlertModal';
 import MarkAsPaidModal from '../components/MarkAsPaidModal';
@@ -272,6 +274,7 @@ function ReceiptActionsPanel({
 const ReceiptDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const listBackTo = useListBackTo('/receipts');
     const { receipts, sendReceiptEmailToClient, upsertReceipt, recordReceiptPayment } = useReceipt();
     const { clients, updateClient, fetchUserData } = useInvoice();
     const { businessInfo } = useSettings();
@@ -337,7 +340,7 @@ const ReceiptDetails = () => {
                 setFetchedReceipt(mapped);
                 upsertReceipt(mapped);
             } catch {
-                if (!cancelled) navigate('/receipts', { replace: true });
+                if (!cancelled) navigate(listBackTo, { replace: true });
             } finally {
                 if (!cancelled) {
                     setResolving(false);
@@ -349,7 +352,7 @@ const ReceiptDetails = () => {
         return () => {
             cancelled = true;
         };
-    }, [id, navigate, upsertReceipt]);
+    }, [id, navigate, upsertReceipt, listBackTo]);
 
     useEffect(() => {
         if (!receipt || !client || !receiptHasLineItems(receipt)) return undefined;
@@ -577,13 +580,13 @@ const ReceiptDetails = () => {
             />
 
             <div className="max-w-6xl mx-auto pb-8">
-                <Link
+                <ListBackLink
                     to="/receipts"
                     className="inline-flex items-center gap-2 text-sm font-medium text-foreground-muted hover:text-brand mb-6 transition-colors"
                 >
                     <ArrowLeft size={16} aria-hidden />
                     Back to receipts
-                </Link>
+                </ListBackLink>
 
                 <div className="mb-8">
                     <div className="flex flex-wrap items-center gap-3">

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams, Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
     ArrowLeft,
@@ -24,6 +24,8 @@ import {
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
+import ListBackLink from '../components/ListBackLink';
+import { useListBackTo } from '../hooks/useOpenListItem';
 import { PageSpinner } from '../components/Spinner';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
@@ -40,7 +42,7 @@ import {
     isShareAbortError,
     getPdfActionErrorMessage,
 } from '../utils/shareInvoicePdf';
-import { formatRecurringSummary, PDF_DOCUMENT_TYPES } from '@waraqah/shared';
+import { formatDocumentAdditionalInfo, getRecurringFrequencyLabel, PDF_DOCUMENT_TYPES } from '@waraqah/shared';
 import { getCachedPdf, setCachedPdf, clearCachedPdf } from '../utils/pdfCache';
 import { formatCurrency } from '../utils/currency';
 import { getClientBusiness } from '../utils/clientHelpers';
@@ -145,6 +147,282 @@ function PaymentReminderInfo({ reminderContext }) {
                     Turn on automatic reminders in Settings → Notifications if you want Waraqah to follow up for you.
                 </p>
             )}
+        </div>
+    );
+}
+
+function formatDetailDate(value) {
+    if (!value) return '—';
+    const raw = String(value).trim();
+    const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const date = iso
+        ? new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]))
+        : new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return format(date, 'MMM dd, yyyy');
+}
+
+function recurringScheduleCopy(invoice) {
+    const frequency = String(getRecurringFrequencyLabel(invoice.recurringFrequency) || '').toLowerCase();
+    const until = invoice.recurringEndDate
+        ? `until ${formatDetailDate(invoice.recurringEndDate)}`
+        : 'until you stop it';
+    const next = invoice.recurringNextDate
+        ? ` Next invoice ${formatDetailDate(invoice.recurringNextDate)}.`
+        : '';
+    return `Repeats ${frequency} ${until}.${next}`;
+}
+
+function RecurringSchedulePanel({ invoice, stopping, onStop }) {
+    const frequency = String(getRecurringFrequencyLabel(invoice.recurringFrequency) || 'on a schedule').toLowerCase();
+    const until = invoice.recurringEndDate
+        ? `Until ${formatDetailDate(invoice.recurringEndDate)}`
+        : 'Until you stop it';
+    const next = invoice.recurringNextDate ? formatDetailDate(invoice.recurringNextDate) : null;
+
+    return (
+        <div className="rounded-lg bg-surface-muted px-3 py-3">
+            <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                <Repeat size={14} className="shrink-0 text-brand" aria-hidden />
+                Repeats {frequency}
+            </p>
+            <p className="mt-1 pl-5 text-xs text-foreground-muted">{until}</p>
+            {next ? (
+                <div className="mt-2.5 flex items-baseline justify-between gap-3 border-t border-border/70 pt-2.5 text-sm">
+                    <span className="text-foreground-muted">Next invoice</span>
+                    <span className="whitespace-nowrap font-medium tabular-nums text-foreground">{next}</span>
+                </div>
+            ) : null}
+            <button
+                type="button"
+                className="btn-secondary mt-3 w-full text-sm"
+                onClick={onStop}
+                disabled={stopping}
+            >
+                {stopping ? 'Stopping…' : 'Stop repeating'}
+            </button>
+        </div>
+    );
+}
+
+function sourceSchedule(source) {
+    if (!source?.isRecurring) return { frequency: '', next: null };
+    const frequency = source.recurringFrequency
+        ? String(getRecurringFrequencyLabel(source.recurringFrequency) || '').toLowerCase()
+        : '';
+    const next = source.recurringNextDate ? formatDetailDate(source.recurringNextDate) : null;
+    return { frequency, next };
+}
+
+function CreatedFromRecurringNotice({ source, layout = 'panel', stopping = false, onStop }) {
+    const { frequency, next } = sourceSchedule(source);
+
+    if (layout === 'strip') {
+        return (
+            <div className="flex items-center justify-between gap-4 border-t border-border/60 bg-surface-muted/70 px-6 py-3">
+                <p className="flex min-w-0 items-start gap-2 text-sm text-foreground">
+                    <Repeat size={15} className="mt-0.5 shrink-0 text-brand" aria-hidden />
+                    <span>
+                        Created from a recurring invoice
+                        {frequency ? ` · Repeats ${frequency}` : ''}
+                    </span>
+                </p>
+                <div className="flex shrink-0 items-center gap-4">
+                    {next ? (
+                        <p className="text-sm">
+                            <span className="text-foreground-muted">Next invoice </span>
+                            <span className="whitespace-nowrap font-medium tabular-nums text-foreground">{next}</span>
+                        </p>
+                    ) : null}
+                    {onStop ? (
+                        <button
+                            type="button"
+                            className="btn-secondary shrink-0 text-sm"
+                            onClick={onStop}
+                            disabled={stopping}
+                        >
+                            {stopping ? 'Stopping…' : 'Stop repeating'}
+                        </button>
+                    ) : null}
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="rounded-lg bg-surface-muted px-3 py-3">
+            <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                <Repeat size={14} className="shrink-0 text-brand" aria-hidden />
+                Created from a recurring invoice
+            </p>
+            {frequency ? (
+                <p className="mt-1 pl-5 text-xs text-foreground-muted">Repeats {frequency}</p>
+            ) : null}
+            {next ? (
+                <div className="mt-2.5 flex items-baseline justify-between gap-3 border-t border-border/70 pt-2.5 text-sm">
+                    <span className="text-foreground-muted">Next invoice</span>
+                    <span className="whitespace-nowrap font-medium tabular-nums text-foreground">{next}</span>
+                </div>
+            ) : null}
+            {onStop ? (
+                <button
+                    type="button"
+                    className="btn-secondary mt-3 w-full text-sm"
+                    onClick={onStop}
+                    disabled={stopping}
+                >
+                    {stopping ? 'Stopping…' : 'Stop repeating'}
+                </button>
+            ) : null}
+        </div>
+    );
+}
+
+function InvoiceBillTo({ client, additionalInfo, onEditClient, contactResolved }) {
+    const emailOnFile = String(client?.email ?? '').trim();
+    const missingEmail = Boolean(contactResolved && onEditClient && client && !emailOnFile);
+    const business = client ? getClientBusiness(client) : '';
+
+    if (!client) {
+        return <p className="text-sm text-foreground-muted">Client not found</p>;
+    }
+
+    return (
+        <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground-muted">Bill to</p>
+            {client.id ? (
+                <Link
+                    to={`/clients/${client.id}`}
+                    className="mt-1 inline-block text-lg font-semibold tracking-[-0.01em] text-foreground hover:text-brand"
+                >
+                    {client.name}
+                </Link>
+            ) : (
+                <p className="mt-1 text-lg font-semibold tracking-[-0.01em] text-foreground">{client.name}</p>
+            )}
+            <div className="mt-2 space-y-1 text-sm text-foreground-muted">
+                {business ? (
+                    <p className="flex items-center gap-1.5">
+                        <Building2 size={14} className="shrink-0 text-foreground-muted/70" aria-hidden />
+                        {business}
+                    </p>
+                ) : null}
+                {emailOnFile ? (
+                    <p className="flex items-center gap-1.5">
+                        <Mail size={14} className="shrink-0 text-foreground-muted/70" aria-hidden />
+                        <span className="truncate">{emailOnFile}</span>
+                    </p>
+                ) : null}
+                {client.phone ? (
+                    <p className="flex items-center gap-1.5">
+                        <Phone size={14} className="shrink-0 text-foreground-muted/70" aria-hidden />
+                        {client.phone}
+                    </p>
+                ) : null}
+                {client.address ? <p className="whitespace-pre-wrap">{client.address}</p> : null}
+                {additionalInfo ? (
+                    <p className="whitespace-pre-wrap leading-relaxed">
+                        {formatDocumentAdditionalInfo(additionalInfo)}
+                    </p>
+                ) : null}
+                {missingEmail ? (
+                    <p>
+                        No email on file.{' '}
+                        <button type="button" className="font-medium text-brand hover:underline" onClick={onEditClient}>
+                            Edit client
+                        </button>
+                    </p>
+                ) : null}
+            </div>
+        </div>
+    );
+}
+
+function InvoiceMetaList({ invoice, paid }) {
+    const rows = [['Issue date', formatDetailDate(invoice.date)]];
+    if (paid) {
+        rows.push(['Payment date', formatDetailDate(invoice.datePaid)]);
+        rows.push(['Payment method', getPaymentMethodLabel(invoice.paymentMethod)]);
+    } else if (invoice.dueDate) {
+        rows.push(['Due date', formatDetailDate(invoice.dueDate)]);
+    }
+
+    return (
+        <dl className="shrink-0 space-y-2 text-sm">
+            {rows.map(([label, value]) => (
+                <div key={label} className="grid grid-cols-[7.25rem_auto] items-baseline gap-x-6">
+                    <dt className="text-foreground-muted">{label}</dt>
+                    <dd className="whitespace-nowrap text-right font-medium tabular-nums text-foreground">{value}</dd>
+                </div>
+            ))}
+        </dl>
+    );
+}
+
+function InvoiceAmountRows({ invoice, paid, amountPaid, balanceDue }) {
+    return (
+        <>
+            <SummaryRow label="Subtotal" value={formatCurrency(invoice.subtotal, invoice.currency)} />
+            {Number(invoice.discount) > 0 ? (
+                <SummaryRow
+                    label={
+                        invoice.discountType === 'percent' && invoice.discountValue
+                            ? `Discount (${invoice.discountValue}%)`
+                            : 'Discount'
+                    }
+                    value={`−${formatCurrency(invoice.discount, invoice.currency)}`}
+                />
+            ) : null}
+            <SummaryRow
+                label={`Tax (${invoice.taxRate}%)`}
+                value={formatCurrency(invoice.tax, invoice.currency)}
+            />
+            <div className="flex items-center justify-between border-t border-border pt-3">
+                <dt className="text-base font-semibold text-foreground">Total</dt>
+                <dd className="text-2xl font-bold tabular-nums text-brand">
+                    {formatCurrency(invoice.total, invoice.currency)}
+                </dd>
+            </div>
+            {amountPaid > 0 || paid ? (
+                <>
+                    <SummaryRow label="Amount paid" value={formatCurrency(amountPaid, invoice.currency)} />
+                    {!paid ? (
+                        <SummaryRow label="Balance due" value={formatCurrency(balanceDue, invoice.currency)} />
+                    ) : null}
+                </>
+            ) : null}
+        </>
+    );
+}
+
+function PaymentHistoryCard({ paymentHistory, currency }) {
+    if (!paymentHistory.length) return null;
+
+    return (
+        <div className="card">
+            <h3 className="mb-4 text-sm font-semibold text-foreground">Payment history</h3>
+            <ul className="space-y-3">
+                {paymentHistory.map((payment, index) => (
+                    <li
+                        key={`${payment.date || 'p'}-${index}`}
+                        className="flex items-start justify-between gap-3 text-sm"
+                    >
+                        <div className="min-w-0">
+                            <p className="font-medium text-foreground">
+                                {formatCurrency(payment.amount, currency)}
+                            </p>
+                            <p className="mt-0.5 text-xs text-foreground-muted">
+                                {payment.date ? formatDetailDate(payment.date) : '—'}
+                                {' · '}
+                                {getPaymentMethodLabel(payment.method)}
+                            </p>
+                            {payment.note ? (
+                                <p className="mt-1 text-xs text-foreground-muted">{payment.note}</p>
+                            ) : null}
+                        </div>
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 }
@@ -377,6 +655,7 @@ const InvoiceDetails = () => {
     const [searchParams] = useSearchParams();
     const initialView = searchParams.get('view');
     const navigate = useNavigate();
+    const listBackTo = useListBackTo('/invoices');
     const {
         invoices,
         clients,
@@ -409,6 +688,7 @@ const InvoiceDetails = () => {
     const [clientOverride, setClientOverride] = useState(null);
     const [fetchedClient, setFetchedClient] = useState(null);
     const [stoppingRecurring, setStoppingRecurring] = useState(false);
+    const [recurringSource, setRecurringSource] = useState(null);
 
     const invoiceFromList = useMemo(
         () => invoices.find((inv) => String(inv.id) === String(id) || String(inv._id) === String(id)),
@@ -483,6 +763,31 @@ const InvoiceDetails = () => {
         setFetchedClient(null);
     }, [id]);
 
+    const recurringSourceId =
+        invoice && !invoice.isRecurring && invoice.recurringSourceId
+            ? String(invoice.recurringSourceId)
+            : '';
+
+    useEffect(() => {
+        if (!recurringSourceId) {
+            setRecurringSource(null);
+            return undefined;
+        }
+
+        let cancelled = false;
+        apiFetch(`/invoices/${recurringSourceId}`)
+            .then((data) => {
+                if (!cancelled) setRecurringSource(mapInvoiceRecord(data));
+            })
+            .catch(() => {
+                if (!cancelled) setRecurringSource(null);
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [recurringSourceId]);
+
     useEffect(() => {
         const clientId = normalizeDocumentClientId(invoice?.clientId);
         if (!clientId) {
@@ -526,7 +831,7 @@ const InvoiceDetails = () => {
             })
             .catch(() => {
                 if (!cancelled) {
-                    navigate('/invoices', { replace: true });
+                    navigate(listBackTo, { replace: true });
                 }
             })
             .finally(() => {
@@ -538,7 +843,7 @@ const InvoiceDetails = () => {
         return () => {
             cancelled = true;
         };
-    }, [loading, id, invoiceFromList, navigate, upsertInvoice]);
+    }, [loading, id, invoiceFromList, navigate, upsertInvoice, listBackTo]);
 
     useEffect(() => {
         if (!invoice || !client || cancelled || !invoiceHasLineItems(invoice)) return undefined;
@@ -649,13 +954,20 @@ const InvoiceDetails = () => {
     };
 
     const handleStopRecurring = async () => {
+        const targetId = invoice?.isRecurring ? id : recurringSourceId;
+        if (!targetId) return;
+
         setStoppingRecurring(true);
         try {
-            const updated = await apiFetch(`/invoices/${id}/stop-recurring`, { method: 'POST' });
+            const updated = await apiFetch(`/invoices/${targetId}/stop-recurring`, { method: 'POST' });
             const mapped = mapInvoiceRecord(updated);
-            setFetchedInvoice(mapped);
+            if (invoice?.isRecurring) {
+                setFetchedInvoice(mapped);
+            } else {
+                setRecurringSource(mapped);
+            }
             upsertInvoice(mapped);
-            showToast('This invoice will no longer repeat.', 'success');
+            showToast('This series will no longer repeat.', 'success');
         } catch (err) {
             setAlert({ open: true, message: err.message || 'Could not stop repeating this invoice.' });
         } finally {
@@ -682,7 +994,7 @@ const InvoiceDetails = () => {
             await deleteInvoice(id);
             clearCachedPdf(id);
             showToast('Invoice deleted', 'success');
-            navigate('/invoices');
+            navigate(listBackTo);
         } catch (err) {
             setAlert({ open: true, message: err.message || 'Failed to delete invoice.' });
         } finally {
@@ -872,20 +1184,20 @@ const InvoiceDetails = () => {
             />
 
             <div className="max-w-6xl mx-auto pb-8">
-                <Link
+                <ListBackLink
                     to="/invoices"
                     className="inline-flex items-center gap-2 text-sm font-medium text-foreground-muted hover:text-brand mb-6 transition-colors"
                 >
                     <ArrowLeft size={16} aria-hidden />
                     Back to invoices
-                </Link>
+                </ListBackLink>
 
                 <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <div className="flex flex-wrap items-center gap-3">
                             <h1 className="page-title">{displayNumber}</h1>
                             <StatusBadge status={invoice.status} />
-                            {invoice.isRecurring ? (
+                            {invoice.isRecurring || recurringSource?.isRecurring ? (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-brand-subtle px-2.5 py-0.5 text-xs font-medium text-brand">
                                     <Repeat size={12} aria-hidden />
                                     Recurring
@@ -900,8 +1212,8 @@ const InvoiceDetails = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                    <div className="xl:col-span-2 space-y-6 order-2 xl:order-1">
+                <div className="grid grid-cols-1 gap-6 xl:hidden">
+                    <div className="order-2 space-y-6">
                         <DocumentClientDisplay
                             client={client}
                             contactResolved={contactResolved}
@@ -914,8 +1226,8 @@ const InvoiceDetails = () => {
                         <DocumentNotesDisplay notes={invoice.notes} />
                     </div>
 
-                    <div className="space-y-6 order-1 xl:order-2">
-                        <div className="card xl:sticky xl:top-24">
+                    <div className="order-1 space-y-6">
+                        <div className="card">
                             <h3 className="text-sm font-semibold text-foreground mb-4">Summary</h3>
                             <dl className="space-y-3">
                                 <SummaryRow
@@ -954,27 +1266,21 @@ const InvoiceDetails = () => {
                                     />
                                 ) : null}
                                 {invoice.isRecurring ? (
-                                    <div className="pt-3 border-t border-border space-y-2">
-                                        <p className="text-sm text-foreground">
-                                            {formatRecurringSummary({
-                                                frequency: invoice.recurringFrequency,
-                                                endDate: invoice.recurringEndDate,
-                                                nextDate: invoice.recurringNextDate,
-                                            })}
-                                        </p>
-                                        <button
-                                            type="button"
-                                            className="btn-secondary text-sm w-full"
-                                            onClick={handleStopRecurring}
-                                            disabled={stoppingRecurring}
-                                        >
-                                            {stoppingRecurring ? 'Stopping…' : 'Stop repeating'}
-                                        </button>
+                                    <div className="border-t border-border pt-3">
+                                        <RecurringSchedulePanel
+                                            invoice={invoice}
+                                            stopping={stoppingRecurring}
+                                            onStop={handleStopRecurring}
+                                        />
                                     </div>
                                 ) : invoice.recurringSourceId ? (
-                                    <p className="text-xs text-foreground-muted pt-2">
-                                        Created from a recurring invoice
-                                    </p>
+                                    <div className="border-t border-border pt-3">
+                                        <CreatedFromRecurringNotice
+                                            source={recurringSource}
+                                            stopping={stoppingRecurring}
+                                            onStop={recurringSource?.isRecurring ? handleStopRecurring : undefined}
+                                        />
+                                    </div>
                                 ) : null}
                                 <SummaryRow
                                     label="Subtotal"
@@ -1050,14 +1356,76 @@ const InvoiceDetails = () => {
                                 </ul>
                             </div>
                         ) : null}
-
-                        <div className="hidden xl:block">
-                            <InvoiceActionsPanel {...actionPanelProps} />
-                        </div>
                     </div>
 
-                    <div className="order-3 xl:hidden">
+                    <div className="order-3">
                         <InvoiceActionsPanel {...actionPanelProps} />
+                    </div>
+                </div>
+
+                <div className="hidden xl:grid xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start xl:gap-6">
+                    <div className="min-w-0 space-y-6">
+                        <article className="card !p-0 overflow-hidden">
+                            <div className="flex items-start justify-between gap-10 px-6 py-5">
+                                <InvoiceBillTo
+                                    client={client}
+                                    additionalInfo={invoice.clientAdditionalInfo}
+                                    contactResolved={contactResolved}
+                                    onEditClient={canEditClient ? handleEditClient : undefined}
+                                />
+                                <InvoiceMetaList invoice={invoice} paid={paid} />
+                            </div>
+
+                            {invoice.isRecurring ? (
+                                <div className="flex items-center justify-between gap-4 border-t border-border/60 bg-surface-muted/70 px-6 py-3">
+                                    <p className="flex min-w-0 items-start gap-2 text-sm text-foreground">
+                                        <Repeat size={15} className="mt-0.5 shrink-0 text-brand" aria-hidden />
+                                        <span>{recurringScheduleCopy(invoice)}</span>
+                                    </p>
+                                    <button
+                                        type="button"
+                                        className="btn-secondary shrink-0 text-sm"
+                                        onClick={handleStopRecurring}
+                                        disabled={stoppingRecurring}
+                                    >
+                                        {stoppingRecurring ? 'Stopping…' : 'Stop repeating'}
+                                    </button>
+                                </div>
+                            ) : invoice.recurringSourceId ? (
+                                <CreatedFromRecurringNotice
+                                    source={recurringSource}
+                                    layout="strip"
+                                    stopping={stoppingRecurring}
+                                    onStop={recurringSource?.isRecurring ? handleStopRecurring : undefined}
+                                />
+                            ) : null}
+
+                            <div className="border-t border-border/60">
+                                <DocumentLineItemsTable
+                                    items={invoice.items}
+                                    currency={invoice.currency}
+                                    embedded
+                                />
+                            </div>
+
+                            <div className="flex justify-end border-t border-border/60 bg-surface-muted/40 px-6 py-5">
+                                <dl className="w-full max-w-xs space-y-2.5">
+                                    <InvoiceAmountRows
+                                        invoice={invoice}
+                                        paid={paid}
+                                        amountPaid={amountPaid}
+                                        balanceDue={balanceDue}
+                                    />
+                                </dl>
+                            </div>
+                        </article>
+
+                        <DocumentNotesDisplay notes={invoice.notes} />
+                    </div>
+
+                    <div className="space-y-6 xl:sticky xl:top-20">
+                        <InvoiceActionsPanel {...actionPanelProps} />
+                        <PaymentHistoryCard paymentHistory={paymentHistory} currency={invoice.currency} />
                     </div>
                 </div>
             </div>

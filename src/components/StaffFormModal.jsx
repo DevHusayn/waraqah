@@ -9,17 +9,19 @@ import FieldValidationMessage from './FieldValidationMessage';
 import { parseAmountInput } from '../utils/numberInput';
 import {
     validateRequired,
+    validateOptionalEmail,
     firstFieldError,
     inputClass,
     focusFieldById,
     clearFieldError,
 } from '../utils/formFieldValidation';
 
-const STAFF_FIELD_ORDER = ['name', 'role', 'salary'];
+const STAFF_FIELD_ORDER = ['name', 'role', 'email', 'salary'];
 
 export const EMPTY_STAFF = {
     name: '',
     role: '',
+    email: '',
     salary: '',
     isActive: true,
 };
@@ -29,6 +31,10 @@ function buildStaffFieldErrors(formData) {
     return {
         name: validateRequired(formData.name?.trim(), 'Please enter a name.'),
         role: validateRequired(formData.role?.trim(), 'Please enter a role.'),
+        email: validateOptionalEmail(
+            formData.email,
+            'Please enter a valid email address.'
+        ),
         salary:
             !Number.isFinite(salary) || salary <= 0
                 ? 'Please enter a salary greater than zero.'
@@ -83,6 +89,7 @@ export default function StaffFormModal({
             await onSubmit({
                 name: formData.name.trim(),
                 role: formData.role.trim(),
+                email: formData.email.trim().toLowerCase(),
                 salary: parseAmountInput(formData.salary),
                 isActive: formData.isActive !== false,
             });
@@ -117,7 +124,7 @@ export default function StaffFormModal({
                             {isEdit ? 'Edit staff' : 'Add staff'}
                         </h2>
                         <p className="text-sm text-foreground-muted mt-0.5">
-                            Name, role, and monthly salary
+                            Name, role, email, and monthly salary
                         </p>
                     </div>
                 </div>
@@ -154,6 +161,27 @@ export default function StaffFormModal({
                         aria-invalid={Boolean(fieldErrors.role)}
                     />
                     <FieldValidationMessage message={fieldErrors.role} />
+                </div>
+
+                <div>
+                    <label htmlFor="staff-email" className="label">
+                        Email
+                    </label>
+                    <input
+                        id="staff-email"
+                        name="email"
+                        type="email"
+                        value={formData.email || ''}
+                        onChange={handleChange}
+                        className={inputClass(Boolean(fieldErrors.email))}
+                        placeholder="e.g. ade@example.com"
+                        autoComplete="off"
+                        aria-invalid={Boolean(fieldErrors.email)}
+                    />
+                    <p className="mt-1 text-xs text-foreground-muted">
+                        Used to send a payment confirmation when you mark them paid.
+                    </p>
+                    <FieldValidationMessage message={fieldErrors.email} />
                 </div>
 
                 <div>

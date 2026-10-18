@@ -23,11 +23,14 @@ import {
 import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { formatCurrency } from '../utils/currency';
+import { lifecycleTemplateLabel } from '@waraqah/shared';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import ModalShell from '../components/ModalShell';
 import Spinner from '../components/Spinner';
 import EmptyState from '../components/EmptyState';
+import ListBackLink from '../components/ListBackLink';
+import { useListBackTo } from '../hooks/useOpenListItem';
 import PaginationBar from '../components/PaginationBar';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import { usePagedList } from '../hooks/usePagedList';
@@ -313,7 +316,7 @@ function AdminEmailHistory({ userId, refreshKey = 0 }) {
                 </div>
             ) : emails.length === 0 ? (
                 <p className="text-sm text-foreground-muted">
-                    Emails you send from this page will appear here.
+                    Emails you send from this page or the follow-up queue will appear here.
                 </p>
             ) : (
                 <>
@@ -342,7 +345,8 @@ function AdminEmailHistory({ userId, refreshKey = 0 }) {
                                                     </p>
                                                 ) : null}
                                                 <p className="text-[11px] text-foreground-muted/70 mt-1">
-                                                    {email.authorName || 'Admin'}
+                                                    {email.source === 'queue' ? 'Follow-up' : (email.authorName || 'Admin')}
+                                                    {email.templateId ? ` · ${lifecycleTemplateLabel(email.templateId)}` : ''}
                                                     {email.from ? ` · ${email.from}` : ''}
                                                     {' · '}
                                                     {formatDateTime(email.createdAt)}
@@ -628,6 +632,7 @@ function DeleteAccountModal({ open, email, onConfirm, onCancel, loading }) {
 export default function AdminUserDetail() {
     const { userId } = useParams();
     const navigate = useNavigate();
+    const listBackTo = useListBackTo('/admin');
     const { user: currentUser } = useAuth();
     const currentUserId = currentUser?.id ? String(currentUser.id) : '';
 
@@ -732,7 +737,22 @@ export default function AdminUserDetail() {
         try {
             await apiFetch(`/auth/admin/users/${userId}`, { method: 'DELETE' });
             setConfirmDelete(false);
-            navigate('/admin', { replace: true });
+            navigate(listBackTo, { replace: true });
+        } catch (e) {
+            setAlert({ open: true, message: e.message });
+        }
+        setActionLoading('');
+    };
+
+    const handleFollowUpOptOut = async (optedOut) => {
+        setActionLoading('follow-up-opt-out');
+        try {
+            const result = await apiFetch(`/auth/admin/follow-ups/users/${userId}/opt-out`, {
+                method: 'PATCH',
+                body: JSON.stringify({ optedOut }),
+            });
+            await loadProfile();
+            setAlert({ open: true, message: result.message, type: 'success' });
         } catch (e) {
             setAlert({ open: true, message: e.message });
         }
@@ -759,9 +779,9 @@ export default function AdminUserDetail() {
                     title="User not found"
                     description="This account may have been deleted."
                     action={
-                        <Link to="/admin" className="btn-secondary">
+                        <ListBackLink to="/admin" className="btn-secondary">
                             Back to admin
-                        </Link>
+                        </ListBackLink>
                     }
                 />
             </div>
@@ -770,7 +790,7 @@ export default function AdminUserDetail() {
 
     if (!profile) return null;
 
-    const { user, businessInfo, stats, invoiceUsage, billing } = profile;
+    const { user, businessInfo, stats, invoiceUsage, billing, pendingFollowUps = [] } = profile;
     const displayName = adminDisplayName(user, businessInfo);
     const busy = Boolean(actionLoading);
 
@@ -814,13 +834,13 @@ export default function AdminUserDetail() {
             />
 
             <div className="max-w-6xl mx-auto">
-                <Link
+                <ListBackLink
                     to="/admin"
                     className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground-muted hover:text-foreground mb-4 transition-colors"
                 >
                     <ArrowLeft size={16} aria-hidden />
                     Back to users
-                </Link>
+                </ListBackLink>
 
                 <div className="card mb-6">
                     <div className="flex flex-col sm:flex-row sm:items-start gap-4">
@@ -923,6 +943,31 @@ export default function AdminUserDetail() {
                     </div>
                 </div>
 
+                {user.lifecycleFollowUpsOptOut ? (
+                    <div className="card mb-6 border-amber-200 bg-amber-50/80">
+                        <p className="text-sm font-medium text-amber-950">Follow-up emails are muted for this user.</p>
+                        <button
+                            type="button"
+                            className="btn-secondary text-sm mt-3"
+                            disabled={busy}
+                            onClick={() => handleFollowUpOptOut(false)}
+                        >
+                            Allow follow-ups again
+                        </button>
+                    </div>
+                ) : pendingFollowUps.length > 0 ? (
+                    <div className="card mb-6">
+                        <p className="text-sm font-medium text-foreground">Queued follow-up</p>
+                        <p className="text-sm text-foreground-muted mt-1">
+                            {pendingFollowUps.map((item) => item.templateLabel).join(', ')} — nothing is sent until
+                            an admin reviews it.
+                        </p>
+                        <Link to="/admin/follow-ups" className="btn-secondary text-sm mt-3 inline-flex">
+                            Open follow-ups
+                        </Link>
+                    </div>
+                ) : null}
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 space-y-6">
                         <SectionCard title="Account overview" icon={Users}>
@@ -986,9 +1031,17 @@ export default function AdminUserDetail() {
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-foreground-muted">Next billing date</p>
+                                    <p className="text-xs text-foreground-muted">
+                                        {billing.plan === 'premium' && billing.subscriptionStatus !== 'active'
+                                            ? 'Premium until'
+                                            : 'Next billing date'}
+                                    </p>
                                     <p className="text-sm font-medium text-foreground mt-1 tabular-nums">
-                                        {formatDate(billing.subscriptionRenews || billing.premiumUntil)}
+                                        {formatDate(
+                                            billing.subscriptionStatus === 'active'
+                                                ? billing.subscriptionRenews || billing.premiumUntil
+                                                : billing.premiumUntil
+                                        )}
                                     </p>
                                 </div>
                             </div>

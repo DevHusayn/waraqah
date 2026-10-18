@@ -19,6 +19,7 @@ import {
     Wallet,
     Settings,
     PanelLeft,
+    Mail,
 } from 'lucide-react';
 import { useState, useEffect, useLayoutEffect, memo } from 'react';
 import { useSettings } from '../context/SettingsContext';
@@ -172,7 +173,10 @@ const Layout = ({ children }) => {
     };
 
     const adminItem = isAdmin
-        ? [{ name: 'Admin', href: '/admin', icon: LayoutDashboard }]
+        ? [
+            { name: 'Admin', href: '/admin', icon: LayoutDashboard },
+            { name: 'Follow-ups', href: '/admin/follow-ups', icon: Mail },
+        ]
         : [];
 
     const isActive = (path) => {
@@ -182,6 +186,9 @@ const Layout = ({ children }) => {
         }
         if (path === '/settings') {
             return location.pathname === '/settings' || location.pathname.startsWith('/settings/');
+        }
+        if (path === '/admin') {
+            return location.pathname === '/admin' || location.pathname.startsWith('/admin/users');
         }
         return location.pathname.startsWith(path);
     };

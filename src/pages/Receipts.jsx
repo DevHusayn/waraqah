@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useMemo } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { Plus, Receipt, Search, ArrowUpDown } from 'lucide-react';
 import { format } from 'date-fns';
@@ -24,6 +23,8 @@ import ListSummaryStats from '../components/ListSummaryStats';
 import { usePagedQuery } from '../hooks/usePagedQuery';
 import { useListSummaryQuery } from '../hooks/useListSummaryQuery';
 import { useListMonthFilter } from '../hooks/useListMonthFilter';
+import { useListUrlState } from '../hooks/useListUrlState';
+import { useOpenListItem } from '../hooks/useOpenListItem';
 import ListMonthToolbarFilter from '../components/ListMonthToolbarFilter';
 import ListExportButton from '../components/ListExportButton';
 import { useToast } from '../context/ToastContext';
@@ -55,14 +56,25 @@ const RECEIPT_FILTER_TABS = [
 
 const mapReceipt = (r) => ({ ...r, id: r._id || r.id });
 
+const LIST_URL_DEFAULTS = {
+    status: 'all',
+    sort: 'newest',
+    page: 1,
+    q: '',
+    period: 'all',
+    startDate: '',
+    endDate: '',
+};
+
 const Receipts = () => {
-    const navigate = useNavigate();
+    const openItem = useOpenListItem();
     const { invoiceUsage, limitModalOpen, setLimitModalOpen, tryNavigateToCreate } =
         useReceiptCreateGuard();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
-    const [filter, setFilter] = useState('all');
-    const [sortBy, setSortBy] = useState('newest');
+    const listUrl = useListUrlState(LIST_URL_DEFAULTS);
+    const filter = listUrl.status;
+    const sortBy = listUrl.sort;
     const {
         summaryYear,
         summaryMonth,
@@ -79,7 +91,7 @@ const Receipts = () => {
         setListCustomDraftRange,
         applyListCustomRange,
         listMaxDate,
-    } = useListMonthFilter();
+    } = useListMonthFilter(listUrl);
 
     const fetcher = useCallback(
         ({ page, limit, search, status, sort, period, startDate, endDate }) =>
@@ -113,6 +125,10 @@ const Receipts = () => {
     } = usePagedQuery({
         queryKeyBase: 'receipts',
         fetcher,
+        page: listUrl.page,
+        onPageChange: listUrl.setPage,
+        searchQuery: listUrl.q,
+        onSearchQueryChange: listUrl.setSearch,
         extraParams: {
             status: filter,
             sort: sortBy,
@@ -122,16 +138,11 @@ const Receipts = () => {
 
     const receipts = useMemo(() => data.map(mapReceipt), [data]);
 
-    useEffect(() => {
-        setPage(1);
-    }, [filter, sortBy, listQueryParams, setPage]);
-
     const handleFilterChange = useCallback(
         (next) => {
-            setFilter(next);
-            setPage(1);
+            listUrl.setStatus(next);
         },
-        [setPage]
+        [listUrl]
     );
 
     const filterTabs = useMemo(() => {
@@ -227,7 +238,7 @@ const Receipts = () => {
                         <div className="min-w-0 flex-1 sm:w-44 sm:flex-none">
                             <CustomSelect
                                 value={sortBy}
-                                onChange={setSortBy}
+                                onChange={listUrl.setSort}
                                 options={SORT_OPTIONS}
                                 placeholder="Sort by"
                                 leadingIcon={<ArrowUpDown size={14} />}
@@ -282,7 +293,7 @@ const Receipts = () => {
                                 return (
                                 <DataTableRow
                                     key={receipt.id}
-                                    onClick={() => navigate(`/receipts/${receipt.id}`)}
+                                    onClick={() => openItem(`/receipts/${receipt.id}`)}
                                     className="cursor-pointer"
                                 >
                                     <DataTableCell>

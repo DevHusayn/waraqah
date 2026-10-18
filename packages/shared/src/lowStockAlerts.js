@@ -1,7 +1,7 @@
 export const LOW_STOCK_EMAIL_COOLDOWN_HOURS = 24;
 
 export function isLowStockEmailAlertsEnabled(businessInfo) {
-    return Boolean(businessInfo?.lowStockEmailAlerts);
+    return businessInfo?.lowStockEmailAlerts !== false;
 }
 
 export function isLowStockProduct(product) {

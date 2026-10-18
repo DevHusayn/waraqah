@@ -11,6 +11,8 @@ import ListSortSelect from '../components/ListSortSelect';
 import PaginationBar from '../components/PaginationBar';
 import { ListPageSkeleton } from '../components/Skeleton';
 import { usePagedQuery } from '../hooks/usePagedQuery';
+import { useListUrlState } from '../hooks/useListUrlState';
+import { useOpenListItem } from '../hooks/useOpenListItem';
 import { useToast } from '../context/ToastContext';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
@@ -36,15 +38,23 @@ const COLUMNS = [
 
 const mapSupplier = (entry) => ({ ...entry, id: entry._id || entry.id });
 
+const LIST_URL_DEFAULTS = {
+    sort: 'newest',
+    page: 1,
+    q: '',
+};
+
 export default function Suppliers() {
     const { showToast } = useToast();
     const navigate = useNavigate();
+    const openItem = useOpenListItem();
     const [searchParams] = useSearchParams();
+    const listUrl = useListUrlState(LIST_URL_DEFAULTS);
     const returnTo = safeReturnPath(searchParams.get('returnTo'));
     const shouldOpenAdd = searchParams.get('add') === '1';
     const openedAddModal = useRef(false);
 
-    const [sortBy, setSortBy] = useState('newest');
+    const sortBy = listUrl.sort;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSupplier, setEditingSupplier] = useState(null);
     const [modalInitialData, setModalInitialData] = useState(EMPTY_SUPPLIER);
@@ -67,14 +77,14 @@ export default function Suppliers() {
     } = usePagedQuery({
         queryKeyBase: 'suppliers',
         fetcher,
+        page: listUrl.page,
+        onPageChange: listUrl.setPage,
+        searchQuery: listUrl.q,
+        onSearchQueryChange: listUrl.setSearch,
         extraParams: { sort: sortBy },
     });
 
     const suppliers = data.map(mapSupplier);
-
-    useEffect(() => {
-        setPage(1);
-    }, [sortBy, setPage]);
 
     useEffect(() => {
         if (shouldOpenAdd && !openedAddModal.current) {
@@ -179,17 +189,14 @@ export default function Suppliers() {
             <Toolbar className="mb-4">
                 <ToolbarSearch
                     value={search}
-                    onChange={(value) => {
-                        setSearch(value);
-                        setPage(1);
-                    }}
+                    onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search suppliers…"
                     icon={Search}
                 />
                 <ToolbarActions>
                     <ListSortSelect
                         value={sortBy}
-                        onChange={setSortBy}
+                        onChange={listUrl.setSort}
                         options={SORT_OPTIONS}
                         ariaLabel="Sort suppliers"
                     />
@@ -220,7 +227,7 @@ export default function Suppliers() {
                         {suppliers.map((supplier) => (
                             <DataTableRow
                                 key={supplier.id}
-                                onClick={() => navigate(`/suppliers/${supplier.id}`)}
+                                onClick={() => openItem(`/suppliers/${supplier.id}`)}
                                 className="cursor-pointer"
                             >
                                 <DataTableCell>

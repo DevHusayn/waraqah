@@ -26,6 +26,8 @@ import { useQuotation } from '../context/QuotationContext';
 import { useInvoice } from '../context/InvoiceContext';
 import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
+import ListBackLink from '../components/ListBackLink';
+import { useListBackTo } from '../hooks/useOpenListItem';
 import { validateDocumentStock } from '../utils/stockWarnings';
 import { PageSpinner } from '../components/Spinner';
 import AlertModal from '../components/AlertModal';
@@ -216,6 +218,7 @@ function QuotationActionsPanel({
 const QuotationDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const listBackTo = useListBackTo('/quotations');
     const {
         quotations,
         deleteQuotation,
@@ -319,7 +322,7 @@ const QuotationDetails = () => {
             })
             .catch(() => {
                 if (!cancelled) {
-                    navigate('/quotations', { replace: true });
+                    navigate(listBackTo, { replace: true });
                 }
             })
             .finally(() => {
@@ -329,7 +332,7 @@ const QuotationDetails = () => {
         return () => {
             cancelled = true;
         };
-    }, [loading, id, quotationFromList, navigate, upsertQuotation]);
+    }, [loading, id, quotationFromList, navigate, upsertQuotation, listBackTo]);
 
     useEffect(() => {
         if (!quotation || !client || !quotationHasLineItems(quotation)) return undefined;
@@ -413,7 +416,7 @@ const QuotationDetails = () => {
             await deleteQuotation(id);
             clearCachedPdf(id);
             showToast('Quotation deleted', 'success');
-            navigate('/quotations');
+            navigate(listBackTo);
         } catch (err) {
             setAlert({ open: true, message: err.message || 'Failed to delete quotation.' });
         } finally {
@@ -559,13 +562,13 @@ const QuotationDetails = () => {
             />
 
             <div className="max-w-6xl mx-auto pb-8">
-                <Link
+                <ListBackLink
                     to="/quotations"
                     className="inline-flex items-center gap-2 text-sm font-medium text-foreground-muted hover:text-brand mb-6 transition-colors"
                 >
                     <ArrowLeft size={16} aria-hidden />
                     Back to quotations
-                </Link>
+                </ListBackLink>
 
                 <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>

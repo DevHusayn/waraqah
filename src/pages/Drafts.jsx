@@ -15,6 +15,8 @@ import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable'
 import EmptyState from '../components/EmptyState';
 import PaginationBar from '../components/PaginationBar';
 import { usePagedQuery } from '../hooks/usePagedQuery';
+import { useListUrlState } from '../hooks/useListUrlState';
+import { useOpenListItem } from '../hooks/useOpenListItem';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
 
@@ -50,8 +52,14 @@ function TypeBadge({ type }) {
     );
 }
 
+const LIST_URL_DEFAULTS = {
+    page: 1,
+};
+
 const Drafts = () => {
     const navigate = useNavigate();
+    const openItem = useOpenListItem();
+    const listUrl = useListUrlState(LIST_URL_DEFAULTS);
     const { deleteInvoice, refreshMeta } = useInvoice();
     const { deleteQuotation } = useQuotation();
     const { deleteReceipt } = useReceipt();
@@ -68,6 +76,8 @@ const Drafts = () => {
     const { page, setPage, data, pagination, loading, refresh } = usePagedQuery({
         queryKeyBase: 'drafts',
         fetcher,
+        page: listUrl.page,
+        onPageChange: listUrl.setPage,
     });
 
     const drafts = data.map(mapDraft);
@@ -165,7 +175,7 @@ const Drafts = () => {
                                     <DataTableCell>
                                         <button
                                             type="button"
-                                            onClick={() => navigate(editPath(draft))}
+                                            onClick={() => openItem(editPath(draft))}
                                             className="font-medium text-foreground hover:underline text-left"
                                         >
                                             {label}
@@ -191,7 +201,7 @@ const Drafts = () => {
                                         <div className="flex items-center justify-end gap-1">
                                             <button
                                                 type="button"
-                                                onClick={() => navigate(editPath(draft))}
+                                                onClick={() => openItem(editPath(draft))}
                                                 className="btn-ghost text-xs py-1 px-2"
                                             >
                                                 Edit

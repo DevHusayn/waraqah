@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Warehouse, Search } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
@@ -16,6 +16,8 @@ import { ListPageSkeleton } from '../components/Skeleton';
 import TopRankedTable from '../components/TopRankedTable';
 import { usePagedQuery } from '../hooks/usePagedQuery';
 import { useListMonthFilter } from '../hooks/useListMonthFilter';
+import { useListUrlState } from '../hooks/useListUrlState';
+import { useOpenListItem } from '../hooks/useOpenListItem';
 import { useInventoryTopProductsQuery } from '../hooks/useSalesRankingQuery';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../utils/api';
@@ -95,13 +97,24 @@ function InventorySummaryCards({ summary, loading }) {
     );
 }
 
+const LIST_URL_DEFAULTS = {
+    view: 'stock',
+    status: 'all',
+    page: 1,
+    q: '',
+    period: 'all',
+    startDate: '',
+    endDate: '',
+};
+
 export default function Inventory() {
-    const navigate = useNavigate();
+    const openItem = useOpenListItem();
     const { user } = useAuth();
     const userId = user?.id;
     const currency = useBusinessCurrency();
-    const [view, setView] = useState('stock');
-    const [stockStatus, setStockStatus] = useState('all');
+    const listUrl = useListUrlState(LIST_URL_DEFAULTS);
+    const view = listUrl.view || 'stock';
+    const stockStatus = listUrl.status;
 
     const {
         listQueryParams,
@@ -114,7 +127,7 @@ export default function Inventory() {
         applyListCustomRange,
         listMaxDate,
         isDefaultListPeriod,
-    } = useListMonthFilter();
+    } = useListMonthFilter(listUrl);
 
     const stockFetcher = useCallback(
         ({ page, limit, search, status }) =>
@@ -156,6 +169,10 @@ export default function Inventory() {
     } = usePagedQuery({
         queryKeyBase: 'inventoryStock',
         fetcher: stockFetcher,
+        page: listUrl.page,
+        onPageChange: listUrl.setPage,
+        searchQuery: listUrl.q,
+        onSearchQueryChange: listUrl.setSearch,
         extraParams: { status: stockStatus },
         enabled: view === 'stock',
     });
@@ -171,6 +188,10 @@ export default function Inventory() {
     } = usePagedQuery({
         queryKeyBase: 'inventoryMovements',
         fetcher: movementsFetcher,
+        page: listUrl.page,
+        onPageChange: listUrl.setPage,
+        searchQuery: listUrl.q,
+        onSearchQueryChange: listUrl.setSearch,
         extraParams: listQueryParams,
         enabled: view === 'movements',
     });
@@ -190,10 +211,6 @@ export default function Inventory() {
 
     const stockRows = stockData.map(mapStockRow);
     const movementRows = movementsData.map(mapMovementRow);
-
-    useEffect(() => {
-        setMovementsPage(1);
-    }, [listQueryParams, setMovementsPage]);
 
     const stockTabs = STOCK_STATUS_TABS.map((tab) => ({
         ...tab,
@@ -221,11 +238,7 @@ export default function Inventory() {
             <FilterTabs
                 tabs={VIEW_TABS}
                 value={view}
-                onChange={(nextView) => {
-                    setView(nextView);
-                    if (nextView === 'stock') setStockPage(1);
-                    if (nextView === 'movements') setMovementsPage(1);
-                }}
+                onChange={listUrl.setView}
                 className="mb-4"
             />
 
@@ -240,7 +253,7 @@ export default function Inventory() {
                         loading={topProductsLoading}
                         emptyTitle="No paid catalog sales in this period"
                         emptyDescription="Paid invoices and receipts with catalog products will appear here."
-                        onRowClick={(item) => navigate(`/products/${item.id}`)}
+                        onRowClick={(item) => openItem(`/products/${item.id}`)}
                         periodFilter={
                             <ListMonthToolbarFilter
                                 id="inventory-top-products-period"
@@ -260,10 +273,7 @@ export default function Inventory() {
                     <FilterTabs
                         tabs={stockTabs}
                         value={stockStatus}
-                        onChange={(value) => {
-                            setStockStatus(value);
-                            setStockPage(1);
-                        }}
+                        onChange={listUrl.setStatus}
                         className="mb-4"
                     />
 
@@ -316,7 +326,7 @@ export default function Inventory() {
                                 {stockRows.map((product) => (
                                     <DataTableRow
                                         key={product.id}
-                                        onClick={() => navigate(`/products/${product.id}`)}
+                                        onClick={() => openItem(`/products/${product.id}`)}
                                         className="cursor-pointer"
                                     >
                                         <DataTableCell>

@@ -9,6 +9,8 @@ import ConfirmModal from '../components/ConfirmModal';
 import PurchaseReceiveModal from '../components/PurchaseReceiveModal';
 import AdjustSellingPriceModal from '../components/AdjustSellingPriceModal';
 import { useToast } from '../context/ToastContext';
+import ListBackLink from '../components/ListBackLink';
+import { useListBackTo } from '../hooks/useOpenListItem';
 import { apiFetch } from '../utils/api';
 import { formatCurrency } from '../utils/currency';
 import { useInvoice } from '../context/InvoiceContext';
@@ -18,6 +20,7 @@ const mapOrder = (entry) => ({ ...entry, id: entry._id || entry.id });
 export default function PurchaseOrderDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const listBackTo = useListBackTo('/purchase-orders');
     const { showToast } = useToast();
     const { fetchProducts, updateProduct } = useInvoice();
 
@@ -42,7 +45,7 @@ export default function PurchaseOrderDetails() {
                 const data = await apiFetch(`/purchase-orders/${id}`);
                 if (!cancelled) setOrder(mapOrder(data));
             } catch {
-                if (!cancelled) navigate('/purchase-orders', { replace: true });
+                if (!cancelled) navigate(listBackTo, { replace: true });
             } finally {
                 if (!cancelled) setLoading(false);
             }
@@ -172,13 +175,13 @@ export default function PurchaseOrderDetails() {
             />
 
             <div className="mb-4">
-                <Link
+                <ListBackLink
                     to="/purchase-orders"
                     className="inline-flex items-center gap-2 text-sm text-foreground-muted hover:text-foreground"
                 >
                     <ArrowLeft size={16} aria-hidden />
                     Back to purchase orders
-                </Link>
+                </ListBackLink>
             </div>
 
             <PageHeader

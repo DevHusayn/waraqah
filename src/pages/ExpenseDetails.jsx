@@ -17,6 +17,7 @@ import ExpenseFormModal, {
     buildDuplicateExpenseInitialData,
 } from '../components/ExpenseFormModal';
 import { useToast } from '../context/ToastContext';
+import ListBackLink from '../components/ListBackLink';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../utils/api';
 import { formatCurrency } from '../utils/currency';
@@ -264,9 +265,9 @@ export default function ExpenseDetails() {
                     title="Expense not found"
                     description="This expense may have been deleted."
                     action={
-                        <Link to="/expenses" className="btn-secondary">
+                        <ListBackLink to="/expenses" className="btn-secondary">
                             Back to expenses
-                        </Link>
+                        </ListBackLink>
                     }
                 />
             </div>
@@ -304,13 +305,13 @@ export default function ExpenseDetails() {
                 initialData={modalInitialData}
             />
 
-            <Link
+            <ListBackLink
                 to={expense.vendor ? expensePayeePath(expense.vendor) : '/expenses'}
                 className="inline-flex items-center gap-2 text-sm text-foreground-muted hover:text-foreground mb-4"
             >
                 <ArrowLeft size={16} aria-hidden />
                 {expense.vendor ? `Back to ${expense.vendor}` : 'Back to expenses'}
-            </Link>
+            </ListBackLink>
 
             <header className="card mb-8 overflow-hidden !p-0">
                 <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-start lg:justify-between">

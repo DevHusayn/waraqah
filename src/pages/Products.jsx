@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useState } from 'react';
 import { Plus, Package, Search } from 'lucide-react';
 import ListSummaryStats from '../components/ListSummaryStats';
 import AlertModal from '../components/AlertModal';
@@ -16,6 +15,8 @@ import PaginationBar from '../components/PaginationBar';
 import { usePagedQuery } from '../hooks/usePagedQuery';
 import { useListSummaryQuery } from '../hooks/useListSummaryQuery';
 import { useListMonthFilter } from '../hooks/useListMonthFilter';
+import { useListUrlState } from '../hooks/useListUrlState';
+import { useOpenListItem } from '../hooks/useOpenListItem';
 import ListMonthToolbarFilter from '../components/ListMonthToolbarFilter';
 import ListExportButton from '../components/ListExportButton';
 import ListSortSelect from '../components/ListSortSelect';
@@ -49,13 +50,23 @@ const TABLE_COLUMNS = [
     { key: 'status', label: 'Status' },
 ];
 
+const LIST_URL_DEFAULTS = {
+    sort: 'newest',
+    page: 1,
+    q: '',
+    period: 'all',
+    startDate: '',
+    endDate: '',
+};
+
 export default function Products() {
-    const navigate = useNavigate();
+    const openItem = useOpenListItem();
     const { addProduct } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
     const currency = useBusinessCurrency();
-    const [sortBy, setSortBy] = useState('newest');
+    const listUrl = useListUrlState(LIST_URL_DEFAULTS);
+    const sortBy = listUrl.sort;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
 
@@ -76,7 +87,7 @@ export default function Products() {
         applyListCustomRange,
         listMaxDate,
         isDefaultListPeriod,
-    } = useListMonthFilter();
+    } = useListMonthFilter(listUrl);
 
     const fetcher = useCallback(
         ({ page, limit, search, sort, period, startDate, endDate }) =>
@@ -101,7 +112,6 @@ export default function Products() {
     );
 
     const {
-        setPage,
         search,
         setSearch,
         debouncedSearch,
@@ -112,6 +122,10 @@ export default function Products() {
     } = usePagedQuery({
         queryKeyBase: 'products',
         fetcher,
+        page: listUrl.page,
+        onPageChange: listUrl.setPage,
+        searchQuery: listUrl.q,
+        onSearchQueryChange: listUrl.setSearch,
         extraParams: {
             sort: sortBy,
             ...listQueryParams,
@@ -119,10 +133,6 @@ export default function Products() {
     });
 
     const products = data.map(mapProduct);
-
-    useEffect(() => {
-        setPage(1);
-    }, [sortBy, listQueryParams, setPage]);
 
     const handleSubmit = async (formData) => {
         try {
@@ -245,7 +255,7 @@ export default function Products() {
                             />
                             <ListSortSelect
                                 value={sortBy}
-                                onChange={setSortBy}
+                                onChange={listUrl.setSort}
                                 options={SORT_OPTIONS}
                                 ariaLabel="Sort products"
                             />
@@ -269,7 +279,7 @@ export default function Products() {
                                 {products.map((product) => (
                                     <DataTableRow
                                         key={product.id}
-                                        onClick={() => navigate(`/products/${product.id}`)}
+                                        onClick={() => openItem(`/products/${product.id}`)}
                                         className="cursor-pointer"
                                     >
                                         <DataTableCell>
@@ -309,7 +319,7 @@ export default function Products() {
                                 page={pagination.page}
                                 totalPages={pagination.totalPages}
                                 total={pagination.total}
-                                onPageChange={setPage}
+                                onPageChange={listUrl.setPage}
                                 disabled={loading}
                             />
                         </>

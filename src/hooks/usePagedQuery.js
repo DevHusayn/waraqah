@@ -7,14 +7,20 @@ import { useAuth } from '../context/AuthContext';
 
 const SUMMARY_RESOURCES = new Set(['invoices', 'quotations', 'receipts', 'products', 'clients']);
 
-const LIST_PLACEHOLDER_KEYS = ['year', 'month', 'period', 'status', 'sort', 'search', 'recurring', 'category'];
+const LIST_PLACEHOLDER_KEYS = ['year', 'month', 'period', 'status', 'sort', 'search', 'recurring', 'category', 'template'];
 
 function listParamsChanged(prev = {}, curr = {}) {
     return LIST_PLACEHOLDER_KEYS.some((key) => prev[key] !== curr[key]);
 }
 
+function resolvePage(value) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
+
 /**
  * Paginated list backed by TanStack Query — caches pages and avoids refetch on back-navigation.
+ * Pass `page`/`onPageChange` and `searchQuery`/`onSearchQueryChange` to keep state in the URL.
  */
 export function usePagedQuery({
     queryKeyBase,
@@ -23,18 +29,32 @@ export function usePagedQuery({
     debounceMs = 300,
     extraParams = {},
     enabled = true,
+    page: controlledPage,
+    onPageChange,
+    searchQuery,
+    onSearchQueryChange,
 }) {
     const queryClient = useQueryClient();
     const { user } = useAuth();
     const userId = user?.id;
-    const [page, setPage] = useState(1);
-    const [search, setSearch] = useState('');
-    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const pageControlled = typeof onPageChange === 'function';
+    const searchControlled = typeof onSearchQueryChange === 'function';
+    const [internalPage, setInternalPage] = useState(1);
+    const page = pageControlled ? resolvePage(controlledPage) : internalPage;
+    const [search, setSearch] = useState(() => searchQuery ?? '');
+    const [debouncedSearch, setDebouncedSearch] = useState(() => searchQuery ?? '');
+    const skipUrlSearchSync = useRef(false);
+    const isFirstSearchEffect = useRef(true);
     const fetcherRef = useRef(fetcher);
     fetcherRef.current = fetcher;
+    const onPageChangeRef = useRef(onPageChange);
+    onPageChangeRef.current = onPageChange;
+    const onSearchQueryChangeRef = useRef(onSearchQueryChange);
+    onSearchQueryChangeRef.current = onSearchQueryChange;
     const lastStatusCountsRef = useRef(null);
     const lastSummaryRef = useRef(null);
     const lastListRef = useRef([]);
+    const committedSearch = searchControlled ? (searchQuery ?? '') : debouncedSearch;
 
     useEffect(() => {
         lastStatusCountsRef.current = null;
@@ -43,12 +63,46 @@ export function usePagedQuery({
     }, [userId]);
 
     useEffect(() => {
+        if (!searchControlled) return;
+        if (skipUrlSearchSync.current) {
+            skipUrlSearchSync.current = false;
+            return;
+        }
+        const next = searchQuery ?? '';
+        setSearch(next);
+        setDebouncedSearch(next);
+    }, [searchControlled, searchQuery]);
+
+    const applyPage = useCallback((next) => {
+        const target = typeof next === 'function' ? next(page) : next;
+        const safe = Math.max(1, Number(target) || 1);
+        if (pageControlled) {
+            onPageChangeRef.current?.(safe);
+        } else {
+            setInternalPage(safe);
+        }
+    }, [page, pageControlled]);
+    const applyPageRef = useRef(applyPage);
+    applyPageRef.current = applyPage;
+
+    useEffect(() => {
         const timer = setTimeout(() => {
-            setDebouncedSearch(search);
-            setPage(1);
+            if (searchControlled) {
+                if ((searchQuery ?? '') !== search) {
+                    skipUrlSearchSync.current = true;
+                    onSearchQueryChangeRef.current?.(search);
+                }
+            } else {
+                setDebouncedSearch(search);
+                if (isFirstSearchEffect.current) {
+                    isFirstSearchEffect.current = false;
+                } else {
+                    applyPageRef.current(1);
+                }
+            }
         }, debounceMs);
         return () => clearTimeout(timer);
-    }, [search, debounceMs]);
+    }, [search, debounceMs, searchControlled, searchQuery]);
 
     useEffect(() => {
         lastListRef.current = [];
@@ -62,10 +116,14 @@ export function usePagedQuery({
         extraParams.sort,
         extraParams.recurring,
         extraParams.category,
-        debouncedSearch,
+        extraParams.plan,
+        extraParams.activity,
+        extraParams.auth,
+        extraParams.template,
+        committedSearch,
     ]);
 
-    const queryParams = { page, limit, search: debouncedSearch, ...extraParams };
+    const queryParams = { page, limit, search: committedSearch, ...extraParams };
     const queryKey = queryKeys[queryKeyBase]
         ? queryKeys[queryKeyBase](userId, queryParams)
         : [queryKeyBase, userId, queryParams];
@@ -76,13 +134,13 @@ export function usePagedQuery({
             const payload = await fetcherRef.current({
                 page,
                 limit,
-                search: debouncedSearch,
+                search: committedSearch,
                 ...extraParams,
             });
             const unwrapped = unwrapListResponse(payload);
             const safePage = clampPage(page, unwrapped.pagination.totalPages);
             if (safePage !== page) {
-                setPage(safePage);
+                applyPage(safePage);
             }
             return unwrapped;
         },
@@ -120,19 +178,21 @@ export function usePagedQuery({
     );
 
     const goToPage = useCallback((next) => {
-        setPage((prev) => {
-            const target = typeof next === 'function' ? next(prev) : next;
-            return Math.max(1, target);
-        });
-    }, []);
+        applyPage(next);
+    }, [applyPage]);
 
     const refresh = useCallback(() => refetch(), [refetch]);
 
     const resetSearchAndPage = useCallback(() => {
         setSearch('');
-        setDebouncedSearch('');
-        setPage(1);
-    }, []);
+        if (searchControlled) {
+            skipUrlSearchSync.current = true;
+            onSearchQueryChangeRef.current?.('');
+        } else {
+            setDebouncedSearch('');
+            applyPage(1);
+        }
+    }, [applyPage, searchControlled]);
 
     const invalidateList = useCallback(() => {
         if (!userId) return;
@@ -147,7 +207,7 @@ export function usePagedQuery({
         setPage: goToPage,
         search,
         setSearch,
-        debouncedSearch,
+        debouncedSearch: committedSearch,
         data: resolvedList,
         setData,
         pagination: data?.pagination ?? { page: 1, limit, total: 0, totalPages: 0 },

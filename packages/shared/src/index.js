@@ -29,6 +29,7 @@ export * from './aiDraft.js';
 export * from './settingsValidation.js';
 export * from './registerValidation.js';
 export * from './paymentReminders.js';
+export * from './lifecycleEmails.js';
 export * from './lowStockAlerts.js';
 export * from './inventorySettings.js';
 export * from './monthlyStatementEmail.js';

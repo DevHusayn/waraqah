@@ -16,6 +16,8 @@ import PaginationBar from '../components/PaginationBar';
 import { usePagedQuery } from '../hooks/usePagedQuery';
 import { useListSummaryQuery } from '../hooks/useListSummaryQuery';
 import { useListMonthFilter } from '../hooks/useListMonthFilter';
+import { useListUrlState } from '../hooks/useListUrlState';
+import { useOpenListItem } from '../hooks/useOpenListItem';
 import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { useClientsTopBuyersQuery } from '../hooks/useSalesRankingQuery';
 import ListMonthToolbarFilter from '../components/ListMonthToolbarFilter';
@@ -56,6 +58,15 @@ const TOP_BUYER_COLUMNS = [
 
 const mapClient = (c) => ({ ...c, id: c._id || c.id });
 
+const LIST_URL_DEFAULTS = {
+    sort: 'newest',
+    page: 1,
+    q: '',
+    period: 'all',
+    startDate: '',
+    endDate: '',
+};
+
 const Clients = () => {
     const { addClient, updateClient } = useInvoice();
     const { businessInfo } = useSettings();
@@ -63,12 +74,14 @@ const Clients = () => {
     const userId = user?.id;
     const { showToast } = useToast();
     const navigate = useNavigate();
+    const openItem = useOpenListItem();
     const [searchParams] = useSearchParams();
+    const listUrl = useListUrlState(LIST_URL_DEFAULTS);
     const returnTo = safeReturnPath(searchParams.get('returnTo'));
     const shouldOpenAdd = searchParams.get('add') === '1';
     const openedAddModal = useRef(false);
 
-    const [sortBy, setSortBy] = useState('newest');
+    const sortBy = listUrl.sort;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingClient, setEditingClient] = useState(null);
     const [modalInitialData, setModalInitialData] = useState(EMPTY_CLIENT);
@@ -89,7 +102,7 @@ const Clients = () => {
         setListCustomDraftRange,
         applyListCustomRange,
         listMaxDate,
-    } = useListMonthFilter();
+    } = useListMonthFilter(listUrl);
 
     const rankingPeriod = usePeriodFilter('month');
 
@@ -118,7 +131,6 @@ const Clients = () => {
     const topBuyers = topBuyersData?.items || [];
 
     const {
-        setPage,
         search,
         setSearch,
         debouncedSearch,
@@ -129,6 +141,10 @@ const Clients = () => {
     } = usePagedQuery({
         queryKeyBase: 'clients',
         fetcher,
+        page: listUrl.page,
+        onPageChange: listUrl.setPage,
+        searchQuery: listUrl.q,
+        onSearchQueryChange: listUrl.setSearch,
         extraParams: {
             sort: sortBy,
             ...listQueryParams,
@@ -136,10 +152,6 @@ const Clients = () => {
     });
 
     const clients = data.map(mapClient);
-
-    useEffect(() => {
-        setPage(1);
-    }, [sortBy, listQueryParams, setPage]);
 
     useEffect(() => {
         if (shouldOpenAdd && !openedAddModal.current) {
@@ -257,7 +269,7 @@ const Clients = () => {
                     loading={topBuyersLoading}
                     emptyTitle="No paid client sales in this period"
                     emptyDescription="Paid invoices and receipts with a client will appear here."
-                    onRowClick={(item) => navigate(`/clients/${item.id}`)}
+                    onRowClick={(item) => openItem(`/clients/${item.id}`)}
                     nameClassName={REPLAY_MASK.SENSITIVE}
                     periodFilter={
                         <ListMonthToolbarFilter
@@ -333,7 +345,7 @@ const Clients = () => {
                             />
                             <ListSortSelect
                                 value={sortBy}
-                                onChange={setSortBy}
+                                onChange={listUrl.setSort}
                                 options={SORT_OPTIONS}
                                 ariaLabel="Sort clients"
                             />
@@ -361,7 +373,7 @@ const Clients = () => {
                                 {clients.map((client) => (
                                     <DataTableRow
                                         key={client.id}
-                                        onClick={() => navigate(`/clients/${client.id}`)}
+                                        onClick={() => openItem(`/clients/${client.id}`)}
                                         className="cursor-pointer"
                                     >
                                         <DataTableCell>
@@ -389,7 +401,7 @@ const Clients = () => {
                                 page={pagination.page}
                                 totalPages={pagination.totalPages}
                                 total={pagination.total}
-                                onPageChange={setPage}
+                                onPageChange={listUrl.setPage}
                                 disabled={loading}
                             />
                         </>

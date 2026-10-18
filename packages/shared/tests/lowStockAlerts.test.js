@@ -6,9 +6,9 @@ import {
     LOW_STOCK_EMAIL_COOLDOWN_HOURS,
 } from '../src/lowStockAlerts.js';
 
-test('isLowStockEmailAlertsEnabled defaults to off', () => {
-    assert.equal(isLowStockEmailAlertsEnabled(undefined), false);
-    assert.equal(isLowStockEmailAlertsEnabled({}), false);
+test('isLowStockEmailAlertsEnabled defaults to on', () => {
+    assert.equal(isLowStockEmailAlertsEnabled(undefined), true);
+    assert.equal(isLowStockEmailAlertsEnabled({}), true);
     assert.equal(isLowStockEmailAlertsEnabled({ lowStockEmailAlerts: false }), false);
     assert.equal(isLowStockEmailAlertsEnabled({ lowStockEmailAlerts: true }), true);
 });

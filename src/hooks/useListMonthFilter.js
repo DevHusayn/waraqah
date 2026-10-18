@@ -6,9 +6,9 @@ import { usePeriodFilter } from './usePeriodFilter';
  * - Stat card ("New this …") → summaryYear / summaryMonth (counts only, month-only)
  * - Toolbar filter → period presets on the document list (defaults to all time)
  */
-export function useListMonthFilter() {
+export function useListMonthFilter(url) {
     const summary = useSummaryPeriod();
-    const listPeriod = usePeriodFilter('all');
+    const listPeriod = usePeriodFilter('all', url);
 
     return {
         summaryYear: summary.summaryYear,

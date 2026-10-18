@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
-import { Pencil, Plus, Users } from 'lucide-react';
+import { Check, Pencil, Plus, Users } from 'lucide-react';
 import {
     getDefaultStatementMonth,
     parseStatementMonth,
@@ -59,6 +59,7 @@ function staffToFormData(staff) {
     return {
         name: staff.name || '',
         role: staff.role || '',
+        email: staff.email || '',
         salary: staff.salary ?? '',
         isActive: staff.isActive !== false,
     };
@@ -158,6 +159,7 @@ export default function StaffPayrollPanel({ openAddKey = 0 }) {
                 id: staff.id,
                 name: staff.name,
                 role: staff.role,
+                email: staff.email || '',
                 salary: staff.salary,
                 isActive: false,
                 paid: false,
@@ -233,11 +235,19 @@ export default function StaffPayrollPanel({ openAddKey = 0 }) {
     const handleMarkPaid = async (staff) => {
         setPayingId(staff.id);
         try {
-            await apiFetch(`/staff/${staff.id}/pay`, {
+            const result = await apiFetch(`/staff/${staff.id}/pay`, {
                 method: 'POST',
                 body: JSON.stringify({ year, month }),
             });
-            showToast(`${staff.name} marked paid`, 'success');
+            if (result?.emailSent && result.sentTo) {
+                showToast(`Payment recorded. Confirmation sent to ${result.sentTo}`, 'success');
+            } else if (result?.emailSkipped === 'no_email') {
+                showToast('Payment recorded. Add an email to send a confirmation next time.', 'success');
+            } else if (result?.emailSkipped === 'send_failed') {
+                showToast('Payment recorded. Confirmation email could not be sent.', 'success');
+            } else {
+                showToast(`${staff.name} marked paid`, 'success');
+            }
             invalidateStaffQueries(user?.id);
         } catch (err) {
             setAlert({
@@ -347,13 +357,14 @@ export default function StaffPayrollPanel({ openAddKey = 0 }) {
         return (
             <button
                 type="button"
-                className="btn-primary text-xs py-1.5 px-3"
+                className="inline-flex h-7 items-center gap-1.5 rounded-md border border-brand/25 bg-brand-subtle px-2.5 text-[12px] font-medium text-brand transition-colors hover:border-brand hover:bg-brand hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={busy}
                 onClick={(event) => {
                     event.stopPropagation();
                     handleMarkPaid(staff);
                 }}
             >
+                <Check size={13} strokeWidth={2.25} aria-hidden />
                 {busy ? 'Saving…' : 'Mark paid'}
             </button>
         );
@@ -380,6 +391,7 @@ export default function StaffPayrollPanel({ openAddKey = 0 }) {
                         </span>
                         <span className="mt-0.5 block text-xs text-foreground-muted">
                             {staff.role || 'No role'}
+                            {staff.email ? ` · ${staff.email}` : ''}
                         </span>
                     </span>
                 </button>
@@ -404,6 +416,11 @@ export default function StaffPayrollPanel({ openAddKey = 0 }) {
                         <span className="block truncate font-medium text-foreground hover:text-brand">
                             {staff.name}
                         </span>
+                        {staff.email ? (
+                            <span className="mt-0.5 block truncate text-xs text-foreground-muted">
+                                {staff.email}
+                            </span>
+                        ) : null}
                     </span>
                 </button>
             </DataTableCell>
@@ -550,7 +567,7 @@ export default function StaffPayrollPanel({ openAddKey = 0 }) {
                     title={allStaff.length === 0 ? 'No staff yet' : 'No staff for this month'}
                     description={
                         allStaff.length === 0
-                            ? 'Add your team with their role and monthly salary, then mark them paid each month.'
+                            ? 'Add your team with their role, email, and monthly salary, then mark them paid each month.'
                             : 'Inactive staff are hidden unless they were already paid this month.'
                     }
                     action={

@@ -22,6 +22,8 @@ import PaginationBar from '../components/PaginationBar';
 import { ListPageSkeleton } from '../components/Skeleton';
 import { usePagedQuery } from '../hooks/usePagedQuery';
 import { usePeriodFilter } from '../hooks/usePeriodFilter';
+import { useListUrlState } from '../hooks/useListUrlState';
+import { useListLinkState, useOpenListItem } from '../hooks/useOpenListItem';
 import { useExpenseSummaryQuery } from '../hooks/useExpenseSummaryQuery';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
@@ -79,13 +81,27 @@ function payeeRowHref(row) {
     return expensePayeePath(row.name);
 }
 
+const LIST_URL_DEFAULTS = {
+    view: VIEW_EXPENSES,
+    category: FILTER_ALL,
+    sort: 'newest',
+    page: 1,
+    q: '',
+    period: 'month',
+    startDate: '',
+    endDate: '',
+};
+
 export default function Expenses() {
     const navigate = useNavigate();
+    const openItem = useOpenListItem();
+    const listLinkState = useListLinkState();
     const { showToast } = useToast();
     const { user } = useAuth();
     const { businessInfo } = useSettings();
     const premium = isPremiumUser(businessInfo);
     const currency = useBusinessCurrency();
+    const listUrl = useListUrlState(LIST_URL_DEFAULTS);
 
     const {
         periodLabel,
@@ -100,15 +116,15 @@ export default function Expenses() {
         setCustomDraftRange,
         applyCustomRange,
         maxDate,
-    } = usePeriodFilter();
+    } = usePeriodFilter('month', listUrl);
 
-    const [view, setView] = useState(VIEW_EXPENSES);
+    const view = listUrl.view || VIEW_EXPENSES;
     const [addStaffKey, setAddStaffKey] = useState(0);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalInitialData, setModalInitialData] = useState(EMPTY_EXPENSE);
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
-    const [categoryFilter, setCategoryFilter] = useState(FILTER_ALL);
-    const [sortBy, setSortBy] = useState('newest');
+    const categoryFilter = listUrl.category;
+    const sortBy = listUrl.sort;
     const recurringOnly = sortBy === 'recurring';
     const sortParam = recurringOnly ? 'newest' : sortBy;
 
@@ -150,7 +166,12 @@ export default function Expenses() {
     } = usePagedQuery({
         queryKeyBase: 'expensePayees',
         fetcher,
+        page: listUrl.page,
+        onPageChange: listUrl.setPage,
+        searchQuery: listUrl.q,
+        onSearchQueryChange: listUrl.setSearch,
         extraParams: listParams,
+        enabled: view === VIEW_EXPENSES,
     });
 
     const { data: summary, isFetching: summaryFetching } = useExpenseSummaryQuery(queryParams);
@@ -274,7 +295,7 @@ export default function Expenses() {
                 tabs={VIEW_TABS}
                 value={view}
                 onChange={(next) => {
-                    setView(next);
+                    listUrl.setView(next);
                     setAddStaffKey(0);
                 }}
                 className="mb-4"
@@ -365,10 +386,7 @@ export default function Expenses() {
             <Toolbar className="mb-4">
                 <ToolbarSearch
                     value={search}
-                    onChange={(e) => {
-                        setSearch(e.target.value);
-                        setPage(1);
-                    }}
+                    onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search name or description…"
                     icon={Search}
                     aria-label="Search expenses"
@@ -377,10 +395,7 @@ export default function Expenses() {
                     <div className="min-w-0 sm:w-48 sm:flex-none">
                         <CustomSelect
                             value={categoryFilter}
-                            onChange={(next) => {
-                                setCategoryFilter(next);
-                                setPage(1);
-                            }}
+                            onChange={listUrl.setCategory}
                             options={filterOptions}
                             placeholder="Category"
                             leadingIcon={<ListFilter size={14} />}
@@ -389,10 +404,7 @@ export default function Expenses() {
                     </div>
                     <ListSortSelect
                         value={sortBy}
-                        onChange={(next) => {
-                            setSortBy(next);
-                            setPage(1);
-                        }}
+                        onChange={listUrl.setSort}
                         options={SORT_OPTIONS}
                         ariaLabel="Sort or filter expenses"
                     />
@@ -460,6 +472,7 @@ export default function Expenses() {
                                 <Link
                                     key={row.id}
                                     to={payeeRowHref(row)}
+                                    state={listLinkState}
                                     className="flex items-start gap-2 px-4 py-3.5 hover:bg-surface-muted/70"
                                 >
                                     <div className="min-w-0 flex-1">
@@ -505,7 +518,7 @@ export default function Expenses() {
                                 return (
                                     <DataTableRow
                                         key={row.id}
-                                        onClick={() => navigate(payeeRowHref(row))}
+                                        onClick={() => openItem(payeeRowHref(row))}
                                         className="cursor-pointer"
                                     >
                                         <DataTableCell>

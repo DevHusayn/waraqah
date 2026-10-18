@@ -51,6 +51,50 @@ import { applyAiDraftToForm, DEFAULT_INVOICE_UNIT, isAiDraftsEnabled, normalizeI
 import { isPremiumUser } from '../utils/premium';
 import AiDraftComposer from '../components/documentForm/AiDraftComposer';
 
+async function recurringFieldsForEdit(invoice) {
+    const own = recurringFieldsFromRecord(invoice);
+    const sourceId = !invoice?.isRecurring && invoice?.recurringSourceId
+        ? String(invoice.recurringSourceId)
+        : '';
+    if (!sourceId) return { ...own, recurringSourceId: '' };
+
+    try {
+        const source = await apiFetch(`/invoices/${sourceId}`);
+        if (source?.isRecurring) {
+            return {
+                ...recurringFieldsFromRecord(source),
+                recurringSourceId: sourceId,
+            };
+        }
+    } catch {
+        return { ...own, recurringSourceId: '' };
+    }
+
+    return { ...own, recurringSourceId: '' };
+}
+
+async function syncLinkedRecurringSeries(current, updateInvoice) {
+    const sourceId = String(current.recurringSourceId || '');
+    if (!sourceId) return;
+
+    if (!current.isRecurring) {
+        await apiFetch(`/invoices/${sourceId}/stop-recurring`, { method: 'POST' });
+        return;
+    }
+
+    const source = await apiFetch(`/invoices/${sourceId}`);
+    const sameFrequency = source.recurringFrequency === current.recurringFrequency;
+    const sameEnd = (source.recurringEndDate || '') === (current.recurringEndDate || '');
+    if (source.isRecurring && sameFrequency && sameEnd) return;
+
+    await updateInvoice(sourceId, {
+        ...source,
+        isRecurring: true,
+        recurringFrequency: current.recurringFrequency,
+        recurringEndDate: current.recurringEndDate || null,
+    });
+}
+
 const CreateInvoice = () => {
     const { id } = useParams();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -226,6 +270,8 @@ const CreateInvoice = () => {
             if (cancelled) return;
             loadedInvoiceIdRef.current = id;
             setResolvedStatus(invoice.status || 'draft');
+            const series = await recurringFieldsForEdit(invoice);
+            if (cancelled) return;
             setFormData({
                 ...invoice,
                 clientName: client?.name || invoice.clientName || '',
@@ -245,7 +291,7 @@ const CreateInvoice = () => {
                     ...item,
                     unit: normalizeInvoiceUnit(item.unit),
                 })),
-                ...recurringFieldsFromRecord(invoice),
+                ...series,
             });
             committedCatalogQuantitiesRef.current =
                 invoice.status && invoice.status !== 'draft' && invoice.status !== 'cancelled'
@@ -589,6 +635,15 @@ const CreateInvoice = () => {
             };
             applyClientSnapshotToPayload(invoiceData, formData);
             delete invoiceData.hasDueDate;
+
+            if (invoiceData.recurringSourceId) {
+                await syncLinkedRecurringSeries(invoiceData, updateInvoice);
+                invoiceData.isRecurring = false;
+                delete invoiceData.recurringFrequency;
+                delete invoiceData.recurringEndDate;
+                delete invoiceData.recurringNextDate;
+            }
+            delete invoiceData.recurringSourceId;
 
             const saved = await updateInvoice(id, invoiceData);
             notifyStockWarnings(showToast, saved);

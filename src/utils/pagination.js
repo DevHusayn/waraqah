@@ -50,6 +50,7 @@ export function buildListQuery({
     summaryOnly,
     recurring,
     category,
+    template,
 } = {}) {
     const params = new URLSearchParams();
     params.set('page', String(page));
@@ -74,6 +75,7 @@ export function buildListQuery({
     if (category && String(category).trim() && category !== 'all') {
         params.set('category', String(category).trim());
     }
+    if (template && template !== 'all') params.set('template', template);
     return params.toString();
 }
 

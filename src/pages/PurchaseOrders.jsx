@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, ShoppingCart, Search } from 'lucide-react';
 import { format } from 'date-fns';
@@ -12,6 +12,8 @@ import PaginationBar from '../components/PaginationBar';
 import StatusBadge from '../components/StatusBadge';
 import { ListPageSkeleton } from '../components/Skeleton';
 import { usePagedQuery } from '../hooks/usePagedQuery';
+import { useListUrlState } from '../hooks/useListUrlState';
+import { useOpenListItem } from '../hooks/useOpenListItem';
 import { formatCurrency } from '../utils/currency';
 import { apiFetch } from '../utils/api';
 import { buildListQuery } from '../utils/pagination';
@@ -42,10 +44,19 @@ const STATUS_TABS = [
 
 const mapOrder = (entry) => ({ ...entry, id: entry._id || entry.id });
 
+const LIST_URL_DEFAULTS = {
+    status: 'all',
+    sort: 'newest',
+    page: 1,
+    q: '',
+};
+
 export default function PurchaseOrders() {
     const navigate = useNavigate();
-    const [filter, setFilter] = useState('all');
-    const [sortBy, setSortBy] = useState('newest');
+    const openItem = useOpenListItem();
+    const listUrl = useListUrlState(LIST_URL_DEFAULTS);
+    const filter = listUrl.status;
+    const sortBy = listUrl.sort;
 
     const fetcher = useCallback(
         ({ page, limit, search, status, sort }) =>
@@ -73,6 +84,10 @@ export default function PurchaseOrders() {
     } = usePagedQuery({
         queryKeyBase: 'purchaseOrders',
         fetcher,
+        page: listUrl.page,
+        onPageChange: listUrl.setPage,
+        searchQuery: listUrl.q,
+        onSearchQueryChange: listUrl.setSearch,
         extraParams: { status: filter, sort: sortBy },
     });
 
@@ -103,30 +118,21 @@ export default function PurchaseOrders() {
             <FilterTabs
                 tabs={tabs}
                 value={filter}
-                onChange={(value) => {
-                    setFilter(value);
-                    setPage(1);
-                }}
+                onChange={listUrl.setStatus}
                 className="mb-4"
             />
 
             <Toolbar className="mb-4">
                 <ToolbarSearch
                     value={search}
-                    onChange={(value) => {
-                        setSearch(value);
-                        setPage(1);
-                    }}
+                    onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by PO number or supplier…"
                     icon={Search}
                 />
                 <ToolbarActions>
                     <ListSortSelect
                         value={sortBy}
-                        onChange={(next) => {
-                            setSortBy(next);
-                            setPage(1);
-                        }}
+                        onChange={listUrl.setSort}
                         options={SORT_OPTIONS}
                         ariaLabel="Sort purchase orders"
                     />
@@ -157,7 +163,7 @@ export default function PurchaseOrders() {
                         {orders.map((order) => (
                             <DataTableRow
                                 key={order.id}
-                                onClick={() => navigate(`/purchase-orders/${order.id}`)}
+                                onClick={() => openItem(`/purchase-orders/${order.id}`)}
                                 className="cursor-pointer"
                             >
                                 <DataTableCell className="font-medium text-foreground">

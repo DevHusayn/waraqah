@@ -2,8 +2,44 @@ import { List } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 import { formatDocumentItemDescription, normalizeInvoiceUnit, resolveQuantityColumnLabel } from '@waraqah/shared';
 
-export default function DocumentLineItemsTable({ items, currency }) {
+export default function DocumentLineItemsTable({ items, currency, embedded = false }) {
     const lineItems = items || [];
+
+    const table = (
+        <table className={`${embedded ? '' : 'hidden md:table'} w-full text-sm`}>
+            <thead className="bg-surface-muted text-foreground-muted uppercase text-xs">
+                <tr>
+                    <th className="text-left px-6 py-3 font-semibold">Description</th>
+                    <th className="text-center px-4 py-3 w-24 font-semibold">
+                        {resolveQuantityColumnLabel(lineItems)}
+                    </th>
+                    <th className="text-right px-4 py-3 font-semibold">Rate</th>
+                    <th className="text-right px-6 py-3 font-semibold">Amount</th>
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100">
+                {lineItems.map((item, index) => (
+                    <tr key={index}>
+                        <td className="px-6 py-4 text-foreground whitespace-pre-wrap leading-relaxed">
+                            {formatDocumentItemDescription(item.description)}
+                        </td>
+                        <td className="px-4 py-4 text-center text-foreground-muted">{item.quantity}</td>
+                        <td className="px-4 py-4 text-right text-foreground-muted whitespace-nowrap">
+                            {formatCurrency(item.rate, currency)}
+                        </td>
+                        <td className="px-6 py-4 text-right font-medium text-foreground whitespace-nowrap">
+                            {formatCurrency(
+                                Number(item.quantity) * Number(item.rate),
+                                currency
+                            )}
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    );
+
+    if (embedded) return table;
 
     return (
         <div className="card !p-0 overflow-hidden">
@@ -41,37 +77,7 @@ export default function DocumentLineItemsTable({ items, currency }) {
                 ))}
             </div>
 
-            <table className="hidden md:table w-full text-sm">
-                <thead className="bg-surface-muted text-foreground-muted uppercase text-xs">
-                    <tr>
-                        <th className="text-left px-6 py-3 font-semibold">Description</th>
-                        <th className="text-center px-4 py-3 w-24 font-semibold">
-                            {resolveQuantityColumnLabel(lineItems)}
-                        </th>
-                        <th className="text-right px-4 py-3 font-semibold">Rate</th>
-                        <th className="text-right px-6 py-3 font-semibold">Amount</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100">
-                    {lineItems.map((item, index) => (
-                        <tr key={index}>
-                            <td className="px-6 py-4 text-foreground whitespace-pre-wrap leading-relaxed">
-                                {formatDocumentItemDescription(item.description)}
-                            </td>
-                            <td className="px-4 py-4 text-center text-foreground-muted">{item.quantity}</td>
-                            <td className="px-4 py-4 text-right text-foreground-muted whitespace-nowrap">
-                                {formatCurrency(item.rate, currency)}
-                            </td>
-                            <td className="px-6 py-4 text-right font-medium text-foreground whitespace-nowrap">
-                                {formatCurrency(
-                                    Number(item.quantity) * Number(item.rate),
-                                    currency
-                                )}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+            {table}
         </div>
     );
 }

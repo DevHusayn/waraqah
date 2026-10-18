@@ -17,6 +17,8 @@ import StatusBadge from '../components/StatusBadge';
 import DataTable, { DataTableRow, DataTableCell } from '../components/DataTable';
 import EmptyState from '../components/EmptyState';
 import { useToast } from '../context/ToastContext';
+import ListBackLink from '../components/ListBackLink';
+import { useListBackTo } from '../hooks/useOpenListItem';
 import { apiFetch } from '../utils/api';
 import { formatCurrency } from '../utils/currency';
 import PaginationBar from '../components/PaginationBar';
@@ -60,6 +62,7 @@ function StatCard({ title, value, detail, className = '' }) {
 export default function SupplierDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const listBackTo = useListBackTo('/suppliers');
     const { showToast } = useToast();
 
     const [activity, setActivity] = useState(null);
@@ -138,7 +141,7 @@ export default function SupplierDetails() {
         try {
             await apiFetch(`/suppliers/${id}`, { method: 'DELETE' });
             showToast('Supplier deleted successfully', 'success');
-            navigate('/suppliers', { replace: true });
+            navigate(listBackTo, { replace: true });
         } catch (err) {
             setAlert({
                 open: true,
@@ -162,9 +165,9 @@ export default function SupplierDetails() {
                 title="Supplier not found"
                 description="This supplier may have been deleted."
                 action={
-                    <Link to="/suppliers" className="btn-primary">
+                    <ListBackLink to="/suppliers" className="btn-primary">
                         Back to suppliers
-                    </Link>
+                    </ListBackLink>
                 }
             />
         );
@@ -200,13 +203,13 @@ export default function SupplierDetails() {
             />
 
             <div className="mb-4">
-                <Link
+                <ListBackLink
                     to="/suppliers"
                     className="inline-flex items-center gap-2 text-sm text-foreground-muted hover:text-foreground"
                 >
                     <ArrowLeft size={16} aria-hidden />
                     Back to suppliers
-                </Link>
+                </ListBackLink>
             </div>
 
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6">

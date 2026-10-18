@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import {
     Search,
     Shield,
@@ -30,6 +30,8 @@ import EmptyState from '../components/EmptyState';
 import PaginationBar from '../components/PaginationBar';
 import CustomSelect from '../components/CustomSelect';
 import { usePagedQuery } from '../hooks/usePagedQuery';
+import { useListUrlState } from '../hooks/useListUrlState';
+import { useOpenListItem } from '../hooks/useOpenListItem';
 import { adminDisplayName } from '../utils/adminDisplayName';
 import {
     buildListQuery,
@@ -288,14 +290,28 @@ function AdminActionsMenu({
     );
 }
 
+const LIST_URL_DEFAULTS = {
+    plan: 'all',
+    status: 'all',
+    activity: 'all',
+    auth: 'all',
+    page: 1,
+    q: '',
+};
+
 export default function AdminDashboard() {
-    const navigate = useNavigate();
+    const openItem = useOpenListItem();
+    const listUrl = useListUrlState(LIST_URL_DEFAULTS);
     const [actionLoading, setActionLoading] = useState('');
     const [exportLoading, setExportLoading] = useState(false);
-    const [planFilter, setPlanFilter] = useState('all');
-    const [statusFilter, setStatusFilter] = useState('all');
-    const [activityFilter, setActivityFilter] = useState('all');
-    const [authFilter, setAuthFilter] = useState('all');
+    const planFilter = listUrl.plan;
+    const statusFilter = listUrl.status;
+    const activityFilter = listUrl.activity;
+    const authFilter = listUrl.auth;
+    const setPlanFilter = (plan) => listUrl.patch({ plan, page: 1 });
+    const setStatusFilter = (status) => listUrl.patch({ status, page: 1 });
+    const setActivityFilter = (activity) => listUrl.patch({ activity, page: 1 });
+    const setAuthFilter = (auth) => listUrl.patch({ auth, page: 1 });
     const [alert, setAlert] = useState({ open: false, message: '', type: 'error' });
     const [confirm, setConfirm] = useState({ open: false, userId: null });
     const [forbidden, setForbidden] = useState(false);
@@ -346,6 +362,10 @@ export default function AdminDashboard() {
         queryKeyBase: 'adminUsers',
         fetcher,
         enabled: !forbidden,
+        page: listUrl.page,
+        onPageChange: listUrl.setPage,
+        searchQuery: listUrl.q,
+        onSearchQueryChange: listUrl.setSearch,
         extraParams: {
             plan: planFilter,
             status: statusFilter,
@@ -353,10 +373,6 @@ export default function AdminDashboard() {
             auth: authFilter,
         },
     });
-
-    useEffect(() => {
-        setPage(1);
-    }, [planFilter, statusFilter, activityFilter, authFilter, setPage]);
 
     const stats = summary ?? {
         total: 0,
@@ -556,7 +572,11 @@ export default function AdminDashboard() {
                 <PageHeader
                     title="Admin"
                     subtitle="Manage users, plans, and account access"
-                />
+                >
+                    <Link to="/admin/follow-ups" className="btn-secondary text-sm">
+                        Follow-ups
+                    </Link>
+                </PageHeader>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
                     {[
@@ -683,7 +703,7 @@ export default function AdminDashboard() {
                                     <tr
                                         key={user._id}
                                         className="hover:bg-surface-muted/80 transition-colors cursor-pointer"
-                                        onClick={() => navigate(`/admin/users/${user._id}`)}
+                                        onClick={() => openItem(`/admin/users/${user._id}`)}
                                     >
                                         <td className="px-4 sm:px-6 py-4">
                                             <div className="min-w-[180px]">
@@ -753,7 +773,7 @@ export default function AdminDashboard() {
                                                 user={user}
                                                 currentUserId={currentUserId}
                                                 actionLoading={actionLoading}
-                                                onView={(id) => navigate(`/admin/users/${id}`)}
+                                                onView={(id) => openItem(`/admin/users/${id}`)}
                                                 onPlan={handlePlan}
                                                 onStatus={handleStatus}
                                                 onAdmin={handleAdmin}

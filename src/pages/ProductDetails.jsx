@@ -27,6 +27,8 @@ import { isOversellingAllowed, resolveClientPeriodFromFilter } from '@waraqah/sh
 import { usePeriodFilter } from '../hooks/usePeriodFilter';
 import { useInvoice } from '../context/InvoiceContext';
 import { useToast } from '../context/ToastContext';
+import ListBackLink from '../components/ListBackLink';
+import { useListBackTo } from '../hooks/useOpenListItem';
 import { apiFetch } from '../utils/api';
 import { formatCurrency } from '../utils/currency';
 import useBusinessCurrency from '../hooks/useBusinessCurrency';
@@ -135,6 +137,7 @@ function CatalogMetric({ label, value }) {
 export default function ProductDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const listBackTo = useListBackTo('/products');
     const { updateProduct, deleteProduct, adjustProductStock } = useInvoice();
     const { businessInfo } = useSettings();
     const { showToast } = useToast();
@@ -277,7 +280,7 @@ export default function ProductDetails() {
         try {
             await deleteProduct(id);
             showToast('Product deleted successfully', 'success');
-            navigate('/products');
+            navigate(listBackTo);
         } catch (err) {
             setAlert({
                 open: true,
@@ -301,9 +304,9 @@ export default function ProductDetails() {
                     title="Product not found"
                     description="This product may have been deleted."
                     action={
-                        <Link to="/products" className="btn-secondary">
+                        <ListBackLink to="/products" className="btn-secondary">
                             Back to products
-                        </Link>
+                        </ListBackLink>
                     }
                 />
             </div>
@@ -343,13 +346,13 @@ export default function ProductDetails() {
                 onSubmit={handleAdjustStock}
             />
 
-            <Link
+            <ListBackLink
                 to="/products"
                 className="inline-flex items-center gap-2 text-sm text-foreground-muted hover:text-foreground mb-4"
             >
                 <ArrowLeft size={16} aria-hidden />
                 Back to products
-            </Link>
+            </ListBackLink>
 
             <header className="card mb-8 overflow-hidden !p-0">
                 <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-start lg:justify-between">

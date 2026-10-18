@@ -5,6 +5,8 @@ import { format, parseISO } from 'date-fns';
 import { ArrowLeft, Copy, Plus, Repeat, Trash2, User, Wallet } from 'lucide-react';
 import { getExpenseCategoryLabel, recurringFieldsFromRecord } from '@waraqah/shared';
 import { PageSpinner } from '../components/Spinner';
+import ListBackLink from '../components/ListBackLink';
+import { useListBackTo } from '../hooks/useOpenListItem';
 import AlertModal from '../components/AlertModal';
 import ConfirmModal from '../components/ConfirmModal';
 import ActionMenu from '../components/ActionMenu';
@@ -67,6 +69,7 @@ function expenseToFormData(expense) {
 export default function ExpensePayeeDetails() {
     const { payeeName } = useParams();
     const navigate = useNavigate();
+    const listBackTo = useListBackTo('/expenses');
     const { showToast } = useToast();
     const { user, isAuthenticated } = useAuth();
     const currency = useBusinessCurrency();
@@ -184,7 +187,7 @@ export default function ExpensePayeeDetails() {
             invalidateExpenseQueries(user?.id);
             setConfirmExpense(null);
             if (expenses.length <= 1) {
-                navigate('/expenses', { replace: true });
+                navigate(listBackTo, { replace: true });
             }
         } catch (err) {
             setAlert({
@@ -230,9 +233,9 @@ export default function ExpensePayeeDetails() {
                     title="Payee not found"
                     description="This payment name is missing."
                     action={
-                        <Link to="/expenses" className="btn-secondary">
+                        <ListBackLink to="/expenses" className="btn-secondary">
                             Back to expenses
-                        </Link>
+                        </ListBackLink>
                     }
                 />
             </div>
@@ -251,9 +254,9 @@ export default function ExpensePayeeDetails() {
                     title="Payee not found"
                     description={error?.message || 'No expenses were found for this name.'}
                     action={
-                        <Link to="/expenses" className="btn-secondary">
+                        <ListBackLink to="/expenses" className="btn-secondary">
                             Back to expenses
-                        </Link>
+                        </ListBackLink>
                     }
                 />
             </div>
@@ -291,13 +294,13 @@ export default function ExpensePayeeDetails() {
                 initialData={modalInitialData}
             />
 
-            <Link
+            <ListBackLink
                 to="/expenses"
                 className="inline-flex items-center gap-2 text-sm text-foreground-muted hover:text-foreground mb-4"
             >
                 <ArrowLeft size={16} aria-hidden />
                 Back to expenses
-            </Link>
+            </ListBackLink>
 
             <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-start gap-3 min-w-0">
@@ -353,6 +356,7 @@ export default function ExpensePayeeDetails() {
                     <p className="mt-1 text-sm text-foreground">
                         {staff.role} · {staff.isActive ? 'Active' : 'Inactive'} · monthly salary{' '}
                         {formatCurrency(staff.salary || 0, currency)}
+                        {staff.email ? ` · ${staff.email}` : ''}
                     </p>
                 </section>
             ) : null}
